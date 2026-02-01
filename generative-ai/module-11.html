@@ -1,0 +1,2488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 11: Context Engineering - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        .context-viz {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+        .context-window {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+        }
+        .context-block {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            color: white;
+        }
+        .context-block.system { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .context-block.memory { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .context-block.retrieved { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .context-block.user { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .context-block.assistant { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: #1a1a2e; }
+        .token-counter {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            color: white;
+        }
+        .token-bar {
+            flex: 1;
+            height: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .token-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #f6ad55, #f56565);
+            transition: width 0.3s;
+        }
+        .mcp-diagram {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+        .agent-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 0.5rem;
+            display: inline-block;
+            color: white;
+            min-width: 150px;
+            text-align: center;
+        }
+        .agent-card.manager { border: 2px solid #ffd700; }
+        .agent-card.worker { border: 2px solid #4facfe; }
+        .agent-card.specialist { border: 2px solid #11998e; }
+        .recall-question {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 0.75rem 0;
+        }
+        .recall-question summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #8b5cf6;
+        }
+        .recall-question .answer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(139, 92, 246, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Setup + Core Math
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Terminology + MNIST
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">LLM Deep Dive</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>LLM Basics
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Attention Mechanisms
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>LLM Coding: GPT
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Training at Scale
+                    </a>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Optimization Hacks
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">RAG &amp; Retrieval</div>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>RAG Fundamentals
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>RAG Implementation
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Agents &amp; Systems</div>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>AI Agents
+                    </a>
+                    <a href="module-11.html" class="sidebar-link active" data-module="11">
+                        <span class="sidebar-link-number">11</span>Context Engineering
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>AI Engineering
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-13.html" class="sidebar-link" data-module="13">
+                        <span class="sidebar-link-number">13</span>Thinking Models
+                    </a>
+                    <a href="module-14.html" class="sidebar-link" data-module="14">
+                        <span class="sidebar-link-number">14</span>Multi-modal Models
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Capstone &amp; Career</div>
+                    <a href="module-15.html" class="sidebar-link" data-module="15">
+                        <span class="sidebar-link-number">15</span>Capstone Project
+                    </a>
+                    <a href="module-16.html" class="sidebar-link" data-module="16">
+                        <span class="sidebar-link-number">16</span>Career Goals
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 11: Context Engineering</h1>
+            <p class="text-muted">Memory Systems, Model Context Protocol (MCP), and Multi-Agent Architectures</p>
+
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Master context window management and token optimization</li>
+                    <li>Implement short-term and long-term memory systems</li>
+                    <li>Build summarization strategies for long conversations</li>
+                    <li>Understand and implement Model Context Protocol (MCP)</li>
+                    <li>Design multi-agent systems with coordination patterns</li>
+                    <li>Build manager-worker agent hierarchies</li>
+                </ul>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 1: CONTEXT WINDOW MANAGEMENT -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">1. Context Window Management</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: linear-gradient(135deg, rgba(79, 172, 254, 0.1), rgba(0, 242, 254, 0.1)); border-left: 4px solid #4facfe;">
+                        <h4>The Filing Cabinet Analogy</h4>
+                        <p>Think of the context window as a <strong>desk with limited space</strong>. You can only have so many documents open at once. When you need a new document, you must decide what to remove. The art of context engineering is deciding:</p>
+                        <ul>
+                            <li><strong>What stays on the desk</strong> (system prompts, critical context)</li>
+                            <li><strong>What goes in the filing cabinet</strong> (long-term memory, vector store)</li>
+                            <li><strong>What gets summarized</strong> (old conversations, verbose documents)</li>
+                            <li><strong>What gets discarded</strong> (irrelevant details)</li>
+                        </ul>
+                    </div>
+
+                    <div class="card mt-2" style="background: linear-gradient(135deg, rgba(17, 153, 142, 0.1), rgba(56, 239, 125, 0.1)); border-left: 4px solid #11998e;">
+                        <h4>The Radio Bandwidth Analogy</h4>
+                        <p>Context window is like <strong>radio bandwidth</strong> - you have a fixed frequency range. If you try to broadcast too much information, signals interfere and quality degrades. Smart context engineering means:</p>
+                        <ul>
+                            <li>Prioritizing high-value signals (relevant context)</li>
+                            <li>Compressing where possible without losing meaning</li>
+                            <li>Filtering out noise (irrelevant information)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>What is a Context Window?</h4>
+                    <p>The context window is the <strong>maximum number of tokens</strong> an LLM can process in a single forward pass. It includes everything: system prompt, conversation history, retrieved documents, and the expected response.</p>
+
+                    <div class="context-viz">
+                        <h4 style="color: white; margin-bottom: 1rem;">Context Window Structure</h4>
+                        <div class="context-window">
+                            <div class="context-block system">System Prompt (500 tokens)</div>
+                            <div class="context-block memory">Long-term Memory Summary (800 tokens)</div>
+                            <div class="context-block retrieved">Retrieved Documents (2000 tokens)</div>
+                            <div class="context-block user">User: Previous messages... (1500 tokens)</div>
+                            <div class="context-block assistant">Assistant: Previous responses... (1200 tokens)</div>
+                            <div class="context-block user">User: Current query (100 tokens)</div>
+                            <div style="color: #a0aec0; text-align: center; padding: 0.5rem;">--- Reserved for Response (2000 tokens) ---</div>
+                        </div>
+                        <div class="token-counter">
+                            <span>6,100 / 8,192 tokens used</span>
+                            <div class="token-bar">
+                                <div class="token-fill" style="width: 74%;"></div>
+                            </div>
+                            <span>74%</span>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Context Window Sizes (2024-2025)</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Model</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Context Window</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Approx. Pages</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Use Case</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">GPT-4 Turbo</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">128K</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~300 pages</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Long document analysis</td></tr>
+                            <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Claude 3.5</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">200K</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~500 pages</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Codebase analysis</td></tr>
+                            <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Gemini 1.5 Pro</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">1M-2M</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~2500+ pages</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Entire repositories</td></tr>
+                            <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Llama 3.1</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">128K</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~300 pages</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Open-source alternative</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h4 class="mt-3">Why Context Engineering Matters</h4>
+                    <div class="card" style="background: var(--error-bg);">
+                        <strong>The "Lost in the Middle" Problem:</strong> Research shows LLMs struggle to use information in the middle of long contexts. Information at the beginning and end is used more effectively. This means naive "stuff everything in" approaches fail.
+                    </div>
+
+                    <h4 class="mt-3">Tradeoffs</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Approach</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pros</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Cons</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Large context, all info</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complete information</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Expensive, slower, lost-in-middle</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Aggressive summarization</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fast, cheap</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Information loss</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">RAG retrieval</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Relevant context only</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">May miss context, retrieval latency</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hybrid approach</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Balanced</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complex to implement</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Math / Theory (Only What Matters)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Token Budget Equation</h4>
+                    <div class="code-block">
+<code>Available Response Tokens = Context Window - (System + Memory + Retrieved + History + Query)
+
+Example for 8K context:
+  System prompt:     500 tokens
+  Memory summary:    800 tokens
+  Retrieved docs:    2000 tokens
+  Conversation:      2700 tokens
+  Current query:     100 tokens
+  -------------------------
+  Total used:        6100 tokens
+  Available:         2092 tokens for response</code>
+                    </div>
+
+                    <h4 class="mt-3">Attention Complexity</h4>
+                    <p>Self-attention is <strong>O(n^2)</strong> where n is sequence length. This is why:</p>
+                    <ul>
+                        <li>Doubling context length = 4x compute cost</li>
+                        <li>128K context uses 16x the memory of 32K</li>
+                        <li>Long contexts need techniques like sparse attention, sliding window</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Attention Cost Growth"
+        A[4K tokens] -->|4x| B[8K tokens]
+        B -->|4x| C[16K tokens]
+        C -->|4x| D[32K tokens]
+    end
+    style A fill:#48bb78
+    style B fill:#f6ad55
+    style C fill:#f56565
+    style D fill:#9f1239
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Information Density Formula</h4>
+                    <div class="code-block">
+<code># Information density = relevant information / total tokens
+# Goal: Maximize this ratio
+
+def calculate_context_efficiency(relevant_tokens, total_tokens, cost_per_token):
+    """
+    Higher is better - more relevant info per dollar spent
+    """
+    density = relevant_tokens / total_tokens
+    cost = total_tokens * cost_per_token
+    efficiency = density / cost
+    return efficiency
+
+# Example: 2000 relevant tokens in 8000 total
+# vs 1800 relevant tokens in 4000 total (after compression)
+efficiency_full = calculate_context_efficiency(2000, 8000, 0.00003)  # Lower
+efficiency_compressed = calculate_context_efficiency(1800, 4000, 0.00003)  # Higher!</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Context Manager</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+<code>import tiktoken
+from dataclasses import dataclass, field
+from typing import List, Optional
+from enum import Enum
+
+class ContextPriority(Enum):
+    CRITICAL = 1    # System prompt - never removed
+    HIGH = 2        # Recent messages, active memory
+    MEDIUM = 3      # Retrieved documents
+    LOW = 4         # Old conversation history
+
+@dataclass
+class ContextBlock:
+    content: str
+    priority: ContextPriority
+    tokens: int = 0
+    metadata: dict = field(default_factory=dict)
+
+    def __post_init__(self):
+        if self.tokens == 0:
+            enc = tiktoken.get_encoding("cl100k_base")
+            self.tokens = len(enc.encode(self.content))
+
+class ContextWindowManager:
+    """
+    Manages context window with priority-based eviction.
+
+    Strategy:
+    1. Always keep CRITICAL blocks
+    2. Summarize or evict LOW priority first
+    3. Track token budget continuously
+    """
+
+    def __init__(self, max_tokens: int = 8192, response_buffer: int = 2000):
+        self.max_tokens = max_tokens
+        self.response_buffer = response_buffer
+        self.available_tokens = max_tokens - response_buffer
+        self.blocks: List[ContextBlock] = []
+        self.encoder = tiktoken.get_encoding("cl100k_base")
+
+    def add_block(self, content: str, priority: ContextPriority,
+                  metadata: dict = None) -> bool:
+        """Add a context block, evicting lower priority if needed."""
+        block = ContextBlock(content, priority, metadata=metadata or {})
+
+        # Check if we need to make room
+        current_usage = sum(b.tokens for b in self.blocks)
+        if current_usage + block.tokens > self.available_tokens:
+            freed = self._evict_for_space(block.tokens)
+            if not freed:
+                return False  # Couldn't make room
+
+        self.blocks.append(block)
+        self._sort_blocks()
+        return True
+
+    def _evict_for_space(self, needed_tokens: int) -> bool:
+        """Evict lowest priority blocks to make room."""
+        # Sort by priority (lowest first for eviction)
+        evictable = [b for b in self.blocks
+                     if b.priority.value > ContextPriority.CRITICAL.value]
+        evictable.sort(key=lambda x: (-x.priority.value, x.tokens))
+
+        freed = 0
+        to_remove = []
+
+        for block in evictable:
+            if freed >= needed_tokens:
+                break
+            to_remove.append(block)
+            freed += block.tokens
+
+        if freed < needed_tokens:
+            return False
+
+        for block in to_remove:
+            self.blocks.remove(block)
+        return True
+
+    def _sort_blocks(self):
+        """Sort blocks: system first, then by priority, then recency."""
+        self.blocks.sort(key=lambda x: (x.priority.value,
+                                        x.metadata.get('timestamp', 0)))
+
+    def build_context(self) -> str:
+        """Build the final context string."""
+        return "\n\n".join(b.content for b in self.blocks)
+
+    def get_usage_stats(self) -> dict:
+        """Return current token usage statistics."""
+        total = sum(b.tokens for b in self.blocks)
+        by_priority = {}
+        for p in ContextPriority:
+            by_priority[p.name] = sum(
+                b.tokens for b in self.blocks if b.priority == p
+            )
+        return {
+            "total_tokens": total,
+            "available_tokens": self.available_tokens,
+            "usage_percent": (total / self.available_tokens) * 100,
+            "by_priority": by_priority,
+            "blocks_count": len(self.blocks)
+        }
+
+
+# Usage Example
+manager = ContextWindowManager(max_tokens=8192)
+
+# Add system prompt (never evicted)
+manager.add_block(
+    "You are a helpful assistant...",
+    ContextPriority.CRITICAL,
+    {"type": "system"}
+)
+
+# Add memory summary
+manager.add_block(
+    "Previous conversation summary: User asked about Python...",
+    ContextPriority.HIGH,
+    {"type": "memory"}
+)
+
+# Add retrieved documents
+manager.add_block(
+    "Document: Python best practices guide...",
+    ContextPriority.MEDIUM,
+    {"type": "retrieved", "source": "docs/python.md"}
+)
+
+# Add conversation history
+for i, msg in enumerate(conversation_history):
+    manager.add_block(
+        f"{msg['role']}: {msg['content']}",
+        ContextPriority.LOW if i < len(conversation_history) - 3
+                            else ContextPriority.HIGH,
+        {"type": "message", "timestamp": i}
+    )
+
+# Build final context
+context = manager.build_context()
+print(manager.get_usage_stats())</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>How Anthropic Claude Does It</h4>
+                    <ul>
+                        <li><strong>200K context</strong> with optimized attention patterns</li>
+                        <li>Uses <strong>sliding window attention</strong> for efficiency</li>
+                        <li>Recommends placing important info at <strong>start and end</strong></li>
+                        <li>System prompts are <strong>cached</strong> for repeated use</li>
+                    </ul>
+
+                    <h4 class="mt-3">How OpenAI Does It</h4>
+                    <ul>
+                        <li><strong>Prompt caching</strong> - reuse common prefixes</li>
+                        <li><strong>Structured outputs</strong> - more efficient token usage</li>
+                        <li>Recommends <strong>clear section markers</strong> in long contexts</li>
+                        <li>Uses <strong>function calling</strong> to reduce context pollution</li>
+                    </ul>
+
+                    <h4 class="mt-3">Production Patterns at Scale</h4>
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Netflix:</strong> Uses context tiering - critical metadata always included, recommendations pulled from vector store only when relevant to query.
+                    </div>
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Notion AI:</strong> Hierarchical summarization - page summaries cached, full content retrieved only when needed.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Common Mistakes</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: var(--error-bg); border-left: 4px solid var(--danger-color);">
+                        <h4>Mistake 1: Stuffing Everything</h4>
+                        <p><strong>Wrong:</strong> "I'll just use 128K context and include everything!"</p>
+                        <p><strong>Why it fails:</strong> Lost-in-the-middle problem, high cost, slow responses.</p>
+                        <p><strong>Fix:</strong> Prioritize and curate context. Less is often more.</p>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--error-bg); border-left: 4px solid var(--danger-color);">
+                        <h4>Mistake 2: Ignoring Token Counting</h4>
+                        <p><strong>Wrong:</strong> Estimating tokens by character count.</p>
+                        <p><strong>Why it fails:</strong> Different tokenizers produce wildly different counts.</p>
+                        <p><strong>Fix:</strong> Always use the model's actual tokenizer (tiktoken for OpenAI).</p>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--error-bg); border-left: 4px solid var(--danger-color);">
+                        <h4>Mistake 3: No Response Buffer</h4>
+                        <p><strong>Wrong:</strong> Using 100% of context for input.</p>
+                        <p><strong>Why it fails:</strong> Model truncates response or errors out.</p>
+                        <p><strong>Fix:</strong> Reserve 20-30% of context for the response.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 2: MEMORY SYSTEMS -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">2. Memory Systems: Short-term and Long-term</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: linear-gradient(135deg, rgba(250, 112, 154, 0.1), rgba(254, 225, 64, 0.1)); border-left: 4px solid #fa709a;">
+                        <h4>Human Memory Analogy</h4>
+                        <p>LLM memory mirrors human memory systems:</p>
+                        <ul>
+                            <li><strong>Working Memory (Context Window)</strong> - What you're actively thinking about right now. Limited capacity (~7 items).</li>
+                            <li><strong>Short-term Memory (Conversation Buffer)</strong> - Recent conversation. Fades without reinforcement.</li>
+                            <li><strong>Long-term Memory (Vector Store)</strong> - Stored knowledge that requires retrieval cue to access.</li>
+                            <li><strong>Episodic Memory</strong> - Specific past interactions ("Remember when we discussed X?")</li>
+                            <li><strong>Semantic Memory</strong> - General knowledge and facts about the user.</li>
+                        </ul>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Memory Hierarchy"
+        WM[Working Memory<br/>Context Window<br/>~8K-200K tokens]
+        STM[Short-term Memory<br/>Recent Messages<br/>Last 10-20 turns]
+        LTM[Long-term Memory<br/>Vector Store<br/>Unlimited]
+    end
+
+    Input[User Input] --> WM
+    WM --> STM
+    STM -->|Summarize & Store| LTM
+    LTM -->|Retrieve Relevant| WM
+
+    style WM fill:#4facfe
+    style STM fill:#11998e
+    style LTM fill:#667eea
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Short-term Memory (Conversation Buffer)</h4>
+                    <p>The immediate conversation context. Strategies include:</p>
+                    <ul>
+                        <li><strong>Buffer Window</strong> - Keep last N messages</li>
+                        <li><strong>Token Buffer</strong> - Keep messages until token limit</li>
+                        <li><strong>Summary Buffer</strong> - Summarize old messages, keep recent</li>
+                    </ul>
+
+                    <h4 class="mt-3">Long-term Memory (Persistent Storage)</h4>
+                    <p>Information that persists across sessions:</p>
+                    <ul>
+                        <li><strong>User Preferences</strong> - Communication style, interests</li>
+                        <li><strong>Facts</strong> - User's name, job, mentioned details</li>
+                        <li><strong>Past Interactions</strong> - What was discussed, decisions made</li>
+                        <li><strong>Entity Memory</strong> - Information about mentioned people, places, things</li>
+                    </ul>
+
+                    <h4 class="mt-3">Memory Retrieval Strategies</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Strategy</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">When to Use</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Recency</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Recent context matters most</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Chat applications</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Relevance (Semantic)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Topic-specific queries</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Q&A systems</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Importance</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Critical facts always needed</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">User preferences</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hybrid</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complex applications</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Personal assistants</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Memory System</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+<code>from dataclasses import dataclass, field
+from datetime import datetime
+from typing import List, Dict, Optional
+import json
+from openai import OpenAI
+import chromadb
+
+@dataclass
+class Memory:
+    content: str
+    memory_type: str  # "fact", "preference", "episode", "entity"
+    importance: float = 0.5
+    timestamp: datetime = field(default_factory=datetime.now)
+    metadata: dict = field(default_factory=dict)
+
+    def to_dict(self):
+        return {
+            "content": self.content,
+            "type": self.memory_type,
+            "importance": self.importance,
+            "timestamp": self.timestamp.isoformat(),
+            "metadata": self.metadata
+        }
+
+class ConversationMemory:
+    """
+    Implements a tiered memory system:
+    1. Buffer (recent messages)
+    2. Summary (compressed history)
+    3. Long-term (vector store)
+    """
+
+    def __init__(self,
+                 buffer_size: int = 10,
+                 summary_threshold: int = 20,
+                 openai_client: OpenAI = None):
+        self.buffer: List[Dict] = []  # Recent messages
+        self.buffer_size = buffer_size
+        self.summary_threshold = summary_threshold
+        self.running_summary = ""
+        self.client = openai_client or OpenAI()
+
+        # Long-term memory with ChromaDB
+        self.chroma_client = chromadb.Client()
+        self.memory_collection = self.chroma_client.create_collection(
+            name="long_term_memory",
+            metadata={"hnsw:space": "cosine"}
+        )
+        self.memories: List[Memory] = []
+
+    def add_message(self, role: str, content: str):
+        """Add a message to the conversation buffer."""
+        self.buffer.append({
+            "role": role,
+            "content": content,
+            "timestamp": datetime.now().isoformat()
+        })
+
+        # Check if we need to summarize
+        if len(self.buffer) >= self.summary_threshold:
+            self._compress_buffer()
+
+    def _compress_buffer(self):
+        """Summarize older messages and extract memories."""
+        # Keep recent messages, summarize the rest
+        to_summarize = self.buffer[:-self.buffer_size]
+        self.buffer = self.buffer[-self.buffer_size:]
+
+        if not to_summarize:
+            return
+
+        # Generate summary
+        messages_text = "\n".join(
+            f"{m['role']}: {m['content']}" for m in to_summarize
+        )
+
+        summary_prompt = f"""Summarize this conversation segment, preserving:
+1. Key decisions made
+2. Important facts mentioned
+3. User preferences expressed
+4. Action items or commitments
+
+Conversation:
+{messages_text}
+
+Previous summary (incorporate if relevant):
+{self.running_summary}
+
+New comprehensive summary:"""
+
+        response = self.client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": summary_prompt}],
+            max_tokens=500
+        )
+
+        self.running_summary = response.choices[0].message.content
+
+        # Extract and store long-term memories
+        self._extract_memories(to_summarize)
+
+    def _extract_memories(self, messages: List[Dict]):
+        """Extract facts, preferences, and entities from messages."""
+        messages_text = "\n".join(
+            f"{m['role']}: {m['content']}" for m in messages
+        )
+
+        extraction_prompt = f"""Extract memorable information from this conversation.
+Return JSON array with objects containing:
+- content: the memory text
+- type: "fact", "preference", "episode", or "entity"
+- importance: 0.0-1.0 score
+
+Conversation:
+{messages_text}
+
+Return only valid JSON array:"""
+
+        response = self.client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": extraction_prompt}],
+            response_format={"type": "json_object"},
+            max_tokens=500
+        )
+
+        try:
+            result = json.loads(response.choices[0].message.content)
+            memories = result.get("memories", [])
+
+            for mem_data in memories:
+                memory = Memory(
+                    content=mem_data["content"],
+                    memory_type=mem_data["type"],
+                    importance=mem_data.get("importance", 0.5)
+                )
+                self._store_memory(memory)
+        except json.JSONDecodeError:
+            pass  # Handle gracefully
+
+    def _store_memory(self, memory: Memory):
+        """Store memory in vector database."""
+        self.memories.append(memory)
+
+        # Add to ChromaDB for semantic retrieval
+        self.memory_collection.add(
+            documents=[memory.content],
+            metadatas=[memory.to_dict()],
+            ids=[f"mem_{len(self.memories)}"]
+        )
+
+    def retrieve_relevant_memories(self, query: str, n_results: int = 5) -> List[str]:
+        """Retrieve memories relevant to the current query."""
+        results = self.memory_collection.query(
+            query_texts=[query],
+            n_results=n_results
+        )
+
+        if results and results['documents']:
+            return results['documents'][0]
+        return []
+
+    def get_context(self, current_query: str) -> str:
+        """Build context from all memory tiers."""
+        context_parts = []
+
+        # Add running summary if exists
+        if self.running_summary:
+            context_parts.append(f"## Conversation History Summary\n{self.running_summary}")
+
+        # Add relevant long-term memories
+        relevant_memories = self.retrieve_relevant_memories(current_query)
+        if relevant_memories:
+            context_parts.append("## Relevant Past Information\n" +
+                               "\n".join(f"- {m}" for m in relevant_memories))
+
+        # Add recent buffer
+        if self.buffer:
+            recent = "\n".join(
+                f"{m['role'].title()}: {m['content']}"
+                for m in self.buffer
+            )
+            context_parts.append(f"## Recent Conversation\n{recent}")
+
+        return "\n\n".join(context_parts)
+
+
+# Usage Example
+memory = ConversationMemory(buffer_size=10)
+
+# Simulate conversation
+memory.add_message("user", "Hi, I'm Alex and I work at Google as an engineer.")
+memory.add_message("assistant", "Nice to meet you Alex! How can I help you today?")
+memory.add_message("user", "I prefer detailed technical explanations over simple ones.")
+memory.add_message("assistant", "Got it! I'll provide in-depth technical details.")
+
+# Later in conversation...
+context = memory.get_context("Can you help with a coding problem?")
+print(context)
+
+# Memories extracted:
+# - Fact: User's name is Alex
+# - Fact: User works at Google as an engineer
+# - Preference: User prefers detailed technical explanations</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 3: SUMMARIZATION STRATEGIES -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">3. Summarization Strategies</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Sliding Window and Compression Techniques</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph "Sliding Window Strategy"
+        M1[Msg 1] --> M2[Msg 2]
+        M2 --> M3[Msg 3]
+        M3 --> M4[Msg 4]
+        M4 --> M5[Msg 5]
+        M5 --> M6[Msg 6]
+
+        M1 -.->|Summarize| S1[Summary 1-3]
+        M2 -.-> S1
+        M3 -.-> S1
+    end
+
+    style M1 fill:#f0f0f0,stroke:#999
+    style M2 fill:#f0f0f0,stroke:#999
+    style M3 fill:#f0f0f0,stroke:#999
+    style M4 fill:#4facfe
+    style M5 fill:#4facfe
+    style M6 fill:#4facfe
+    style S1 fill:#11998e
+                        </div>
+                    </div>
+
+                    <h4>Strategy 1: Rolling Summary</h4>
+                    <div class="code-block">
+<code>class RollingSummaryBuffer:
+    """
+    Maintains a rolling summary that incorporates old messages.
+    New messages are kept verbatim until threshold, then summarized.
+    """
+
+    def __init__(self, max_tokens: int = 2000,
+                 summary_ratio: float = 0.3):
+        self.max_tokens = max_tokens
+        self.summary_tokens = int(max_tokens * summary_ratio)
+        self.buffer_tokens = max_tokens - self.summary_tokens
+        self.summary = ""
+        self.recent_messages = []
+
+    def add_message(self, message: dict):
+        self.recent_messages.append(message)
+
+        # Check if we need to summarize
+        current_tokens = self._count_tokens(self.recent_messages)
+        if current_tokens > self.buffer_tokens:
+            self._roll_summary()
+
+    def _roll_summary(self):
+        # Take oldest half of messages to summarize
+        to_summarize = self.recent_messages[:len(self.recent_messages)//2]
+        self.recent_messages = self.recent_messages[len(self.recent_messages)//2:]
+
+        # Create new summary incorporating old
+        new_summary = self._generate_summary(to_summarize, self.summary)
+        self.summary = new_summary
+
+    def _generate_summary(self, messages, previous_summary):
+        prompt = f"""Create a concise summary that captures key information.
+
+Previous context: {previous_summary}
+
+New messages to incorporate:
+{self._format_messages(messages)}
+
+Updated summary (be concise, preserve important details):"""
+
+        # Call LLM for summary
+        return self._call_llm(prompt)</code>
+                    </div>
+
+                    <h4 class="mt-3">Strategy 2: Hierarchical Summarization</h4>
+                    <p>For very long conversations, use multi-level summaries:</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Level 0: Raw Messages"
+        M1[1-10]
+        M2[11-20]
+        M3[21-30]
+        M4[31-40]
+    end
+
+    subgraph "Level 1: Chunk Summaries"
+        S1[Summary 1-20]
+        S2[Summary 21-40]
+    end
+
+    subgraph "Level 2: Meta Summary"
+        MS[Overall Summary]
+    end
+
+    M1 --> S1
+    M2 --> S1
+    M3 --> S2
+    M4 --> S2
+    S1 --> MS
+    S2 --> MS
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<code>class HierarchicalSummarizer:
+    """
+    Creates multi-level summaries for very long conversations.
+    Useful for conversations with 100+ turns.
+    """
+
+    def __init__(self, chunk_size: int = 20):
+        self.chunk_size = chunk_size
+        self.level_0_chunks = []  # Raw message chunks
+        self.level_1_summaries = []  # Chunk summaries
+        self.level_2_summary = ""  # Meta summary
+
+    def add_messages(self, messages: List[dict]):
+        """Process a batch of messages."""
+        # Chunk messages
+        for i in range(0, len(messages), self.chunk_size):
+            chunk = messages[i:i + self.chunk_size]
+            self.level_0_chunks.append(chunk)
+
+            # Generate chunk summary
+            chunk_summary = self._summarize_chunk(chunk)
+            self.level_1_summaries.append(chunk_summary)
+
+        # Update meta summary if we have multiple chunks
+        if len(self.level_1_summaries) > 1:
+            self._update_meta_summary()
+
+    def _summarize_chunk(self, chunk: List[dict]) -> str:
+        prompt = f"""Summarize this conversation segment:
+
+{self._format_messages(chunk)}
+
+Summary (2-3 sentences, key points only):"""
+        return self._call_llm(prompt)
+
+    def _update_meta_summary(self):
+        prompt = f"""Create an overall summary from these segment summaries:
+
+{chr(10).join(f"Segment {i+1}: {s}" for i, s in enumerate(self.level_1_summaries))}
+
+Overall summary (capture main themes, decisions, and outcomes):"""
+        self.level_2_summary = self._call_llm(prompt)
+
+    def get_context(self, detail_level: str = "medium") -> str:
+        """
+        Get context at different detail levels:
+        - "high": All chunks + summaries
+        - "medium": Recent chunks + meta summary
+        - "low": Meta summary only
+        """
+        if detail_level == "low":
+            return self.level_2_summary
+        elif detail_level == "medium":
+            recent_chunks = self.level_0_chunks[-2:]
+            return f"""Overall Context:
+{self.level_2_summary}
+
+Recent Conversation:
+{self._format_chunks(recent_chunks)}"""
+        else:
+            return f"""Meta Summary:
+{self.level_2_summary}
+
+Segment Summaries:
+{chr(10).join(self.level_1_summaries)}
+
+Recent Messages:
+{self._format_chunks(self.level_0_chunks[-1:])}"""</code>
+                    </div>
+
+                    <h4 class="mt-3">Strategy 3: Semantic Compression</h4>
+                    <div class="code-block">
+<code>def semantic_compress(text: str, target_ratio: float = 0.5) -> str:
+    """
+    Compress text while preserving semantic meaning.
+    Uses extractive + abstractive summarization.
+    """
+    prompt = f"""Compress the following text to approximately {int(target_ratio * 100)}%
+of its length while preserving ALL important information:
+
+1. Keep all facts, numbers, names, and decisions
+2. Remove redundancy and filler words
+3. Use concise language
+4. Maintain logical flow
+
+Original text:
+{text}
+
+Compressed version:"""
+
+    return call_llm(prompt)
+
+
+def selective_compression(messages: List[dict]) -> List[dict]:
+    """
+    Selectively compress messages based on importance.
+    Recent and high-importance messages kept intact.
+    """
+    compressed = []
+
+    for i, msg in enumerate(messages):
+        is_recent = i >= len(messages) - 5
+        is_important = _assess_importance(msg) > 0.7
+
+        if is_recent or is_important:
+            compressed.append(msg)  # Keep intact
+        else:
+            # Compress to key points
+            compressed.append({
+                "role": msg["role"],
+                "content": f"[Summary: {_extract_key_point(msg['content'])}]"
+            })
+
+    return compressed</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 4: MODEL CONTEXT PROTOCOL (MCP) -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">4. Model Context Protocol (MCP)</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border-left: 4px solid #667eea;">
+                        <h4>The USB Standard Analogy</h4>
+                        <p>MCP is like <strong>USB for AI applications</strong>. Before USB, every device had a proprietary connector. MCP standardizes how AI models connect to external data sources and tools.</p>
+                        <ul>
+                            <li><strong>Without MCP:</strong> Custom integration for each data source (like proprietary cables)</li>
+                            <li><strong>With MCP:</strong> One protocol, many connections (like USB ports)</li>
+                        </ul>
+                    </div>
+
+                    <div class="card mt-2" style="background: linear-gradient(135deg, rgba(240, 147, 251, 0.1), rgba(245, 87, 108, 0.1)); border-left: 4px solid #f093fb;">
+                        <h4>The Restaurant Kitchen Analogy</h4>
+                        <p>Think of MCP as a <strong>standardized order ticket system</strong>:</p>
+                        <ul>
+                            <li><strong>MCP Client (Waiter)</strong> - Takes orders from customers (AI model)</li>
+                            <li><strong>MCP Server (Kitchen)</strong> - Fulfills requests (data sources, tools)</li>
+                            <li><strong>Resources</strong> - Menu items available (files, APIs, databases)</li>
+                            <li><strong>Tools</strong> - Kitchen equipment (functions the server can execute)</li>
+                            <li><strong>Prompts</strong> - Chef's specials (pre-defined templates)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: MCP Architecture</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>What is MCP?</h4>
+                    <p><strong>Model Context Protocol</strong> is an open standard created by Anthropic that defines how AI applications can securely connect to external data sources and tools. It solves the "N x M integration problem" - instead of building custom integrations between N apps and M data sources, you build one MCP implementation.</p>
+
+                    <div class="mcp-diagram">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Host Application"
+        Claude[Claude Desktop / IDE]
+        Client1[MCP Client 1]
+        Client2[MCP Client 2]
+    end
+
+    subgraph "MCP Servers"
+        S1[File System Server]
+        S2[Database Server]
+        S3[API Server]
+        S4[Custom Server]
+    end
+
+    subgraph "Data Sources"
+        FS[(Local Files)]
+        DB[(PostgreSQL)]
+        API[REST APIs]
+        Custom[Custom Systems]
+    end
+
+    Claude --> Client1
+    Claude --> Client2
+    Client1 <-->|MCP Protocol| S1
+    Client1 <-->|MCP Protocol| S2
+    Client2 <-->|MCP Protocol| S3
+    Client2 <-->|MCP Protocol| S4
+
+    S1 --> FS
+    S2 --> DB
+    S3 --> API
+    S4 --> Custom
+
+    style Claude fill:#667eea
+    style Client1 fill:#4facfe
+    style Client2 fill:#4facfe
+    style S1 fill:#11998e
+    style S2 fill:#11998e
+    style S3 fill:#11998e
+    style S4 fill:#11998e
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">MCP Components</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Component</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Description</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Resources</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Data the server exposes (read-only)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Files, database records, API responses</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Tools</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Functions the server can execute</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Create file, run query, send message</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Prompts</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Pre-defined prompt templates</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Code review template, analysis prompt</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Sampling</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Server requests LLM completions</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Agentic behaviors within server</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 class="mt-3">Communication Flow</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant Host as Host (Claude)
+    participant Client as MCP Client
+    participant Server as MCP Server
+    participant Data as Data Source
+
+    Host->>Client: User asks about project files
+    Client->>Server: list_resources()
+    Server->>Data: Read directory
+    Data-->>Server: File list
+    Server-->>Client: Resource list
+    Client-->>Host: Available files
+
+    Host->>Client: Read specific file
+    Client->>Server: read_resource(uri)
+    Server->>Data: Read file content
+    Data-->>Server: File content
+    Server-->>Client: Resource content
+    Client-->>Host: File content for context
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Building an MCP Server</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Basic MCP Server Structure</h4>
+                    <div class="code-block">
+<code># mcp_server.py - A complete MCP server example
+import asyncio
+import json
+from typing import Any
+from mcp.server import Server, NotificationOptions
+from mcp.server.models import InitializationOptions
+from mcp.server.stdio import stdio_server
+from mcp.types import (
+    Resource,
+    Tool,
+    TextContent,
+    ImageContent,
+    EmbeddedResource,
+)
+import mcp.types as types
+
+# Create server instance
+server = Server("my-mcp-server")
+
+
+# ============================================
+# RESOURCES: Data the server exposes
+# ============================================
+
+@server.list_resources()
+async def list_resources() -> list[Resource]:
+    """List available resources."""
+    return [
+        Resource(
+            uri="file:///project/readme.md",
+            name="Project README",
+            description="Main project documentation",
+            mimeType="text/markdown"
+        ),
+        Resource(
+            uri="db://users/recent",
+            name="Recent Users",
+            description="Last 10 registered users",
+            mimeType="application/json"
+        ),
+        Resource(
+            uri="metrics://dashboard/today",
+            name="Today's Metrics",
+            description="Current day's performance metrics",
+            mimeType="application/json"
+        )
+    ]
+
+
+@server.read_resource()
+async def read_resource(uri: str) -> str:
+    """Read a specific resource by URI."""
+    if uri == "file:///project/readme.md":
+        # Read actual file
+        with open("/project/readme.md", "r") as f:
+            return f.read()
+
+    elif uri == "db://users/recent":
+        # Query database
+        users = await fetch_recent_users()
+        return json.dumps(users, indent=2)
+
+    elif uri == "metrics://dashboard/today":
+        # Fetch metrics
+        metrics = await fetch_todays_metrics()
+        return json.dumps(metrics, indent=2)
+
+    raise ValueError(f"Unknown resource: {uri}")
+
+
+# ============================================
+# TOOLS: Functions the server can execute
+# ============================================
+
+@server.list_tools()
+async def list_tools() -> list[Tool]:
+    """List available tools."""
+    return [
+        Tool(
+            name="create_file",
+            description="Create a new file with given content",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "File path to create"
+                    },
+                    "content": {
+                        "type": "string",
+                        "description": "Content to write"
+                    }
+                },
+                "required": ["path", "content"]
+            }
+        ),
+        Tool(
+            name="run_query",
+            description="Execute a read-only SQL query",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "SQL SELECT query"
+                    }
+                },
+                "required": ["query"]
+            }
+        ),
+        Tool(
+            name="send_notification",
+            description="Send a notification to a user",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "string"},
+                    "message": {"type": "string"},
+                    "channel": {
+                        "type": "string",
+                        "enum": ["email", "slack", "sms"]
+                    }
+                },
+                "required": ["user_id", "message", "channel"]
+            }
+        )
+    ]
+
+
+@server.call_tool()
+async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+    """Execute a tool with given arguments."""
+
+    if name == "create_file":
+        path = arguments["path"]
+        content = arguments["content"]
+
+        # Security check
+        if not path.startswith("/allowed/"):
+            return [TextContent(
+                type="text",
+                text=f"Error: Path {path} is not in allowed directory"
+            )]
+
+        with open(path, "w") as f:
+            f.write(content)
+
+        return [TextContent(
+            type="text",
+            text=f"Successfully created file: {path}"
+        )]
+
+    elif name == "run_query":
+        query = arguments["query"]
+
+        # Security: only allow SELECT
+        if not query.strip().upper().startswith("SELECT"):
+            return [TextContent(
+                type="text",
+                text="Error: Only SELECT queries are allowed"
+            )]
+
+        results = await execute_query(query)
+        return [TextContent(
+            type="text",
+            text=json.dumps(results, indent=2)
+        )]
+
+    elif name == "send_notification":
+        user_id = arguments["user_id"]
+        message = arguments["message"]
+        channel = arguments["channel"]
+
+        success = await send_notification(user_id, message, channel)
+        return [TextContent(
+            type="text",
+            text=f"Notification sent via {channel}: {success}"
+        )]
+
+    raise ValueError(f"Unknown tool: {name}")
+
+
+# ============================================
+# PROMPTS: Pre-defined prompt templates
+# ============================================
+
+@server.list_prompts()
+async def list_prompts() -> list[types.Prompt]:
+    """List available prompt templates."""
+    return [
+        types.Prompt(
+            name="code_review",
+            description="Review code for best practices",
+            arguments=[
+                types.PromptArgument(
+                    name="code",
+                    description="Code to review",
+                    required=True
+                ),
+                types.PromptArgument(
+                    name="language",
+                    description="Programming language",
+                    required=False
+                )
+            ]
+        )
+    ]
+
+
+@server.get_prompt()
+async def get_prompt(
+    name: str,
+    arguments: dict | None
+) -> types.GetPromptResult:
+    """Get a specific prompt with arguments filled in."""
+
+    if name == "code_review":
+        code = arguments.get("code", "")
+        language = arguments.get("language", "unknown")
+
+        return types.GetPromptResult(
+            description=f"Code review for {language}",
+            messages=[
+                types.PromptMessage(
+                    role="user",
+                    content=types.TextContent(
+                        type="text",
+                        text=f"""Please review this {language} code for:
+1. Best practices and patterns
+2. Potential bugs or issues
+3. Performance concerns
+4. Security vulnerabilities
+5. Suggestions for improvement
+
+Code to review:
+```{language}
+{code}
+```"""
+                    )
+                )
+            ]
+        )
+
+    raise ValueError(f"Unknown prompt: {name}")
+
+
+# ============================================
+# SERVER STARTUP
+# ============================================
+
+async def main():
+    """Run the MCP server."""
+    async with stdio_server() as (read_stream, write_stream):
+        await server.run(
+            read_stream,
+            write_stream,
+            InitializationOptions(
+                server_name="my-mcp-server",
+                server_version="1.0.0",
+                capabilities=server.get_capabilities(
+                    notification_options=NotificationOptions(),
+                    experimental_capabilities={}
+                )
+            )
+        )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())</code>
+                    </div>
+
+                    <h4 class="mt-3">MCP Client Integration</h4>
+                    <div class="code-block">
+<code># mcp_client.py - Connecting to MCP servers
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+async def connect_to_mcp_server():
+    """Connect to an MCP server and use its capabilities."""
+
+    server_params = StdioServerParameters(
+        command="python",
+        args=["mcp_server.py"],
+        env=None
+    )
+
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            # Initialize the connection
+            await session.initialize()
+
+            # List available resources
+            resources = await session.list_resources()
+            print("Available resources:")
+            for resource in resources.resources:
+                print(f"  - {resource.name}: {resource.uri}")
+
+            # Read a resource
+            content = await session.read_resource("file:///project/readme.md")
+            print(f"\nREADME content:\n{content.contents[0].text[:200]}...")
+
+            # List available tools
+            tools = await session.list_tools()
+            print("\nAvailable tools:")
+            for tool in tools.tools:
+                print(f"  - {tool.name}: {tool.description}")
+
+            # Call a tool
+            result = await session.call_tool(
+                "run_query",
+                {"query": "SELECT * FROM users LIMIT 5"}
+            )
+            print(f"\nQuery result:\n{result.content[0].text}")
+
+            # Get a prompt template
+            prompt = await session.get_prompt(
+                "code_review",
+                {"code": "def foo(): pass", "language": "python"}
+            )
+            print(f"\nGenerated prompt:\n{prompt.messages[0].content.text}")</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights: MCP in Production</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>How Anthropic Uses MCP</h4>
+                    <ul>
+                        <li><strong>Claude Desktop</strong> - Ships with MCP support, can connect to local file systems, databases</li>
+                        <li><strong>Reference Servers</strong> - Open source implementations for GitHub, Slack, Google Drive</li>
+                        <li><strong>Security Model</strong> - Servers run locally, user controls what's exposed</li>
+                    </ul>
+
+                    <h4 class="mt-3">Production MCP Patterns</h4>
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Pattern: Federated MCP</strong>
+                        <p>Large organizations run multiple MCP servers, each owning specific data domains:</p>
+                        <ul>
+                            <li>mcp-engineering: Code repos, CI/CD, documentation</li>
+                            <li>mcp-analytics: Metrics, dashboards, reports</li>
+                            <li>mcp-customer: CRM, support tickets, user data</li>
+                        </ul>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Pattern: MCP Gateway</strong>
+                        <p>Single entry point that routes to appropriate MCP servers based on request type. Adds authentication, rate limiting, and logging.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 5: MULTI-AGENT SYSTEMS -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">5. Multi-Agent Systems</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1)); border-left: 4px solid #ffd700;">
+                        <h4>The Software Team Analogy</h4>
+                        <p>Multi-agent systems are like <strong>software engineering teams</strong>:</p>
+                        <ul>
+                            <li><strong>Tech Lead (Manager Agent)</strong> - Breaks down tasks, assigns work, reviews output</li>
+                            <li><strong>Backend Engineer (Code Agent)</strong> - Writes and reviews code</li>
+                            <li><strong>Data Scientist (Research Agent)</strong> - Analyzes data, finds patterns</li>
+                            <li><strong>QA Engineer (Critic Agent)</strong> - Tests, finds bugs, validates quality</li>
+                            <li><strong>Technical Writer (Documentation Agent)</strong> - Creates docs, explains decisions</li>
+                        </ul>
+                    </div>
+
+                    <div class="context-viz">
+                        <h4 style="color: white; margin-bottom: 1rem;">Multi-Agent Team Structure</h4>
+                        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
+                            <div class="agent-card manager">
+                                <strong>Manager</strong><br>
+                                <small>Orchestrates</small>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: 1rem;">
+                            <div class="agent-card worker">
+                                <strong>Coder</strong><br>
+                                <small>Implements</small>
+                            </div>
+                            <div class="agent-card worker">
+                                <strong>Researcher</strong><br>
+                                <small>Investigates</small>
+                            </div>
+                            <div class="agent-card worker">
+                                <strong>Critic</strong><br>
+                                <small>Reviews</small>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: 1rem;">
+                            <div class="agent-card specialist">
+                                <strong>SQL Expert</strong><br>
+                                <small>Specialist</small>
+                            </div>
+                            <div class="agent-card specialist">
+                                <strong>Security</strong><br>
+                                <small>Specialist</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: Coordination Patterns</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Agent Coordination Patterns</h4>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "1. Hierarchical (Manager-Worker)"
+        M1[Manager] --> W1[Worker 1]
+        M1 --> W2[Worker 2]
+        M1 --> W3[Worker 3]
+    end
+
+    subgraph "2. Sequential (Pipeline)"
+        A1[Agent 1] --> A2[Agent 2]
+        A2 --> A3[Agent 3]
+    end
+
+    subgraph "3. Debate (Adversarial)"
+        P[Proposer] <--> C[Critic]
+        P --> J[Judge]
+        C --> J
+    end
+
+    subgraph "4. Ensemble (Voting)"
+        E1[Agent 1] --> V[Vote]
+        E2[Agent 2] --> V
+        E3[Agent 3] --> V
+    end
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Pattern Comparison</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pattern</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Best For</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Drawback</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hierarchical</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complex tasks with clear subtasks</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Single point of failure (manager)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Sequential</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Multi-stage processing</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">No parallelism, error propagation</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Debate</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Improving quality, catching errors</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Expensive (multiple calls)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Ensemble</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">High-stakes decisions</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">3x+ cost, consensus challenges</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Multi-Agent System</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Manager-Worker Pattern Implementation</h4>
+                    <div class="code-block">
+<code>from dataclasses import dataclass
+from typing import List, Dict, Any, Callable
+from enum import Enum
+from openai import OpenAI
+import json
+
+class AgentRole(Enum):
+    MANAGER = "manager"
+    CODER = "coder"
+    RESEARCHER = "researcher"
+    CRITIC = "critic"
+
+@dataclass
+class Task:
+    id: str
+    description: str
+    assigned_to: AgentRole
+    status: str = "pending"
+    result: str = ""
+    dependencies: List[str] = None
+
+@dataclass
+class Agent:
+    role: AgentRole
+    system_prompt: str
+    model: str = "gpt-4o"
+
+    def __post_init__(self):
+        self.client = OpenAI()
+        self.conversation_history = []
+
+    def execute(self, task: str, context: str = "") -> str:
+        """Execute a task and return the result."""
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+        ]
+
+        if context:
+            messages.append({
+                "role": "user",
+                "content": f"Context from other agents:\n{context}"
+            })
+
+        messages.append({"role": "user", "content": task})
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            temperature=0.7
+        )
+
+        return response.choices[0].message.content
+
+
+class MultiAgentOrchestrator:
+    """
+    Orchestrates a team of agents using manager-worker pattern.
+    """
+
+    def __init__(self):
+        self.agents = self._create_agents()
+        self.tasks: List[Task] = []
+        self.results: Dict[str, str] = {}
+
+    def _create_agents(self) -> Dict[AgentRole, Agent]:
+        return {
+            AgentRole.MANAGER: Agent(
+                role=AgentRole.MANAGER,
+                system_prompt="""You are a project manager AI. Your job is to:
+1. Break down complex requests into subtasks
+2. Assign tasks to appropriate team members (coder, researcher, critic)
+3. Review and synthesize results
+4. Ensure quality and completeness
+
+When breaking down tasks, return JSON:
+{
+    "tasks": [
+        {"id": "1", "description": "...", "assigned_to": "coder|researcher|critic", "dependencies": []}
+    ]
+}
+
+When synthesizing, provide a coherent final answer."""
+            ),
+
+            AgentRole.CODER: Agent(
+                role=AgentRole.CODER,
+                system_prompt="""You are an expert programmer. You:
+1. Write clean, efficient, well-documented code
+2. Follow best practices and design patterns
+3. Include error handling and edge cases
+4. Explain your implementation decisions
+
+Always provide working code with clear comments."""
+            ),
+
+            AgentRole.RESEARCHER: Agent(
+                role=AgentRole.RESEARCHER,
+                system_prompt="""You are a research analyst. You:
+1. Gather and synthesize information
+2. Identify key patterns and insights
+3. Provide well-sourced analysis
+4. Present findings clearly
+
+Be thorough but concise in your research."""
+            ),
+
+            AgentRole.CRITIC: Agent(
+                role=AgentRole.CRITIC,
+                system_prompt="""You are a critical reviewer. You:
+1. Identify bugs, errors, and inconsistencies
+2. Suggest improvements and alternatives
+3. Verify correctness and completeness
+4. Challenge assumptions
+
+Be constructive but thorough in your criticism."""
+            )
+        }
+
+    async def process_request(self, user_request: str) -> str:
+        """Process a user request using the multi-agent team."""
+
+        # Step 1: Manager breaks down the task
+        breakdown_prompt = f"""Break down this request into subtasks:
+
+Request: {user_request}
+
+Identify what needs to be done and who should do it.
+Return the task breakdown as JSON."""
+
+        breakdown = self.agents[AgentRole.MANAGER].execute(breakdown_prompt)
+
+        try:
+            task_data = json.loads(breakdown)
+            self.tasks = [
+                Task(
+                    id=t["id"],
+                    description=t["description"],
+                    assigned_to=AgentRole[t["assigned_to"].upper()],
+                    dependencies=t.get("dependencies", [])
+                )
+                for t in task_data["tasks"]
+            ]
+        except (json.JSONDecodeError, KeyError):
+            # Fallback: treat as single task
+            self.tasks = [Task("1", user_request, AgentRole.CODER)]
+
+        # Step 2: Execute tasks in dependency order
+        completed = set()
+        while len(completed) < len(self.tasks):
+            for task in self.tasks:
+                if task.id in completed:
+                    continue
+
+                # Check dependencies
+                deps_met = all(d in completed for d in (task.dependencies or []))
+                if not deps_met:
+                    continue
+
+                # Build context from dependencies
+                context = "\n".join(
+                    f"Result of task {d}: {self.results.get(d, '')}"
+                    for d in (task.dependencies or [])
+                )
+
+                # Execute task
+                agent = self.agents[task.assigned_to]
+                result = agent.execute(task.description, context)
+
+                task.result = result
+                task.status = "completed"
+                self.results[task.id] = result
+                completed.add(task.id)
+
+        # Step 3: Manager synthesizes results
+        synthesis_prompt = f"""Synthesize these results into a final answer:
+
+Original request: {user_request}
+
+Task results:
+{json.dumps({t.id: {"task": t.description, "result": t.result} for t in self.tasks}, indent=2)}
+
+Provide a coherent, complete response to the original request."""
+
+        final_answer = self.agents[AgentRole.MANAGER].execute(synthesis_prompt)
+
+        return final_answer
+
+
+# Usage Example
+async def main():
+    orchestrator = MultiAgentOrchestrator()
+
+    result = await orchestrator.process_request(
+        "Create a Python function to fetch and analyze stock prices, "
+        "including error handling and a simple moving average calculation."
+    )
+
+    print(result)
+
+# Task breakdown example:
+# 1. Researcher: Research best APIs for stock data
+# 2. Coder: Implement fetch function (depends on 1)
+# 3. Coder: Implement moving average (depends on 2)
+# 4. Critic: Review code for bugs (depends on 2, 3)
+# Manager synthesizes into final answer</code>
+                    </div>
+
+                    <h4 class="mt-3">Debate Pattern Implementation</h4>
+                    <div class="code-block">
+<code>class DebateOrchestrator:
+    """
+    Implements debate pattern where agents argue and a judge decides.
+    Improves quality through adversarial refinement.
+    """
+
+    def __init__(self, max_rounds: int = 3):
+        self.max_rounds = max_rounds
+        self.proposer = Agent(
+            role=AgentRole.CODER,
+            system_prompt="""You are proposing solutions. Present your best answer.
+When given criticism, defend good points and improve weak ones."""
+        )
+        self.critic = Agent(
+            role=AgentRole.CRITIC,
+            system_prompt="""You are a critical reviewer. Find flaws, suggest improvements.
+Be specific about what's wrong and how to fix it."""
+        )
+        self.judge = Agent(
+            role=AgentRole.MANAGER,
+            system_prompt="""You are an impartial judge. Given a proposal and criticism:
+1. Evaluate the validity of criticisms
+2. Assess if the proposal adequately addresses concerns
+3. Decide if more refinement is needed or if we have a good solution
+Return JSON: {"decision": "accept|refine", "reasoning": "...", "final_answer": "..."}"""
+        )
+
+    async def debate(self, question: str) -> str:
+        """Run a debate to arrive at a high-quality answer."""
+
+        # Initial proposal
+        proposal = self.proposer.execute(question)
+
+        for round_num in range(self.max_rounds):
+            # Critic reviews
+            criticism = self.critic.execute(
+                f"Review this answer to '{question}':\n\n{proposal}"
+            )
+
+            # Judge evaluates
+            judgment = self.judge.execute(
+                f"""Question: {question}
+
+Proposal: {proposal}
+
+Criticism: {criticism}
+
+Should we accept this answer or refine it?"""
+            )
+
+            try:
+                result = json.loads(judgment)
+                if result["decision"] == "accept":
+                    return result.get("final_answer", proposal)
+
+                # Proposer refines based on criticism
+                proposal = self.proposer.execute(
+                    f"""Your previous answer was criticized:
+
+Original question: {question}
+Your answer: {proposal}
+Criticism: {criticism}
+Judge's feedback: {result.get('reasoning', '')}
+
+Provide an improved answer addressing the valid criticisms."""
+                )
+
+            except json.JSONDecodeError:
+                # If judge response isn't valid JSON, continue debate
+                continue
+
+        return proposal  # Return last proposal after max rounds
+
+
+# Usage
+debate = DebateOrchestrator(max_rounds=3)
+answer = await debate.debate(
+    "What's the best way to handle database migrations in a microservices architecture?"
+)</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>AutoGen and CrewAI Patterns</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>AutoGen Pattern (Microsoft)</h4>
+                    <div class="code-block">
+<code># AutoGen-style multi-agent conversation
+from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager
+
+# Create agents
+coder = AssistantAgent(
+    name="Coder",
+    system_message="You are a Python expert. Write clean, efficient code.",
+    llm_config={"model": "gpt-4o"}
+)
+
+reviewer = AssistantAgent(
+    name="Reviewer",
+    system_message="You review code for bugs, security issues, and improvements.",
+    llm_config={"model": "gpt-4o"}
+)
+
+user_proxy = UserProxyAgent(
+    name="User",
+    human_input_mode="NEVER",  # Automated
+    code_execution_config={"work_dir": "coding"}
+)
+
+# Create group chat
+group_chat = GroupChat(
+    agents=[user_proxy, coder, reviewer],
+    messages=[],
+    max_round=10
+)
+
+manager = GroupChatManager(groupchat=group_chat)
+
+# Start conversation
+user_proxy.initiate_chat(
+    manager,
+    message="Create a REST API endpoint for user authentication with JWT."
+)</code>
+                    </div>
+
+                    <h4 class="mt-3">CrewAI Pattern</h4>
+                    <div class="code-block">
+<code># CrewAI-style task-based agents
+from crewai import Agent, Task, Crew, Process
+
+# Define agents with roles
+researcher = Agent(
+    role="Senior Research Analyst",
+    goal="Uncover cutting-edge developments in AI",
+    backstory="Expert at finding and analyzing emerging tech trends.",
+    verbose=True,
+    llm="gpt-4o"
+)
+
+writer = Agent(
+    role="Tech Content Writer",
+    goal="Create engaging content about tech discoveries",
+    backstory="Skilled at making complex topics accessible.",
+    verbose=True,
+    llm="gpt-4o"
+)
+
+# Define tasks
+research_task = Task(
+    description="Research the latest developments in AI agents for 2024",
+    agent=researcher,
+    expected_output="A comprehensive report on AI agent trends"
+)
+
+writing_task = Task(
+    description="Write a blog post based on the research findings",
+    agent=writer,
+    expected_output="A 1000-word blog post",
+    context=[research_task]  # Depends on research
+)
+
+# Create crew
+crew = Crew(
+    agents=[researcher, writer],
+    tasks=[research_task, writing_task],
+    process=Process.sequential,  # or Process.hierarchical
+    verbose=True
+)
+
+# Execute
+result = crew.kickoff()</code>
+                    </div>
+
+                    <h4 class="mt-3">Key Differences</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Feature</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">AutoGen</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">CrewAI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Paradigm</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Conversation-based</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Task-based</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Flexibility</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">High (free-form chat)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Structured (defined tasks)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Code Execution</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Built-in sandbox</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Tool-based</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Best For</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complex coding tasks</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Business workflows</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Common Mistakes</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: var(--error-bg); border-left: 4px solid var(--danger-color);">
+                        <h4>Mistake 1: Over-Engineering Agent Teams</h4>
+                        <p><strong>Wrong:</strong> Creating 10 specialized agents for a simple task.</p>
+                        <p><strong>Why it fails:</strong> Coordination overhead exceeds benefits. More agents = more latency, cost, and failure points.</p>
+                        <p><strong>Fix:</strong> Start with 1 agent. Add more only when single-agent clearly fails.</p>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--error-bg); border-left: 4px solid var(--danger-color);">
+                        <h4>Mistake 2: No Termination Condition</h4>
+                        <p><strong>Wrong:</strong> Agents keep debating/refining forever.</p>
+                        <p><strong>Why it fails:</strong> Infinite loops, runaway costs.</p>
+                        <p><strong>Fix:</strong> Always set max_rounds, timeout, or convergence criteria.</p>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--error-bg); border-left: 4px solid var(--danger-color);">
+                        <h4>Mistake 3: Poor Context Sharing</h4>
+                        <p><strong>Wrong:</strong> Each agent starts fresh without previous results.</p>
+                        <p><strong>Why it fails:</strong> Agents repeat work, miss context, give inconsistent answers.</p>
+                        <p><strong>Fix:</strong> Design explicit context passing between agents.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- ACTIVE RECALL QUESTIONS -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">Active Recall Questions</h2>
+
+            <details class="recall-question">
+                <summary>1. What is the "lost in the middle" problem and how do you mitigate it?</summary>
+                <div class="answer">
+                    <p><strong>Answer:</strong> LLMs struggle to effectively use information placed in the middle of long contexts - they better utilize information at the beginning and end. Mitigation strategies:</p>
+                    <ul>
+                        <li>Place important information at the start and end of the context</li>
+                        <li>Use clear section headers and delimiters</li>
+                        <li>Summarize middle content or use RAG to retrieve only relevant parts</li>
+                        <li>Break long contexts into multiple calls with focused context each</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>2. Explain the difference between short-term and long-term memory in LLM applications.</summary>
+                <div class="answer">
+                    <p><strong>Short-term memory:</strong> The immediate conversation buffer - recent messages kept in context. Implemented as a sliding window of messages, limited by context size. Fades when not reinforced.</p>
+                    <p><strong>Long-term memory:</strong> Persistent storage across sessions - facts, preferences, past interactions stored in vector databases. Requires explicit retrieval based on relevance to current query. Persists indefinitely.</p>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>3. What are the four main components of MCP and what does each do?</summary>
+                <div class="answer">
+                    <ul>
+                        <li><strong>Resources:</strong> Data the server exposes for reading (files, database records, API responses)</li>
+                        <li><strong>Tools:</strong> Functions the server can execute (create file, run query, send message)</li>
+                        <li><strong>Prompts:</strong> Pre-defined prompt templates with parameters (code review template)</li>
+                        <li><strong>Sampling:</strong> Allows server to request LLM completions for agentic behaviors</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>4. When would you use the debate pattern vs. hierarchical pattern for multi-agent systems?</summary>
+                <div class="answer">
+                    <p><strong>Debate pattern:</strong> Use when quality and correctness are paramount. Good for high-stakes decisions, catching errors, refining answers. Trade-off: Higher cost (multiple rounds of critique/refinement).</p>
+                    <p><strong>Hierarchical pattern:</strong> Use when tasks can be cleanly decomposed into subtasks. Good for complex projects with clear division of labor. Trade-off: Single point of failure (manager), requires good task decomposition.</p>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>5. What is the token budget equation and why does the response buffer matter?</summary>
+                <div class="answer">
+                    <p><strong>Token Budget Equation:</strong></p>
+                    <code>Available Response = Context Window - (System + Memory + Retrieved + History + Query)</code>
+                    <p><strong>Response buffer matters because:</strong> If you use 100% of context for input, the model has no room to generate a response. This causes truncated responses or errors. Best practice: Reserve 20-30% of context window for the response.</p>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>6. Describe hierarchical summarization and when you would use it.</summary>
+                <div class="answer">
+                    <p><strong>Hierarchical summarization:</strong> Multi-level compression where raw messages are chunked, each chunk is summarized (Level 1), and chunk summaries are combined into a meta-summary (Level 2).</p>
+                    <p><strong>Use when:</strong> Conversations exceed 100+ turns, need to maintain very long context history, want flexible detail levels (can retrieve full chunks when needed, use summaries otherwise).</p>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>7. What makes MCP different from just building custom API integrations?</summary>
+                <div class="answer">
+                    <p>MCP solves the "N x M integration problem." Without MCP: N apps x M data sources = N*M custom integrations. With MCP: N apps implement client, M sources implement server = N+M implementations.</p>
+                    <p>Additional benefits: Standardized security model, local server execution (user controls access), discovery protocol (clients can explore server capabilities), open standard with community implementations.</p>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>8. How do you prevent infinite loops in multi-agent debate systems?</summary>
+                <div class="answer">
+                    <p>Multiple safeguards needed:</p>
+                    <ul>
+                        <li><strong>Max rounds:</strong> Hard limit on debate iterations (e.g., max_rounds=3)</li>
+                        <li><strong>Timeout:</strong> Wall-clock time limit for entire process</li>
+                        <li><strong>Convergence check:</strong> Stop if proposals stop changing significantly</li>
+                        <li><strong>Judge decision:</strong> Explicit "accept" signal from judge agent</li>
+                        <li><strong>Cost budget:</strong> Stop when token/API cost exceeds threshold</li>
+                    </ul>
+                </div>
+            </details>
+
+            <!-- ============================================== -->
+            <!-- MINI PROJECT -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">Mini Project: Build a Memory-Enhanced Chatbot</h2>
+
+            <div class="card">
+                <h4>Project: Personal Assistant with Long-term Memory</h4>
+                <p>Build a chatbot that remembers user information across sessions.</p>
+
+                <h5>Requirements:</h5>
+                <ol>
+                    <li>Implement conversation buffer with rolling summarization</li>
+                    <li>Extract and store user facts/preferences in vector store</li>
+                    <li>Retrieve relevant memories based on current query</li>
+                    <li>Build context that combines recent messages + relevant memories + summary</li>
+                </ol>
+
+                <h5>Bonus Challenges:</h5>
+                <ul>
+                    <li>Add memory importance scoring (prioritize retrieval)</li>
+                    <li>Implement memory decay (older memories less likely to retrieve)</li>
+                    <li>Add entity extraction (track people, places mentioned)</li>
+                </ul>
+
+                <div class="code-block">
+<code># Starter code structure
+class PersonalAssistant:
+    def __init__(self, user_id: str):
+        self.user_id = user_id
+        self.context_manager = ContextWindowManager(max_tokens=8192)
+        self.memory = ConversationMemory(buffer_size=10)
+        # TODO: Load existing memories for this user
+
+    async def chat(self, user_message: str) -> str:
+        # 1. Add user message to memory
+        self.memory.add_message("user", user_message)
+
+        # 2. Retrieve relevant long-term memories
+        relevant = self.memory.retrieve_relevant_memories(user_message)
+
+        # 3. Build context with memory
+        context = self.memory.get_context(user_message)
+
+        # 4. Add to context manager with priorities
+        self.context_manager.add_block(SYSTEM_PROMPT, ContextPriority.CRITICAL)
+        self.context_manager.add_block(context, ContextPriority.HIGH)
+
+        # 5. Call LLM
+        response = await self._call_llm(self.context_manager.build_context())
+
+        # 6. Add response to memory
+        self.memory.add_message("assistant", response)
+
+        return response</code>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- HOW THIS CONNECTS FORWARD -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">How This Connects Forward</h2>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(79, 172, 254, 0.1), rgba(0, 242, 254, 0.1));">
+                <h4>Next Module: AI Engineering (Evals, Tradeoffs, Fine-tuning)</h4>
+                <ul>
+                    <li><strong>Evals:</strong> How do you evaluate if your context management is working? What metrics matter?</li>
+                    <li><strong>Tradeoffs:</strong> When is context engineering enough vs. needing fine-tuning or RAG?</li>
+                    <li><strong>Production:</strong> How do you version control and test different context strategies?</li>
+                </ul>
+            </div>
+
+            <div class="card mt-2" style="background: linear-gradient(135deg, rgba(17, 153, 142, 0.1), rgba(56, 239, 125, 0.1));">
+                <h4>Future Modules Connection</h4>
+                <ul>
+                    <li><strong>Thinking Models (Module 13):</strong> Chain-of-thought prompting is a form of context engineering</li>
+                    <li><strong>Multi-modal (Module 14):</strong> Image/video tokens compete for context space</li>
+                    <li><strong>Capstone (Module 15):</strong> You'll combine all these techniques in a real project</li>
+                </ul>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- CHECKPOINT SUMMARY -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">Checkpoint Summary</h2>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2)); border: 2px solid rgba(139, 92, 246, 0.5);">
+                <h4>Key Takeaways</h4>
+                <ol>
+                    <li><strong>Context windows are precious real estate</strong> - Manage them with priorities, not just stuffing</li>
+                    <li><strong>Memory is hierarchical</strong> - Buffer (working) + Summary (compressed) + Long-term (retrieved)</li>
+                    <li><strong>Summarization is an art</strong> - Rolling, hierarchical, and semantic compression each have their place</li>
+                    <li><strong>MCP standardizes AI-data connections</strong> - Resources, Tools, Prompts, Sampling</li>
+                    <li><strong>Multi-agent systems need coordination</strong> - Hierarchical, sequential, debate, or ensemble patterns</li>
+                    <li><strong>Start simple</strong> - Single agent first, add complexity only when needed</li>
+                </ol>
+
+                <h4 class="mt-3">You Should Now Be Able To:</h4>
+                <ul>
+                    <li>Implement a priority-based context window manager</li>
+                    <li>Build short-term and long-term memory systems</li>
+                    <li>Create summarization strategies for long conversations</li>
+                    <li>Build and connect MCP servers</li>
+                    <li>Design multi-agent systems with appropriate coordination patterns</li>
+                    <li>Choose between AutoGen and CrewAI patterns based on use case</li>
+                </ul>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="module-10.html" class="btn btn-secondary">&larr; Previous: AI Agents</a>
+                <a href="module-12.html" class="btn btn-primary">Next: AI Engineering &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        // Sidebar toggle
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        }
+
+        // Collapsible sections
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const collapsible = header.parentElement;
+                collapsible.classList.toggle('open');
+            });
+        });
+    </script>
+</body>
+</html>

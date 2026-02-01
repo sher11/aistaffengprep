@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 3: Basics of LLMs - Tokenization, Vectorization, Attention</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        .math-block {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-left: 4px solid #667eea;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+            font-family: 'Georgia', serif;
+            overflow-x: auto;
+        }
+        .insight-box {
+            background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 161, 105, 0.1) 100%);
+            border-left: 4px solid #48bb78;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .warning-box {
+            background: linear-gradient(135deg, rgba(237, 137, 54, 0.1) 0%, rgba(221, 107, 32, 0.1) 100%);
+            border-left: 4px solid #ed8936;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .mistake-box {
+            background: linear-gradient(135deg, rgba(245, 101, 101, 0.1) 0%, rgba(229, 62, 62, 0.1) 100%);
+            border-left: 4px solid #f56565;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .recall-question {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        .recall-question:hover {
+            background: rgba(139, 92, 246, 0.2);
+        }
+        .recall-answer {
+            display: none;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .recall-question.open .recall-answer {
+            display: block;
+        }
+        .token-viz {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin: 1rem 0;
+        }
+        .token {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .token-0 { background: #ef4444; color: white; }
+        .token-1 { background: #f97316; color: white; }
+        .token-2 { background: #eab308; color: black; }
+        .token-3 { background: #22c55e; color: white; }
+        .token-4 { background: #3b82f6; color: white; }
+        .token-5 { background: #8b5cf6; color: white; }
+        .token-6 { background: #ec4899; color: white; }
+        .embedding-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .embedding-cell {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem;
+            text-align: center;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+        .checkpoint-summary {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin: 2rem 0;
+        }
+        .attention-demo {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 0.5rem;
+        }
+        .attention-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .attention-word {
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+            min-width: 80px;
+            text-align: center;
+        }
+        .attention-weight {
+            height: 20px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 0.25rem;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Setup + Core Math
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Terminology + MNIST
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">LLM Deep Dive</div>
+                    <a href="module-03.html" class="sidebar-link active" data-module="3">
+                        <span class="sidebar-link-number">3</span>LLM Basics
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Attention Mechanisms
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>LLM Coding: GPT
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Training at Scale
+                    </a>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Optimization Hacks
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">RAG & Retrieval</div>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>RAG Fundamentals
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>RAG Implementation
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Agents & Systems</div>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>AI Agents
+                    </a>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Context Engineering
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>AI Engineering
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-13.html" class="sidebar-link" data-module="13">
+                        <span class="sidebar-link-number">13</span>Thinking Models
+                    </a>
+                    <a href="module-14.html" class="sidebar-link" data-module="14">
+                        <span class="sidebar-link-number">14</span>Multi-modal Models
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Capstone & Career</div>
+                    <a href="module-15.html" class="sidebar-link" data-module="15">
+                        <span class="sidebar-link-number">15</span>Capstone Project
+                    </a>
+                    <a href="module-16.html" class="sidebar-link" data-module="16">
+                        <span class="sidebar-link-number">16</span>Career Goals
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Mobile sidebar toggle -->
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Module 3: Basics of LLMs</h1>
+            <p class="text-muted">Tokenization, Vectorization, and the Attention Mechanism</p>
+
+            <!-- Learning Objectives -->
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Why tokenization is the first critical step in any NLP pipeline</li>
+                    <li>How BPE (Byte Pair Encoding) works and why it's used in GPT models</li>
+                    <li>The evolution from one-hot encoding to dense word embeddings</li>
+                    <li>Word2Vec's revolutionary training objective</li>
+                    <li>How to use embedding layers in PyTorch</li>
+                    <li>The attention mechanism as "soft dictionary lookup"</li>
+                    <li>Building a simple attention mechanism from scratch</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 1: WHY TOKENIZATION MATTERS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">1. Why Tokenization Matters: Text to Numbers</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Model: The Translation Layer</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Engineering Analogy:</strong> Think of tokenization like URL encoding. Just as URLs need special characters converted to %XX codes to be transmitted safely over HTTP, text needs to be converted to numbers before neural networks can process it. The tokenizer is the "encoder/decoder" that sits at the boundary between human-readable text and machine-processable numbers.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    A["Raw Text<br/>'Hello, world!'"] --> B["Tokenizer"]
+    B --> C["Token IDs<br/>[15496, 11, 995, 0]"]
+    C --> D["Neural Network"]
+    D --> E["Output IDs<br/>[464, 1388, 318]"]
+    E --> F["Detokenizer"]
+    F --> G["Generated Text<br/>'The answer is'"]
+                        </div>
+                    </div>
+
+                    <p><strong>Why can't we just use characters?</strong> We could! But:</p>
+                    <ul>
+                        <li><strong>Sequence length explosion:</strong> "tokenization" is 12 characters but maybe 3-4 tokens. Transformers have O(n^2) attention cost.</li>
+                        <li><strong>No semantic meaning:</strong> 't', 'o', 'k' individually tell us nothing about the word "token"</li>
+                        <li><strong>Vocabulary size:</strong> Character-level = ~256, but subword = 50,000+ meaningful units</li>
+                    </ul>
+
+                    <div class="insight-box">
+                        <strong>Key Insight:</strong> Tokenization is a trade-off between vocabulary size (memory) and sequence length (compute). Modern tokenizers like BPE find the sweet spot.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: Tokenization Strategies</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Three Approaches to Tokenization</h4>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Strategy</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Unit</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Vocab Size</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pros</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Cons</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Character</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Single char</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~256</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Handles any text, no OOV</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Very long sequences, no semantics</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Word</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Whole words</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">100K+</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Semantic meaning preserved</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">OOV problem, huge vocabulary</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Subword (BPE)</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Subword pieces</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">32K-100K</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Best of both worlds</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Training required</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Visualizing Tokenization</h4>
+                    <p>Here's how GPT-2's tokenizer handles the sentence "Tokenization is fundamental to LLMs":</p>
+
+                    <div class="token-viz">
+                        <span class="token token-0">Token</span>
+                        <span class="token token-1">ization</span>
+                        <span class="token token-2"> is</span>
+                        <span class="token token-3"> fundamental</span>
+                        <span class="token token-4"> to</span>
+                        <span class="token token-5"> LL</span>
+                        <span class="token token-6">Ms</span>
+                    </div>
+
+                    <p>Notice: common words like " is" and " to" are single tokens (with leading space!), while rare words get split.</p>
+
+                    <div class="warning-box">
+                        <strong>Watch Out:</strong> Spaces are often included IN the token. " is" (with space) is different from "is". This is why GPT-2's tokenizer uses the special character "G" to mark spaces.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Using Tokenizers</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Using Hugging Face Tokenizers</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">from transformers import AutoTokenizer
+
+# Load GPT-2 tokenizer (BPE-based)
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+
+text = "Tokenization is fundamental to LLMs"
+
+# Encode: text -> token IDs
+token_ids = tokenizer.encode(text)
+print(f"Token IDs: {token_ids}")
+# Output: [22906, 1634, 318, 7531, 284, 27140, 82]
+
+# Decode individual tokens to see what each represents
+for token_id in token_ids:
+    print(f"  {token_id} -> '{tokenizer.decode([token_id])}'")
+# Output:
+#   22906 -> 'Token'
+#   1634 -> 'ization'
+#   318 -> ' is'
+#   7531 -> ' fundamental'
+#   284 -> ' to'
+#   27140 -> ' LL'
+#   82 -> 'Ms'
+
+# Decode back to text
+decoded = tokenizer.decode(token_ids)
+print(f"Decoded: {decoded}")
+# Output: 'Tokenization is fundamental to LLMs'
+
+# Get vocab size
+print(f"Vocabulary size: {tokenizer.vocab_size}")
+# Output: 50257</code></pre>
+                    </div>
+
+                    <h4>Batch Tokenization with Padding</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Real-world usage: batch tokenization
+texts = [
+    "Hello, world!",
+    "This is a longer sentence that needs more tokens.",
+    "Short."
+]
+
+# Tokenize with padding and attention mask
+batch = tokenizer(
+    texts,
+    padding=True,        # Pad shorter sequences
+    truncation=True,     # Truncate if longer than max_length
+    max_length=20,       # Maximum sequence length
+    return_tensors="pt"  # Return PyTorch tensors
+)
+
+print(f"Input IDs shape: {batch['input_ids'].shape}")
+# Output: torch.Size([3, 20])
+
+print(f"Attention mask shape: {batch['attention_mask'].shape}")
+# Output: torch.Size([3, 20])
+
+# Attention mask: 1 for real tokens, 0 for padding
+print(f"Attention mask [0]: {batch['attention_mask'][0]}")
+# Shows which positions are real vs padded</code></pre>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Engineering Insight:</strong> The attention mask is crucial! It tells the model to ignore padding tokens during attention computation. Without it, padded positions would affect the output.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 2: BPE EXPLAINED -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">2. BPE (Byte Pair Encoding) Explained</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Model: Data Compression for Text</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Engineering Analogy:</strong> BPE is like creating a compression dictionary. Imagine you're building a ZIP algorithm, but instead of compressing for file size, you're compressing for "meaningful chunks." You repeatedly find the most common pair of adjacent symbols and replace them with a new symbol.</p>
+
+                    <h4>BPE Algorithm in Plain English</h4>
+                    <ol>
+                        <li><strong>Start with characters:</strong> Split all words into characters</li>
+                        <li><strong>Count pairs:</strong> Find the most frequent adjacent pair</li>
+                        <li><strong>Merge:</strong> Create a new token by joining that pair</li>
+                        <li><strong>Repeat:</strong> Keep merging until you reach desired vocab size</li>
+                    </ol>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TD
+    A["Corpus: 'low lower lowest'"] --> B["Step 1: Split into chars<br/>l o w _ l o w e r _ l o w e s t"]
+    B --> C["Step 2: Most frequent pair: 'l o'<br/>Merge to 'lo'"]
+    C --> D["lo w _ lo w e r _ lo w e s t"]
+    D --> E["Step 3: Most frequent: 'lo w'<br/>Merge to 'low'"]
+    E --> F["low _ low e r _ low e s t"]
+    F --> G["Continue until vocab_size reached..."]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: BPE from Scratch</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Minimal BPE Implementation</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">from collections import Counter, defaultdict
+
+def get_vocab(corpus):
+    """Convert corpus to vocabulary with word frequencies."""
+    vocab = Counter()
+    for word in corpus.split():
+        # Add end-of-word marker and split into characters
+        word = ' '.join(list(word)) + ' &lt;/w&gt;'
+        vocab[word] += 1
+    return vocab
+
+def get_stats(vocab):
+    """Count frequency of adjacent pairs."""
+    pairs = defaultdict(int)
+    for word, freq in vocab.items():
+        symbols = word.split()
+        for i in range(len(symbols) - 1):
+            pairs[(symbols[i], symbols[i + 1])] += freq
+    return pairs
+
+def merge_vocab(pair, vocab):
+    """Merge the most frequent pair in vocabulary."""
+    new_vocab = {}
+    bigram = ' '.join(pair)
+    replacement = ''.join(pair)
+
+    for word, freq in vocab.items():
+        new_word = word.replace(bigram, replacement)
+        new_vocab[new_word] = freq
+    return new_vocab
+
+def train_bpe(corpus, num_merges):
+    """Train BPE tokenizer."""
+    vocab = get_vocab(corpus)
+    merges = []
+
+    for i in range(num_merges):
+        pairs = get_stats(vocab)
+        if not pairs:
+            break
+
+        # Find most frequent pair
+        best_pair = max(pairs, key=pairs.get)
+        merges.append(best_pair)
+
+        print(f"Merge {i+1}: {best_pair} (freq: {pairs[best_pair]})")
+        vocab = merge_vocab(best_pair, vocab)
+
+    return vocab, merges
+
+# Example usage
+corpus = "low low low lower lower lowest"
+vocab, merges = train_bpe(corpus, num_merges=10)
+
+# Output:
+# Merge 1: ('l', 'o') (freq: 6)
+# Merge 2: ('lo', 'w') (freq: 6)
+# Merge 3: ('low', '&lt;/w&gt;') (freq: 3)
+# Merge 4: ('low', 'e') (freq: 3)
+# Merge 5: ('lowe', 'r') (freq: 2)
+# ...</code></pre>
+                    </div>
+
+                    <h4>Complete BPE Tokenizer Class</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import re
+from collections import Counter, defaultdict
+
+class SimpleBPE:
+    def __init__(self, vocab_size=1000):
+        self.vocab_size = vocab_size
+        self.merges = []
+        self.vocab = {}
+
+    def train(self, corpus):
+        """Train BPE on corpus."""
+        # Initialize vocabulary with characters
+        word_freqs = Counter(corpus.split())
+
+        # Split words into characters with end marker
+        self.vocab = {}
+        for word, freq in word_freqs.items():
+            chars = tuple(list(word) + ['&lt;/w&gt;'])
+            self.vocab[chars] = freq
+
+        # Iteratively merge most common pairs
+        num_merges = self.vocab_size - len(set(corpus)) - 1
+
+        for _ in range(num_merges):
+            pairs = self._get_pair_stats()
+            if not pairs:
+                break
+
+            best_pair = max(pairs, key=pairs.get)
+            self.merges.append(best_pair)
+            self.vocab = self._merge_pair(best_pair)
+
+    def _get_pair_stats(self):
+        """Count frequency of each adjacent pair."""
+        pairs = defaultdict(int)
+        for word, freq in self.vocab.items():
+            for i in range(len(word) - 1):
+                pairs[(word[i], word[i + 1])] += freq
+        return pairs
+
+    def _merge_pair(self, pair):
+        """Merge all occurrences of pair."""
+        new_vocab = {}
+        for word, freq in self.vocab.items():
+            new_word = []
+            i = 0
+            while i &lt; len(word):
+                if i &lt; len(word) - 1 and (word[i], word[i + 1]) == pair:
+                    new_word.append(word[i] + word[i + 1])
+                    i += 2
+                else:
+                    new_word.append(word[i])
+                    i += 1
+            new_vocab[tuple(new_word)] = freq
+        return new_vocab
+
+    def tokenize(self, text):
+        """Tokenize text using learned merges."""
+        tokens = []
+        for word in text.split():
+            word_tokens = list(word) + ['&lt;/w&gt;']
+
+            # Apply merges in order
+            for merge in self.merges:
+                i = 0
+                while i &lt; len(word_tokens) - 1:
+                    if (word_tokens[i], word_tokens[i + 1]) == merge:
+                        word_tokens = (word_tokens[:i] +
+                                      [word_tokens[i] + word_tokens[i + 1]] +
+                                      word_tokens[i + 2:])
+                    else:
+                        i += 1
+            tokens.extend(word_tokens)
+        return tokens
+
+# Usage
+bpe = SimpleBPE(vocab_size=100)
+bpe.train("low lower lowest low lower lowest")
+print(bpe.tokenize("lowest"))
+# Output: ['low', 'est', '&lt;/w&gt;']</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights: How Big Companies Do This</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Tokenizer Comparison Across Major Models</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Model</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Algorithm</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Vocab Size</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">GPT-2</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">BPE</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">50,257</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Byte-level BPE</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">GPT-4 / ChatGPT</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">BPE (tiktoken)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">100,277</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Optimized for code</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">BERT</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">WordPiece</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">30,522</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">## prefix for subwords</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">LLaMA</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">SentencePiece</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">32,000</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Unigram LM + BPE hybrid</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Claude</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">BPE variant</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~100K</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Proprietary</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>OpenAI's tiktoken (GPT-4's Tokenizer)</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import tiktoken
+
+# GPT-4's tokenizer
+enc = tiktoken.encoding_for_model("gpt-4")
+
+text = "Hello, world! This is GPT-4's tokenizer."
+tokens = enc.encode(text)
+print(f"Tokens: {tokens}")
+print(f"Number of tokens: {len(tokens)}")
+
+# Decode each token
+for token in tokens:
+    print(f"  {token} -> '{enc.decode([token])}'")
+
+# Count tokens for pricing estimation
+def count_tokens(text, model="gpt-4"):
+    enc = tiktoken.encoding_for_model(model)
+    return len(enc.encode(text))
+
+# Useful for estimating API costs
+print(f"Token count: {count_tokens('Your prompt here')}")</code></pre>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Production Tip:</strong> Always count tokens before API calls! GPT-4 charges per token, and prompts + completions both count. Use tiktoken to estimate costs and ensure you don't exceed context limits.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Common Mistakes with Tokenization</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="mistake-box">
+                        <h4>Mistake 1: Assuming 1 word = 1 token</h4>
+                        <p><strong>Reality:</strong> On average, 1 token ≈ 0.75 words for English. But it varies wildly:</p>
+                        <ul>
+                            <li>"the" = 1 token</li>
+                            <li>"Anthropic" = 3 tokens (An, th, ropic)</li>
+                            <li>Code often has more tokens than expected due to special characters</li>
+                        </ul>
+                    </div>
+
+                    <div class="mistake-box">
+                        <h4>Mistake 2: Ignoring tokenization for prompt engineering</h4>
+                        <p><strong>Reality:</strong> Token boundaries affect model behavior! "GPT" and " GPT" (with leading space) are different tokens and may be understood differently.</p>
+                    </div>
+
+                    <div class="mistake-box">
+                        <h4>Mistake 3: Using the wrong tokenizer for token counting</h4>
+                        <p><strong>Reality:</strong> Different models use different tokenizers. GPT-4 and Claude have different tokenizations. Always use the correct tokenizer for accurate counts.</p>
+                    </div>
+
+                    <div class="mistake-box">
+                        <h4>Mistake 4: Forgetting special tokens</h4>
+                        <p><strong>Reality:</strong> Models have special tokens like &lt;|endoftext|&gt;, [CLS], [SEP], etc. These affect sequence length and model behavior.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 3: WORD EMBEDDINGS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">3. Word Embeddings: From One-Hot to Dense Vectors</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Model: From Zip Codes to GPS Coordinates</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Engineering Analogy:</strong> One-hot encoding is like using zip codes - each location gets a unique ID, but you can't tell that 94102 (SF) is close to 94103. Dense embeddings are like GPS coordinates - the numbers themselves encode spatial relationships. Similar things have similar coordinates.</p>
+
+                    <h4>One-Hot Encoding: The Problem</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Vocabulary: ["cat", "dog", "fish", "bird"]
+# One-hot encoding:
+cat  = [1, 0, 0, 0]
+dog  = [0, 1, 0, 0]
+fish = [0, 0, 1, 0]
+bird = [0, 0, 0, 1]
+
+# Problem 1: Orthogonal - no similarity information
+import numpy as np
+print(np.dot(cat, dog))  # 0 - same as cat vs fish!
+
+# Problem 2: Huge vectors for large vocabularies
+# 50,000 word vocab = 50,000-dimensional vectors
+# Memory nightmare!</code></pre>
+                    </div>
+
+                    <h4>Dense Embeddings: The Solution</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Same words, but now 4-dimensional dense vectors
+# (In practice, 256-1024 dimensions)
+cat  = [0.2, 0.8, -0.1, 0.3]   # Learned representation
+dog  = [0.3, 0.7, -0.2, 0.4]   # Similar to cat!
+fish = [-0.5, 0.1, 0.8, -0.3]  # Different
+bird = [0.1, 0.5, 0.2, 0.6]    # Somewhere in between
+
+# Now similarity is meaningful
+from numpy.linalg import norm
+def cosine_sim(a, b):
+    return np.dot(a, b) / (norm(a) * norm(b))
+
+print(f"cat-dog similarity: {cosine_sim(cat, dog):.3f}")   # ~0.95 high!
+print(f"cat-fish similarity: {cosine_sim(cat, fish):.3f}") # ~-0.3 low</code></pre>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "One-Hot Space"
+        A["cat: [1,0,0,0]"]
+        B["dog: [0,1,0,0]"]
+        C["fish: [0,0,1,0]"]
+    end
+    subgraph "Embedding Space"
+        D["cat & dog<br/>close together"]
+        E["fish<br/>far away"]
+    end
+    A --> D
+    B --> D
+    C --> E
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concept: Why Embeddings Work</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>The Distributional Hypothesis:</strong> "You shall know a word by the company it keeps" - J.R. Firth, 1957</p>
+
+                    <p>Words that appear in similar contexts have similar meanings. If "dog" and "cat" both appear in contexts like "The ___ is sleeping" and "I pet my ___", they should have similar embeddings.</p>
+
+                    <h4>What Embedding Dimensions Represent</h4>
+                    <p>Each dimension can (loosely) represent a semantic axis:</p>
+
+                    <div class="embedding-grid">
+                        <div class="embedding-cell">Gender<br/>-0.3</div>
+                        <div class="embedding-cell">Size<br/>0.7</div>
+                        <div class="embedding-cell">Alive<br/>0.9</div>
+                        <div class="embedding-cell">Domestic<br/>0.8</div>
+                        <div class="embedding-cell">...<br/>...</div>
+                        <div class="embedding-cell">Dim 256<br/>0.1</div>
+                    </div>
+
+                    <p>Famous example: king - man + woman ≈ queen</p>
+
+                    <div class="code-block">
+                        <pre><code class="language-python"># The famous word analogy
+# king - man + woman ≈ queen
+
+# This works because embeddings encode relationships
+# king and queen are similar (royalty)
+# man and woman are similar (human)
+# king - man removes "maleness", + woman adds "femaleness"
+
+# In embedding space:
+king = np.array([0.5, 0.9, 0.1])   # [royalty, power, gender]
+man = np.array([0.1, 0.5, 0.9])
+woman = np.array([0.1, 0.5, -0.9])
+queen = np.array([0.5, 0.9, -0.1])
+
+result = king - man + woman
+print(f"king - man + woman = {result}")
+# Closest to queen!</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 4: WORD2VEC -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">4. Word2Vec: Learning Embeddings from Text</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Model: Learning by Prediction</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Key Insight:</strong> Word2Vec learns embeddings by training a simple neural network on a prediction task. The prediction task is just a means to an end - we actually want the learned weights (embeddings).</p>
+
+                    <h4>Two Architectures</h4>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    subgraph "Skip-gram"
+        A1["Input: 'cat'"] --> B1["Embedding Layer"]
+        B1 --> C1["Predict: 'the', 'sat', 'on', 'mat'"]
+    end
+    subgraph "CBOW"
+        A2["Input: 'the', 'sat', 'on', 'mat'"] --> B2["Embedding Layer"]
+        B2 --> C2["Predict: 'cat'"]
+    end
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Architecture</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Task</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Skip-gram</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Predict context from word</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Rare words, smaller datasets</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>CBOW</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Predict word from context</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Frequent words, faster training</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Math / Theory: Skip-gram Objective</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Given a center word w_c, we want to maximize the probability of context words:</p>
+
+                    <div class="math-block">
+                        <p><strong>Objective:</strong> Maximize P(context | center)</p>
+                        <p>For sentence "The cat sat on mat" with center word "sat" and window=2:</p>
+                        <p>Maximize: P("The"|"sat") * P("cat"|"sat") * P("on"|"sat") * P("mat"|"sat")</p>
+                    </div>
+
+                    <p>The probability is computed using softmax over dot products:</p>
+
+                    <div class="math-block">
+                        <p>P(w_o | w_c) = exp(u_o^T v_c) / sum_w exp(u_w^T v_c)</p>
+                        <p>Where:</p>
+                        <ul>
+                            <li>v_c = embedding of center word</li>
+                            <li>u_o = "output" embedding of context word</li>
+                            <li>Higher dot product = higher probability</li>
+                        </ul>
+                    </div>
+
+                    <div class="warning-box">
+                        <strong>The Problem:</strong> The denominator sums over ALL words in vocabulary. For 50K words, this is very expensive! Solution: Negative Sampling.
+                    </div>
+
+                    <h4>Negative Sampling: The Practical Solution</h4>
+                    <p>Instead of normalizing over all words, we:</p>
+                    <ol>
+                        <li>Take the positive example (real context word)</li>
+                        <li>Sample k random "negative" words (not in context)</li>
+                        <li>Train binary classifier: "Is this word in the context?"</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <pre><code class="language-python"># Simplified negative sampling loss
+def negative_sampling_loss(center_emb, context_emb, negative_embs):
+    """
+    center_emb: embedding of center word
+    context_emb: embedding of actual context word (positive)
+    negative_embs: embeddings of random negative samples
+    """
+    # Positive: maximize dot product with real context
+    pos_score = torch.sigmoid(torch.dot(center_emb, context_emb))
+    pos_loss = -torch.log(pos_score)
+
+    # Negative: minimize dot product with random words
+    neg_scores = torch.sigmoid(-torch.matmul(negative_embs, center_emb))
+    neg_loss = -torch.sum(torch.log(neg_scores))
+
+    return pos_loss + neg_loss</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Skip-gram with Negative Sampling</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.optim as optim
+import numpy as np
+from collections import Counter
+
+class Word2Vec(nn.Module):
+    def __init__(self, vocab_size, embedding_dim):
+        super().__init__()
+        # Two embedding matrices: center and context
+        self.center_embeddings = nn.Embedding(vocab_size, embedding_dim)
+        self.context_embeddings = nn.Embedding(vocab_size, embedding_dim)
+
+        # Initialize with small random values
+        self.center_embeddings.weight.data.uniform_(-0.5/embedding_dim, 0.5/embedding_dim)
+        self.context_embeddings.weight.data.uniform_(-0.5/embedding_dim, 0.5/embedding_dim)
+
+    def forward(self, center_ids, context_ids, negative_ids):
+        """
+        center_ids: (batch_size,)
+        context_ids: (batch_size,) - positive examples
+        negative_ids: (batch_size, num_negatives)
+        """
+        # Get embeddings
+        center_emb = self.center_embeddings(center_ids)  # (batch, dim)
+        context_emb = self.context_embeddings(context_ids)  # (batch, dim)
+        negative_emb = self.context_embeddings(negative_ids)  # (batch, neg, dim)
+
+        # Positive score: dot product of center and context
+        pos_score = torch.sum(center_emb * context_emb, dim=1)  # (batch,)
+        pos_loss = -torch.mean(torch.log(torch.sigmoid(pos_score) + 1e-10))
+
+        # Negative score: dot product of center and negatives
+        neg_score = torch.bmm(negative_emb, center_emb.unsqueeze(2)).squeeze()  # (batch, neg)
+        neg_loss = -torch.mean(torch.log(torch.sigmoid(-neg_score) + 1e-10))
+
+        return pos_loss + neg_loss
+
+    def get_embedding(self, word_id):
+        """Get the trained embedding for a word."""
+        return self.center_embeddings.weight[word_id].detach()
+
+
+def create_training_data(corpus, word2idx, window_size=2):
+    """Create skip-gram training pairs."""
+    data = []
+    words = corpus.split()
+
+    for i, center in enumerate(words):
+        center_id = word2idx[center]
+
+        # Get context window
+        start = max(0, i - window_size)
+        end = min(len(words), i + window_size + 1)
+
+        for j in range(start, end):
+            if i != j:
+                context_id = word2idx[words[j]]
+                data.append((center_id, context_id))
+
+    return data
+
+
+def negative_sample(vocab_size, batch_size, num_negatives, exclude=None):
+    """Sample negative examples."""
+    negatives = torch.randint(0, vocab_size, (batch_size, num_negatives))
+    return negatives
+
+
+# Training example
+corpus = """
+the cat sat on the mat
+the dog ran in the park
+a cat and a dog played together
+the mat was soft
+"""
+
+# Build vocabulary
+words = corpus.split()
+word_counts = Counter(words)
+vocab = list(word_counts.keys())
+word2idx = {w: i for i, w in enumerate(vocab)}
+idx2word = {i: w for w, i in word2idx.items()}
+
+# Create model and training data
+EMBEDDING_DIM = 50
+NUM_NEGATIVES = 5
+model = Word2Vec(len(vocab), EMBEDDING_DIM)
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+training_data = create_training_data(corpus, word2idx, window_size=2)
+print(f"Training pairs: {len(training_data)}")
+
+# Training loop
+for epoch in range(100):
+    total_loss = 0
+    np.random.shuffle(training_data)
+
+    for center_id, context_id in training_data:
+        center_tensor = torch.tensor([center_id])
+        context_tensor = torch.tensor([context_id])
+        negative_tensor = negative_sample(len(vocab), 1, NUM_NEGATIVES)
+
+        optimizer.zero_grad()
+        loss = model(center_tensor, context_tensor, negative_tensor)
+        loss.backward()
+        optimizer.step()
+
+        total_loss += loss.item()
+
+    if epoch % 20 == 0:
+        print(f"Epoch {epoch}, Loss: {total_loss/len(training_data):.4f}")
+
+# Test similarity
+def cosine_similarity(emb1, emb2):
+    return torch.dot(emb1, emb2) / (torch.norm(emb1) * torch.norm(emb2))
+
+cat_emb = model.get_embedding(word2idx['cat'])
+dog_emb = model.get_embedding(word2idx['dog'])
+mat_emb = model.get_embedding(word2idx['mat'])
+
+print(f"\ncat-dog similarity: {cosine_similarity(cat_emb, dog_emb):.3f}")
+print(f"cat-mat similarity: {cosine_similarity(cat_emb, mat_emb):.3f}")</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 5: EMBEDDING LAYERS IN PYTORCH -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">5. Embedding Layers in PyTorch</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Model: A Learnable Lookup Table</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Engineering Analogy:</strong> An embedding layer is like a database table where the primary key is the token ID and the value is a vector. The difference: the vectors are learned during training, not manually specified.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    A["Token ID: 42"] --> B["Embedding Layer<br/>(lookup table)"]
+    B --> C["Vector: [0.1, -0.3, 0.8, ...]"]
+
+    D["Shape: (vocab_size, embedding_dim)"]
+    E["Learnable parameters"]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: nn.Embedding Deep Dive</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn as nn
+
+# Create embedding layer
+vocab_size = 10000
+embedding_dim = 256
+
+embedding = nn.Embedding(
+    num_embeddings=vocab_size,   # Size of vocabulary
+    embedding_dim=embedding_dim,  # Dimension of each embedding
+    padding_idx=0                 # Optional: index to use for padding (won't be updated)
+)
+
+# Check the weight matrix shape
+print(f"Embedding weight shape: {embedding.weight.shape}")
+# Output: torch.Size([10000, 256])
+
+# Lookup single token
+token_id = torch.tensor([42])
+emb = embedding(token_id)
+print(f"Single embedding shape: {emb.shape}")
+# Output: torch.Size([1, 256])
+
+# Lookup batch of sequences
+# Shape: (batch_size, sequence_length)
+batch = torch.tensor([
+    [1, 2, 3, 0, 0],    # Sequence 1 (padded)
+    [4, 5, 6, 7, 8],    # Sequence 2
+    [9, 10, 0, 0, 0]    # Sequence 3 (padded)
+])
+
+batch_emb = embedding(batch)
+print(f"Batch embedding shape: {batch_emb.shape}")
+# Output: torch.Size([3, 5, 256])
+# (batch_size, seq_len, embedding_dim)</code></pre>
+                    </div>
+
+                    <h4>Embedding in a Full Model</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">class SimpleTextClassifier(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, num_classes):
+        super().__init__()
+
+        # Embedding layer
+        self.embedding = nn.Embedding(vocab_size, embedding_dim, padding_idx=0)
+
+        # Classification head
+        self.fc = nn.Linear(embedding_dim, num_classes)
+
+    def forward(self, x, mask=None):
+        """
+        x: (batch_size, seq_len) - token IDs
+        mask: (batch_size, seq_len) - attention mask (1 for real, 0 for padding)
+        """
+        # Get embeddings: (batch, seq_len, embed_dim)
+        emb = self.embedding(x)
+
+        if mask is not None:
+            # Masked mean pooling
+            mask = mask.unsqueeze(-1).float()  # (batch, seq_len, 1)
+            emb = emb * mask
+            emb = emb.sum(dim=1) / mask.sum(dim=1)  # (batch, embed_dim)
+        else:
+            # Simple mean pooling
+            emb = emb.mean(dim=1)
+
+        # Classify
+        logits = self.fc(emb)
+        return logits
+
+# Usage
+model = SimpleTextClassifier(vocab_size=10000, embedding_dim=256, num_classes=2)
+tokens = torch.tensor([[1, 2, 3, 0, 0], [4, 5, 6, 7, 8]])
+mask = torch.tensor([[1, 1, 1, 0, 0], [1, 1, 1, 1, 1]])
+
+logits = model(tokens, mask)
+print(f"Output shape: {logits.shape}")  # (2, 2)</code></pre>
+                    </div>
+
+                    <h4>Loading Pre-trained Embeddings</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import gensim.downloader as api
+
+# Load pre-trained Word2Vec
+word2vec = api.load('word2vec-google-news-300')
+
+# Create embedding layer from pre-trained
+def create_embedding_from_pretrained(word2vec, word2idx, embedding_dim=300):
+    vocab_size = len(word2idx)
+    embedding_matrix = np.zeros((vocab_size, embedding_dim))
+
+    found = 0
+    for word, idx in word2idx.items():
+        if word in word2vec:
+            embedding_matrix[idx] = word2vec[word]
+            found += 1
+        else:
+            # Random initialization for unknown words
+            embedding_matrix[idx] = np.random.normal(0, 0.1, embedding_dim)
+
+    print(f"Found {found}/{vocab_size} words in pre-trained embeddings")
+
+    # Create embedding layer
+    embedding = nn.Embedding(vocab_size, embedding_dim)
+    embedding.weight.data = torch.tensor(embedding_matrix, dtype=torch.float32)
+
+    # Optionally freeze embeddings
+    # embedding.weight.requires_grad = False
+
+    return embedding
+
+# Alternative: Use Hugging Face
+from transformers import AutoModel
+
+# Get embeddings from transformer models
+bert = AutoModel.from_pretrained('bert-base-uncased')
+bert_embeddings = bert.embeddings.word_embeddings.weight
+print(f"BERT embedding shape: {bert_embeddings.shape}")
+# Output: torch.Size([30522, 768])</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 6: INTRODUCTION TO ATTENTION -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">6. Introduction to Attention: The "Look at Relevant Parts" Mechanism</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Model: Selective Focus</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Engineering Analogy:</strong> Imagine you're debugging a 10,000-line codebase. You don't read every line sequentially - you focus on relevant parts based on the error message. Attention works the same way: given a query (what you're looking for), it learns to focus on the most relevant parts of the input.</p>
+
+                    <h4>The Problem Attention Solves</h4>
+                    <p>Before attention, sequence models (RNNs) had to compress an entire sequence into a single fixed-size vector:</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Without Attention (RNN)"
+        A["word1"] --> B["word2"] --> C["word3"] --> D["word4"]
+        D --> E["Single Vector<br/>(bottleneck!)"]
+        E --> F["Decoder"]
+    end
+                        </div>
+                    </div>
+
+                    <p>This is the <strong>information bottleneck problem</strong>. Long sequences lose information when compressed to a fixed-size vector.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "With Attention"
+        A["word1"] --> E["Decoder"]
+        B["word2"] --> E
+        C["word3"] --> E
+        D["word4"] --> E
+        E --> F["Output"]
+
+        style B stroke:#f00,stroke-width:3px
+        style C stroke:#f00,stroke-width:3px
+    end
+                        </div>
+                    </div>
+
+                    <p><strong>Solution:</strong> Let the decoder "look back" at all encoder states and focus on the relevant ones for each output token.</p>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Attention as Soft Dictionary Lookup</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Key Insight:</strong> Attention is like a weighted database query that returns a mixture of values based on how well keys match the query.</p>
+
+                    <h4>Hard vs Soft Lookup</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Hard lookup (traditional dictionary)
+d = {"cat": [0.1, 0.2], "dog": [0.3, 0.4], "bird": [0.5, 0.6]}
+result = d["cat"]  # Returns exactly [0.1, 0.2]
+
+# Soft lookup (attention)
+# Query: "pet" (doesn't exist exactly)
+# Returns: weighted average based on similarity to keys
+# If "pet" is similar to both "cat" and "dog":
+# result ≈ 0.5 * [0.1, 0.2] + 0.5 * [0.3, 0.4] = [0.2, 0.3]</code></pre>
+                    </div>
+
+                    <h4>The Attention Formula (Simplified)</h4>
+                    <div class="math-block">
+                        <ol>
+                            <li><strong>Compute similarity scores:</strong> score_i = similarity(query, key_i)</li>
+                            <li><strong>Normalize to weights:</strong> weight_i = softmax(scores)</li>
+                            <li><strong>Weighted sum of values:</strong> output = sum(weight_i * value_i)</li>
+                        </ol>
+                    </div>
+
+                    <h4>Visualizing Attention Weights</h4>
+                    <div class="attention-demo">
+                        <p>Translating "The cat sat" to French. When generating "chat" (cat), the model attends heavily to "cat":</p>
+                        <div class="attention-row">
+                            <div class="attention-word" style="background: rgba(102, 126, 234, 0.3);">The</div>
+                            <div class="attention-weight" style="width: 30px;"></div>
+                            <span>0.1</span>
+                        </div>
+                        <div class="attention-row">
+                            <div class="attention-word" style="background: rgba(102, 126, 234, 0.9);">cat</div>
+                            <div class="attention-weight" style="width: 200px;"></div>
+                            <span>0.8</span>
+                        </div>
+                        <div class="attention-row">
+                            <div class="attention-word" style="background: rgba(102, 126, 234, 0.2);">sat</div>
+                            <div class="attention-weight" style="width: 20px;"></div>
+                            <span>0.1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 7: BUILDING ATTENTION FROM SCRATCH -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">7. Building a Simple Attention Mechanism from Scratch</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Additive Attention (Bahdanau)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>The original attention mechanism from the famous "Neural Machine Translation by Jointly Learning to Align and Translate" paper (2015).</p>
+
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class AdditiveAttention(nn.Module):
+    """
+    Bahdanau-style additive attention.
+    score(query, key) = v^T * tanh(W_q * query + W_k * key)
+    """
+    def __init__(self, query_dim, key_dim, hidden_dim):
+        super().__init__()
+        self.W_query = nn.Linear(query_dim, hidden_dim, bias=False)
+        self.W_key = nn.Linear(key_dim, hidden_dim, bias=False)
+        self.v = nn.Linear(hidden_dim, 1, bias=False)
+
+    def forward(self, query, keys, values, mask=None):
+        """
+        query: (batch_size, query_dim) - what we're looking for
+        keys: (batch_size, seq_len, key_dim) - what we match against
+        values: (batch_size, seq_len, value_dim) - what we retrieve
+        mask: (batch_size, seq_len) - 1 for valid, 0 for padding
+
+        Returns:
+            context: (batch_size, value_dim) - weighted sum of values
+            attention_weights: (batch_size, seq_len) - the weights
+        """
+        batch_size, seq_len, _ = keys.shape
+
+        # Project query and keys to hidden space
+        # query: (batch, hidden_dim)
+        query_proj = self.W_query(query)
+        # keys: (batch, seq_len, hidden_dim)
+        keys_proj = self.W_key(keys)
+
+        # Add query to each key position
+        # (batch, 1, hidden_dim) + (batch, seq_len, hidden_dim)
+        combined = query_proj.unsqueeze(1) + keys_proj
+
+        # Compute attention scores
+        # (batch, seq_len, hidden_dim) -> (batch, seq_len, 1) -> (batch, seq_len)
+        scores = self.v(torch.tanh(combined)).squeeze(-1)
+
+        # Apply mask (set padded positions to -inf so softmax gives 0)
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, float('-inf'))
+
+        # Normalize to get attention weights
+        attention_weights = F.softmax(scores, dim=-1)
+
+        # Weighted sum of values
+        # (batch, 1, seq_len) @ (batch, seq_len, value_dim) -> (batch, 1, value_dim)
+        context = torch.bmm(attention_weights.unsqueeze(1), values).squeeze(1)
+
+        return context, attention_weights
+
+
+# Example usage
+batch_size = 2
+seq_len = 5
+query_dim = 64
+key_dim = 128
+value_dim = 128
+hidden_dim = 32
+
+attention = AdditiveAttention(query_dim, key_dim, hidden_dim)
+
+# Create some dummy data
+query = torch.randn(batch_size, query_dim)
+keys = torch.randn(batch_size, seq_len, key_dim)
+values = torch.randn(batch_size, seq_len, value_dim)
+mask = torch.tensor([[1, 1, 1, 0, 0], [1, 1, 1, 1, 1]])  # Padding mask
+
+context, weights = attention(query, keys, values, mask)
+
+print(f"Context shape: {context.shape}")  # (2, 128)
+print(f"Attention weights shape: {weights.shape}")  # (2, 5)
+print(f"Attention weights (seq 1): {weights[0]}")
+# Notice: weights for padded positions are ~0</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Dot-Product Attention</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Simpler and faster than additive attention. Used in Transformers.</p>
+
+                    <div class="code-block">
+                        <pre><code class="language-python">class DotProductAttention(nn.Module):
+    """
+    Scaled dot-product attention.
+    score(query, key) = query . key / sqrt(d_k)
+    """
+    def __init__(self, scale=True):
+        super().__init__()
+        self.scale = scale
+
+    def forward(self, query, keys, values, mask=None):
+        """
+        query: (batch_size, query_dim) or (batch, num_queries, query_dim)
+        keys: (batch_size, seq_len, key_dim) - must match query_dim
+        values: (batch_size, seq_len, value_dim)
+        mask: (batch_size, seq_len) or (batch, num_queries, seq_len)
+        """
+        # Handle single query case
+        if query.dim() == 2:
+            query = query.unsqueeze(1)  # (batch, 1, dim)
+
+        # Compute attention scores via dot product
+        # (batch, num_q, dim) @ (batch, dim, seq_len) -> (batch, num_q, seq_len)
+        scores = torch.bmm(query, keys.transpose(1, 2))
+
+        # Scale by sqrt(d_k) to prevent softmax saturation
+        if self.scale:
+            d_k = query.size(-1)
+            scores = scores / (d_k ** 0.5)
+
+        # Apply mask
+        if mask is not None:
+            if mask.dim() == 2:
+                mask = mask.unsqueeze(1)  # (batch, 1, seq_len)
+            scores = scores.masked_fill(mask == 0, float('-inf'))
+
+        # Softmax to get weights
+        attention_weights = F.softmax(scores, dim=-1)
+
+        # Weighted sum of values
+        # (batch, num_q, seq_len) @ (batch, seq_len, value_dim) -> (batch, num_q, value_dim)
+        context = torch.bmm(attention_weights, values)
+
+        return context.squeeze(1), attention_weights.squeeze(1)
+
+
+# Compare computational cost
+import time
+
+def benchmark_attention(attention_fn, query, keys, values, mask, n_runs=100):
+    start = time.time()
+    for _ in range(n_runs):
+        _, _ = attention_fn(query, keys, values, mask)
+    return (time.time() - start) / n_runs * 1000  # ms
+
+# Setup
+d = 256
+additive = AdditiveAttention(d, d, 64)
+dot_product = DotProductAttention()
+
+q = torch.randn(32, d)
+k = torch.randn(32, 100, d)
+v = torch.randn(32, 100, d)
+m = torch.ones(32, 100)
+
+print(f"Additive attention: {benchmark_attention(additive, q, k, v, m):.2f} ms")
+print(f"Dot-product attention: {benchmark_attention(dot_product, q, k, v, m):.2f} ms")
+# Dot-product is typically 2-3x faster!</code></pre>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Why Scale?</strong> Without scaling, dot products grow with dimension size. Large values cause softmax to saturate (all weight on one position), reducing gradient flow. Dividing by sqrt(d_k) keeps variance around 1.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Complete Example: Attention for Sequence Classification</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">class AttentionClassifier(nn.Module):
+    """
+    Text classifier using attention to aggregate sequence.
+    Instead of mean pooling, we learn what to focus on.
+    """
+    def __init__(self, vocab_size, embed_dim, num_classes):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=0)
+
+        # Learnable query vector (what to look for)
+        self.query = nn.Parameter(torch.randn(embed_dim))
+
+        # Attention components
+        self.attention = DotProductAttention(scale=True)
+
+        # Classification head
+        self.classifier = nn.Sequential(
+            nn.Linear(embed_dim, 128),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(128, num_classes)
+        )
+
+    def forward(self, x, mask=None):
+        """
+        x: (batch_size, seq_len) - token IDs
+        mask: (batch_size, seq_len) - attention mask
+        """
+        batch_size = x.size(0)
+
+        # Embed tokens
+        emb = self.embedding(x)  # (batch, seq_len, embed_dim)
+
+        # Expand query for batch
+        query = self.query.unsqueeze(0).expand(batch_size, -1)  # (batch, embed_dim)
+
+        # Attention: find important tokens
+        context, weights = self.attention(query, emb, emb, mask)
+
+        # Classify based on attended representation
+        logits = self.classifier(context)
+
+        return logits, weights
+
+
+# Training example
+torch.manual_seed(42)
+
+model = AttentionClassifier(vocab_size=1000, embed_dim=128, num_classes=2)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+criterion = nn.CrossEntropyLoss()
+
+# Fake data
+texts = torch.randint(1, 1000, (32, 20))  # 32 sequences of length 20
+labels = torch.randint(0, 2, (32,))
+masks = torch.ones(32, 20)
+masks[:, 15:] = 0  # Last 5 positions are padding
+
+# Training step
+for epoch in range(5):
+    optimizer.zero_grad()
+    logits, attention_weights = model(texts, masks)
+    loss = criterion(logits, labels)
+    loss.backward()
+    optimizer.step()
+    print(f"Epoch {epoch+1}, Loss: {loss.item():.4f}")
+
+# Inspect attention weights
+print(f"\nAttention weights for first example: {attention_weights[0][:10]}")
+# Shows which tokens the model focused on</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- ACTIVE RECALL QUESTIONS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Active Recall Questions</h2>
+            <p class="text-muted">Click each question to reveal the answer. Test yourself before looking!</p>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q1:</strong> Why is BPE preferred over word-level tokenization for modern LLMs?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> BPE provides a balance between vocabulary size and sequence length. Word-level tokenization creates huge vocabularies (100K+ words) and can't handle out-of-vocabulary words. BPE creates a moderate vocabulary (~50K) of subword units that can compose any word, handles rare words gracefully, and keeps sequences at manageable lengths for the O(n^2) attention complexity.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q2:</strong> What problem do embeddings solve compared to one-hot encoding?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> One-hot encoding treats all words as equally different (orthogonal vectors), losing semantic relationships. It also creates vectors proportional to vocabulary size (50K dimensions!). Embeddings compress to fixed dimensions (~256-1024) while encoding semantic similarity - words with similar meanings have similar vectors.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q3:</strong> Explain negative sampling in Word2Vec. Why is it necessary?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> The original softmax formulation requires summing over ALL vocabulary words in the denominator - O(V) per training example. Negative sampling reformulates the task as binary classification: distinguish true context words from random "negative" samples. This reduces computation from O(V) to O(k) where k is the number of negatives (typically 5-20).
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q4:</strong> What is the "information bottleneck" problem that attention solves?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> Before attention, encoder-decoder models (like seq2seq RNNs) had to compress the entire input sequence into a single fixed-size vector. Long sequences lost information in this compression. Attention allows the decoder to "look back" at all encoder hidden states and focus on relevant ones for each output token, removing the bottleneck.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q5:</strong> Why do we divide by sqrt(d_k) in scaled dot-product attention?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> Dot products grow in magnitude with dimension size. If queries and keys have variance 1, their dot product has variance d_k. Large values cause softmax to saturate (push all probability mass to one position), which creates small gradients and hurts training. Dividing by sqrt(d_k) normalizes the variance back to 1.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q6:</strong> How is attention like a "soft" dictionary lookup?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> A hard dictionary returns exactly one value for an exact key match. Attention computes similarity between a query and ALL keys, then returns a weighted average of values based on these similarities. The "softmax" creates a probability distribution over keys, allowing partial matches and returning blended results.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q7:</strong> What role does the attention mask play?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> The attention mask tells the model which positions to ignore (usually padding). It works by setting the attention scores for masked positions to -infinity before softmax, which results in attention weights of ~0 for those positions. This prevents padded tokens from affecting the output.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q8:</strong> What's the difference between additive and dot-product attention?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> Additive attention (Bahdanau): score = v^T * tanh(W_q*q + W_k*k). More expressive but slower due to extra parameters. Dot-product attention: score = q^T*k / sqrt(d_k). Simpler, faster (no learned parameters in score function), and just as effective in practice. Transformers use dot-product.
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- MINI PROJECT -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Mini Project: Build a Sentiment Analyzer with Attention</h2>
+
+            <div class="card">
+                <h4>Project Goal</h4>
+                <p>Build a sentiment classifier that uses attention to identify which words in a review are most important for the prediction.</p>
+
+                <h4>Requirements</h4>
+                <ol>
+                    <li>Use the IMDB dataset (via torchtext or huggingface datasets)</li>
+                    <li>Implement a BPE tokenizer or use a pre-trained one</li>
+                    <li>Build a model with embedding layer + attention + classifier</li>
+                    <li>Visualize attention weights for sample predictions</li>
+                    <li>Compare against a baseline without attention (mean pooling)</li>
+                </ol>
+
+                <h4>Starter Code</h4>
+                <div class="code-block">
+                    <pre><code class="language-python"># Starter code for the mini project
+from datasets import load_dataset
+from transformers import AutoTokenizer
+import torch
+import torch.nn as nn
+
+# Load IMDB dataset
+dataset = load_dataset("imdb")
+
+# Use GPT-2 tokenizer
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+tokenizer.pad_token = tokenizer.eos_token
+
+# Tokenize function
+def tokenize(batch):
+    return tokenizer(
+        batch["text"],
+        padding="max_length",
+        truncation=True,
+        max_length=256,
+        return_tensors="pt"
+    )
+
+# YOUR TASK:
+# 1. Create train/val dataloaders
+# 2. Implement AttentionClassifier (hint: use code from earlier)
+# 3. Train the model
+# 4. Visualize attention weights on test examples
+# 5. What words does the model focus on for positive vs negative?</code></pre>
+                </div>
+
+                <h4>Expected Outcomes</h4>
+                <ul>
+                    <li>Accuracy > 85% on IMDB test set</li>
+                    <li>Attention weights should highlight sentiment words ("great", "terrible", etc.)</li>
+                    <li>Understanding of how attention provides interpretability</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- HOW THIS CONNECTS FORWARD -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">How This Connects Forward</h2>
+
+            <div class="card">
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph LR
+    A["Module 3<br/>Tokenization &<br/>Basic Attention"] --> B["Module 4<br/>QKV Matrices &<br/>Multi-Head Attention"]
+    B --> C["Module 5<br/>Build GPT<br/>from Scratch"]
+
+    A --> D["RAG Modules<br/>Embeddings for<br/>Retrieval"]
+
+    style A fill:#8b5cf6,color:#fff
+    style B fill:#3b82f6,color:#fff
+    style C fill:#22c55e,color:#fff
+    style D fill:#f97316,color:#fff
+                    </div>
+                </div>
+
+                <h4>Concepts You'll Build On</h4>
+                <ul>
+                    <li><strong>Module 4:</strong> We'll extend attention to Query-Key-Value matrices, enabling self-attention where tokens attend to each other</li>
+                    <li><strong>Module 5:</strong> We'll combine everything to build a complete GPT model from scratch</li>
+                    <li><strong>Module 8-9 (RAG):</strong> Embeddings become crucial for semantic search and retrieval</li>
+                </ul>
+
+                <h4>Key Concepts to Remember</h4>
+                <ul>
+                    <li>Tokenization determines the "atoms" your model works with</li>
+                    <li>Embeddings encode meaning in geometry (similar = close)</li>
+                    <li>Attention lets models focus on relevant parts dynamically</li>
+                    <li>All modern LLMs are built on these foundations</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- CHECKPOINT SUMMARY -->
+            <!-- ============================================ -->
+            <div class="checkpoint-summary">
+                <h2>Checkpoint Summary</h2>
+
+                <h4>Core Concepts Mastered</h4>
+                <ul>
+                    <li><strong>Tokenization:</strong> Converting text to numbers. BPE finds the sweet spot between vocabulary size and sequence length.</li>
+                    <li><strong>Embeddings:</strong> Dense vector representations where geometry encodes meaning. Words with similar meanings have similar vectors.</li>
+                    <li><strong>Word2Vec:</strong> Learning embeddings by predicting context. Negative sampling makes training tractable.</li>
+                    <li><strong>Attention:</strong> A soft lookup mechanism that computes weighted averages of values based on query-key similarity.</li>
+                </ul>
+
+                <h4>Key Equations</h4>
+                <ul>
+                    <li>Attention weights: softmax(query * keys^T / sqrt(d_k))</li>
+                    <li>Attention output: weights @ values</li>
+                    <li>Word2Vec objective: maximize log P(context | center)</li>
+                </ul>
+
+                <h4>Production Insights</h4>
+                <ul>
+                    <li>Always count tokens for API cost estimation (use tiktoken for OpenAI)</li>
+                    <li>Different models have different tokenizers - use the right one</li>
+                    <li>Pre-trained embeddings can bootstrap models with limited data</li>
+                    <li>Attention weights provide interpretability - visualize them!</li>
+                </ul>
+
+                <h4>Ready for Module 4</h4>
+                <p>You now understand the building blocks. Next, we'll see how these combine into the full Transformer attention mechanism with Q, K, V projections and multi-head attention.</p>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex flex-between mt-4">
+                <a href="module-02.html" class="btn btn-secondary">&larr; Module 2: Terminology + MNIST</a>
+                <a href="module-04.html" class="btn btn-primary">Module 4: Attention Mechanisms &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        // Sidebar toggle for mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('open');
+                    sidebarOverlay.classList.toggle('open');
+                });
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('open');
+                });
+            }
+
+            // Collapsible sections
+            document.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    header.parentElement.classList.toggle('open');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

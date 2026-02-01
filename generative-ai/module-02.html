@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 2: Terminology + MNIST - Generative AI Engineering</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        .math-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+        }
+        .analogy-box {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border-left: 4px solid #22c55e;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .warning-box {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(234, 88, 12, 0.1) 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .insight-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .quiz-question {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .quiz-question h4 {
+            margin-bottom: 0.5rem;
+        }
+        .quiz-answer {
+            display: none;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 0.25rem;
+        }
+        .reveal-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        .reveal-btn:hover {
+            opacity: 0.9;
+        }
+        .checkpoint-summary {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+            border: 2px solid rgba(139, 92, 246, 0.4);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        .mini-project {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 2px dashed rgba(99, 102, 241, 0.5);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .neuron-visual {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            color: white;
+        }
+        .activation-chart {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .activation-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: 0.5rem;
+            min-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Setup + Core Math
+                    </a>
+                    <a href="module-02.html" class="sidebar-link active" data-module="2">
+                        <span class="sidebar-link-number">2</span>Terminology + MNIST
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">LLM Deep Dive</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>LLM Basics
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Attention Mechanisms
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>LLM Coding: GPT
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Training at Scale
+                    </a>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Optimization Hacks
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">RAG & Retrieval</div>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>RAG Fundamentals
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>RAG Implementation
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Agents & Systems</div>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>AI Agents
+                    </a>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Context Engineering
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>AI Engineering
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-13.html" class="sidebar-link" data-module="13">
+                        <span class="sidebar-link-number">13</span>Thinking Models
+                    </a>
+                    <a href="module-14.html" class="sidebar-link" data-module="14">
+                        <span class="sidebar-link-number">14</span>Multi-modal Models
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Capstone & Career</div>
+                    <a href="module-15.html" class="sidebar-link" data-module="15">
+                        <span class="sidebar-link-number">15</span>Capstone Project
+                    </a>
+                    <a href="module-16.html" class="sidebar-link" data-module="16">
+                        <span class="sidebar-link-number">16</span>Career Goals
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 2: Neural Network Terminology + MNIST</h1>
+            <p class="text-muted">Master the core vocabulary of neural networks and build a digit classifier from scratch.</p>
+
+            <!-- Learning Objectives -->
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Understand neurons, layers, and activation functions as building blocks</li>
+                    <li>Trace data through a network (forward pass)</li>
+                    <li>Measure error with loss functions (MSE, cross-entropy)</li>
+                    <li>Compute gradients with backpropagation</li>
+                    <li>Update weights with gradient descent</li>
+                    <li>Build a complete MNIST classifier from scratch in PyTorch</li>
+                    <li>Recognize and prevent overfitting with regularization</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 1: NEURAL NETWORK FUNDAMENTALS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">1. Neural Network Fundamentals</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Assembly Line</strong>
+                        <p>A neural network is like a factory assembly line. Raw materials (input data) enter, pass through multiple stations (layers), each performing a specific transformation, and a finished product (prediction) emerges. Each station has workers (neurons) that combine inputs and make decisions. The factory improves by adjusting how each worker operates (training).</p>
+                    </div>
+
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Signal Processing Pipeline</strong>
+                        <p>Or think of it like a signal processing chain: Input signal -> Filter 1 -> Filter 2 -> ... -> Output. Each filter (layer) extracts or transforms certain features. Early layers detect simple patterns (edges), later layers detect complex patterns (faces). The filters' parameters are learned, not hand-designed.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: Neurons and Layers</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Neuron: Basic Unit</h4>
+                    <p>A neuron takes multiple inputs, computes a weighted sum, adds a bias, and applies an activation function:</p>
+
+                    <div class="math-box">
+                        <strong>Neuron equation:</strong><br>
+                        output = activation(sum(weight_i * input_i) + bias)<br><br>
+                        <strong>Or in vector form:</strong><br>
+                        output = activation(w . x + b)<br><br>
+                        Where:<br>
+                        - w = weight vector (learned)<br>
+                        - x = input vector<br>
+                        - b = bias (learned)<br>
+                        - activation = non-linear function
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Single Neuron"
+        X1["x1"] --> |"w1"| SUM["Sum + Bias"]
+        X2["x2"] --> |"w2"| SUM
+        X3["x3"] --> |"w3"| SUM
+        SUM --> ACT["Activation"]
+        ACT --> OUT["Output"]
+    end
+                        </div>
+                    </div>
+
+                    <h4>Layers: Collections of Neurons</h4>
+                    <p>A layer is multiple neurons operating in parallel, each with its own weights:</p>
+                    <ul>
+                        <li><strong>Input layer:</strong> Just the raw features (no computation)</li>
+                        <li><strong>Hidden layers:</strong> Where transformation happens (learned features)</li>
+                        <li><strong>Output layer:</strong> Final prediction (class probabilities, values, etc.)</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Input (4 features)"
+        I1["x1"]
+        I2["x2"]
+        I3["x3"]
+        I4["x4"]
+    end
+    subgraph "Hidden Layer (8 neurons)"
+        H1["h1"]
+        H2["h2"]
+        H3["..."]
+        H4["h8"]
+    end
+    subgraph "Output (3 classes)"
+        O1["P(cat)"]
+        O2["P(dog)"]
+        O3["P(bird)"]
+    end
+    I1 --> H1 & H2 & H3 & H4
+    I2 --> H1 & H2 & H3 & H4
+    I3 --> H1 & H2 & H3 & H4
+    I4 --> H1 & H2 & H3 & H4
+    H1 --> O1 & O2 & O3
+    H2 --> O1 & O2 & O3
+    H3 --> O1 & O2 & O3
+    H4 --> O1 & O2 & O3
+                        </div>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Key Insight:</strong> A layer is just matrix multiplication! If input is shape (batch, 4) and we want 8 hidden neurons, we need weights of shape (4, 8). The computation: hidden = input @ W + b gives shape (batch, 8).
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: Activation Functions</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Why We Need Non-linearity</h4>
+                    <p>Without activation functions, a neural network is just a series of linear transformations, which collapses to a single linear transformation. No matter how many layers, it can only learn linear relationships.</p>
+
+                    <div class="math-box">
+                        <strong>Problem without activation:</strong><br>
+                        y = W2(W1 * x) = (W2 * W1) * x = W_combined * x<br><br>
+                        Still just a linear function! Adding activation breaks this:<br>
+                        y = W2 * activation(W1 * x)<br>
+                        Now we can learn non-linear patterns!
+                    </div>
+
+                    <h4>Common Activation Functions</h4>
+
+                    <div class="activation-chart">
+                        <div class="activation-item">
+                            <strong>ReLU</strong>
+                            <p>max(0, x)</p>
+                            <p class="text-muted">Default choice. Fast, works well.</p>
+                        </div>
+                        <div class="activation-item">
+                            <strong>Sigmoid</strong>
+                            <p>1 / (1 + e^(-x))</p>
+                            <p class="text-muted">Output 0-1. Binary classification.</p>
+                        </div>
+                        <div class="activation-item">
+                            <strong>Tanh</strong>
+                            <p>(e^x - e^(-x)) / (e^x + e^(-x))</p>
+                            <p class="text-muted">Output -1 to 1. Zero-centered.</p>
+                        </div>
+                        <div class="activation-item">
+                            <strong>Softmax</strong>
+                            <p>e^(x_i) / sum(e^(x_j))</p>
+                            <p class="text-muted">Output probabilities. Classification.</p>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = torch.linspace(-5, 5, 100)
+
+# Activation functions
+relu = F.relu(x)
+sigmoid = torch.sigmoid(x)
+tanh = torch.tanh(x)
+
+# Plot comparison
+fig, axes = plt.subplots(1, 3, figsize=(12, 3))
+
+axes[0].plot(x.numpy(), relu.numpy())
+axes[0].set_title('ReLU: max(0, x)')
+axes[0].axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+axes[0].axvline(x=0, color='gray', linestyle='--', alpha=0.5)
+
+axes[1].plot(x.numpy(), sigmoid.numpy())
+axes[1].set_title('Sigmoid: 1/(1+e^-x)')
+axes[1].axhline(y=0.5, color='gray', linestyle='--', alpha=0.5)
+
+axes[2].plot(x.numpy(), tanh.numpy())
+axes[2].set_title('Tanh')
+axes[2].axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+
+plt.tight_layout()
+plt.show()</code></pre>
+                    </div>
+
+                    <h4>When to Use Each</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Activation</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Use Case</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pros</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Cons</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>ReLU</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hidden layers (default)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fast, no vanishing gradient</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Dead neurons" if input always negative</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Sigmoid</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Binary output (yes/no)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Output is probability</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Vanishing gradients, not zero-centered</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Softmax</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Multi-class output</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Outputs sum to 1</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Only for output layer</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>GELU/SiLU</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Transformers, modern nets</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Smooth, better for deep nets</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Slightly more compute</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Common Mistakes</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ol>
+                        <li><strong>Using sigmoid in hidden layers:</strong> Causes vanishing gradients. Use ReLU instead.</li>
+                        <li><strong>Applying softmax twice:</strong> PyTorch's CrossEntropyLoss includes softmax. Don't apply softmax to output AND use CrossEntropyLoss.</li>
+                        <li><strong>Forgetting bias:</strong> Bias allows the network to shift the activation function. Always include unless you have batch normalization.</li>
+                        <li><strong>Not initializing weights properly:</strong> Default initialization matters. PyTorch defaults are usually fine, but be careful with custom layers.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 2: FORWARD PASS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">2. Forward Pass: Data Flows Through the Network</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Water Through Pipes</strong>
+                        <p>Imagine water (data) flowing through a series of pipes with valves (weights) and pressure regulators (activations). Each pipe transforms the water's pressure and flow. The forward pass is just opening the valves and letting water flow from input to output. The backward pass figures out which valves to adjust to get the desired output pressure.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>The forward pass computes the network's output given an input. For a 2-layer network:</p>
+
+                    <div class="math-box">
+                        <strong>Forward Pass:</strong><br>
+                        1. z1 = x @ W1 + b1     (linear transformation)<br>
+                        2. h1 = relu(z1)        (activation)<br>
+                        3. z2 = h1 @ W2 + b2    (linear transformation)<br>
+                        4. output = softmax(z2) (final activation)<br><br>
+                        Where:<br>
+                        - x: input (batch_size, input_features)<br>
+                        - z1, h1: hidden layer (batch_size, hidden_size)<br>
+                        - z2, output: (batch_size, num_classes)
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Forward Pass"
+        X["Input x"] --> L1["z1 = x @ W1 + b1"]
+        L1 --> A1["h1 = ReLU(z1)"]
+        A1 --> L2["z2 = h1 @ W2 + b2"]
+        L2 --> A2["output = Softmax(z2)"]
+        A2 --> P["Prediction"]
+    end
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Forward Pass</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# Manual forward pass (educational)
+def forward_manual(x, W1, b1, W2, b2):
+    """
+    Forward pass through 2-layer network.
+    Input: x (batch_size, 784) - flattened 28x28 images
+    Output: probabilities (batch_size, 10) - 10 digit classes
+    """
+    # Layer 1: Linear + ReLU
+    z1 = x @ W1 + b1           # (batch, 784) @ (784, 128) = (batch, 128)
+    h1 = F.relu(z1)            # Non-linearity
+
+    # Layer 2: Linear + Softmax
+    z2 = h1 @ W2 + b2          # (batch, 128) @ (128, 10) = (batch, 10)
+    output = F.softmax(z2, dim=1)  # Probabilities over classes
+
+    return output
+
+# Initialize weights
+torch.manual_seed(42)
+W1 = torch.randn(784, 128) * 0.01
+b1 = torch.zeros(128)
+W2 = torch.randn(128, 10) * 0.01
+b2 = torch.zeros(10)
+
+# Test with random input
+x = torch.randn(16, 784)  # Batch of 16 images
+output = forward_manual(x, W1, b1, W2, b2)
+print(f"Input shape: {x.shape}")
+print(f"Output shape: {output.shape}")
+print(f"Output sums to 1: {output[0].sum():.4f}")
+print(f"Sample prediction: {output[0]}")</code></pre>
+                    </div>
+
+                    <h4>Using PyTorch nn.Module</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch.nn as nn
+
+class SimpleNet(nn.Module):
+    def __init__(self, input_size=784, hidden_size=128, num_classes=10):
+        super().__init__()
+        # Define layers
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, num_classes)
+
+    def forward(self, x):
+        # Forward pass
+        x = self.fc1(x)       # Linear layer 1
+        x = F.relu(x)         # Activation
+        x = self.fc2(x)       # Linear layer 2
+        return x              # Return logits (not softmax!)
+
+# Create model
+model = SimpleNet()
+print(model)
+
+# Count parameters
+total_params = sum(p.numel() for p in model.parameters())
+print(f"Total parameters: {total_params:,}")
+# 784*128 + 128 + 128*10 + 10 = 100,480 + 128 + 1,280 + 10 = 101,898
+
+# Forward pass
+x = torch.randn(16, 784)
+logits = model(x)
+print(f"Output shape: {logits.shape}")  # (16, 10)
+
+# To get probabilities
+probs = F.softmax(logits, dim=1)</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <strong>Important:</strong> In PyTorch, return LOGITS from forward(), not probabilities. CrossEntropyLoss expects logits and computes softmax internally (more numerically stable).
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 3: LOSS FUNCTIONS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">3. Loss Functions: Measuring How Wrong We Are</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Error Signal</strong>
+                        <p>The loss function is like a quality control metric in manufacturing. It measures the difference between what you produced (prediction) and what you wanted (target). A higher loss means worse quality. Training minimizes this metric, improving product quality over time.</p>
+                    </div>
+
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: GPS Navigation</strong>
+                        <p>Loss is the distance to your destination. Gradient is the direction to drive. Gradient descent is driving toward the destination, reducing distance step by step.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Mean Squared Error (MSE)</h4>
+                    <p>Used for regression (predicting continuous values).</p>
+                    <div class="math-box">
+                        MSE = (1/n) * sum((prediction - target)^2)<br><br>
+                        Properties:<br>
+                        - Always positive (squared)<br>
+                        - Penalizes large errors more (quadratic)<br>
+                        - Minimum when prediction = target
+                    </div>
+
+                    <h4>Cross-Entropy Loss</h4>
+                    <p>Used for classification (predicting discrete classes).</p>
+                    <div class="math-box">
+                        CE = -sum(target_i * log(prediction_i))<br><br>
+                        For one-hot targets (classification):<br>
+                        CE = -log(p_correct_class)<br><br>
+                        Properties:<br>
+                        - Low when we're confident AND correct<br>
+                        - High when we're confident AND wrong<br>
+                        - Works with softmax outputs
+                    </div>
+
+                    <h4>Why Cross-Entropy for Classification?</h4>
+                    <div class="insight-box">
+                        <strong>Key Insight:</strong> Cross-entropy penalizes confident wrong predictions severely. If you predict 99% cat but it's a dog, CE is very high. MSE wouldn't penalize this nearly as much. Cross-entropy also has nice gradient properties with softmax - the gradient is simply (prediction - target).
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Loss Functions</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# ========== MSE Loss ==========
+predictions = torch.tensor([2.5, 0.0, 2.1])
+targets = torch.tensor([3.0, -0.5, 2.0])
+
+# Manual MSE
+mse_manual = ((predictions - targets) ** 2).mean()
+print(f"Manual MSE: {mse_manual:.4f}")
+
+# PyTorch MSE
+mse_loss = nn.MSELoss()
+mse_pytorch = mse_loss(predictions, targets)
+print(f"PyTorch MSE: {mse_pytorch:.4f}")
+
+# ========== Cross-Entropy Loss ==========
+# For classification: logits (raw scores) + integer labels
+
+# Network outputs (logits, NOT probabilities)
+logits = torch.tensor([
+    [2.0, 1.0, 0.1],   # Sample 1: model thinks class 0
+    [0.1, 2.0, 0.5],   # Sample 2: model thinks class 1
+    [1.0, 0.5, 2.5],   # Sample 3: model thinks class 2
+])
+# True labels (as integers)
+labels = torch.tensor([0, 1, 2])  # All correct!
+
+# Manual cross-entropy (educational)
+probs = F.softmax(logits, dim=1)
+correct_class_probs = probs[range(3), labels]  # Get prob of correct class
+ce_manual = -torch.log(correct_class_probs).mean()
+print(f"Manual CE: {ce_manual:.4f}")
+
+# PyTorch cross-entropy (expects LOGITS, not probabilities!)
+ce_loss = nn.CrossEntropyLoss()
+ce_pytorch = ce_loss(logits, labels)
+print(f"PyTorch CE: {ce_pytorch:.4f}")
+
+# What if we're wrong?
+wrong_labels = torch.tensor([1, 2, 0])  # All wrong!
+ce_wrong = ce_loss(logits, wrong_labels)
+print(f"CE when wrong: {ce_wrong:.4f}")  # Much higher!
+
+# ========== Why NOT to apply softmax before CrossEntropyLoss ==========
+# BAD: Double softmax
+probs = F.softmax(logits, dim=1)
+ce_bad = ce_loss(probs, labels)  # WRONG! probs are not logits
+print(f"CE with softmax (WRONG): {ce_bad:.4f}")  # Different value!</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 4: BACKPROPAGATION -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">4. Backpropagation: Computing Gradients Efficiently</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Blame Assignment</strong>
+                        <p>Imagine a factory with 3 assembly stations where the final product is defective. Backpropagation is figuring out how much each station contributed to the defect. You start at the end (final inspection failed) and trace back: "Station 3 made it 30% worse, Station 2 made it 50% worse, Station 1 made it 20% worse." Now you know how much to adjust each station.</p>
+                    </div>
+
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Chain Reaction</strong>
+                        <p>If you change a setting in Station 1, it affects Station 2's output, which affects Station 3's output, which affects the final quality. The chain rule computes exactly how much the final quality changes per unit change in Station 1's setting.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Goal</h4>
+                    <p>Compute dL/dW for every weight W, where L is the loss. This tells us how to adjust each weight to reduce the loss.</p>
+
+                    <h4>The Chain Rule in Action</h4>
+                    <p>For a network: input -> layer1 -> layer2 -> output -> loss</p>
+
+                    <div class="math-box">
+                        <strong>Forward:</strong><br>
+                        z1 = x @ W1<br>
+                        h1 = relu(z1)<br>
+                        z2 = h1 @ W2<br>
+                        loss = cross_entropy(z2, target)<br><br>
+
+                        <strong>Backward (chain rule):</strong><br>
+                        dL/dz2 = ... (from cross-entropy derivative)<br>
+                        dL/dW2 = h1.T @ dL/dz2<br>
+                        dL/dh1 = dL/dz2 @ W2.T<br>
+                        dL/dz1 = dL/dh1 * relu_derivative(z1)<br>
+                        dL/dW1 = x.T @ dL/dz1
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph RL
+    subgraph "Backpropagation Flow"
+        L["Loss"] --> |"dL/dz2"| Z2["z2"]
+        Z2 --> |"dL/dh1"| H1["h1"]
+        H1 --> |"dL/dz1"| Z1["z1"]
+        Z2 --> |"dL/dW2"| W2["W2"]
+        Z1 --> |"dL/dW1"| W1["W1"]
+    end
+                        </div>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Key Insight:</strong> Backpropagation is just the chain rule applied systematically. PyTorch handles this automatically - you call loss.backward() and gradients appear in tensor.grad. But understanding the mechanics helps debug gradient issues.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Manual vs Automatic Backprop</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Manual Backpropagation (Educational)</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn.functional as F
+
+# Simple 2-layer network
+torch.manual_seed(42)
+
+# Data: 1 sample, 4 features, 3 classes
+x = torch.randn(1, 4)
+target = torch.tensor([1])  # True class is 1
+
+# Weights
+W1 = torch.randn(4, 8, requires_grad=True)
+b1 = torch.zeros(8, requires_grad=True)
+W2 = torch.randn(8, 3, requires_grad=True)
+b2 = torch.zeros(3, requires_grad=True)
+
+# ========== Forward Pass ==========
+z1 = x @ W1 + b1
+h1 = F.relu(z1)
+z2 = h1 @ W2 + b2
+loss = F.cross_entropy(z2, target)
+
+print(f"Loss: {loss.item():.4f}")
+
+# ========== Backward Pass (Manual) ==========
+# Note: This is for learning. In practice, use .backward()
+
+# Gradient of cross-entropy + softmax combined
+probs = F.softmax(z2, dim=1)
+dL_dz2 = probs.clone()
+dL_dz2[0, target] -= 1  # Softmax + CE gradient: (probs - one_hot)
+
+# Gradient for W2 and b2
+dL_dW2 = h1.T @ dL_dz2
+dL_db2 = dL_dz2.sum(dim=0)
+
+# Gradient flowing back through layer 2
+dL_dh1 = dL_dz2 @ W2.T
+
+# ReLU gradient: pass through where z1 > 0, else 0
+dL_dz1 = dL_dh1 * (z1 > 0).float()
+
+# Gradient for W1 and b1
+dL_dW1 = x.T @ dL_dz1
+dL_db1 = dL_dz1.sum(dim=0)
+
+print(f"\nManual gradients:")
+print(f"dL/dW2 shape: {dL_dW2.shape}")
+print(f"dL/dW1 shape: {dL_dW1.shape}")
+
+# ========== Automatic Backward Pass ==========
+loss.backward()
+
+print(f"\nPyTorch gradients:")
+print(f"W2.grad shape: {W2.grad.shape}")
+print(f"W1.grad shape: {W1.grad.shape}")
+
+# Verify they match
+print(f"\nGradients match for W2: {torch.allclose(dL_dW2, W2.grad, atol=1e-5)}")
+print(f"Gradients match for W1: {torch.allclose(dL_dW1, W1.grad, atol=1e-5)}")</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 5: GRADIENT DESCENT -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">5. Gradient Descent: Walking Downhill</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Blind Hiking</strong>
+                        <p>Imagine you're blindfolded on a hilly terrain, trying to reach the lowest point (valley). You can feel the slope under your feet (gradient). Gradient descent: take a step in the downhill direction, feel the slope again, take another step. Repeat until you reach flat ground (minimum loss).</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Update Rule</h4>
+                    <div class="math-box">
+                        w_new = w_old - learning_rate * gradient<br><br>
+                        - learning_rate: How big a step to take (hyperparameter)<br>
+                        - gradient: Direction of steepest increase<br>
+                        - Minus sign: We want to DECREASE loss, so go opposite
+                    </div>
+
+                    <h4>Key Hyperparameters</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Parameter</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">What It Controls</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Typical Values</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Learning Rate</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Step size per update</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">0.001 - 0.1 (start with 0.001)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Batch Size</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Samples per gradient update</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">32, 64, 128, 256</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Epochs</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Full passes through dataset</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">10-100 (depends on data size)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Batch Size Trade-offs</h4>
+                    <ul>
+                        <li><strong>Large batch:</strong> More stable gradients, faster per sample (GPU utilization), but may generalize worse</li>
+                        <li><strong>Small batch:</strong> Noisier gradients (acts as regularization), more updates per epoch, may generalize better</li>
+                    </ul>
+
+                    <div class="warning-box">
+                        <strong>Learning Rate Matters Most:</strong> Too high = diverge (loss goes up). Too low = train forever. Start with 0.001 and adjust. Most issues in training are learning rate issues.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Training Loop</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.optim as optim
+
+# Simple model
+model = nn.Sequential(
+    nn.Linear(784, 128),
+    nn.ReLU(),
+    nn.Linear(128, 10)
+)
+
+# Loss function
+criterion = nn.CrossEntropyLoss()
+
+# Optimizer: handles gradient descent for us
+optimizer = optim.SGD(model.parameters(), lr=0.01)
+
+# Fake data for demonstration
+X_batch = torch.randn(64, 784)  # 64 samples
+y_batch = torch.randint(0, 10, (64,))  # 64 labels
+
+# ========== The Training Loop ==========
+for epoch in range(5):
+    # 1. Forward pass
+    logits = model(X_batch)
+
+    # 2. Compute loss
+    loss = criterion(logits, y_batch)
+
+    # 3. Zero gradients (important! otherwise they accumulate)
+    optimizer.zero_grad()
+
+    # 4. Backward pass (compute gradients)
+    loss.backward()
+
+    # 5. Update weights (gradient descent step)
+    optimizer.step()
+
+    print(f"Epoch {epoch+1}, Loss: {loss.item():.4f}")
+
+# What optimizer.step() does internally:
+# for param in model.parameters():
+#     param.data -= learning_rate * param.grad</code></pre>
+                    </div>
+
+                    <h4>Popular Optimizers</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># SGD: Simple gradient descent
+optimizer = optim.SGD(model.parameters(), lr=0.01)
+
+# SGD with momentum: smoother updates
+optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+
+# Adam: adaptive learning rates (usually best default)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+# AdamW: Adam with proper weight decay (for transformers)
+optimizer = optim.AdamW(model.parameters(), lr=0.001, weight_decay=0.01)</code></pre>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Rule of Thumb:</strong> Start with Adam at lr=0.001. If it doesn't work, try lr=0.0001 or lr=0.01. Adam adapts learning rates per-parameter, making it more robust than vanilla SGD.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 6: MNIST FROM SCRATCH -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">6. Hands-On: MNIST Classifier from Scratch</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>The Complete Implementation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+import matplotlib.pyplot as plt
+
+# ========== 1. Setup ==========
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
+
+# ========== 2. Load Data ==========
+# MNIST: 28x28 grayscale images of digits 0-9
+transform = transforms.Compose([
+    transforms.ToTensor(),  # Convert PIL Image to tensor (0-1 range)
+    transforms.Normalize((0.1307,), (0.3081,))  # MNIST mean and std
+])
+
+train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
+test_dataset = datasets.MNIST('./data', train=False, transform=transform)
+
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=1000, shuffle=False)
+
+# Visualize a few samples
+fig, axes = plt.subplots(1, 5, figsize=(12, 3))
+for i, (img, label) in enumerate(train_dataset):
+    if i >= 5:
+        break
+    axes[i].imshow(img.squeeze(), cmap='gray')
+    axes[i].set_title(f'Label: {label}')
+    axes[i].axis('off')
+plt.tight_layout()
+plt.show()
+
+# ========== 3. Define Model ==========
+class MNISTClassifier(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # Input: 28x28 = 784 pixels, flattened
+        self.flatten = nn.Flatten()
+        self.fc1 = nn.Linear(784, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, 10)  # 10 classes
+        self.dropout = nn.Dropout(0.2)
+
+    def forward(self, x):
+        x = self.flatten(x)         # (batch, 1, 28, 28) -> (batch, 784)
+        x = torch.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = torch.relu(self.fc2(x))
+        x = self.dropout(x)
+        x = self.fc3(x)             # Return logits
+        return x
+
+model = MNISTClassifier().to(device)
+print(model)
+
+# Count parameters
+total_params = sum(p.numel() for p in model.parameters())
+print(f"Total parameters: {total_params:,}")
+
+# ========== 4. Loss and Optimizer ==========
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+# ========== 5. Training Loop ==========
+def train_epoch(model, loader, criterion, optimizer, device):
+    model.train()  # Set to training mode (enables dropout)
+    total_loss = 0
+    correct = 0
+    total = 0
+
+    for batch_idx, (data, target) in enumerate(loader):
+        data, target = data.to(device), target.to(device)
+
+        # Forward pass
+        output = model(data)
+        loss = criterion(output, target)
+
+        # Backward pass
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        # Track metrics
+        total_loss += loss.item()
+        pred = output.argmax(dim=1)
+        correct += (pred == target).sum().item()
+        total += target.size(0)
+
+    return total_loss / len(loader), correct / total
+
+def evaluate(model, loader, criterion, device):
+    model.eval()  # Set to evaluation mode (disables dropout)
+    total_loss = 0
+    correct = 0
+    total = 0
+
+    with torch.no_grad():  # Don't compute gradients
+        for data, target in loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            loss = criterion(output, target)
+
+            total_loss += loss.item()
+            pred = output.argmax(dim=1)
+            correct += (pred == target).sum().item()
+            total += target.size(0)
+
+    return total_loss / len(loader), correct / total
+
+# Train for 10 epochs
+train_losses, test_losses = [], []
+train_accs, test_accs = [], []
+
+for epoch in range(10):
+    train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
+    test_loss, test_acc = evaluate(model, test_loader, criterion, device)
+
+    train_losses.append(train_loss)
+    test_losses.append(test_loss)
+    train_accs.append(train_acc)
+    test_accs.append(test_acc)
+
+    print(f"Epoch {epoch+1:2d}: Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.4f}, "
+          f"Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.4f}")
+
+# ========== 6. Plot Results ==========
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+
+ax1.plot(train_losses, label='Train')
+ax1.plot(test_losses, label='Test')
+ax1.set_xlabel('Epoch')
+ax1.set_ylabel('Loss')
+ax1.set_title('Loss over Training')
+ax1.legend()
+
+ax2.plot(train_accs, label='Train')
+ax2.plot(test_accs, label='Test')
+ax2.set_xlabel('Epoch')
+ax2.set_ylabel('Accuracy')
+ax2.set_title('Accuracy over Training')
+ax2.legend()
+
+plt.tight_layout()
+plt.show()
+
+# ========== 7. Test on Specific Examples ==========
+model.eval()
+examples = iter(test_loader)
+data, labels = next(examples)
+data, labels = data.to(device), labels.to(device)
+
+with torch.no_grad():
+    output = model(data)
+    predictions = output.argmax(dim=1)
+
+# Show some predictions
+fig, axes = plt.subplots(2, 5, figsize=(12, 5))
+for i, ax in enumerate(axes.flat):
+    ax.imshow(data[i].cpu().squeeze(), cmap='gray')
+    color = 'green' if predictions[i] == labels[i] else 'red'
+    ax.set_title(f'Pred: {predictions[i].item()}, True: {labels[i].item()}', color=color)
+    ax.axis('off')
+plt.tight_layout()
+plt.show()
+
+print(f"\nFinal Test Accuracy: {test_acc:.2%}")</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights: How Big Companies Train</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Production Training Infrastructure</h4>
+                    <ul>
+                        <li><strong>Distributed training:</strong> Models trained across 100s of GPUs using data parallelism</li>
+                        <li><strong>Mixed precision:</strong> FP16 for speed, FP32 for stability (saves memory, 2x faster)</li>
+                        <li><strong>Gradient accumulation:</strong> Simulate larger batch sizes when GPU memory is limited</li>
+                        <li><strong>Checkpointing:</strong> Save model every N steps to resume if training crashes</li>
+                    </ul>
+
+                    <h4>Typical Training Run at Scale</h4>
+                    <ul>
+                        <li><strong>GPT-3:</strong> ~355 GPU-years of compute, distributed across thousands of GPUs</li>
+                        <li><strong>Image classification:</strong> Hours to days on single GPU, depending on dataset size</li>
+                        <li><strong>MNIST:</strong> Minutes on any modern hardware (it's tiny by today's standards)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 7: OVERFITTING AND REGULARIZATION -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">7. Overfitting and Regularization</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Memorization vs Understanding</strong>
+                        <p>Overfitting is like a student who memorizes all practice test answers but can't solve new problems. The model learns the training data too well (including noise and quirks) instead of learning general patterns. It gets 100% on training but fails on new data.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Signs of Overfitting</h4>
+                    <ul>
+                        <li>Training loss decreases, test loss increases</li>
+                        <li>Large gap between training and test accuracy</li>
+                        <li>Model gets worse on new data over training time</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Underfitting"
+        U1["High train loss"]
+        U2["High test loss"]
+        U3["Model too simple"]
+    end
+    subgraph "Good Fit"
+        G1["Low train loss"]
+        G2["Low test loss"]
+        G3["Generalizes well"]
+    end
+    subgraph "Overfitting"
+        O1["Very low train loss"]
+        O2["High test loss"]
+        O3["Memorized training data"]
+    end
+                        </div>
+                    </div>
+
+                    <h4>Regularization Techniques</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Technique</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">How It Works</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">When to Use</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Dropout</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Randomly zero neurons during training</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Always (0.1-0.5 rate)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Weight Decay (L2)</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Penalize large weights in loss</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Always (0.01 typical)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Early Stopping</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Stop when test loss starts increasing</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">When overfitting is visible</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Data Augmentation</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Create variations of training data</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Image/text tasks</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Batch Normalization</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Normalize layer outputs</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Deep networks</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Regularization Techniques</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn as nn
+
+# ========== Dropout ==========
+class RegularizedNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc1 = nn.Linear(784, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, 10)
+        self.dropout = nn.Dropout(0.3)  # 30% dropout rate
+        self.bn1 = nn.BatchNorm1d(256)  # Batch normalization
+        self.bn2 = nn.BatchNorm1d(128)
+
+    def forward(self, x):
+        x = x.view(-1, 784)
+        x = torch.relu(self.bn1(self.fc1(x)))
+        x = self.dropout(x)  # Only active during training!
+        x = torch.relu(self.bn2(self.fc2(x)))
+        x = self.dropout(x)
+        x = self.fc3(x)
+        return x
+
+model = RegularizedNet()
+
+# ========== Weight Decay (L2 Regularization) ==========
+# Add weight_decay to optimizer
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=0.01)
+
+# ========== Early Stopping ==========
+class EarlyStopping:
+    def __init__(self, patience=5, min_delta=0.001):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.best_loss = float('inf')
+
+    def should_stop(self, val_loss):
+        if val_loss < self.best_loss - self.min_delta:
+            self.best_loss = val_loss
+            self.counter = 0
+            return False
+        else:
+            self.counter += 1
+            return self.counter >= self.patience
+
+early_stopping = EarlyStopping(patience=5)
+
+# In training loop:
+# if early_stopping.should_stop(val_loss):
+#     print("Early stopping!")
+#     break
+
+# ========== Data Augmentation (for images) ==========
+from torchvision import transforms
+
+train_transform = transforms.Compose([
+    transforms.RandomRotation(10),         # Random rotation +/- 10 degrees
+    transforms.RandomAffine(0, translate=(0.1, 0.1)),  # Random translation
+    transforms.ToTensor(),
+    transforms.Normalize((0.1307,), (0.3081,))
+])
+
+# ========== model.train() vs model.eval() ==========
+# CRITICAL: Switch modes for training vs evaluation
+
+# Training mode: dropout active, batch norm uses batch statistics
+model.train()
+output_train = model(x_train)
+
+# Evaluation mode: dropout disabled, batch norm uses running statistics
+model.eval()
+with torch.no_grad():
+    output_test = model(x_test)</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <strong>Critical Mistake:</strong> Forgetting to call <code>model.eval()</code> before testing. With dropout active during testing, your accuracy will be lower and inconsistent.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- ACTIVE RECALL QUESTIONS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Active Recall Questions</h2>
+
+            <div class="quiz-question">
+                <h4>Q1: Why do we need activation functions in neural networks?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> Without activation functions, neural networks are just a series of linear transformations that collapse into a single linear transformation. No matter how many layers, it can only learn linear relationships. Activation functions add non-linearity, allowing the network to learn complex patterns like curves, boundaries, and hierarchical features.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q2: What's the difference between logits and probabilities, and which should your network return?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> Logits are raw scores (can be any real number). Probabilities are softmax-transformed logits (sum to 1, all positive). Your network should return LOGITS, not probabilities. PyTorch's CrossEntropyLoss expects logits and computes softmax internally for numerical stability. Applying softmax before CrossEntropyLoss is a common bug that causes poor performance.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q3: Explain what happens during one iteration of the training loop.</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> (1) Forward pass: compute output from input using current weights. (2) Compute loss: measure how wrong the prediction is. (3) Zero gradients: clear accumulated gradients from previous iteration. (4) Backward pass: compute gradient of loss with respect to each weight using chain rule. (5) Update weights: move each weight opposite to its gradient (gradient descent step).
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q4: What are the signs of overfitting and how do you prevent it?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> Signs: training loss decreasing while test loss increasing, large gap between train/test accuracy. Prevention: (1) Dropout - randomly zero neurons during training. (2) Weight decay (L2) - penalize large weights. (3) Early stopping - stop when test loss starts increasing. (4) Data augmentation - create more training examples. (5) Reduce model size if you have little data.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q5: Why do we call optimizer.zero_grad() before loss.backward()?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> PyTorch accumulates gradients by default (adds new gradients to existing ones). Without zeroing, gradients from previous batches would add up, leading to incorrect updates. We zero gradients before backward() to start fresh each iteration. Note: gradient accumulation (intentionally not zeroing) is useful for simulating larger batch sizes with limited memory.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q6: What's the difference between model.train() and model.eval()?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> model.train() enables training behaviors: dropout is active (randomly zeros neurons), batch normalization uses batch statistics. model.eval() disables training behaviors: dropout is disabled (uses all neurons), batch normalization uses running statistics computed during training. Forgetting to call model.eval() before testing is a common bug that causes lower, inconsistent accuracy.
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- MINI PROJECT -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Mini Project: Improve the MNIST Classifier</h2>
+
+            <div class="mini-project">
+                <h4>Project: Beat 98% Accuracy on MNIST</h4>
+                <p>The baseline model achieves ~97% accuracy. Your goal is to improve it to >98% by applying techniques from this module.</p>
+
+                <h4>Tasks:</h4>
+                <ol>
+                    <li>Add batch normalization between layers</li>
+                    <li>Experiment with different dropout rates (0.1, 0.3, 0.5)</li>
+                    <li>Try different learning rates and optimizers</li>
+                    <li>Add data augmentation (rotation, translation)</li>
+                    <li>Implement early stopping</li>
+                    <li>Track train vs test loss to identify overfitting</li>
+                </ol>
+
+                <h4>Bonus Challenges:</h4>
+                <ul>
+                    <li>Try a deeper network (4-5 layers) - does it help or hurt?</li>
+                    <li>Use a CNN instead of fully-connected (preview of future modules)</li>
+                    <li>Achieve >99% accuracy (state of the art is ~99.8%)</li>
+                </ul>
+
+                <h4>Tips:</h4>
+                <ul>
+                    <li>Change one thing at a time and measure the effect</li>
+                    <li>Keep a log of what you tried and the results</li>
+                    <li>Plot learning curves to understand model behavior</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- HOW THIS CONNECTS FORWARD -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">How This Connects Forward</h2>
+
+            <div class="card">
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph LR
+    subgraph "This Module"
+        A[Forward Pass] --> B[Loss Functions]
+        B --> C[Backpropagation]
+        C --> D[Gradient Descent]
+        D --> E[Training Loop]
+    end
+    subgraph "Next Modules"
+        E --> F[LLM Basics: Same loop, different data]
+        E --> G[Attention: New layer type]
+        E --> H[GPT: Put it all together]
+    end
+                    </div>
+                </div>
+
+                <h4>What You'll Learn Next (Module 3: LLM Basics):</h4>
+                <ul>
+                    <li><strong>Tokenization:</strong> How text becomes numbers that neural networks can process</li>
+                    <li><strong>Embeddings:</strong> Representing words as learned vectors</li>
+                    <li><strong>Sequence modeling:</strong> How to handle variable-length inputs</li>
+                    <li><strong>Language modeling:</strong> Predicting the next word (the core LLM task)</li>
+                </ul>
+
+                <p>Everything from this module applies directly to LLMs. The forward pass, loss computation, backpropagation, and gradient descent work exactly the same way. LLMs just use different architectures (attention instead of dense layers) and different data (text instead of images).</p>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- CHECKPOINT SUMMARY -->
+            <!-- ============================================ -->
+            <div class="checkpoint-summary">
+                <h2>Checkpoint Summary</h2>
+                <p>After completing this module, you should be able to:</p>
+                <ul>
+                    <li><strong>Neurons:</strong> Explain what a neuron computes (weighted sum + bias + activation)</li>
+                    <li><strong>Layers:</strong> Understand layers as parallel neurons, implementable as matrix multiplication</li>
+                    <li><strong>Activations:</strong> Know when to use ReLU (hidden), Sigmoid (binary), Softmax (multi-class)</li>
+                    <li><strong>Forward pass:</strong> Trace data through a network from input to output</li>
+                    <li><strong>Loss functions:</strong> Choose MSE for regression, cross-entropy for classification</li>
+                    <li><strong>Backpropagation:</strong> Understand gradient computation as the chain rule applied backward</li>
+                    <li><strong>Gradient descent:</strong> Know the update rule: w = w - lr * gradient</li>
+                    <li><strong>Training loop:</strong> Implement forward, loss, zero_grad, backward, step</li>
+                    <li><strong>Overfitting:</strong> Recognize symptoms and apply regularization (dropout, weight decay, early stopping)</li>
+                </ul>
+
+                <h4>Key Code Patterns:</h4>
+                <div class="code-block">
+                    <pre><code class="language-python"># The training loop pattern
+for epoch in range(num_epochs):
+    model.train()
+    for batch_x, batch_y in train_loader:
+        optimizer.zero_grad()
+        output = model(batch_x)
+        loss = criterion(output, batch_y)
+        loss.backward()
+        optimizer.step()
+
+    model.eval()
+    with torch.no_grad():
+        # Evaluate on test set</code></pre>
+                </div>
+
+                <h4>Common Pitfalls to Avoid:</h4>
+                <ul>
+                    <li>Don't apply softmax AND use CrossEntropyLoss</li>
+                    <li>Don't forget optimizer.zero_grad()</li>
+                    <li>Don't forget model.eval() for testing</li>
+                    <li>Don't use sigmoid/tanh in hidden layers (use ReLU)</li>
+                </ul>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex flex-between mt-4">
+                <a href="module-01.html" class="btn btn-secondary">&larr; Previous: Setup + Core Math</a>
+                <a href="module-03.html" class="btn btn-primary">Next: LLM Basics &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

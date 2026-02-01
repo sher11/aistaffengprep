@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 1: Setup + Core Math - Generative AI Engineering</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        .math-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+        }
+        .analogy-box {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border-left: 4px solid #22c55e;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .warning-box {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(234, 88, 12, 0.1) 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .insight-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .quiz-question {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .quiz-question h4 {
+            margin-bottom: 0.5rem;
+        }
+        .quiz-answer {
+            display: none;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 0.25rem;
+        }
+        .reveal-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        .reveal-btn:hover {
+            opacity: 0.9;
+        }
+        .checkpoint-summary {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+            border: 2px solid rgba(139, 92, 246, 0.4);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        .mini-project {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 2px dashed rgba(99, 102, 241, 0.5);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link active" data-module="1">
+                        <span class="sidebar-link-number">1</span>Setup + Core Math
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Terminology + MNIST
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">LLM Deep Dive</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>LLM Basics
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Attention Mechanisms
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>LLM Coding: GPT
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Training at Scale
+                    </a>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Optimization Hacks
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">RAG & Retrieval</div>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>RAG Fundamentals
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>RAG Implementation
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Agents & Systems</div>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>AI Agents
+                    </a>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Context Engineering
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>AI Engineering
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-13.html" class="sidebar-link" data-module="13">
+                        <span class="sidebar-link-number">13</span>Thinking Models
+                    </a>
+                    <a href="module-14.html" class="sidebar-link" data-module="14">
+                        <span class="sidebar-link-number">14</span>Multi-modal Models
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Capstone & Career</div>
+                    <a href="module-15.html" class="sidebar-link" data-module="15">
+                        <span class="sidebar-link-number">15</span>Capstone Project
+                    </a>
+                    <a href="module-16.html" class="sidebar-link" data-module="16">
+                        <span class="sidebar-link-number">16</span>Career Goals
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 1: Setup + Core Math</h1>
+            <p class="text-muted">Build your development environment and master the mathematical foundations that make neural networks work.</p>
+
+            <!-- Learning Objectives -->
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Set up a complete AI development environment (Python, PyTorch, CUDA, Jupyter)</li>
+                    <li>Understand vectors and matrices as the language of neural networks</li>
+                    <li>Develop intuition for why matrix multiplication is the core operation in deep learning</li>
+                    <li>Grasp calculus concepts (derivatives, gradients, chain rule) needed for backpropagation</li>
+                    <li>Build probability intuition for understanding model outputs (softmax, distributions)</li>
+                    <li>Write efficient NumPy/PyTorch code with GPU acceleration</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 1: DEVELOPMENT ENVIRONMENT SETUP -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">1. Development Environment Setup</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: The Workshop</strong>
+                        <p>Think of your development environment like a machine shop. Python is your workbench - stable, familiar, where you do most of your work. PyTorch is your power tools - specialized equipment that makes hard tasks easy. CUDA is the electrical system that powers everything - without it, your power tools run on batteries (CPU) instead of high-voltage power (GPU). Jupyter is your whiteboard - great for sketching ideas and iterating quickly.</p>
+                    </div>
+                    <p>The key insight: <strong>AI engineering is 80% software engineering</strong>. Your environment setup determines your iteration speed, and iteration speed determines how fast you learn and ship.</p>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Why These Tools?</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Tool</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Purpose</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Why Not Alternatives</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Python 3.10+</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Primary language for ML/AI</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Ecosystem dominance - 95% of ML libraries are Python-first</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>PyTorch</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Deep learning framework</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Dynamic graphs, Pythonic, research standard (TensorFlow lost)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>CUDA</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">GPU acceleration</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">NVIDIA dominates AI hardware; ROCm (AMD) catching up but not there</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Jupyter</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Interactive development</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">See results immediately; great for exploration (not production)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>conda/mamba</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Environment management</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Handles CUDA/cuDNN versions; pip alone struggles with binaries</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="warning-box">
+                        <strong>Common Trap:</strong> Don't install PyTorch with just <code>pip install torch</code>. You'll get the CPU-only version. Always use the official PyTorch installation command with CUDA support.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Complete Setup</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Step 1: Install Miniconda</h4>
+                    <div class="code-block">
+                        <pre><code class="language-bash"># Download Miniconda (Linux/Mac)
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+
+# Or on Mac with Homebrew
+brew install --cask miniconda
+
+# Windows: Download from https://docs.conda.io/en/latest/miniconda.html</code></pre>
+                    </div>
+
+                    <h4>Step 2: Create AI Environment</h4>
+                    <div class="code-block">
+                        <pre><code class="language-bash"># Create environment with Python 3.10
+conda create -n ai python=3.10 -y
+conda activate ai
+
+# Install PyTorch with CUDA 12.1 (check your CUDA version with nvidia-smi)
+# Go to https://pytorch.org/get-started/locally/ for the exact command
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Install essential packages
+pip install numpy pandas matplotlib jupyter ipykernel
+pip install transformers datasets accelerate
+pip install scikit-learn tqdm
+
+# Register kernel for Jupyter
+python -m ipykernel install --user --name=ai --display-name="AI Env"</code></pre>
+                    </div>
+
+                    <h4>Step 3: Verify Installation</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import numpy as np
+
+# Check versions
+print(f"PyTorch version: {torch.__version__}")
+print(f"NumPy version: {np.__version__}")
+
+# Check CUDA availability
+print(f"CUDA available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"CUDA version: {torch.version.cuda}")
+    print(f"GPU: {torch.cuda.get_device_name(0)}")
+    print(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
+
+# Quick GPU test
+if torch.cuda.is_available():
+    x = torch.randn(1000, 1000, device='cuda')
+    y = torch.randn(1000, 1000, device='cuda')
+
+    # Warm up
+    _ = x @ y
+    torch.cuda.synchronize()
+
+    # Time it
+    import time
+    start = time.time()
+    for _ in range(100):
+        _ = x @ y
+    torch.cuda.synchronize()
+    print(f"100 matrix multiplications (1000x1000): {(time.time()-start)*1000:.1f}ms")</code></pre>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Expected Output:</strong> If CUDA is working, 100 matrix multiplications should take ~10-50ms on a decent GPU. On CPU, the same operation takes 500-2000ms. This 10-100x speedup is why GPUs matter.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights: How Big Companies Do This</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Environment Management at Scale</h4>
+                    <ul>
+                        <li><strong>Google/Meta:</strong> Custom internal build systems (Bazel/Buck) with pre-built binaries. Engineers don't install CUDA manually.</li>
+                        <li><strong>OpenAI:</strong> Heavy Docker usage with pre-configured images. <code>docker pull openai/pytorch-cuda</code> and you're done.</li>
+                        <li><strong>Startups:</strong> Often use cloud notebooks (Colab Pro, SageMaker, Lambda Labs) to avoid setup entirely.</li>
+                    </ul>
+
+                    <h4>Production vs Development</h4>
+                    <ul>
+                        <li><strong>Development:</strong> Jupyter notebooks, interactive debugging, local GPU</li>
+                        <li><strong>Training:</strong> Python scripts, distributed across multiple GPUs/nodes, cloud clusters</li>
+                        <li><strong>Inference:</strong> Optimized runtimes (TensorRT, ONNX), containerized, autoscaling</li>
+                    </ul>
+
+                    <div class="warning-box">
+                        <strong>Real Talk:</strong> Most AI engineers at big companies never touch raw CUDA or manage GPU drivers. Infrastructure teams handle this. But understanding how it works makes you 10x more effective at debugging and optimization.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Common Mistakes</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ol>
+                        <li><strong>Installing CPU-only PyTorch:</strong> Always check <code>torch.cuda.is_available()</code> after installation.</li>
+                        <li><strong>CUDA version mismatch:</strong> Your PyTorch CUDA version must match or be lower than your system CUDA. Run <code>nvidia-smi</code> to check.</li>
+                        <li><strong>Mixing pip and conda:</strong> This breaks environments. Pick one package manager for ML packages.</li>
+                        <li><strong>Not using virtual environments:</strong> Global Python installations lead to dependency hell. Always use conda or venv.</li>
+                        <li><strong>Forgetting to activate the environment:</strong> Your IDE might use the wrong Python. Always verify with <code>which python</code>.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 2: LINEAR ALGEBRA ESSENTIALS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">2. Linear Algebra Essentials</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Data as Coordinates</strong>
+                        <p>Think of a vector as a point in space. A 3D vector like [x, y, z] is a point in 3D space. An image with 784 pixels is a point in 784-dimensional space. A word embedding with 768 dimensions is a point in 768-dimensional space. Neural networks learn to move these points around in high-dimensional space until similar things are close together.</p>
+                    </div>
+
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Matrices as Transformations</strong>
+                        <p>A matrix is a function that transforms vectors. It's like a machine: you feed in a vector, it spits out a different vector. The matrix [[2,0],[0,2]] doubles everything. The matrix [[0,-1],[1,0]] rotates 90 degrees. Neural network layers are just matrices that have learned useful transformations.</p>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Vector = Point in Space"
+        V1["[3, 4]"] --> |"Position"| P1["Point at (3,4)"]
+    end
+    subgraph "Matrix = Transformation"
+        M1["[[2,0],[0,2]]"] --> |"Scaling"| T1["Doubles size"]
+    end
+    subgraph "Matrix x Vector = Transform Point"
+        MV["Matrix @ Vector"] --> |"Apply transform"| R1["New position"]
+    end
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Vectors: The Building Blocks</h4>
+                    <p>A vector is an ordered list of numbers. In deep learning, vectors represent:</p>
+                    <ul>
+                        <li><strong>Features:</strong> [height, weight, age] = a person's attributes</li>
+                        <li><strong>Pixels:</strong> [0.1, 0.5, 0.9, ...] = flattened image</li>
+                        <li><strong>Embeddings:</strong> [0.2, -0.1, 0.8, ...] = word meaning in 768 dimensions</li>
+                    </ul>
+
+                    <div class="math-box">
+                        <strong>Vector Operations:</strong><br>
+                        Addition: [1, 2] + [3, 4] = [4, 6] (element-wise)<br>
+                        Scaling: 2 * [1, 2] = [2, 4] (multiply each element)<br>
+                        Dot Product: [1, 2] . [3, 4] = 1*3 + 2*4 = 11 (similarity measure)
+                    </div>
+
+                    <h4>Matrices: Collections of Vectors</h4>
+                    <p>A matrix is a 2D array of numbers. Think of it as either:</p>
+                    <ul>
+                        <li><strong>Stacked row vectors:</strong> Each row is a data point (batch of inputs)</li>
+                        <li><strong>Stacked column vectors:</strong> Each column is a feature</li>
+                        <li><strong>A transformation:</strong> A function that maps vectors to vectors</li>
+                    </ul>
+
+                    <div class="math-box">
+                        <strong>Matrix Shape Convention:</strong><br>
+                        Shape (m, n) = m rows, n columns<br>
+                        Example: Shape (64, 784) = 64 images, each with 784 pixels<br>
+                        Example: Shape (768, 512) = transformation from 768-dim to 512-dim
+                    </div>
+
+                    <h4>Matrix Multiplication: The Core Operation</h4>
+                    <p>Matrix multiplication is THE operation in deep learning. Here's why it's special:</p>
+
+                    <div class="math-box">
+                        <strong>Rule:</strong> (m x n) @ (n x p) = (m x p)<br>
+                        The inner dimensions must match, outer dimensions give result shape.<br><br>
+                        <strong>Example:</strong><br>
+                        (64, 784) @ (784, 256) = (64, 256)<br>
+                        64 images with 784 features -> 64 images with 256 features<br>
+                        This is ONE layer of a neural network!
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Key Insight:</strong> A neural network layer is just: output = input @ weights + bias. That's it. The "magic" of deep learning is learning what values to put in the weights matrix.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Math / Theory: Why Matrix Multiplication Rules Deep Learning</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Batch Processing Insight</h4>
+                    <p>Why do we use matrices instead of processing one input at a time?</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    subgraph "Without Batching (Slow)"
+        I1["Input 1"] --> L1["Layer"]
+        L1 --> O1["Output 1"]
+        I2["Input 2"] --> L2["Layer"]
+        L2 --> O2["Output 2"]
+        I3["Input 3"] --> L3["Layer"]
+        L3 --> O3["Output 3"]
+    end
+    subgraph "With Batching (Fast)"
+        B["Batch [I1, I2, I3]"] --> BL["Single Matrix Multiply"]
+        BL --> BO["Batch [O1, O2, O3]"]
+    end
+                        </div>
+                    </div>
+
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Assembly Line</strong>
+                        <p>Processing one input at a time is like a chef making one dish, then cleaning up, then starting the next dish. Batching is like an assembly line: set up once, process many items in parallel. GPUs are designed for this parallel processing - they have thousands of cores that can all do multiplications simultaneously.</p>
+                    </div>
+
+                    <h4>Visual: How Matrix Multiplication Works</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Visualizing matrix multiplication
+# Each output element is a dot product of a row and a column
+
+#     [a b]       [e f]       [ae+bg  af+bh]
+#     [c d]   @   [g h]   =   [ce+dg  cf+dh]
+
+# In neural networks:
+# - Left matrix: batch of inputs (each row = one input)
+# - Right matrix: weights (each column = weights for one output neuron)
+# - Result: each row is the output for one input
+
+import numpy as np
+
+# 3 inputs, each with 4 features
+inputs = np.array([
+    [1, 2, 3, 4],  # Input 1
+    [5, 6, 7, 8],  # Input 2
+    [9, 10, 11, 12]  # Input 3
+])
+
+# Weights: transform 4 features to 2 outputs
+# Think: 2 output neurons, each looking at all 4 input features
+weights = np.array([
+    [0.1, 0.2],  # How feature 1 affects each output
+    [0.3, 0.4],  # How feature 2 affects each output
+    [0.5, 0.6],  # How feature 3 affects each output
+    [0.7, 0.8]   # How feature 4 affects each output
+])
+
+# One matrix multiplication processes ALL inputs through the layer
+outputs = inputs @ weights
+print(f"Input shape: {inputs.shape}")    # (3, 4)
+print(f"Weights shape: {weights.shape}")  # (4, 2)
+print(f"Output shape: {outputs.shape}")   # (3, 2)
+print(f"Outputs:\n{outputs}")</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: NumPy and PyTorch Operations</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>NumPy Basics</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import numpy as np
+
+# Creating vectors and matrices
+vector = np.array([1, 2, 3])
+matrix = np.array([[1, 2, 3],
+                   [4, 5, 6]])
+
+print(f"Vector shape: {vector.shape}")  # (3,)
+print(f"Matrix shape: {matrix.shape}")  # (2, 3)
+
+# Common operations
+a = np.array([[1, 2], [3, 4]])
+b = np.array([[5, 6], [7, 8]])
+
+# Element-wise operations
+print(f"Addition:\n{a + b}")
+print(f"Multiplication:\n{a * b}")  # NOT matrix mult!
+
+# Matrix multiplication (3 equivalent ways)
+print(f"Matrix mult:\n{a @ b}")         # Preferred
+print(f"Matrix mult:\n{np.matmul(a, b)}")
+print(f"Matrix mult:\n{np.dot(a, b)}")   # Works but ambiguous for higher dims
+
+# Reshaping - CRITICAL for neural networks
+x = np.arange(12)  # [0, 1, 2, ..., 11]
+print(f"Original shape: {x.shape}")  # (12,)
+print(f"Reshaped to (3,4):\n{x.reshape(3, 4)}")
+print(f"Reshaped to (2,2,3):\n{x.reshape(2, 2, 3)}")
+
+# Transpose
+print(f"Transpose of (2,3) becomes (3,2): {matrix.T.shape}")
+
+# Broadcasting - NumPy's superpower
+# Smaller array is "broadcast" to match larger array's shape
+matrix = np.ones((3, 4))
+row_vector = np.array([1, 2, 3, 4])  # shape (4,)
+col_vector = np.array([[1], [2], [3]])  # shape (3, 1)
+
+print(f"Matrix + row vector:\n{matrix + row_vector}")  # row added to each row
+print(f"Matrix + col vector:\n{matrix + col_vector}")  # col added to each column</code></pre>
+                    </div>
+
+                    <h4>PyTorch Tensors</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+
+# PyTorch tensors are like NumPy arrays but can run on GPU
+# and track gradients for backpropagation
+
+# Creating tensors
+x = torch.tensor([[1, 2], [3, 4]], dtype=torch.float32)
+y = torch.randn(2, 3)  # Random normal distribution
+z = torch.zeros(3, 3)  # All zeros
+w = torch.ones(2, 2)   # All ones
+
+# Move to GPU (if available)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+x_gpu = x.to(device)
+print(f"Tensor device: {x_gpu.device}")
+
+# Same operations as NumPy
+a = torch.randn(2, 3)
+b = torch.randn(3, 4)
+c = a @ b  # Matrix multiplication
+print(f"(2,3) @ (3,4) = {c.shape}")  # (2, 4)
+
+# Key difference: requires_grad for automatic differentiation
+x = torch.tensor([2.0, 3.0], requires_grad=True)
+y = x.sum() ** 2  # (2 + 3)^2 = 25
+y.backward()  # Compute gradients
+print(f"dy/dx = {x.grad}")  # [10, 10] because d(x1+x2)^2/dx1 = 2(x1+x2) = 10
+
+# NumPy <-> PyTorch conversion
+np_array = np.array([1, 2, 3])
+torch_tensor = torch.from_numpy(np_array)  # Shares memory!
+back_to_numpy = torch_tensor.numpy()
+
+# IMPORTANT: .clone() if you don't want shared memory
+torch_tensor_copy = torch.from_numpy(np_array).clone()</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Why GPUs Dominate AI</h4>
+                    <ul>
+                        <li><strong>CPUs:</strong> 4-64 powerful cores, optimized for sequential tasks</li>
+                        <li><strong>GPUs:</strong> 1000s of simpler cores, optimized for parallel matrix operations</li>
+                    </ul>
+
+                    <p>Matrix multiplication is "embarrassingly parallel" - each output element can be computed independently. GPUs excel at this.</p>
+
+                    <div class="code-block">
+                        <pre><code class="language-python"># Benchmark: CPU vs GPU matrix multiplication
+import torch
+import time
+
+def benchmark(device, size=4096, iterations=10):
+    a = torch.randn(size, size, device=device)
+    b = torch.randn(size, size, device=device)
+
+    # Warmup
+    _ = a @ b
+    if device.type == 'cuda':
+        torch.cuda.synchronize()
+
+    start = time.time()
+    for _ in range(iterations):
+        c = a @ b
+    if device.type == 'cuda':
+        torch.cuda.synchronize()
+
+    elapsed = (time.time() - start) / iterations
+    return elapsed
+
+cpu_time = benchmark(torch.device('cpu'), size=2048, iterations=5)
+print(f"CPU: {cpu_time*1000:.1f}ms per matmul")
+
+if torch.cuda.is_available():
+    gpu_time = benchmark(torch.device('cuda'), size=2048, iterations=5)
+    print(f"GPU: {gpu_time*1000:.1f}ms per matmul")
+    print(f"Speedup: {cpu_time/gpu_time:.1f}x")
+
+# Typical output on a modern system:
+# CPU: 500-2000ms per matmul
+# GPU: 2-10ms per matmul
+# Speedup: 50-200x</code></pre>
+                    </div>
+
+                    <h4>Memory Layout Matters</h4>
+                    <p>Data in memory can be row-major (C-style) or column-major (Fortran-style). NumPy/PyTorch default to row-major. This affects performance:</p>
+                    <ul>
+                        <li>Accessing rows is fast (contiguous memory)</li>
+                        <li>Accessing columns is slower (strided access)</li>
+                        <li>Always batch on the first dimension for best performance</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Common Mistakes</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ol>
+                        <li><strong>Confusing * and @:</strong> <code>a * b</code> is element-wise, <code>a @ b</code> is matrix multiplication. This will silently give wrong results.</li>
+                        <li><strong>Shape mismatches:</strong> Always print shapes when debugging. Most bugs are shape bugs.</li>
+                        <li><strong>Forgetting batch dimension:</strong> Neural networks expect shape (batch, features), not just (features,).</li>
+                        <li><strong>In-place operations with gradients:</strong> <code>x += 1</code> can break gradient computation. Use <code>x = x + 1</code>.</li>
+                        <li><strong>Not using .item() for scalars:</strong> <code>loss.item()</code> gives a Python number; <code>loss</code> is a tensor that accumulates gradients.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 3: CALCULUS INTUITION -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">3. Calculus Intuition: Derivatives and Gradients</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Derivatives as Sensitivity</strong>
+                        <p>A derivative tells you: "If I change this input a tiny bit, how much does the output change?" It's like a sensitivity analysis. If dy/dx = 10, then a small change in x causes a 10x larger change in y. If dy/dx = 0.01, y barely responds to changes in x.</p>
+                    </div>
+
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Gradients as Direction</strong>
+                        <p>When you have multiple inputs (a vector), the gradient points in the direction of steepest increase. Imagine you're hiking and want to reach the peak - the gradient tells you which direction is steepest uphill. For optimization, we go OPPOSITE the gradient (steepest DOWNhill) to find the minimum.</p>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Loss Landscape"
+        A["High Loss"] --> B["Medium Loss"]
+        B --> C["Low Loss (Goal)"]
+    end
+    subgraph "Gradient Descent"
+        G1["Gradient points uphill"] --> G2["We move opposite: downhill"]
+        G2 --> G3["Repeat until minimum"]
+    end
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Derivative: Rate of Change</h4>
+                    <div class="math-box">
+                        <strong>Definition:</strong> f'(x) = lim(h->0) [f(x+h) - f(x)] / h<br><br>
+                        <strong>Intuition:</strong> Slope of the tangent line at point x<br><br>
+                        <strong>Key derivatives to know:</strong><br>
+                        - d/dx(x^n) = n*x^(n-1)<br>
+                        - d/dx(e^x) = e^x<br>
+                        - d/dx(log(x)) = 1/x<br>
+                        - d/dx(sin(x)) = cos(x)
+                    </div>
+
+                    <h4>Gradient: Multi-variable Derivative</h4>
+                    <p>When a function has multiple inputs f(x, y, z), the gradient is a vector of partial derivatives:</p>
+                    <div class="math-box">
+                        grad(f) = [df/dx, df/dy, df/dz]<br><br>
+                        Each partial derivative: "How does f change if I only change this one input?"<br><br>
+                        Example: f(x, y) = x^2 + 3xy<br>
+                        df/dx = 2x + 3y<br>
+                        df/dy = 3x<br>
+                        grad(f) = [2x + 3y, 3x]
+                    </div>
+
+                    <h4>The Chain Rule: Why Backpropagation Works</h4>
+                    <p>When functions are composed, derivatives multiply:</p>
+                    <div class="math-box">
+                        <strong>Chain Rule:</strong> d/dx[f(g(x))] = f'(g(x)) * g'(x)<br><br>
+                        <strong>Example:</strong> y = (2x + 1)^3<br>
+                        Let u = 2x + 1, so y = u^3<br>
+                        dy/dx = dy/du * du/dx = 3u^2 * 2 = 6(2x+1)^2
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Key Insight for Deep Learning:</strong> A neural network is just a chain of functions: output = f3(f2(f1(input))). The chain rule lets us compute how each weight affects the final output by multiplying local derivatives backward through the network. This is backpropagation.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Automatic Differentiation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Manual vs Automatic Gradients</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import numpy as np
+
+# Example: f(x) = x^2 + 3x
+# Derivative: f'(x) = 2x + 3
+
+# Manual gradient (numerical approximation)
+def f(x):
+    return x**2 + 3*x
+
+def numerical_gradient(f, x, h=1e-5):
+    return (f(x + h) - f(x - h)) / (2 * h)
+
+x_val = 2.0
+print(f"At x = {x_val}:")
+print(f"  Numerical gradient: {numerical_gradient(f, x_val):.4f}")
+print(f"  Analytical gradient: {2*x_val + 3:.4f}")  # 2*2 + 3 = 7
+
+# PyTorch automatic differentiation
+x = torch.tensor(2.0, requires_grad=True)
+y = x**2 + 3*x
+y.backward()  # Compute gradient
+print(f"  PyTorch gradient: {x.grad.item():.4f}")  # Also 7!</code></pre>
+                    </div>
+
+                    <h4>Chain Rule in Code: Backpropagation Preview</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Composition: y = (2x + 1)^3
+# Chain rule: dy/dx = 3(2x+1)^2 * 2 = 6(2x+1)^2
+
+# Manual chain rule
+x_val = 1.0
+u = 2*x_val + 1  # u = 3
+dy_du = 3 * u**2  # = 27
+du_dx = 2
+dy_dx = dy_du * du_dx  # = 54
+print(f"Manual chain rule: dy/dx = {dy_dx}")
+
+# PyTorch automatic
+x = torch.tensor(1.0, requires_grad=True)
+u = 2*x + 1
+y = u**3
+y.backward()
+print(f"PyTorch gradient: {x.grad.item()}")  # Also 54!
+
+# Multiple variables: f(x, y) = x^2 * y + y^3
+x = torch.tensor(2.0, requires_grad=True)
+y = torch.tensor(3.0, requires_grad=True)
+f = x**2 * y + y**3
+f.backward()
+print(f"df/dx = {x.grad.item()}")  # 2*x*y = 12
+print(f"df/dy = {y.grad.item()}")  # x^2 + 3*y^2 = 4 + 27 = 31</code></pre>
+                    </div>
+
+                    <h4>Simple Neural Network: Forward and Backward</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># A tiny neural network: input -> linear -> relu -> linear -> output
+# We'll compute gradients of the loss with respect to weights
+
+import torch
+import torch.nn.functional as F
+
+# Setup: 2 inputs, hidden layer with 3 neurons, 1 output
+torch.manual_seed(42)
+
+# Weights (what we want to learn)
+W1 = torch.randn(2, 3, requires_grad=True)  # Input to hidden
+b1 = torch.zeros(3, requires_grad=True)
+W2 = torch.randn(3, 1, requires_grad=True)  # Hidden to output
+b2 = torch.zeros(1, requires_grad=True)
+
+# Input and target
+x = torch.tensor([[1.0, 2.0]])  # One sample, 2 features
+target = torch.tensor([[1.0]])   # We want output to be 1
+
+# Forward pass (composition of functions)
+hidden = x @ W1 + b1           # Linear layer 1
+hidden = F.relu(hidden)         # ReLU activation
+output = hidden @ W2 + b2       # Linear layer 2
+
+# Loss: how wrong are we?
+loss = (output - target)**2
+
+print(f"Output: {output.item():.4f}")
+print(f"Loss: {loss.item():.4f}")
+
+# Backward pass: compute all gradients via chain rule
+loss.backward()
+
+print(f"\nGradients (how to adjust weights to reduce loss):")
+print(f"dL/dW1:\n{W1.grad}")
+print(f"dL/db1: {b1.grad}")
+print(f"dL/dW2:\n{W2.grad}")
+print(f"dL/db2: {b2.grad}")
+
+# Gradient descent step: move weights opposite to gradient
+learning_rate = 0.1
+with torch.no_grad():  # Don't track gradients for update
+    W1 -= learning_rate * W1.grad
+    b1 -= learning_rate * b1.grad
+    W2 -= learning_rate * W2.grad
+    b2 -= learning_rate * b2.grad
+
+# Zero gradients for next iteration
+W1.grad.zero_()
+b1.grad.zero_()
+W2.grad.zero_()
+b2.grad.zero_()</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Common Mistakes</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ol>
+                        <li><strong>Not zeroing gradients:</strong> PyTorch accumulates gradients. Call <code>optimizer.zero_grad()</code> or <code>tensor.grad.zero_()</code> before each backward pass.</li>
+                        <li><strong>Calling backward() twice without retain_graph=True:</strong> The computation graph is freed after backward(). Set <code>retain_graph=True</code> if you need to call backward() multiple times.</li>
+                        <li><strong>Forgetting requires_grad:</strong> Tensors without <code>requires_grad=True</code> won't have gradients computed.</li>
+                        <li><strong>Operating on gradients without torch.no_grad():</strong> Updates to parameters should be done in <code>with torch.no_grad():</code> block.</li>
+                        <li><strong>Confusing .item() with tensor values:</strong> Use <code>.item()</code> to get Python numbers for logging; use tensors for computation.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 4: PROBABILITY BASICS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">4. Probability Basics for Deep Learning</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Probability as Uncertainty</strong>
+                        <p>A neural network doesn't output "this is a cat" - it outputs "I'm 95% confident this is a cat, 3% confident it's a dog, 2% other." Probability distributions let us express and quantify uncertainty. The network's output is a probability distribution over all possible answers.</p>
+                    </div>
+
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Expected Value as Average Outcome</strong>
+                        <p>If you ran an experiment infinite times, expected value is what you'd see on average. For a loss function, the expected value over all training examples is what we're trying to minimize.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Probability Distribution</h4>
+                    <p>A probability distribution assigns probabilities to all possible outcomes. Key properties:</p>
+                    <ul>
+                        <li>All probabilities are between 0 and 1</li>
+                        <li>All probabilities sum to 1</li>
+                    </ul>
+
+                    <div class="math-box">
+                        <strong>Discrete distribution example:</strong><br>
+                        Rolling a die: P(1) = P(2) = P(3) = P(4) = P(5) = P(6) = 1/6<br><br>
+                        <strong>Neural network output:</strong><br>
+                        Classification: P(cat) = 0.7, P(dog) = 0.2, P(bird) = 0.1<br>
+                        Sum = 0.7 + 0.2 + 0.1 = 1.0 (valid distribution)
+                    </div>
+
+                    <h4>Softmax: Turning Numbers into Probabilities</h4>
+                    <p>Neural networks output raw scores (logits). Softmax converts them to probabilities:</p>
+                    <div class="math-box">
+                        softmax(x_i) = exp(x_i) / sum(exp(x_j) for all j)<br><br>
+                        Properties:<br>
+                        - Output is always positive (exp is always positive)<br>
+                        - Outputs sum to 1 (divided by sum)<br>
+                        - Preserves order (larger logit = larger probability)<br>
+                        - Amplifies differences (exp makes big numbers MUCH bigger)
+                    </div>
+
+                    <h4>Expected Value</h4>
+                    <div class="math-box">
+                        E[X] = sum(x * P(x)) for all x<br><br>
+                        Example: Expected value of rolling a die<br>
+                        E[X] = 1*(1/6) + 2*(1/6) + 3*(1/6) + 4*(1/6) + 5*(1/6) + 6*(1/6) = 3.5<br><br>
+                        In deep learning, we compute expected loss over training examples.
+                    </div>
+
+                    <h4>Entropy and Cross-Entropy</h4>
+                    <div class="math-box">
+                        <strong>Entropy:</strong> Measures uncertainty in a distribution<br>
+                        H(p) = -sum(p(x) * log(p(x)))<br>
+                        High entropy = high uncertainty (uniform distribution)<br>
+                        Low entropy = low uncertainty (peaked distribution)<br><br>
+                        <strong>Cross-Entropy:</strong> Measures how well q approximates p<br>
+                        H(p, q) = -sum(p(x) * log(q(x)))<br>
+                        This is THE loss function for classification!
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Softmax and Cross-Entropy</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn.functional as F
+import numpy as np
+
+# Raw network outputs (logits) - NOT probabilities
+logits = torch.tensor([2.0, 1.0, 0.1])
+
+# Manual softmax
+def softmax(x):
+    exp_x = torch.exp(x)
+    return exp_x / exp_x.sum()
+
+probs = softmax(logits)
+print(f"Logits: {logits}")
+print(f"Probabilities: {probs}")
+print(f"Sum: {probs.sum()}")  # Should be 1.0
+
+# PyTorch softmax
+probs_torch = F.softmax(logits, dim=0)
+print(f"PyTorch softmax: {probs_torch}")
+
+# Temperature: controls "sharpness" of distribution
+def softmax_with_temp(x, temperature):
+    return F.softmax(x / temperature, dim=0)
+
+print(f"\nTemperature effects:")
+print(f"T=0.5 (sharp):  {softmax_with_temp(logits, 0.5)}")
+print(f"T=1.0 (normal): {softmax_with_temp(logits, 1.0)}")
+print(f"T=2.0 (smooth): {softmax_with_temp(logits, 2.0)}")
+
+# Cross-entropy loss: how wrong is our prediction?
+# True label: class 0 (one-hot: [1, 0, 0])
+true_label = 0
+
+# Manual cross-entropy
+probs = F.softmax(logits, dim=0)
+manual_ce = -torch.log(probs[true_label])
+print(f"\nManual cross-entropy: {manual_ce.item():.4f}")
+
+# PyTorch cross-entropy (takes logits, not probabilities!)
+loss = F.cross_entropy(logits.unsqueeze(0), torch.tensor([true_label]))
+print(f"PyTorch cross-entropy: {loss.item():.4f}")
+
+# Why use logits instead of probabilities?
+# Numerical stability! log(softmax(x)) can overflow/underflow
+# PyTorch combines log + softmax in a stable way</code></pre>
+                    </div>
+
+                    <h4>Probability Distributions in PyTorch</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+from torch.distributions import Normal, Categorical
+
+# Normal (Gaussian) distribution
+mu = torch.tensor(0.0)
+sigma = torch.tensor(1.0)
+normal = Normal(mu, sigma)
+
+# Sample from the distribution
+samples = normal.sample((5,))
+print(f"5 samples from N(0,1): {samples}")
+
+# Log probability of a value
+x = torch.tensor(0.5)
+log_prob = normal.log_prob(x)
+print(f"log P(x=0.5): {log_prob.item():.4f}")
+
+# Categorical distribution (for classification)
+probs = torch.tensor([0.2, 0.5, 0.3])  # 3 classes
+categorical = Categorical(probs)
+
+# Sample a class
+samples = categorical.sample((10,))
+print(f"10 samples from Categorical: {samples}")
+print(f"Counts: {[(samples == i).sum().item() for i in range(3)]}")
+
+# This is what happens during text generation!
+# LLM outputs logits -> softmax -> Categorical -> sample next token</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights: Softmax in Production</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Temperature in LLMs</h4>
+                    <p>When you set "temperature" in ChatGPT or other LLMs, you're directly modifying the softmax:</p>
+                    <ul>
+                        <li><strong>Temperature = 0:</strong> Always pick the highest probability token (deterministic, but actually implemented as very low temp)</li>
+                        <li><strong>Temperature = 1:</strong> Sample according to the model's probability distribution</li>
+                        <li><strong>Temperature > 1:</strong> More random, more "creative"</li>
+                    </ul>
+
+                    <h4>Numerical Stability Trick</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Naive softmax can overflow!
+big_logits = torch.tensor([1000.0, 1001.0, 1002.0])
+# exp(1000) is HUGE - will overflow
+
+# Trick: subtract max first (doesn't change softmax result)
+def stable_softmax(x):
+    x_max = x.max()
+    exp_x = torch.exp(x - x_max)  # Now largest exp is exp(0) = 1
+    return exp_x / exp_x.sum()
+
+print(f"Stable softmax: {stable_softmax(big_logits)}")
+# PyTorch's F.softmax already does this internally</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 5: GPU ACCELERATION -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">5. GPU Acceleration Basics</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: CPU vs GPU</strong>
+                        <p>A CPU is like a few brilliant professors who can solve any problem quickly, but can only work on a few things at once. A GPU is like thousands of students who can only do simple math, but can all work in parallel. Matrix multiplication is millions of simple multiplications and additions - perfect for the students (GPU).</p>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "CPU: Few Fast Cores"
+        C1["Core 1: Complex task"]
+        C2["Core 2: Complex task"]
+        C3["Core 3: Complex task"]
+        C4["Core 4: Complex task"]
+    end
+    subgraph "GPU: Many Simple Cores"
+        G1["1000s of cores"]
+        G2["Each does: multiply, add"]
+        G3["All work in parallel"]
+    end
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Using the GPU</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import time
+
+# Check GPU availability
+print(f"CUDA available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"GPU: {torch.cuda.get_device_name(0)}")
+    print(f"Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
+
+# Device-agnostic code pattern
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
+
+# Moving tensors to GPU
+x_cpu = torch.randn(1000, 1000)
+x_gpu = x_cpu.to(device)  # Copy to GPU
+
+# Or create directly on GPU
+y_gpu = torch.randn(1000, 1000, device=device)
+
+# Operations on GPU tensors happen on GPU
+z_gpu = x_gpu @ y_gpu  # Matrix multiply on GPU
+
+# Move back to CPU if needed
+z_cpu = z_gpu.cpu()  # or z_gpu.to('cpu')
+
+# Common pattern: model and data on same device
+class SimpleModel(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear = torch.nn.Linear(784, 10)
+
+    def forward(self, x):
+        return self.linear(x)
+
+model = SimpleModel().to(device)  # Model on GPU
+data = torch.randn(64, 784, device=device)  # Data on GPU
+output = model(data)  # Computation on GPU
+
+# Benchmark
+def benchmark_matmul(size, device, iterations=100):
+    a = torch.randn(size, size, device=device)
+    b = torch.randn(size, size, device=device)
+
+    # Warmup
+    for _ in range(10):
+        _ = a @ b
+    if device.type == 'cuda':
+        torch.cuda.synchronize()
+
+    start = time.time()
+    for _ in range(iterations):
+        c = a @ b
+    if device.type == 'cuda':
+        torch.cuda.synchronize()
+
+    elapsed = time.time() - start
+    return elapsed / iterations
+
+sizes = [256, 512, 1024, 2048]
+for size in sizes:
+    cpu_time = benchmark_matmul(size, torch.device('cpu'), 10)
+    if torch.cuda.is_available():
+        gpu_time = benchmark_matmul(size, torch.device('cuda'), 100)
+        speedup = cpu_time / gpu_time
+        print(f"Size {size}x{size}: CPU {cpu_time*1000:.1f}ms, GPU {gpu_time*1000:.2f}ms, Speedup: {speedup:.1f}x")
+    else:
+        print(f"Size {size}x{size}: CPU {cpu_time*1000:.1f}ms")</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Common Mistakes with GPU</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ol>
+                        <li><strong>Mixing CPU and GPU tensors:</strong> <code>cpu_tensor + gpu_tensor</code> will error. Always check <code>.device</code>.</li>
+                        <li><strong>Forgetting torch.cuda.synchronize():</strong> GPU operations are asynchronous. Timing code needs synchronize().</li>
+                        <li><strong>Moving data in training loop:</strong> Move model and data to GPU ONCE, not every iteration.</li>
+                        <li><strong>Not using .to(device):</strong> Hardcoding <code>.cuda()</code> breaks on CPU-only machines.</li>
+                        <li><strong>GPU memory leaks:</strong> Storing tensors in lists without <code>.detach()</code> keeps computation graph in memory.</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <pre><code class="language-python"># Memory management
+# Check GPU memory
+if torch.cuda.is_available():
+    print(f"Allocated: {torch.cuda.memory_allocated() / 1e9:.2f} GB")
+    print(f"Cached: {torch.cuda.memory_reserved() / 1e9:.2f} GB")
+
+# Free cached memory
+torch.cuda.empty_cache()
+
+# Avoid memory leaks in training
+losses = []
+for batch in dataloader:
+    loss = model(batch).sum()
+    loss.backward()
+
+    # BAD: stores computation graph
+    # losses.append(loss)
+
+    # GOOD: detaches from graph
+    losses.append(loss.item())  # or loss.detach()</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- ACTIVE RECALL QUESTIONS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Active Recall Questions</h2>
+
+            <div class="quiz-question">
+                <h4>Q1: Why is matrix multiplication the core operation in neural networks?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> A neural network layer transforms inputs to outputs using: output = input @ weights + bias. Matrix multiplication is perfect because: (1) it applies a linear transformation to each input, (2) it naturally handles batches - many inputs processed simultaneously, (3) it's embarrassingly parallel - GPUs can compute all elements simultaneously, and (4) the transformation learned by the network is encoded in the weight matrix values.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q2: What does the gradient of a function tell you, and why does this matter for training neural networks?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> The gradient points in the direction of steepest increase of a function. For training, we want to minimize loss, so we move in the OPPOSITE direction of the gradient (gradient descent). The gradient tells us exactly how much to adjust each weight to reduce the loss. The chain rule lets us compute gradients efficiently through many layers (backpropagation).
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q3: Why does softmax use exponential function instead of just normalizing by sum?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> Three reasons: (1) Exp ensures all outputs are positive (negative logits become small positive numbers), (2) Exp amplifies differences - the largest logit gets much larger probability, making the network more "decisive", (3) Mathematical convenience - the derivative of softmax has a nice form that works well with cross-entropy loss.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q4: When should you NOT use GPU for computation?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> GPU is NOT beneficial for: (1) Small tensors - transfer overhead exceeds computation benefit, (2) Sequential operations - GPU excels at parallel work, (3) Operations dominated by memory access rather than compute, (4) When you need to frequently move data between CPU and GPU. Rule of thumb: batch sizes > 32 and matrix sizes > 256 benefit from GPU.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q5: What does requires_grad=True do in PyTorch, and when should you turn it off?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> requires_grad=True tells PyTorch to track operations for gradient computation. Turn it off (or use torch.no_grad()): (1) During inference - no need for gradients, saves memory, (2) When updating parameters - don't want to track the update itself, (3) For tensors that shouldn't be trained (frozen layers). Training requires it ON for model parameters, OFF for inputs and during weight updates.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q6: Explain the "temperature" parameter in LLM generation.</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> Temperature divides logits before softmax: softmax(logits / T). T < 1 sharpens the distribution (more confident, less random). T > 1 flattens it (less confident, more random). T = 0 (limit) always picks the highest probability. T = 1 is the model's natural distribution. High temperature produces more "creative" but potentially incoherent text; low temperature produces more "safe" but repetitive text.
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- MINI PROJECT -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Mini Project: Implement Forward Pass from Scratch</h2>
+
+            <div class="mini-project">
+                <h4>Project: Build a 2-layer Neural Network Forward Pass</h4>
+                <p>Implement a neural network forward pass using only NumPy (no PyTorch). This builds intuition for what's actually happening inside neural networks.</p>
+
+                <h4>Requirements:</h4>
+                <ol>
+                    <li>Input: 4 features</li>
+                    <li>Hidden layer: 8 neurons with ReLU activation</li>
+                    <li>Output layer: 3 neurons with softmax (classification)</li>
+                    <li>Process a batch of 16 samples</li>
+                </ol>
+
+                <h4>Starter Code:</h4>
+                <div class="code-block">
+                    <pre><code class="language-python">import numpy as np
+
+def relu(x):
+    """ReLU activation: max(0, x)"""
+    # YOUR CODE HERE
+    pass
+
+def softmax(x):
+    """Softmax activation (stable version)"""
+    # YOUR CODE HERE
+    pass
+
+def forward(x, W1, b1, W2, b2):
+    """
+    Forward pass through 2-layer network.
+
+    Args:
+        x: Input, shape (batch_size, 4)
+        W1: First layer weights, shape (4, 8)
+        b1: First layer bias, shape (8,)
+        W2: Second layer weights, shape (8, 3)
+        b2: Second layer bias, shape (3,)
+
+    Returns:
+        probabilities: Shape (batch_size, 3)
+    """
+    # YOUR CODE HERE
+    # 1. Linear layer 1: z1 = x @ W1 + b1
+    # 2. Activation: h = relu(z1)
+    # 3. Linear layer 2: z2 = h @ W2 + b2
+    # 4. Output: probs = softmax(z2)
+    pass
+
+# Test your implementation
+np.random.seed(42)
+batch_size = 16
+x = np.random.randn(batch_size, 4)
+W1 = np.random.randn(4, 8) * 0.1
+b1 = np.zeros(8)
+W2 = np.random.randn(8, 3) * 0.1
+b2 = np.zeros(3)
+
+probs = forward(x, W1, b1, W2, b2)
+print(f"Output shape: {probs.shape}")  # Should be (16, 3)
+print(f"Probabilities sum to 1: {np.allclose(probs.sum(axis=1), 1.0)}")  # Should be True
+print(f"Sample output:\n{probs[0]}")  # Should be 3 positive numbers summing to 1</code></pre>
+                </div>
+
+                <h4>Solution:</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Solution</button>
+                <div class="quiz-answer">
+                    <div class="code-block">
+                        <pre><code class="language-python">import numpy as np
+
+def relu(x):
+    """ReLU activation: max(0, x)"""
+    return np.maximum(0, x)
+
+def softmax(x):
+    """Softmax activation (stable version)"""
+    # Subtract max for numerical stability
+    x_shifted = x - np.max(x, axis=-1, keepdims=True)
+    exp_x = np.exp(x_shifted)
+    return exp_x / np.sum(exp_x, axis=-1, keepdims=True)
+
+def forward(x, W1, b1, W2, b2):
+    # Layer 1: Linear + ReLU
+    z1 = x @ W1 + b1  # (batch, 4) @ (4, 8) + (8,) = (batch, 8)
+    h = relu(z1)
+
+    # Layer 2: Linear + Softmax
+    z2 = h @ W2 + b2  # (batch, 8) @ (8, 3) + (3,) = (batch, 3)
+    probs = softmax(z2)
+
+    return probs
+
+# Test
+np.random.seed(42)
+batch_size = 16
+x = np.random.randn(batch_size, 4)
+W1 = np.random.randn(4, 8) * 0.1
+b1 = np.zeros(8)
+W2 = np.random.randn(8, 3) * 0.1
+b2 = np.zeros(3)
+
+probs = forward(x, W1, b1, W2, b2)
+print(f"Output shape: {probs.shape}")  # (16, 3)
+print(f"Probabilities sum to 1: {np.allclose(probs.sum(axis=1), 1.0)}")  # True
+print(f"Sample output:\n{probs[0]}")  # 3 positive numbers summing to 1</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- HOW THIS CONNECTS FORWARD -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">How This Connects Forward</h2>
+
+            <div class="card">
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph LR
+    subgraph "This Module"
+        A[Vectors/Matrices] --> B[Matrix Multiplication]
+        C[Derivatives/Gradients] --> D[Chain Rule]
+        E[Probability] --> F[Softmax]
+    end
+    subgraph "Next Module"
+        B --> G[Forward Pass]
+        D --> H[Backpropagation]
+        F --> I[Loss Functions]
+        G --> J[MNIST Classifier]
+        H --> J
+        I --> J
+    end
+                    </div>
+                </div>
+
+                <h4>What You'll Learn Next (Module 2):</h4>
+                <ul>
+                    <li><strong>Neurons and Layers:</strong> How matrix multiplication + activation = neural network layer</li>
+                    <li><strong>Backpropagation:</strong> The chain rule applied systematically to compute gradients</li>
+                    <li><strong>Loss Functions:</strong> Cross-entropy and how it connects to gradient descent</li>
+                    <li><strong>MNIST from Scratch:</strong> Build a complete image classifier using everything from Module 1</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- CHECKPOINT SUMMARY -->
+            <!-- ============================================ -->
+            <div class="checkpoint-summary">
+                <h2>Checkpoint Summary</h2>
+                <p>After completing this module, you should be able to:</p>
+                <ul>
+                    <li><strong>Environment:</strong> Set up Python + PyTorch + CUDA and verify GPU acceleration works</li>
+                    <li><strong>Vectors:</strong> Understand vectors as points in high-dimensional space representing features</li>
+                    <li><strong>Matrices:</strong> See matrix multiplication as batch-processing transformation (the core of neural networks)</li>
+                    <li><strong>Derivatives:</strong> Understand derivatives as sensitivity - how much output changes for input changes</li>
+                    <li><strong>Gradients:</strong> Know that gradients point uphill, so we go opposite direction to minimize loss</li>
+                    <li><strong>Chain Rule:</strong> Compose derivatives through functions - the foundation of backpropagation</li>
+                    <li><strong>Softmax:</strong> Convert raw scores to probabilities with exp and normalization</li>
+                    <li><strong>GPU:</strong> Write device-agnostic code with <code>.to(device)</code> and understand when GPU helps</li>
+                </ul>
+
+                <h4>Key Equations to Remember:</h4>
+                <div class="math-box">
+                    Neural network layer: y = f(Wx + b)<br>
+                    Softmax: p_i = exp(x_i) / sum(exp(x_j))<br>
+                    Chain rule: d/dx[f(g(x))] = f'(g(x)) * g'(x)<br>
+                    Gradient descent: w = w - learning_rate * gradient
+                </div>
+
+                <h4>Mental Models to Keep:</h4>
+                <ul>
+                    <li>Vectors = points in space, matrices = transformations</li>
+                    <li>Derivatives = sensitivity, gradients = direction of steepest ascent</li>
+                    <li>Neural networks learn which transformations (weight matrices) are useful</li>
+                    <li>GPU = thousands of simple workers doing parallel math</li>
+                </ul>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex flex-between mt-4">
+                <a href="index.html" class="btn btn-secondary">&larr; Back to Overview</a>
+                <a href="module-02.html" class="btn btn-primary">Next: Terminology + MNIST &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

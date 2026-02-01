@@ -1,0 +1,2229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 5: LLM Coding - Causal Masking + Code GPT - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Module-specific styles */
+        .token-viz {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .token {
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .token.context {
+            background: rgba(102, 126, 234, 0.3);
+            color: #a5b4fc;
+            border: 1px solid rgba(102, 126, 234, 0.5);
+        }
+
+        .token.predicted {
+            background: rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+        }
+
+        .token.current {
+            background: rgba(245, 158, 11, 0.4);
+            color: #fcd34d;
+            border: 2px solid #f59e0b;
+            animation: pulse-token 1s infinite;
+        }
+
+        .token.masked {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px dashed rgba(239, 68, 68, 0.5);
+            opacity: 0.5;
+        }
+
+        @keyframes pulse-token {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
+        }
+
+        .mask-matrix {
+            display: grid;
+            gap: 2px;
+            padding: 1rem;
+            background: #1a1a2e;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .mask-cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .mask-cell.visible {
+            background: rgba(16, 185, 129, 0.4);
+            color: #6ee7b7;
+        }
+
+        .mask-cell.masked {
+            background: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .mask-cell.header {
+            background: rgba(102, 126, 234, 0.4);
+            color: #a5b4fc;
+        }
+
+        .architecture-block {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .architecture-block h4 {
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+        }
+
+        .generation-demo {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .generation-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            justify-content: center;
+        }
+
+        .gen-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .gen-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .gen-btn.greedy { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .gen-btn.beam { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .gen-btn.sample { background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); }
+        .gen-btn.nucleus { background: linear-gradient(135deg, #f56565 0%, #ed64a6 100%); }
+
+        .gen-output {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            font-family: 'Fira Code', monospace;
+            color: #e2e8f0;
+            min-height: 100px;
+            margin-bottom: 1rem;
+        }
+
+        .prob-bar {
+            display: flex;
+            align-items: center;
+            margin: 0.5rem 0;
+        }
+
+        .prob-label {
+            width: 80px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #a0aec0;
+        }
+
+        .prob-fill-container {
+            flex: 1;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 0.5rem;
+        }
+
+        .prob-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .prob-value {
+            width: 50px;
+            text-align: right;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #fcd34d;
+        }
+
+        .temp-slider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .temp-slider label {
+            color: white;
+            font-weight: 600;
+        }
+
+        .temp-slider input[type="range"] {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #3b82f6, #ef4444);
+            border-radius: 4px;
+        }
+
+        .temp-value {
+            min-width: 50px;
+            text-align: center;
+            color: #fcd34d;
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+        }
+
+        .code-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .code-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .recall-question {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .recall-question.revealed .recall-answer {
+            display: block;
+        }
+
+        .recall-answer {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--secondary-color);
+        }
+
+        .reveal-btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Setup + Core Math
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Terminology + MNIST
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">LLM Deep Dive</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>LLM Basics
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Attention Mechanisms
+                    </a>
+                    <a href="module-05.html" class="sidebar-link active" data-module="5">
+                        <span class="sidebar-link-number">5</span>LLM Coding: GPT
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Training at Scale
+                    </a>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Optimization Hacks
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">RAG & Retrieval</div>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>RAG Fundamentals
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>RAG Implementation
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Agents & Systems</div>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>AI Agents
+                    </a>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Context Engineering
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>AI Engineering
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-13.html" class="sidebar-link" data-module="13">
+                        <span class="sidebar-link-number">13</span>Thinking Models
+                    </a>
+                    <a href="module-14.html" class="sidebar-link" data-module="14">
+                        <span class="sidebar-link-number">14</span>Multi-modal Models
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Capstone & Career</div>
+                    <a href="module-15.html" class="sidebar-link" data-module="15">
+                        <span class="sidebar-link-number">15</span>Capstone Project
+                    </a>
+                    <a href="module-16.html" class="sidebar-link" data-module="16">
+                        <span class="sidebar-link-number">16</span>Career Goals
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 5: LLM Coding - Causal Masking + Code GPT</h1>
+
+            <div class="card mt-3">
+                <h3>What You Will Learn</h3>
+                <ul>
+                    <li>Understand autoregressive generation and why LLMs predict one token at a time</li>
+                    <li>Build a causal attention mask from scratch and understand why it exists</li>
+                    <li>Implement a complete GPT model in PyTorch with all components</li>
+                    <li>Master text generation strategies: greedy, beam search, sampling, temperature</li>
+                    <li>Understand top-k and top-p (nucleus) sampling and when to use each</li>
+                </ul>
+            </div>
+
+            <!-- Section 1: Autoregressive Generation -->
+            <h2 class="mt-4">1. Autoregressive Generation: Predicting the Next Token</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Autocomplete Analogy</h4>
+                    <p>Think of autoregressive generation like an extremely sophisticated autocomplete. When you type on your phone, it predicts the next word based on what you have typed. LLMs do the same thing, but:</p>
+                    <ul>
+                        <li><strong>Much larger context:</strong> They consider thousands of previous tokens, not just a few words</li>
+                        <li><strong>Deeper understanding:</strong> They capture grammar, facts, reasoning patterns</li>
+                        <li><strong>One token at a time:</strong> They generate sequentially, each new token becoming input for the next</li>
+                    </ul>
+
+                    <h4>The Chain Reaction</h4>
+                    <p>Imagine a row of dominoes. Each domino (token) can only fall after the previous one has fallen. The model cannot see which dominoes will fall next - it can only see the ones that have already fallen and predict which one comes next.</p>
+
+                    <div class="token-viz">
+                        <div class="token context">The</div>
+                        <div class="token context">quick</div>
+                        <div class="token context">brown</div>
+                        <div class="token context">fox</div>
+                        <div class="token current">?</div>
+                        <div class="token masked">jumps</div>
+                        <div class="token masked">over</div>
+                        <div class="token masked">the</div>
+                    </div>
+                    <p class="text-muted text-center">The model sees green tokens, predicts the yellow token, and cannot see red tokens</p>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>What is Autoregressive?</h4>
+                    <p><strong>Auto</strong> (self) + <strong>Regressive</strong> (depending on past values) = A model that uses its own previous outputs as inputs.</p>
+
+                    <p>Mathematically, we model the probability of a sequence as:</p>
+                    <div class="code-block">
+                        <code>P(x1, x2, ..., xn) = P(x1) * P(x2|x1) * P(x3|x1,x2) * ... * P(xn|x1,...,xn-1)</code>
+                    </div>
+
+                    <p>This is the <strong>chain rule of probability</strong>. Each token's probability depends on ALL previous tokens.</p>
+
+                    <h4>Why Autoregressive?</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Alternative</th>
+                                <th>How It Works</th>
+                                <th>Problem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>All at once</strong></td>
+                                <td>Predict all tokens simultaneously</td>
+                                <td>Cannot capture dependencies between outputs</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Bidirectional</strong></td>
+                                <td>Look at future tokens too (like BERT)</td>
+                                <td>Cannot generate - needs the full sequence already</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Autoregressive</strong></td>
+                                <td>One token at a time, left to right</td>
+                                <td>Slower, but captures all dependencies correctly</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="key-insight">
+                        <p><strong>The key insight:</strong> Autoregressive generation is not a limitation - it is a feature. It allows the model to make each prediction conditional on ALL previous context, enabling coherent long-form generation.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Math / Theory (Only What Matters)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Language Modeling Objective</h4>
+                    <p>We train the model to maximize the log probability of the training data:</p>
+
+                    <div class="code-block">
+                        <code>Loss = -sum(log P(x_t | x_1, ..., x_{t-1}))</code>
+                    </div>
+
+                    <p>This is called <strong>cross-entropy loss</strong>. For each position, we:</p>
+                    <ol>
+                        <li>Feed in all previous tokens</li>
+                        <li>Get a probability distribution over the vocabulary</li>
+                        <li>Measure how much probability we assigned to the correct next token</li>
+                        <li>Take negative log (so higher probability = lower loss)</li>
+                    </ol>
+
+                    <h4>Why Log Probability?</h4>
+                    <ul>
+                        <li><strong>Numerical stability:</strong> Probabilities can be tiny (1e-100), logs are manageable</li>
+                        <li><strong>Turns products into sums:</strong> log(a*b) = log(a) + log(b)</li>
+                        <li><strong>Information theory:</strong> Cross-entropy measures "surprise" in bits</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Training: Teacher Forcing"
+        A["Input: The quick brown"] --> B["Model"]
+        B --> C["Predict: fox (0.8)"]
+        D["True: fox"] --> E["Loss = -log(0.8)"]
+        C --> E
+    end
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Simple Autoregressive Generation Loop</h4>
+                    <div class="code-block">
+                        <code><pre>import torch
+import torch.nn.functional as F
+
+def generate_autoregressive(model, tokenizer, prompt, max_new_tokens=50):
+    """
+    Generate text autoregressively, one token at a time.
+
+    This is the core generation loop used by ALL LLMs.
+    """
+    # Encode the prompt to token IDs
+    input_ids = tokenizer.encode(prompt, return_tensors='pt')
+
+    # Generate one token at a time
+    for _ in range(max_new_tokens):
+        # Forward pass: get logits for next token
+        with torch.no_grad():
+            outputs = model(input_ids)
+            # outputs.logits shape: [batch, seq_len, vocab_size]
+            # We only care about the LAST position
+            next_token_logits = outputs.logits[:, -1, :]
+
+        # Convert logits to probabilities
+        probs = F.softmax(next_token_logits, dim=-1)
+
+        # Greedy: pick the most likely token
+        next_token_id = torch.argmax(probs, dim=-1, keepdim=True)
+
+        # Append to sequence
+        input_ids = torch.cat([input_ids, next_token_id], dim=1)
+
+        # Stop if we hit the end token
+        if next_token_id.item() == tokenizer.eos_token_id:
+            break
+
+    # Decode back to text
+    return tokenizer.decode(input_ids[0])
+
+# Example usage:
+# text = generate_autoregressive(model, tokenizer, "The quick brown fox")</pre></code>
+                    </div>
+
+                    <div class="callout callout-info">
+                        <div class="callout-title">Key Implementation Detail</div>
+                        <p>Notice we only use <code>logits[:, -1, :]</code> - the last position. The model computes logits for ALL positions, but during generation we only care about predicting what comes AFTER the current sequence.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Causal Masking -->
+            <h2 class="mt-4">2. Causal Masking: Why We Cannot See the Future</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The No-Cheating Exam Analogy</h4>
+                    <p>Imagine you are taking a fill-in-the-blank test, but you can see all the answers already written on the page. You would not actually learn to predict - you would just copy. Causal masking is like covering up future answers so the model must genuinely predict.</p>
+
+                    <h4>The Time Travel Paradox</h4>
+                    <p>At inference time, when we generate "The quick brown ___", the word "fox" does not exist yet. If during training the model could see "fox" when predicting that position, it would learn to cheat. The training would not match inference conditions.</p>
+
+                    <h4>The One-Way Mirror</h4>
+                    <p>Each token can see all previous tokens (like looking through a window) but cannot see future tokens (like a one-way mirror). Position 3 can attend to positions 0, 1, 2 but NOT to position 4, 5, etc.</p>
+
+                    <div class="mask-matrix" id="mask-viz" style="display: grid; grid-template-columns: repeat(6, 50px); justify-content: center;">
+                        <div class="mask-cell header"></div>
+                        <div class="mask-cell header">T0</div>
+                        <div class="mask-cell header">T1</div>
+                        <div class="mask-cell header">T2</div>
+                        <div class="mask-cell header">T3</div>
+                        <div class="mask-cell header">T4</div>
+
+                        <div class="mask-cell header">T0</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell masked">0</div>
+                        <div class="mask-cell masked">0</div>
+                        <div class="mask-cell masked">0</div>
+                        <div class="mask-cell masked">0</div>
+
+                        <div class="mask-cell header">T1</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell masked">0</div>
+                        <div class="mask-cell masked">0</div>
+                        <div class="mask-cell masked">0</div>
+
+                        <div class="mask-cell header">T2</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell masked">0</div>
+                        <div class="mask-cell masked">0</div>
+
+                        <div class="mask-cell header">T3</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell masked">0</div>
+
+                        <div class="mask-cell header">T4</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell visible">1</div>
+                        <div class="mask-cell visible">1</div>
+                    </div>
+                    <p class="text-muted text-center">Causal attention mask: Row = query position, Column = key position. Green (1) = can attend, Red (0) = masked</p>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>What is a Causal Mask?</h4>
+                    <p>A causal mask (also called attention mask or look-ahead mask) is a matrix that prevents attention from flowing from later positions to earlier positions.</p>
+
+                    <ul>
+                        <li><strong>Shape:</strong> [seq_len, seq_len]</li>
+                        <li><strong>Type:</strong> Lower triangular matrix</li>
+                        <li><strong>Values:</strong> 0 or -infinity (before softmax)</li>
+                    </ul>
+
+                    <h4>How It Works in Attention</h4>
+                    <p>Recall the attention formula:</p>
+                    <div class="code-block">
+                        <code>Attention(Q, K, V) = softmax(QK^T / sqrt(d_k) + mask) @ V</code>
+                    </div>
+
+                    <p>The mask adds <strong>-infinity</strong> to positions we want to ignore. After softmax, e^(-inf) = 0, so those positions contribute nothing.</p>
+
+                    <h4>Why "Causal"?</h4>
+                    <p>In statistics, "causal" means cause precedes effect. Token at position 5 can only be "caused by" (influenced by) tokens at positions 0-4, never by tokens at positions 6+.</p>
+
+                    <div class="interview-tip">
+                        <p><strong>Interview Question:</strong> "Why use -inf instead of 0 in the mask?"</p>
+                        <p>Answer: We add the mask BEFORE softmax. Adding 0 would not change the attention. Adding -inf ensures e^(-inf) = 0 after softmax, completely zeroing out those attention weights.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Building a Causal Mask</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code><pre>import torch
+
+def create_causal_mask(seq_len: int) -> torch.Tensor:
+    """
+    Create a causal attention mask.
+
+    Returns a mask where mask[i, j] = 0 if j <= i (can attend)
+                                     -inf if j > i (cannot attend)
+
+    Args:
+        seq_len: Length of the sequence
+
+    Returns:
+        Tensor of shape [seq_len, seq_len]
+    """
+    # Create lower triangular matrix of ones
+    # torch.tril = lower triangular
+    mask = torch.tril(torch.ones(seq_len, seq_len))
+
+    # Convert: 1 -> 0 (attend), 0 -> -inf (mask)
+    mask = mask.masked_fill(mask == 0, float('-inf'))
+    mask = mask.masked_fill(mask == 1, 0.0)
+
+    return mask
+
+# Example
+mask = create_causal_mask(5)
+print(mask)
+# tensor([[  0., -inf, -inf, -inf, -inf],
+#         [  0.,   0., -inf, -inf, -inf],
+#         [  0.,   0.,   0., -inf, -inf],
+#         [  0.,   0.,   0.,   0., -inf],
+#         [  0.,   0.,   0.,   0.,   0.]])
+
+# Alternative: More efficient using torch.triu
+def create_causal_mask_v2(seq_len: int) -> torch.Tensor:
+    """Even simpler using upper triangular."""
+    return torch.triu(
+        torch.full((seq_len, seq_len), float('-inf')),
+        diagonal=1
+    )
+
+# PyTorch's built-in (most efficient):
+def create_causal_mask_v3(seq_len: int) -> torch.Tensor:
+    """Using PyTorch's nn.Transformer helper."""
+    return torch.nn.Transformer.generate_square_subsequent_mask(seq_len)</pre></code>
+                    </div>
+
+                    <h4>Applying the Mask in Attention</h4>
+                    <div class="code-block">
+                        <code><pre>def causal_attention(Q, K, V, mask=None):
+    """
+    Scaled dot-product attention with causal masking.
+
+    Args:
+        Q: Query tensor [batch, heads, seq_len, d_k]
+        K: Key tensor [batch, heads, seq_len, d_k]
+        V: Value tensor [batch, heads, seq_len, d_v]
+        mask: Causal mask [seq_len, seq_len]
+    """
+    d_k = Q.size(-1)
+
+    # Compute attention scores
+    scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(d_k)
+    # scores shape: [batch, heads, seq_len, seq_len]
+
+    # Apply causal mask (add -inf to future positions)
+    if mask is not None:
+        scores = scores + mask  # Broadcasting handles batch & heads
+
+    # Softmax: -inf becomes 0
+    attention_weights = F.softmax(scores, dim=-1)
+
+    # Weighted sum of values
+    output = torch.matmul(attention_weights, V)
+
+    return output, attention_weights</pre></code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>How Big Companies Handle Causal Masks</h4>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Company/Framework</th>
+                                <th>Approach</th>
+                                <th>Key Optimization</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>FlashAttention</td>
+                                <td>Fused CUDA kernel</td>
+                                <td>Never materializes full attention matrix, applies mask on-the-fly</td>
+                            </tr>
+                            <tr>
+                                <td>xFormers</td>
+                                <td>Memory-efficient attention</td>
+                                <td>Block-sparse patterns, custom CUDA kernels</td>
+                            </tr>
+                            <tr>
+                                <td>PyTorch 2.0+</td>
+                                <td>scaled_dot_product_attention</td>
+                                <td>Automatic kernel selection, native causal support</td>
+                            </tr>
+                            <tr>
+                                <td>vLLM</td>
+                                <td>PagedAttention</td>
+                                <td>KV cache optimization with implicit causal masking</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-block">
+                        <code><pre># Modern PyTorch (2.0+) - use this in production!
+import torch.nn.functional as F
+
+# Efficient causal attention with automatic optimization
+output = F.scaled_dot_product_attention(
+    query, key, value,
+    is_causal=True  # <-- This flag enables optimized causal masking!
+)
+# PyTorch automatically uses FlashAttention or other optimized kernels</pre></code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Common Mistakes</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 1: Forgetting the mask during training</div>
+                        <p>Without causal masking, the model will learn to "cheat" by looking at future tokens. Your training loss will look great, but generation will be garbage.</p>
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 2: Using 0 instead of -inf</div>
+                        <p>Adding 0 to attention scores does nothing. You must use -inf (or a very large negative number like -1e9) so that softmax produces 0.</p>
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 3: Wrong mask shape</div>
+                        <p>The mask should be [seq_len, seq_len], not [batch, seq_len, seq_len]. Broadcasting handles the batch dimension.</p>
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 4: Applying mask after softmax</div>
+                        <p>The mask must be applied BEFORE softmax (to attention scores), not after. Zeroing out after softmax breaks the probability distribution.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Transformer Decoder Architecture -->
+            <h2 class="mt-4">3. The Transformer Decoder Architecture</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Assembly Line Analogy</h4>
+                    <p>Think of a Transformer decoder as an assembly line with multiple stations (layers). Each station:</p>
+                    <ol>
+                        <li><strong>Self-Attention Station:</strong> "What have I seen so far that's relevant?"</li>
+                        <li><strong>Feed-Forward Station:</strong> "Let me process and transform this information"</li>
+                        <li><strong>Normalize & Pass:</strong> "Clean up and send to next station"</li>
+                    </ol>
+
+                    <p>Each layer refines the representation, building increasingly sophisticated understanding.</p>
+
+                    <h4>Decoder vs Encoder</h4>
+                    <ul>
+                        <li><strong>Encoder (BERT-style):</strong> Bidirectional - sees entire sequence. Used for understanding.</li>
+                        <li><strong>Decoder (GPT-style):</strong> Causal - only sees past. Used for generation.</li>
+                        <li><strong>Encoder-Decoder (T5, original Transformer):</strong> Encoder understands input, decoder generates output.</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    subgraph "GPT Decoder Block (repeated N times)"
+        A[Input Embeddings] --> B[+ Positional Encoding]
+        B --> C[Layer Norm 1]
+        C --> D[Masked Self-Attention]
+        D --> E[+ Residual]
+        E --> F[Layer Norm 2]
+        F --> G[Feed-Forward Network]
+        G --> H[+ Residual]
+        H --> I[Output]
+    end
+
+    I --> J[Final Layer Norm]
+    J --> K[Linear to Vocab]
+    K --> L[Softmax]
+    L --> M[Token Probabilities]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Components</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>1. Token Embedding</h4>
+                    <p>Maps each token ID to a dense vector. Vocabulary size x embedding dimension.</p>
+
+                    <h4>2. Positional Encoding</h4>
+                    <p>Adds position information since attention is position-agnostic. Can be:</p>
+                    <ul>
+                        <li><strong>Learned:</strong> GPT-2, GPT-3 (embedding per position)</li>
+                        <li><strong>Sinusoidal:</strong> Original Transformer (fixed, generalizes)</li>
+                        <li><strong>Rotary (RoPE):</strong> LLaMA, modern models (relative positions)</li>
+                    </ul>
+
+                    <h4>3. Multi-Head Causal Self-Attention</h4>
+                    <p>Multiple attention heads in parallel, each learning different patterns. All use causal masking.</p>
+
+                    <h4>4. Feed-Forward Network (FFN)</h4>
+                    <p>Two linear layers with activation in between. Often 4x the hidden dimension.</p>
+                    <div class="code-block">
+                        <code>FFN(x) = Linear2(GELU(Linear1(x)))</code>
+                    </div>
+
+                    <h4>5. Layer Normalization</h4>
+                    <p>Stabilizes training by normalizing activations. Two main variants:</p>
+                    <ul>
+                        <li><strong>Post-LN:</strong> Original Transformer (harder to train deep)</li>
+                        <li><strong>Pre-LN:</strong> GPT-2+ (more stable, easier training)</li>
+                    </ul>
+
+                    <h4>6. Residual Connections</h4>
+                    <p>Skip connections that add input to output: <code>output = x + sublayer(x)</code></p>
+                    <p>Critical for training deep networks - allows gradients to flow directly.</p>
+                </div>
+            </div>
+
+            <!-- Section 4: Building GPT from Scratch -->
+            <h2 class="mt-4">4. Building GPT from Scratch</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Complete GPT Implementation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code><pre>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
+
+class GPTConfig:
+    """Configuration for GPT model."""
+    def __init__(
+        self,
+        vocab_size: int = 50257,      # GPT-2 vocabulary size
+        block_size: int = 1024,        # Maximum sequence length
+        n_layer: int = 12,             # Number of transformer blocks
+        n_head: int = 12,              # Number of attention heads
+        n_embd: int = 768,             # Embedding dimension
+        dropout: float = 0.1,          # Dropout rate
+        bias: bool = True,             # Use bias in linear layers
+    ):
+        self.vocab_size = vocab_size
+        self.block_size = block_size
+        self.n_layer = n_layer
+        self.n_head = n_head
+        self.n_embd = n_embd
+        self.dropout = dropout
+        self.bias = bias
+
+
+class CausalSelfAttention(nn.Module):
+    """Multi-head causal self-attention."""
+
+    def __init__(self, config: GPTConfig):
+        super().__init__()
+        assert config.n_embd % config.n_head == 0
+
+        # Key, Query, Value projections combined
+        self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd, bias=config.bias)
+        # Output projection
+        self.c_proj = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
+
+        self.attn_dropout = nn.Dropout(config.dropout)
+        self.resid_dropout = nn.Dropout(config.dropout)
+
+        self.n_head = config.n_head
+        self.n_embd = config.n_embd
+        self.dropout = config.dropout
+
+        # Causal mask - register as buffer (not a parameter)
+        self.register_buffer(
+            "mask",
+            torch.tril(torch.ones(config.block_size, config.block_size))
+                 .view(1, 1, config.block_size, config.block_size)
+        )
+
+    def forward(self, x):
+        B, T, C = x.size()  # Batch, Sequence length, Embedding dim
+
+        # Calculate Q, K, V for all heads in batch
+        qkv = self.c_attn(x)
+        q, k, v = qkv.split(self.n_embd, dim=2)
+
+        # Reshape for multi-head: [B, T, C] -> [B, n_head, T, head_dim]
+        head_dim = C // self.n_head
+        q = q.view(B, T, self.n_head, head_dim).transpose(1, 2)
+        k = k.view(B, T, self.n_head, head_dim).transpose(1, 2)
+        v = v.view(B, T, self.n_head, head_dim).transpose(1, 2)
+
+        # Attention scores
+        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(head_dim))
+
+        # Apply causal mask
+        att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float('-inf'))
+        att = F.softmax(att, dim=-1)
+        att = self.attn_dropout(att)
+
+        # Weighted sum of values
+        y = att @ v  # [B, n_head, T, head_dim]
+
+        # Reshape back: [B, n_head, T, head_dim] -> [B, T, C]
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
+
+        # Output projection
+        y = self.resid_dropout(self.c_proj(y))
+        return y
+
+
+class MLP(nn.Module):
+    """Feed-forward network."""
+
+    def __init__(self, config: GPTConfig):
+        super().__init__()
+        self.c_fc = nn.Linear(config.n_embd, 4 * config.n_embd, bias=config.bias)
+        self.gelu = nn.GELU()
+        self.c_proj = nn.Linear(4 * config.n_embd, config.n_embd, bias=config.bias)
+        self.dropout = nn.Dropout(config.dropout)
+
+    def forward(self, x):
+        x = self.c_fc(x)
+        x = self.gelu(x)
+        x = self.c_proj(x)
+        x = self.dropout(x)
+        return x
+
+
+class Block(nn.Module):
+    """Transformer block: attention + FFN with residuals."""
+
+    def __init__(self, config: GPTConfig):
+        super().__init__()
+        self.ln_1 = nn.LayerNorm(config.n_embd)
+        self.attn = CausalSelfAttention(config)
+        self.ln_2 = nn.LayerNorm(config.n_embd)
+        self.mlp = MLP(config)
+
+    def forward(self, x):
+        # Pre-LN architecture (GPT-2 style)
+        x = x + self.attn(self.ln_1(x))  # Residual + attention
+        x = x + self.mlp(self.ln_2(x))   # Residual + FFN
+        return x
+
+
+class GPT(nn.Module):
+    """The full GPT model."""
+
+    def __init__(self, config: GPTConfig):
+        super().__init__()
+        self.config = config
+
+        self.transformer = nn.ModuleDict({
+            # Token embeddings
+            'wte': nn.Embedding(config.vocab_size, config.n_embd),
+            # Position embeddings (learned)
+            'wpe': nn.Embedding(config.block_size, config.n_embd),
+            # Dropout
+            'drop': nn.Dropout(config.dropout),
+            # Transformer blocks
+            'h': nn.ModuleList([Block(config) for _ in range(config.n_layer)]),
+            # Final layer norm
+            'ln_f': nn.LayerNorm(config.n_embd),
+        })
+
+        # Language model head (tied with token embeddings for efficiency)
+        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        # Weight tying: share embedding weights with output projection
+        self.transformer.wte.weight = self.lm_head.weight
+
+        # Initialize weights
+        self.apply(self._init_weights)
+
+        # Count parameters
+        n_params = sum(p.numel() for p in self.parameters())
+        print(f"GPT model with {n_params/1e6:.2f}M parameters")
+
+    def _init_weights(self, module):
+        if isinstance(module, nn.Linear):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            if module.bias is not None:
+                torch.nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+
+    def forward(self, idx, targets=None):
+        """
+        Args:
+            idx: Token indices [batch, seq_len]
+            targets: Target token indices for loss calculation
+
+        Returns:
+            logits: [batch, seq_len, vocab_size]
+            loss: Cross-entropy loss if targets provided
+        """
+        device = idx.device
+        B, T = idx.size()
+        assert T <= self.config.block_size, f"Sequence too long: {T} > {self.config.block_size}"
+
+        # Create position indices
+        pos = torch.arange(0, T, dtype=torch.long, device=device)  # [T]
+
+        # Token + position embeddings
+        tok_emb = self.transformer.wte(idx)  # [B, T, n_embd]
+        pos_emb = self.transformer.wpe(pos)  # [T, n_embd]
+        x = self.transformer.drop(tok_emb + pos_emb)
+
+        # Transformer blocks
+        for block in self.transformer.h:
+            x = block(x)
+
+        # Final layer norm
+        x = self.transformer.ln_f(x)
+
+        # Language model head
+        logits = self.lm_head(x)  # [B, T, vocab_size]
+
+        # Calculate loss if targets provided
+        loss = None
+        if targets is not None:
+            # Flatten for cross-entropy
+            loss = F.cross_entropy(
+                logits.view(-1, logits.size(-1)),
+                targets.view(-1),
+                ignore_index=-1  # Ignore padding
+            )
+
+        return logits, loss
+
+    @torch.no_grad()
+    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
+        """
+        Generate tokens autoregressively.
+
+        Args:
+            idx: Starting token indices [batch, seq_len]
+            max_new_tokens: Number of tokens to generate
+            temperature: Sampling temperature (1.0 = normal, <1 = more deterministic)
+            top_k: If set, only sample from top k tokens
+        """
+        for _ in range(max_new_tokens):
+            # Crop to block_size if needed
+            idx_cond = idx if idx.size(1) <= self.config.block_size else idx[:, -self.config.block_size:]
+
+            # Forward pass
+            logits, _ = self(idx_cond)
+
+            # Get logits for last position only
+            logits = logits[:, -1, :] / temperature
+
+            # Optional top-k filtering
+            if top_k is not None:
+                v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
+                logits[logits < v[:, [-1]]] = float('-inf')
+
+            # Convert to probabilities
+            probs = F.softmax(logits, dim=-1)
+
+            # Sample from distribution
+            idx_next = torch.multinomial(probs, num_samples=1)
+
+            # Append to sequence
+            idx = torch.cat([idx, idx_next], dim=1)
+
+        return idx
+
+
+# Usage example
+if __name__ == "__main__":
+    # Create a small GPT model
+    config = GPTConfig(
+        vocab_size=50257,
+        block_size=256,
+        n_layer=6,
+        n_head=6,
+        n_embd=384,
+        dropout=0.1
+    )
+
+    model = GPT(config)
+
+    # Random input (batch=2, seq_len=10)
+    x = torch.randint(0, 50257, (2, 10))
+
+    # Forward pass
+    logits, loss = model(x, targets=x)
+    print(f"Logits shape: {logits.shape}")  # [2, 10, 50257]
+
+    # Generate
+    generated = model.generate(x[:1], max_new_tokens=20, temperature=0.8, top_k=50)
+    print(f"Generated shape: {generated.shape}")  # [1, 30]</pre></code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights: Production Considerations</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Weight Tying</h4>
+                    <p>The embedding matrix and the final output projection can share weights. This:</p>
+                    <ul>
+                        <li>Reduces parameters significantly (vocab_size * n_embd parameters saved)</li>
+                        <li>Improves generalization</li>
+                        <li>Is used by GPT-2, GPT-3, LLaMA, etc.</li>
+                    </ul>
+
+                    <h4>GPT-2 vs GPT-3 vs Modern Architectures</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Layers</th>
+                                <th>Heads</th>
+                                <th>d_model</th>
+                                <th>Parameters</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>GPT-2 Small</td>
+                                <td>12</td>
+                                <td>12</td>
+                                <td>768</td>
+                                <td>124M</td>
+                            </tr>
+                            <tr>
+                                <td>GPT-2 Medium</td>
+                                <td>24</td>
+                                <td>16</td>
+                                <td>1024</td>
+                                <td>350M</td>
+                            </tr>
+                            <tr>
+                                <td>GPT-2 Large</td>
+                                <td>36</td>
+                                <td>20</td>
+                                <td>1280</td>
+                                <td>774M</td>
+                            </tr>
+                            <tr>
+                                <td>GPT-3</td>
+                                <td>96</td>
+                                <td>96</td>
+                                <td>12288</td>
+                                <td>175B</td>
+                            </tr>
+                            <tr>
+                                <td>LLaMA 7B</td>
+                                <td>32</td>
+                                <td>32</td>
+                                <td>4096</td>
+                                <td>7B</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Modern Improvements (Not in Basic GPT)</h4>
+                    <ul>
+                        <li><strong>RoPE (Rotary Position Embedding):</strong> Better length generalization</li>
+                        <li><strong>GQA (Grouped Query Attention):</strong> Faster inference with shared KV heads</li>
+                        <li><strong>SwiGLU activation:</strong> Better than GELU for large models</li>
+                        <li><strong>RMSNorm:</strong> Simpler than LayerNorm, similar performance</li>
+                        <li><strong>Flash Attention:</strong> Memory-efficient attention computation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 5: Training Loop -->
+            <h2 class="mt-4">5. Training Loop for Language Modeling</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Complete Training Implementation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code><pre>import torch
+from torch.utils.data import Dataset, DataLoader
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import CosineAnnealingLR
+
+class TextDataset(Dataset):
+    """Simple dataset for language modeling."""
+
+    def __init__(self, text: str, tokenizer, block_size: int):
+        self.tokenizer = tokenizer
+        self.block_size = block_size
+
+        # Tokenize entire text
+        self.tokens = tokenizer.encode(text)
+        print(f"Dataset has {len(self.tokens):,} tokens")
+
+    def __len__(self):
+        # Number of complete blocks we can form
+        return max(0, len(self.tokens) - self.block_size)
+
+    def __getitem__(self, idx):
+        # Get a chunk of tokens
+        chunk = self.tokens[idx : idx + self.block_size + 1]
+        x = torch.tensor(chunk[:-1], dtype=torch.long)  # Input
+        y = torch.tensor(chunk[1:], dtype=torch.long)   # Target (shifted by 1)
+        return x, y
+
+
+def train_gpt(
+    model,
+    train_dataset,
+    val_dataset=None,
+    epochs: int = 10,
+    batch_size: int = 32,
+    learning_rate: float = 3e-4,
+    weight_decay: float = 0.1,
+    warmup_steps: int = 100,
+    device: str = 'cuda'
+):
+    """
+    Train a GPT model.
+
+    This implements the standard training recipe used by most LLMs:
+    - AdamW optimizer with weight decay
+    - Linear warmup + cosine decay learning rate
+    - Gradient clipping
+    """
+    model = model.to(device)
+
+    # Create data loader
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=4,
+        pin_memory=True
+    )
+
+    # Optimizer: AdamW with weight decay (exclude biases and LayerNorm)
+    # This is crucial for training stability
+    decay_params = []
+    no_decay_params = []
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            if 'bias' in name or 'ln' in name or 'LayerNorm' in name:
+                no_decay_params.append(param)
+            else:
+                decay_params.append(param)
+
+    optimizer = AdamW([
+        {'params': decay_params, 'weight_decay': weight_decay},
+        {'params': no_decay_params, 'weight_decay': 0.0}
+    ], lr=learning_rate, betas=(0.9, 0.95))
+
+    # Learning rate scheduler with warmup
+    total_steps = len(train_loader) * epochs
+
+    def lr_lambda(step):
+        # Linear warmup
+        if step < warmup_steps:
+            return step / warmup_steps
+        # Cosine decay
+        progress = (step - warmup_steps) / (total_steps - warmup_steps)
+        return 0.5 * (1 + math.cos(math.pi * progress))
+
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
+
+    # Training loop
+    model.train()
+    global_step = 0
+
+    for epoch in range(epochs):
+        total_loss = 0
+
+        for batch_idx, (x, y) in enumerate(train_loader):
+            x, y = x.to(device), y.to(device)
+
+            # Forward pass
+            logits, loss = model(x, targets=y)
+
+            # Backward pass
+            optimizer.zero_grad()
+            loss.backward()
+
+            # Gradient clipping (prevents exploding gradients)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
+            # Update weights
+            optimizer.step()
+            scheduler.step()
+
+            total_loss += loss.item()
+            global_step += 1
+
+            # Logging
+            if batch_idx % 100 == 0:
+                avg_loss = total_loss / (batch_idx + 1)
+                lr = scheduler.get_last_lr()[0]
+                print(f"Epoch {epoch+1}/{epochs} | Batch {batch_idx}/{len(train_loader)} | "
+                      f"Loss: {avg_loss:.4f} | LR: {lr:.6f}")
+
+        # Validation
+        if val_dataset is not None:
+            val_loss = evaluate(model, val_dataset, batch_size, device)
+            print(f"Epoch {epoch+1} complete. Val Loss: {val_loss:.4f}")
+
+        # Save checkpoint
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': total_loss / len(train_loader),
+        }, f'checkpoint_epoch_{epoch+1}.pt')
+
+    return model
+
+
+@torch.no_grad()
+def evaluate(model, dataset, batch_size, device):
+    """Evaluate model on a dataset."""
+    model.eval()
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
+    total_loss = 0
+    total_tokens = 0
+
+    for x, y in loader:
+        x, y = x.to(device), y.to(device)
+        logits, loss = model(x, targets=y)
+        total_loss += loss.item() * x.size(0) * x.size(1)
+        total_tokens += x.size(0) * x.size(1)
+
+    model.train()
+    return total_loss / total_tokens
+
+
+# Example usage
+if __name__ == "__main__":
+    from transformers import GPT2Tokenizer
+
+    # Load tokenizer
+    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+
+    # Sample text (in practice, use a large corpus)
+    text = open('shakespeare.txt').read()
+
+    # Create dataset
+    dataset = TextDataset(text, tokenizer, block_size=256)
+
+    # Create model
+    config = GPTConfig(
+        vocab_size=tokenizer.vocab_size,
+        block_size=256,
+        n_layer=6,
+        n_head=6,
+        n_embd=384
+    )
+    model = GPT(config)
+
+    # Train
+    model = train_gpt(
+        model,
+        dataset,
+        epochs=5,
+        batch_size=32,
+        learning_rate=3e-4,
+        device='cuda' if torch.cuda.is_available() else 'cpu'
+    )</pre></code>
+                    </div>
+
+                    <div class="key-insight">
+                        <p><strong>Why AdamW with separate weight decay?</strong> The original Adam applies L2 regularization incorrectly for adaptive learning rates. AdamW decouples weight decay from the gradient update, leading to better generalization.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 6: Text Generation Strategies -->
+            <h2 class="mt-4">6. Text Generation: Greedy, Beam Search, Sampling</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Interactive Generation Demo</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Explore how different generation strategies produce different outputs from the same probability distribution.</p>
+
+                    <div class="generation-demo">
+                        <div class="generation-controls">
+                            <button class="gen-btn greedy" onclick="demonstrateGeneration('greedy')">Greedy</button>
+                            <button class="gen-btn beam" onclick="demonstrateGeneration('beam')">Beam Search</button>
+                            <button class="gen-btn sample" onclick="demonstrateGeneration('sample')">Sampling</button>
+                            <button class="gen-btn nucleus" onclick="demonstrateGeneration('nucleus')">Nucleus (Top-p)</button>
+                        </div>
+
+                        <div class="gen-output" id="gen-output">
+                            <strong>Prompt:</strong> "The quick brown fox"<br><br>
+                            <span id="gen-text">Click a button to see generation...</span>
+                        </div>
+
+                        <div id="prob-distribution">
+                            <p style="color: #a0aec0; margin-bottom: 0.5rem;">Next token probabilities:</p>
+                            <div class="prob-bar">
+                                <span class="prob-label">jumps</span>
+                                <div class="prob-fill-container">
+                                    <div class="prob-fill" style="width: 35%; background: linear-gradient(90deg, #48bb78, #38a169);"></div>
+                                </div>
+                                <span class="prob-value">35%</span>
+                            </div>
+                            <div class="prob-bar">
+                                <span class="prob-label">runs</span>
+                                <div class="prob-fill-container">
+                                    <div class="prob-fill" style="width: 25%; background: linear-gradient(90deg, #4299e1, #3182ce);"></div>
+                                </div>
+                                <span class="prob-value">25%</span>
+                            </div>
+                            <div class="prob-bar">
+                                <span class="prob-label">sat</span>
+                                <div class="prob-fill-container">
+                                    <div class="prob-fill" style="width: 15%; background: linear-gradient(90deg, #ed8936, #dd6b20);"></div>
+                                </div>
+                                <span class="prob-value">15%</span>
+                            </div>
+                            <div class="prob-bar">
+                                <span class="prob-label">is</span>
+                                <div class="prob-fill-container">
+                                    <div class="prob-fill" style="width: 10%; background: linear-gradient(90deg, #9f7aea, #805ad5);"></div>
+                                </div>
+                                <span class="prob-value">10%</span>
+                            </div>
+                            <div class="prob-bar">
+                                <span class="prob-label">other</span>
+                                <div class="prob-fill-container">
+                                    <div class="prob-fill" style="width: 15%; background: linear-gradient(90deg, #718096, #4a5568);"></div>
+                                </div>
+                                <span class="prob-value">15%</span>
+                            </div>
+                        </div>
+
+                        <div id="gen-explanation" style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 0.5rem; color: white;">
+                            <strong>Select a strategy</strong> to see how it works.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Greedy Decoding</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>How It Works</h4>
+                    <p>Always pick the token with the highest probability. Simple but often produces repetitive, boring text.</p>
+
+                    <div class="code-block">
+                        <code><pre>def greedy_decode(model, input_ids, max_length):
+    """
+    Greedy decoding: always pick the most likely token.
+
+    Pros: Fast, deterministic, consistent
+    Cons: Repetitive, misses better sequences, boring
+    """
+    for _ in range(max_length):
+        logits = model(input_ids).logits[:, -1, :]
+        next_token = torch.argmax(logits, dim=-1, keepdim=True)
+        input_ids = torch.cat([input_ids, next_token], dim=1)
+    return input_ids</pre></code>
+                    </div>
+
+                    <div class="callout callout-warning">
+                        <div class="callout-title">Greedy's Fatal Flaw</div>
+                        <p>Greedy decoding can miss globally optimal sequences. If the best sequence requires a slightly lower probability token early on, greedy will never find it.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Beam Search</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>How It Works</h4>
+                    <p>Keep track of the top-k most likely sequences at each step. Explores multiple paths but can still be repetitive.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TD
+    A["The quick brown fox"] --> B1["jumps (0.35)"]
+    A --> B2["runs (0.25)"]
+    A --> B3["sat (0.15)"]
+
+    B1 --> C1["jumps over (0.20)"]
+    B1 --> C2["jumps high (0.08)"]
+    B2 --> C3["runs fast (0.15)"]
+    B2 --> C4["runs away (0.05)"]
+
+    style C1 fill:#48bb78,color:white
+    style C3 fill:#4299e1,color:white
+                        </div>
+                    </div>
+                    <p class="text-muted text-center">Beam search with beam_width=2 keeps the top 2 sequences at each step</p>
+
+                    <div class="code-block">
+                        <code><pre>def beam_search(model, input_ids, max_length, beam_width=5):
+    """
+    Beam search: maintain top-k sequences at each step.
+
+    Pros: Finds higher probability sequences than greedy
+    Cons: Still deterministic, can be repetitive, slower
+    """
+    # Each beam: (sequence, cumulative_log_prob)
+    beams = [(input_ids, 0.0)]
+
+    for _ in range(max_length):
+        all_candidates = []
+
+        for seq, score in beams:
+            logits = model(seq).logits[:, -1, :]
+            log_probs = F.log_softmax(logits, dim=-1)
+
+            # Get top beam_width tokens
+            top_log_probs, top_indices = torch.topk(log_probs, beam_width)
+
+            for i in range(beam_width):
+                new_seq = torch.cat([seq, top_indices[:, i:i+1]], dim=1)
+                new_score = score + top_log_probs[:, i].item()
+                all_candidates.append((new_seq, new_score))
+
+        # Keep top beam_width sequences
+        all_candidates.sort(key=lambda x: x[1], reverse=True)
+        beams = all_candidates[:beam_width]
+
+    # Return best sequence
+    return beams[0][0]</pre></code>
+                    </div>
+
+                    <h4>When to Use Beam Search</h4>
+                    <ul>
+                        <li><strong>Machine Translation:</strong> There's usually one "correct" translation</li>
+                        <li><strong>Summarization:</strong> Factual accuracy matters</li>
+                        <li><strong>NOT for creative writing:</strong> Too deterministic</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Temperature Sampling</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>How It Works</h4>
+                    <p>Divide logits by temperature before softmax, then sample from the distribution.</p>
+
+                    <div class="code-block">
+                        <code>probs = softmax(logits / temperature)</code>
+                    </div>
+
+                    <ul>
+                        <li><strong>T = 1.0:</strong> Original distribution (default)</li>
+                        <li><strong>T &lt; 1.0:</strong> Sharper distribution, more deterministic (like greedy)</li>
+                        <li><strong>T &gt; 1.0:</strong> Flatter distribution, more random/creative</li>
+                        <li><strong>T &rarr; 0:</strong> Approaches greedy decoding</li>
+                        <li><strong>T &rarr; inf:</strong> Approaches uniform random</li>
+                    </ul>
+
+                    <div class="temp-slider">
+                        <label>Temperature:</label>
+                        <input type="range" min="0.1" max="2.0" step="0.1" value="1.0" id="temp-slider" onchange="updateTempDemo()">
+                        <span class="temp-value" id="temp-value">1.0</span>
+                    </div>
+
+                    <div id="temp-viz" style="padding: 1rem;">
+                        <div class="prob-bar">
+                            <span class="prob-label">jumps</span>
+                            <div class="prob-fill-container">
+                                <div class="prob-fill" id="temp-bar-1" style="width: 35%; background: linear-gradient(90deg, #48bb78, #38a169);"></div>
+                            </div>
+                            <span class="prob-value" id="temp-prob-1">35%</span>
+                        </div>
+                        <div class="prob-bar">
+                            <span class="prob-label">runs</span>
+                            <div class="prob-fill-container">
+                                <div class="prob-fill" id="temp-bar-2" style="width: 25%; background: linear-gradient(90deg, #4299e1, #3182ce);"></div>
+                            </div>
+                            <span class="prob-value" id="temp-prob-2">25%</span>
+                        </div>
+                        <div class="prob-bar">
+                            <span class="prob-label">sat</span>
+                            <div class="prob-fill-container">
+                                <div class="prob-fill" id="temp-bar-3" style="width: 15%; background: linear-gradient(90deg, #ed8936, #dd6b20);"></div>
+                            </div>
+                            <span class="prob-value" id="temp-prob-3">15%</span>
+                        </div>
+                        <div class="prob-bar">
+                            <span class="prob-label">is</span>
+                            <div class="prob-fill-container">
+                                <div class="prob-fill" id="temp-bar-4" style="width: 10%; background: linear-gradient(90deg, #9f7aea, #805ad5);"></div>
+                            </div>
+                            <span class="prob-value" id="temp-prob-4">10%</span>
+                        </div>
+                        <div class="prob-bar">
+                            <span class="prob-label">other</span>
+                            <div class="prob-fill-container">
+                                <div class="prob-fill" id="temp-bar-5" style="width: 15%; background: linear-gradient(90deg, #718096, #4a5568);"></div>
+                            </div>
+                            <span class="prob-value" id="temp-prob-5">15%</span>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <code><pre>def sample_with_temperature(model, input_ids, max_length, temperature=1.0):
+    """
+    Sample from the distribution with temperature scaling.
+
+    Temperature controls randomness:
+    - T < 1: More deterministic (sharper distribution)
+    - T = 1: Original distribution
+    - T > 1: More random (flatter distribution)
+    """
+    for _ in range(max_length):
+        logits = model(input_ids).logits[:, -1, :]
+
+        # Apply temperature
+        logits = logits / temperature
+
+        # Convert to probabilities
+        probs = F.softmax(logits, dim=-1)
+
+        # Sample from distribution
+        next_token = torch.multinomial(probs, num_samples=1)
+
+        input_ids = torch.cat([input_ids, next_token], dim=1)
+
+    return input_ids</pre></code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 7: Top-k and Top-p Sampling -->
+            <h2 class="mt-4">7. Top-k and Top-p (Nucleus) Sampling</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Top-k Sampling</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>How It Works</h4>
+                    <p>Only sample from the top-k most likely tokens. Filters out low-probability "garbage" tokens.</p>
+
+                    <div class="code-block">
+                        <code><pre>def top_k_sampling(model, input_ids, max_length, k=50, temperature=1.0):
+    """
+    Top-k sampling: only consider the k most likely tokens.
+
+    Prevents sampling very unlikely tokens that could derail generation.
+    Typical values: k=50 for creative, k=10 for factual
+    """
+    for _ in range(max_length):
+        logits = model(input_ids).logits[:, -1, :] / temperature
+
+        # Get top-k values and indices
+        top_k_logits, top_k_indices = torch.topk(logits, k)
+
+        # Set all other logits to -inf
+        logits = torch.full_like(logits, float('-inf'))
+        logits.scatter_(1, top_k_indices, top_k_logits)
+
+        # Sample from filtered distribution
+        probs = F.softmax(logits, dim=-1)
+        next_token = torch.multinomial(probs, num_samples=1)
+
+        input_ids = torch.cat([input_ids, next_token], dim=1)
+
+    return input_ids</pre></code>
+                    </div>
+
+                    <h4>The Problem with Fixed k</h4>
+                    <p>Sometimes the distribution is sharp (model is confident) and k=50 includes too many bad options. Sometimes it is flat (model is uncertain) and k=50 excludes good options.</p>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Top-p (Nucleus) Sampling</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>How It Works</h4>
+                    <p>Sample from the smallest set of tokens whose cumulative probability exceeds p. Adaptively adjusts based on confidence.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Top-p = 0.9"
+        A["Sort by probability"] --> B["Cumulative sum"]
+        B --> C["Keep until sum >= 0.9"]
+        C --> D["Sample from nucleus"]
+    end
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <code><pre>def top_p_sampling(model, input_ids, max_length, p=0.9, temperature=1.0):
+    """
+    Top-p (nucleus) sampling: sample from smallest set with cumulative prob >= p.
+
+    Adapts to the confidence of the model:
+    - High confidence: fewer tokens in nucleus
+    - Low confidence: more tokens in nucleus
+
+    Typical values: p=0.9 or p=0.95
+    """
+    for _ in range(max_length):
+        logits = model(input_ids).logits[:, -1, :] / temperature
+
+        # Sort logits in descending order
+        sorted_logits, sorted_indices = torch.sort(logits, descending=True)
+        sorted_probs = F.softmax(sorted_logits, dim=-1)
+
+        # Compute cumulative probabilities
+        cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
+
+        # Find cutoff index (first position where cumsum > p)
+        # Shift right to include the token that crosses threshold
+        sorted_indices_to_remove = cumulative_probs > p
+        sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
+        sorted_indices_to_remove[..., 0] = False
+
+        # Set removed tokens to -inf
+        sorted_logits[sorted_indices_to_remove] = float('-inf')
+
+        # Unsort to original order
+        logits = torch.zeros_like(logits).scatter_(1, sorted_indices, sorted_logits)
+
+        # Sample
+        probs = F.softmax(logits, dim=-1)
+        next_token = torch.multinomial(probs, num_samples=1)
+
+        input_ids = torch.cat([input_ids, next_token], dim=1)
+
+    return input_ids</pre></code>
+                    </div>
+
+                    <h4>Comparison: Top-k vs Top-p</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Aspect</th>
+                                <th>Top-k</th>
+                                <th>Top-p (Nucleus)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Token count</td>
+                                <td>Fixed (always k)</td>
+                                <td>Adaptive (varies)</td>
+                            </tr>
+                            <tr>
+                                <td>When model is confident</td>
+                                <td>May include low-prob garbage</td>
+                                <td>Nucleus shrinks automatically</td>
+                            </tr>
+                            <tr>
+                                <td>When model is uncertain</td>
+                                <td>May exclude valid options</td>
+                                <td>Nucleus expands automatically</td>
+                            </tr>
+                            <tr>
+                                <td>Common values</td>
+                                <td>k=40 to k=100</td>
+                                <td>p=0.9 to p=0.95</td>
+                            </tr>
+                            <tr>
+                                <td>Used by</td>
+                                <td>GPT-2 original demo</td>
+                                <td>GPT-3+, Claude, most modern LLMs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="key-insight">
+                        <p><strong>Best Practice:</strong> Use top-p (nucleus) sampling with p=0.9 and temperature around 0.7-0.9 for most applications. Combine with top-k for extra safety (e.g., top_k=50, top_p=0.9).</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Recall Questions -->
+            <h2 class="mt-4">8. Active Recall Questions</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Test Your Understanding</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="recall-question" onclick="this.classList.toggle('revealed')">
+                        <strong>Q1:</strong> Why do we use -infinity instead of 0 in the causal mask?
+                        <button class="reveal-btn">Reveal Answer</button>
+                        <div class="recall-answer">
+                            <p>We add the mask BEFORE softmax. Adding 0 would not change the attention scores. Adding -infinity ensures that after softmax, e^(-inf) = 0, completely zeroing out attention to future positions. The mask is applied to the raw attention scores (QK^T), not to the attention weights.</p>
+                        </div>
+                    </div>
+
+                    <div class="recall-question" onclick="this.classList.toggle('revealed')">
+                        <strong>Q2:</strong> What is the difference between Pre-LN and Post-LN Transformers?
+                        <button class="reveal-btn">Reveal Answer</button>
+                        <div class="recall-answer">
+                            <p><strong>Post-LN (original):</strong> LayerNorm after residual connection: x + LayerNorm(sublayer(x))</p>
+                            <p><strong>Pre-LN (GPT-2+):</strong> LayerNorm before sublayer: x + sublayer(LayerNorm(x))</p>
+                            <p>Pre-LN is more stable for training deep networks because gradients flow more easily through the residual connections. Most modern LLMs use Pre-LN.</p>
+                        </div>
+                    </div>
+
+                    <div class="recall-question" onclick="this.classList.toggle('revealed')">
+                        <strong>Q3:</strong> Why does temperature=0.5 make generation more deterministic?
+                        <button class="reveal-btn">Reveal Answer</button>
+                        <div class="recall-answer">
+                            <p>Temperature divides the logits before softmax: softmax(logits/T). When T < 1, this amplifies the differences between logits. For example, if logits are [2, 1], then:</p>
+                            <ul>
+                                <li>T=1.0: softmax([2,1]) ≈ [0.73, 0.27]</li>
+                                <li>T=0.5: softmax([4,2]) ≈ [0.88, 0.12]</li>
+                            </ul>
+                            <p>The highest probability token becomes even more dominant, making sampling more likely to pick it.</p>
+                        </div>
+                    </div>
+
+                    <div class="recall-question" onclick="this.classList.toggle('revealed')">
+                        <strong>Q4:</strong> Why is top-p (nucleus) sampling better than top-k for most cases?
+                        <button class="reveal-btn">Reveal Answer</button>
+                        <div class="recall-answer">
+                            <p>Top-p adapts to the model's confidence. When the model is confident (sharp distribution), fewer tokens are in the nucleus. When uncertain (flat distribution), more tokens are included. Top-k uses a fixed number regardless of confidence, which can either include garbage (when confident) or exclude valid options (when uncertain).</p>
+                        </div>
+                    </div>
+
+                    <div class="recall-question" onclick="this.classList.toggle('revealed')">
+                        <strong>Q5:</strong> What is weight tying and why is it used in GPT?
+                        <button class="reveal-btn">Reveal Answer</button>
+                        <div class="recall-answer">
+                            <p>Weight tying shares the embedding matrix between the input token embedding layer and the output projection layer. Benefits:</p>
+                            <ul>
+                                <li>Reduces parameters by vocab_size * d_model (significant for large vocabularies)</li>
+                                <li>Improves generalization by enforcing that similar tokens have similar input and output representations</li>
+                                <li>Makes semantic sense: a token's embedding should be related to how we predict that token</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="recall-question" onclick="this.classList.toggle('revealed')">
+                        <strong>Q6:</strong> In the training loop, why do we apply weight decay only to weight matrices and not to biases or LayerNorm parameters?
+                        <button class="reveal-btn">Reveal Answer</button>
+                        <div class="recall-answer">
+                            <p>Weight decay acts as L2 regularization, pushing weights toward zero. This makes sense for weight matrices to prevent overfitting. However:</p>
+                            <ul>
+                                <li><strong>Biases:</strong> Often need to be non-zero to shift activations; regularizing them can hurt performance</li>
+                                <li><strong>LayerNorm:</strong> Has learned scale and shift parameters that are critical for proper normalization; regularizing them breaks normalization</li>
+                            </ul>
+                            <p>This is the standard practice established in the original Transformer and BERT papers.</p>
+                        </div>
+                    </div>
+
+                    <div class="recall-question" onclick="this.classList.toggle('revealed')">
+                        <strong>Q7:</strong> Why do we only use the logits from the LAST position during generation?
+                        <button class="reveal-btn">Reveal Answer</button>
+                        <div class="recall-answer">
+                            <p>The model outputs logits for every position, predicting the next token after each position. During generation, we only care about what comes AFTER the entire current sequence. The last position's logits represent P(next_token | all_previous_tokens), which is exactly what we need to extend the sequence.</p>
+                            <p>During training, we use all positions to compute loss (teacher forcing), but during inference we only need the last one.</p>
+                        </div>
+                    </div>
+
+                    <div class="recall-question" onclick="this.classList.toggle('revealed')">
+                        <strong>Q8:</strong> What problem does beam search NOT solve that sampling does?
+                        <button class="reveal-btn">Reveal Answer</button>
+                        <div class="recall-answer">
+                            <p>Beam search is deterministic - given the same input, it always produces the same output. This causes:</p>
+                            <ul>
+                                <li><strong>Repetition:</strong> Often produces repetitive, generic text</li>
+                                <li><strong>Lack of diversity:</strong> Cannot generate varied responses</li>
+                                <li><strong>High probability bias:</strong> Human-written text often includes lower-probability but more interesting word choices</li>
+                            </ul>
+                            <p>Sampling with temperature/top-p introduces controlled randomness, producing more natural, diverse, and interesting text.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini Project -->
+            <h2 class="mt-4">9. Mini Project: Build a Character-Level GPT</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Project Instructions</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%); border: 2px solid rgba(139, 92, 246, 0.3);">
+                        <h4>Build a Shakespeare Text Generator</h4>
+                        <p>Train a small GPT model on Shakespeare's works and generate new text in his style.</p>
+
+                        <h5>Tasks:</h5>
+                        <ol>
+                            <li>Download the tiny Shakespeare dataset (1MB of text)</li>
+                            <li>Implement character-level tokenization (no BPE needed)</li>
+                            <li>Build a GPT model with 6 layers, 6 heads, 384 embedding dimension</li>
+                            <li>Train for 5000 iterations with batch_size=64, block_size=256</li>
+                            <li>Implement generation with different strategies</li>
+                            <li>Compare outputs: greedy vs temperature=0.8 vs top_p=0.9</li>
+                        </ol>
+
+                        <h5>Starter Code:</h5>
+                    </div>
+
+                    <div class="code-block">
+                        <code><pre>import torch
+import torch.nn as nn
+from torch.nn import functional as F
+
+# Download: wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
+
+# Hyperparameters
+batch_size = 64
+block_size = 256
+max_iters = 5000
+eval_interval = 500
+learning_rate = 3e-4
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+eval_iters = 200
+n_embd = 384
+n_head = 6
+n_layer = 6
+dropout = 0.2
+
+# Read data
+with open('input.txt', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+# Character-level tokenization
+chars = sorted(list(set(text)))
+vocab_size = len(chars)
+stoi = {ch: i for i, ch in enumerate(chars)}
+itos = {i: ch for i, ch in enumerate(chars)}
+encode = lambda s: [stoi[c] for c in s]
+decode = lambda l: ''.join([itos[i] for i in l])
+
+# Train/val split
+data = torch.tensor(encode(text), dtype=torch.long)
+n = int(0.9 * len(data))
+train_data = data[:n]
+val_data = data[n:]
+
+# TODO: Implement the rest!
+# 1. Create a get_batch function
+# 2. Use the GPT class from earlier
+# 3. Write the training loop
+# 4. Implement different generation strategies
+# 5. Generate samples and compare quality
+
+# Expected output after training:
+# """
+# ROMEO:
+# What say'st thou? Is the duke dead?
+#
+# JULIET:
+# I would not for the world they should know
+# That I have been so long a stranger here.
+# """</pre></code>
+                    </div>
+
+                    <h5>Success Criteria:</h5>
+                    <ul>
+                        <li>Training loss below 1.5 after 5000 iterations</li>
+                        <li>Generated text has correct Shakespeare-style formatting (character names, iambic meter attempts)</li>
+                        <li>Can explain the difference in outputs between generation strategies</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Checkpoint Summary -->
+            <h2 class="mt-4">10. Checkpoint Summary</h2>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(56, 239, 125, 0.1) 100%); border: 2px solid rgba(16, 185, 129, 0.3);">
+                <h3>Key Takeaways</h3>
+
+                <h4>Autoregressive Generation</h4>
+                <ul>
+                    <li>LLMs generate one token at a time, each conditioned on all previous tokens</li>
+                    <li>This is the chain rule of probability: P(x1...xn) = P(x1) * P(x2|x1) * ...</li>
+                    <li>Enables coherent long-form generation but is inherently sequential</li>
+                </ul>
+
+                <h4>Causal Masking</h4>
+                <ul>
+                    <li>Prevents attention from seeing future tokens during training</li>
+                    <li>Lower triangular mask, applied BEFORE softmax as -infinity</li>
+                    <li>Makes training match inference conditions</li>
+                </ul>
+
+                <h4>GPT Architecture</h4>
+                <ul>
+                    <li>Stack of decoder blocks: LayerNorm -> Attention -> LayerNorm -> FFN</li>
+                    <li>Residual connections enable deep networks</li>
+                    <li>Weight tying between embedding and output projection</li>
+                </ul>
+
+                <h4>Generation Strategies</h4>
+                <ul>
+                    <li><strong>Greedy:</strong> Fast but repetitive, picks argmax</li>
+                    <li><strong>Beam search:</strong> Better sequences but still deterministic</li>
+                    <li><strong>Temperature:</strong> Controls randomness (lower = more deterministic)</li>
+                    <li><strong>Top-k:</strong> Only sample from top k tokens</li>
+                    <li><strong>Top-p (nucleus):</strong> Adaptive, samples from smallest set with cumulative prob >= p</li>
+                </ul>
+
+                <h4>Production Recommendations</h4>
+                <ul>
+                    <li>Use PyTorch 2.0+ <code>scaled_dot_product_attention</code> with <code>is_causal=True</code></li>
+                    <li>Use AdamW with separate weight decay for weights vs biases</li>
+                    <li>Use nucleus sampling (top_p=0.9) with moderate temperature (0.7-0.9)</li>
+                    <li>Consider combining top-k and top-p for extra safety</li>
+                </ul>
+            </div>
+
+            <!-- How This Connects Forward -->
+            <h2 class="mt-4">How This Connects Forward</h2>
+
+            <div class="card">
+                <p>Now that you understand how to build and train a GPT from scratch, you are ready for:</p>
+
+                <ul>
+                    <li><strong>Module 6 (Training at Scale):</strong> How to train models 1000x larger across thousands of GPUs</li>
+                    <li><strong>Module 7 (Optimization Hacks):</strong> KV caching to speed up generation, quantization to reduce memory</li>
+                    <li><strong>Module 8 (RAG):</strong> Combining generation with retrieval for knowledge-intensive tasks</li>
+                </ul>
+
+                <p>The core GPT architecture you built here is the foundation of Claude, GPT-4, LLaMA, and all modern LLMs. The differences are in scale, training data, and alignment techniques (RLHF) - which we cover in Module 6.</p>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="module-04.html" class="btn btn-secondary">&larr; Module 4: Attention</a>
+                <a href="module-06.html" class="btn btn-primary">Module 6: Training at Scale &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+
+        // Sidebar toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                    sidebarOverlay.classList.toggle('open');
+                });
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('open');
+                });
+            }
+        });
+
+        // Generation demo
+        const genExplanations = {
+            greedy: '<strong>Greedy Decoding:</strong> Always picks "jumps" (35%) - the highest probability token. Fast and deterministic, but often produces repetitive, predictable text. The model never explores alternative paths.',
+            beam: '<strong>Beam Search (beam=3):</strong> Maintains top 3 sequences: "jumps over", "runs fast", "jumps high". Finds higher probability complete sequences than greedy, but still deterministic. Good for translation, not for creative writing.',
+            sample: '<strong>Temperature Sampling (T=0.8):</strong> Samples from the distribution with slight sharpening. Might pick "runs" (25%) or even "sat" (15%). Introduces creative variation while staying reasonable.',
+            nucleus: '<strong>Nucleus Sampling (p=0.9):</strong> Includes "jumps", "runs", "sat" in the nucleus (cumulative 75%), excludes "is" and low-prob tokens. Adapts to model confidence - fewer tokens when confident, more when uncertain.'
+        };
+
+        const genOutputs = {
+            greedy: 'The quick brown fox <span style="color: #48bb78;">jumps</span> over the lazy dog. The lazy dog sleeps. The quick brown fox jumps over the lazy dog...',
+            beam: 'The quick brown fox <span style="color: #48bb78;">jumps</span> swiftly <span style="color: #4299e1;">over</span> the sleeping hound, landing gracefully on the other side.',
+            sample: 'The quick brown fox <span style="color: #ed8936;">sat</span> quietly in the meadow, watching the sunset paint the sky in brilliant oranges and purples.',
+            nucleus: 'The quick brown fox <span style="color: #4299e1;">runs</span> through the autumn forest, leaves crunching beneath its paws as it searches for its den.'
+        };
+
+        function demonstrateGeneration(strategy) {
+            document.getElementById('gen-text').innerHTML = genOutputs[strategy];
+            document.getElementById('gen-explanation').innerHTML = genExplanations[strategy];
+
+            // Highlight active button
+            document.querySelectorAll('.gen-btn').forEach(btn => btn.style.opacity = '0.6');
+            event.target.style.opacity = '1';
+        }
+
+        // Temperature demo
+        function updateTempDemo() {
+            const temp = parseFloat(document.getElementById('temp-slider').value);
+            document.getElementById('temp-value').textContent = temp.toFixed(1);
+
+            // Original logits (before temperature)
+            const logits = [1.5, 1.0, 0.5, 0.2, 0.5];
+
+            // Apply temperature
+            const scaledLogits = logits.map(l => l / temp);
+
+            // Softmax
+            const maxLogit = Math.max(...scaledLogits);
+            const expLogits = scaledLogits.map(l => Math.exp(l - maxLogit));
+            const sumExp = expLogits.reduce((a, b) => a + b, 0);
+            const probs = expLogits.map(e => e / sumExp);
+
+            // Update bars
+            for (let i = 1; i <= 5; i++) {
+                const prob = probs[i - 1];
+                document.getElementById(`temp-bar-${i}`).style.width = `${prob * 100}%`;
+                document.getElementById(`temp-prob-${i}`).textContent = `${Math.round(prob * 100)}%`;
+            }
+        }
+
+        // Initialize temperature demo
+        updateTempDemo();
+    </script>
+</body>
+</html>

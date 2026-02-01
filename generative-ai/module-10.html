@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 10: AI Agents - ReAct, Tool Calling, LangChain, LangGraph</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        .math-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+        }
+        .analogy-box {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border-left: 4px solid #22c55e;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .warning-box {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(234, 88, 12, 0.1) 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .insight-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .quiz-question {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .quiz-question h4 {
+            margin-bottom: 0.5rem;
+        }
+        .quiz-answer {
+            display: none;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 0.25rem;
+        }
+        .reveal-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        .reveal-btn:hover {
+            opacity: 0.9;
+        }
+        .checkpoint-summary {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+            border: 2px solid rgba(139, 92, 246, 0.4);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        .mini-project {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 2px dashed rgba(99, 102, 241, 0.5);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Setup + Core Math
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Terminology + MNIST
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">LLM Deep Dive</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>LLM Basics
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Attention Mechanisms
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>LLM Coding: GPT
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Training at Scale
+                    </a>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Optimization Hacks
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">RAG & Retrieval</div>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>RAG Fundamentals
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>RAG Implementation
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Agents & Systems</div>
+                    <a href="module-10.html" class="sidebar-link active" data-module="10">
+                        <span class="sidebar-link-number">10</span>AI Agents
+                    </a>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Context Engineering
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>AI Engineering
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-13.html" class="sidebar-link" data-module="13">
+                        <span class="sidebar-link-number">13</span>Thinking Models
+                    </a>
+                    <a href="module-14.html" class="sidebar-link" data-module="14">
+                        <span class="sidebar-link-number">14</span>Multi-modal Models
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Capstone & Career</div>
+                    <a href="module-15.html" class="sidebar-link" data-module="15">
+                        <span class="sidebar-link-number">15</span>Capstone Project
+                    </a>
+                    <a href="module-16.html" class="sidebar-link" data-module="16">
+                        <span class="sidebar-link-number">16</span>Career Goals
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 10: AI Agents</h1>
+            <p class="text-muted">Master the ReAct pattern, tool calling, and build intelligent agents with LangChain and LangGraph.</p>
+
+            <!-- Learning Objectives -->
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Understand what makes an AI agent different from a simple chatbot</li>
+                    <li>Implement the ReAct (Reasoning + Acting) pattern from scratch</li>
+                    <li>Build and use tools with OpenAI's function calling API</li>
+                    <li>Create agents using LangChain's agent framework</li>
+                    <li>Orchestrate complex agent workflows with LangGraph's state machines</li>
+                    <li>Handle agent loops, errors, and memory in production systems</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 1: MENTAL MODELS & CORE CONCEPTS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">1. Mental Models & Core Concepts</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>What is an AI Agent? Beyond Simple Chat</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Chatbot vs Agent</strong>
+                        <p>A chatbot is like a customer service representative who can only answer questions from a script. An agent is like a personal assistant who can not only answer questions but also check your calendar, book flights, send emails, and coordinate complex multi-step tasks. The key difference: <strong>agents can take actions in the world</strong>.</p>
+                    </div>
+
+                    <h4>The Evolution: Chat to Agent</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Capability</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Simple LLM</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">AI Agent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Knowledge</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Training data only (stale)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Can search, query databases, call APIs</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Actions</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Generate text only</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Execute code, send emails, modify files</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Planning</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Single response</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Multi-step reasoning and task decomposition</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Memory</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Context window only</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Persistent memory across sessions</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Error Handling</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">None</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Retry, fallback, self-correction</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    subgraph "Simple LLM"
+        U1[User Query] --> L1[LLM]
+        L1 --> R1[Text Response]
+    end
+    subgraph "AI Agent"
+        U2[User Query] --> A[Agent/LLM]
+        A --> T{Decide Action}
+        T -->|Need Info| Tool1[Search Tool]
+        T -->|Need Calc| Tool2[Calculator]
+        T -->|Need Data| Tool3[Database]
+        Tool1 --> A
+        Tool2 --> A
+        Tool3 --> A
+        T -->|Ready| R2[Final Response]
+    end
+                        </div>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Key Insight:</strong> An AI agent is an LLM with a loop. Instead of responding once, it can think, act, observe the result, and iterate until the task is complete. This loop is what transforms a stateless text generator into a capable assistant.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>The ReAct Pattern: Reasoning + Acting</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>ReAct (Reasoning and Acting) is a prompting pattern that interleaves reasoning traces with action execution. It was introduced in the 2022 paper "ReAct: Synergizing Reasoning and Acting in Language Models" by Yao et al.</p>
+
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: Think Out Loud</strong>
+                        <p>ReAct is like asking someone to "think out loud" while solving a problem. Instead of just giving an answer, they explain their reasoning at each step: "I need to find X, so I'll search for Y. The result shows Z, which means I should next do W." This transparency helps with debugging and makes the agent more reliable.</p>
+                    </div>
+
+                    <h4>The ReAct Loop</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    Q[Question] --> T[Thought]
+    T --> A[Action]
+    A --> O[Observation]
+    O --> T
+    T -->|Done| F[Final Answer]
+
+    style T fill:#9333ea,color:#fff
+    style A fill:#22c55e,color:#fff
+    style O fill:#3b82f6,color:#fff
+                        </div>
+                    </div>
+
+                    <div class="math-box">
+                        <strong>ReAct Pattern Structure:</strong><br><br>
+                        <strong>Thought:</strong> I need to [reasoning about what to do next]<br>
+                        <strong>Action:</strong> [tool_name][tool_input]<br>
+                        <strong>Observation:</strong> [result from tool execution]<br>
+                        ...(repeat)...<br>
+                        <strong>Thought:</strong> I now have enough information to answer.<br>
+                        <strong>Final Answer:</strong> [response to user]
+                    </div>
+
+                    <h4>Example: ReAct in Action</h4>
+                    <div class="code-block">
+                        <pre><code class="language-text">User: What is the population of the capital of France?
+
+Thought: I need to find the capital of France first, then look up its population.
+Action: search[capital of France]
+Observation: Paris is the capital of France.
+
+Thought: Now I know the capital is Paris. I need to find the population of Paris.
+Action: search[population of Paris 2024]
+Observation: The population of Paris is approximately 2.1 million in the city proper,
+             or about 12 million in the metropolitan area.
+
+Thought: I now have the information needed to answer the question.
+Final Answer: The capital of France is Paris, which has a population of approximately
+              2.1 million people in the city proper, or about 12 million in the greater
+              metropolitan area.</code></pre>
+                    </div>
+
+                    <h4>Why ReAct Works Better Than Chain-of-Thought Alone</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Approach</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pros</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Cons</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Chain-of-Thought</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Good reasoning, no external dependencies</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Limited to training knowledge, can hallucinate facts</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Action-Only</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Can use tools, access real data</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">No reasoning trace, hard to debug, can loop forever</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>ReAct</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Combines both: grounded reasoning with tool use</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">More tokens, requires careful prompt engineering</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="warning-box">
+                        <strong>Common Pitfall:</strong> ReAct agents can get stuck in loops if the observations don't provide useful information. Always implement a maximum iteration limit and have fallback behavior when the agent cannot make progress.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Tool Calling: Extending LLM Capabilities</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Tool calling (also called function calling) is a structured way for LLMs to request the execution of external functions. Instead of generating free-form text that needs to be parsed, the model outputs structured JSON that specifies which tool to call and with what arguments.</p>
+
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: API Design for AI</strong>
+                        <p>Tool calling is like designing an API that the LLM can call. You provide the function signature (name, parameters, descriptions) and the LLM decides when and how to call it. The LLM acts as the client, and your tools are the server endpoints.</p>
+                    </div>
+
+                    <h4>How Tool Calling Works</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant L as LLM
+    participant T as Tool Executor
+    participant API as External API
+
+    U->>L: "What's the weather in Tokyo?"
+    L->>L: Analyze available tools
+    L->>T: {"tool": "get_weather", "args": {"city": "Tokyo"}}
+    T->>API: HTTP Request
+    API->>T: {"temp": 22, "condition": "sunny"}
+    T->>L: Tool result: 22C, sunny
+    L->>U: "The weather in Tokyo is 22C and sunny"
+                        </div>
+                    </div>
+
+                    <h4>Tool Definition Schema</h4>
+                    <p>Tools are defined with a JSON schema that tells the LLM:</p>
+                    <ul>
+                        <li><strong>Name:</strong> Unique identifier for the tool</li>
+                        <li><strong>Description:</strong> When to use this tool (crucial for selection)</li>
+                        <li><strong>Parameters:</strong> What arguments it accepts with types and constraints</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <pre><code class="language-json">{
+  "name": "get_weather",
+  "description": "Get the current weather for a specified city. Use this when the user asks about weather conditions, temperature, or forecasts.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "city": {
+        "type": "string",
+        "description": "The city name, e.g., 'Tokyo', 'New York'"
+      },
+      "units": {
+        "type": "string",
+        "enum": ["celsius", "fahrenheit"],
+        "description": "Temperature unit preference"
+      }
+    },
+    "required": ["city"]
+  }
+}</code></pre>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Key Insight:</strong> The quality of your tool descriptions directly impacts how well the LLM uses them. Write descriptions as if explaining to a junior developer when to use this function. Include examples of appropriate use cases.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 2: CODE WALKTHROUGH -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">2. Code Walkthrough</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Function Calling with OpenAI API</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Basic Tool Definition and Calling</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import openai
+import json
+from typing import Callable
+
+# Define your tools as Python functions
+def get_weather(city: str, units: str = "celsius") -> dict:
+    """Simulated weather API call."""
+    # In production, this would call a real weather API
+    weather_data = {
+        "Tokyo": {"temp": 22, "condition": "sunny"},
+        "London": {"temp": 15, "condition": "cloudy"},
+        "New York": {"temp": 18, "condition": "rainy"},
+    }
+    data = weather_data.get(city, {"temp": 20, "condition": "unknown"})
+    if units == "fahrenheit":
+        data["temp"] = data["temp"] * 9/5 + 32
+    return {"city": city, **data, "units": units}
+
+def calculate(expression: str) -> dict:
+    """Safely evaluate a mathematical expression."""
+    try:
+        # WARNING: eval is dangerous! Use a proper math parser in production
+        allowed_chars = set("0123456789+-*/.() ")
+        if not all(c in allowed_chars for c in expression):
+            return {"error": "Invalid characters in expression"}
+        result = eval(expression)
+        return {"expression": expression, "result": result}
+    except Exception as e:
+        return {"error": str(e)}
+
+# Tool registry - maps tool names to functions
+TOOLS = {
+    "get_weather": get_weather,
+    "calculate": calculate,
+}
+
+# OpenAI tool definitions
+TOOL_DEFINITIONS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a city. Use when user asks about weather, temperature, or conditions in a specific location.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "city": {
+                        "type": "string",
+                        "description": "City name, e.g., 'Tokyo', 'London'"
+                    },
+                    "units": {
+                        "type": "string",
+                        "enum": ["celsius", "fahrenheit"],
+                        "default": "celsius"
+                    }
+                },
+                "required": ["city"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "calculate",
+            "description": "Perform mathematical calculations. Use for arithmetic, percentages, or any numerical computation.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "expression": {
+                        "type": "string",
+                        "description": "Mathematical expression, e.g., '2 + 2', '100 * 0.15'"
+                    }
+                },
+                "required": ["expression"]
+            }
+        }
+    }
+]</code></pre>
+                    </div>
+
+                    <h4>The Agent Loop</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">from openai import OpenAI
+
+client = OpenAI()
+
+def run_agent(user_message: str, max_iterations: int = 5) -> str:
+    """Run an agent loop until completion or max iterations."""
+
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant. Use the available tools when needed to answer questions accurately."},
+        {"role": "user", "content": user_message}
+    ]
+
+    for iteration in range(max_iterations):
+        print(f"\n--- Iteration {iteration + 1} ---")
+
+        # Call the LLM
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            tools=TOOL_DEFINITIONS,
+            tool_choice="auto"  # Let the model decide
+        )
+
+        assistant_message = response.choices[0].message
+        messages.append(assistant_message)
+
+        # Check if we're done (no tool calls)
+        if not assistant_message.tool_calls:
+            print(f"Final response: {assistant_message.content}")
+            return assistant_message.content
+
+        # Process each tool call
+        for tool_call in assistant_message.tool_calls:
+            tool_name = tool_call.function.name
+            tool_args = json.loads(tool_call.function.arguments)
+
+            print(f"Calling tool: {tool_name}({tool_args})")
+
+            # Execute the tool
+            if tool_name in TOOLS:
+                result = TOOLS[tool_name](**tool_args)
+            else:
+                result = {"error": f"Unknown tool: {tool_name}"}
+
+            print(f"Tool result: {result}")
+
+            # Add tool result to messages
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": json.dumps(result)
+            })
+
+    return "Max iterations reached without completing the task."
+
+# Example usage
+if __name__ == "__main__":
+    result = run_agent("What's the weather in Tokyo? Also, what's 15% of 200?")
+    print(f"\nFinal Answer: {result}")</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <strong>Production Consideration:</strong> Always implement timeout handling, rate limiting, and cost tracking. Each iteration consumes API tokens. A runaway agent loop can quickly become expensive.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Building Custom Tools</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Tool Design Principles</h4>
+                    <ul>
+                        <li><strong>Single Responsibility:</strong> Each tool should do one thing well</li>
+                        <li><strong>Clear Documentation:</strong> The LLM only sees the description, make it count</li>
+                        <li><strong>Robust Error Handling:</strong> Return structured errors, not exceptions</li>
+                        <li><strong>Idempotent When Possible:</strong> Retries shouldn't cause duplicate side effects</li>
+                    </ul>
+
+                    <h4>Example: Building a Database Query Tool</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import sqlite3
+from typing import Optional
+from dataclasses import dataclass
+from enum import Enum
+
+class ToolResult:
+    """Structured tool result for consistent handling."""
+    def __init__(self, success: bool, data: any = None, error: str = None):
+        self.success = success
+        self.data = data
+        self.error = error
+
+    def to_dict(self) -> dict:
+        if self.success:
+            return {"status": "success", "data": self.data}
+        return {"status": "error", "error": self.error}
+
+class DatabaseTool:
+    """A safe database query tool for agents."""
+
+    # Whitelist of allowed tables and columns
+    ALLOWED_TABLES = {"users", "orders", "products"}
+    ALLOWED_OPERATIONS = {"SELECT"}
+
+    def __init__(self, db_path: str):
+        self.db_path = db_path
+
+    def query(self, sql: str, limit: int = 100) -> ToolResult:
+        """
+        Execute a READ-ONLY SQL query.
+
+        Args:
+            sql: SELECT query to execute
+            limit: Maximum rows to return (default 100)
+
+        Returns:
+            ToolResult with query results or error
+        """
+        # Security: Validate query
+        sql_upper = sql.upper().strip()
+
+        # Only allow SELECT statements
+        if not sql_upper.startswith("SELECT"):
+            return ToolResult(
+                success=False,
+                error="Only SELECT queries are allowed"
+            )
+
+        # Check for dangerous keywords
+        dangerous = ["DROP", "DELETE", "INSERT", "UPDATE", "ALTER", "CREATE", ";"]
+        for keyword in dangerous:
+            if keyword in sql_upper:
+                return ToolResult(
+                    success=False,
+                    error=f"Query contains forbidden keyword: {keyword}"
+                )
+
+        # Add limit if not present
+        if "LIMIT" not in sql_upper:
+            sql = f"{sql} LIMIT {limit}"
+
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute(sql)
+
+            rows = cursor.fetchall()
+            results = [dict(row) for row in rows]
+
+            conn.close()
+
+            return ToolResult(
+                success=True,
+                data={
+                    "row_count": len(results),
+                    "rows": results
+                }
+            )
+        except sqlite3.Error as e:
+            return ToolResult(success=False, error=f"Database error: {str(e)}")
+
+# Tool definition for OpenAI
+DATABASE_TOOL_DEFINITION = {
+    "type": "function",
+    "function": {
+        "name": "query_database",
+        "description": """Execute a read-only SQL SELECT query against the database.
+Available tables:
+- users (id, name, email, created_at)
+- orders (id, user_id, total, status, created_at)
+- products (id, name, price, category)
+
+Use this to look up user information, order history, or product details.""",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "sql": {
+                    "type": "string",
+                    "description": "SELECT query to execute. Only SELECT is allowed."
+                }
+            },
+            "required": ["sql"]
+        }
+    }
+}</code></pre>
+                    </div>
+
+                    <h4>Example: Web Search Tool</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import requests
+from typing import List, Dict
+
+class WebSearchTool:
+    """Web search tool using a search API."""
+
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+        self.base_url = "https://api.search.example.com/v1/search"
+
+    def search(self, query: str, num_results: int = 5) -> ToolResult:
+        """
+        Search the web for information.
+
+        Args:
+            query: Search query string
+            num_results: Number of results to return (1-10)
+
+        Returns:
+            ToolResult with search results
+        """
+        num_results = min(max(num_results, 1), 10)
+
+        try:
+            response = requests.get(
+                self.base_url,
+                params={"q": query, "num": num_results},
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                timeout=10
+            )
+            response.raise_for_status()
+
+            data = response.json()
+            results = [
+                {
+                    "title": r["title"],
+                    "snippet": r["snippet"],
+                    "url": r["url"]
+                }
+                for r in data.get("results", [])
+            ]
+
+            return ToolResult(success=True, data={"results": results})
+
+        except requests.Timeout:
+            return ToolResult(success=False, error="Search request timed out")
+        except requests.RequestException as e:
+            return ToolResult(success=False, error=f"Search failed: {str(e)}")
+
+WEB_SEARCH_TOOL_DEFINITION = {
+    "type": "function",
+    "function": {
+        "name": "web_search",
+        "description": "Search the web for current information. Use for recent events, facts you're unsure about, or when the user asks about something that requires up-to-date information.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Search query, be specific and include relevant keywords"
+                },
+                "num_results": {
+                    "type": "integer",
+                    "description": "Number of results (1-10)",
+                    "default": 5
+                }
+            },
+            "required": ["query"]
+        }
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>LangChain Basics: Chains, Agents, Tools</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>LangChain is a framework for building applications with LLMs. It provides abstractions for common patterns like chains (sequences of operations), agents (LLMs that decide which tools to use), and tools (functions the LLM can call).</p>
+
+                    <h4>LangChain Architecture</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    subgraph "LangChain Components"
+        LLM[LLM Wrapper]
+        PT[Prompt Templates]
+        CH[Chains]
+        AG[Agents]
+        TL[Tools]
+        MM[Memory]
+    end
+
+    subgraph "Flow"
+        PT --> CH
+        LLM --> CH
+        CH --> AG
+        TL --> AG
+        MM --> AG
+    end
+                        </div>
+                    </div>
+
+                    <h4>Basic LangChain Setup</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Install: pip install langchain langchain-openai
+
+from langchain_openai import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+from langchain.schema.output_parser import StrOutputParser
+
+# Initialize the LLM
+llm = ChatOpenAI(model="gpt-4o", temperature=0)
+
+# Create a simple chain
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant that explains concepts simply."),
+    ("user", "Explain {topic} in simple terms.")
+])
+
+# Chain components together using LCEL (LangChain Expression Language)
+chain = prompt | llm | StrOutputParser()
+
+# Run the chain
+result = chain.invoke({"topic": "quantum computing"})
+print(result)</code></pre>
+                    </div>
+
+                    <h4>Creating Tools in LangChain</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">from langchain.tools import tool, Tool
+from langchain_core.tools import StructuredTool
+from pydantic import BaseModel, Field
+
+# Method 1: Using the @tool decorator (simplest)
+@tool
+def get_word_count(text: str) -> int:
+    """Count the number of words in a text. Use this when asked about text length or word count."""
+    return len(text.split())
+
+# Method 2: Using Tool class with a function
+def search_database(query: str) -> str:
+    """Search the internal database for information."""
+    # Simulated database search
+    return f"Found 5 results for: {query}"
+
+db_search_tool = Tool(
+    name="database_search",
+    func=search_database,
+    description="Search the company database for internal information about employees, projects, or documents."
+)
+
+# Method 3: StructuredTool with Pydantic schema (most control)
+class CalculatorInput(BaseModel):
+    expression: str = Field(description="Mathematical expression to evaluate")
+
+def calculate_expression(expression: str) -> str:
+    """Evaluate a mathematical expression."""
+    try:
+        # Simple safe eval for demo
+        result = eval(expression, {"__builtins__": {}}, {})
+        return f"Result: {result}"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+calculator_tool = StructuredTool.from_function(
+    func=calculate_expression,
+    name="calculator",
+    description="Perform mathematical calculations. Input should be a valid mathematical expression.",
+    args_schema=CalculatorInput
+)
+
+# List all tools
+tools = [get_word_count, db_search_tool, calculator_tool]</code></pre>
+                    </div>
+
+                    <h4>Building a LangChain Agent</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">from langchain_openai import ChatOpenAI
+from langchain.agents import create_openai_functions_agent, AgentExecutor
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.tools import tool
+
+# Define tools
+@tool
+def get_current_time() -> str:
+    """Get the current date and time. Use when asked about the current time or date."""
+    from datetime import datetime
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+@tool
+def search_web(query: str) -> str:
+    """Search the web for information. Use for current events or facts you don't know."""
+    # Simulated search
+    return f"Search results for '{query}': [Result 1: ...], [Result 2: ...]"
+
+@tool
+def calculate(expression: str) -> str:
+    """Calculate a mathematical expression. Use for any math operations."""
+    try:
+        return str(eval(expression))
+    except:
+        return "Error evaluating expression"
+
+tools = [get_current_time, search_web, calculate]
+
+# Create the prompt
+prompt = ChatPromptTemplate.from_messages([
+    ("system", """You are a helpful AI assistant. You have access to tools to help answer questions.
+Always think step-by-step about which tools to use.
+If you don't need a tool, just respond directly."""),
+    ("user", "{input}"),
+    MessagesPlaceholder(variable_name="agent_scratchpad"),
+])
+
+# Initialize LLM
+llm = ChatOpenAI(model="gpt-4o", temperature=0)
+
+# Create the agent
+agent = create_openai_functions_agent(llm, tools, prompt)
+
+# Create the executor (handles the agent loop)
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=tools,
+    verbose=True,  # Shows reasoning steps
+    max_iterations=5,
+    handle_parsing_errors=True
+)
+
+# Run the agent
+result = agent_executor.invoke({
+    "input": "What time is it, and what's 15% of 230?"
+})
+print(result["output"])</code></pre>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>When to Use LangChain:</strong> LangChain excels at rapid prototyping and when you need many integrations (vector stores, document loaders, etc.). For production systems with specific requirements, you might prefer direct API calls for more control and fewer dependencies.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>LangGraph: Stateful Agent Orchestration</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>LangGraph is a library for building stateful, multi-actor applications with LLMs. It extends LangChain with a graph-based approach where nodes are functions and edges define the flow between them.</p>
+
+                    <div class="analogy-box">
+                        <strong>Engineering Analogy: State Machines for AI</strong>
+                        <p>LangGraph is like building a state machine where each state is handled by an LLM or tool. The graph defines valid transitions between states, and the framework handles the execution loop. This is perfect for complex workflows where the next step depends on the current state.</p>
+                    </div>
+
+                    <h4>LangGraph Concepts</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    subgraph "LangGraph Structure"
+        S[State] --> N1[Node: LLM Call]
+        N1 --> E{Edge: Conditional}
+        E -->|tool_call| N2[Node: Tool Executor]
+        E -->|no_tool| END[End]
+        N2 --> N1
+    end
+                        </div>
+                    </div>
+
+                    <h4>Building a ReAct Agent with LangGraph</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Install: pip install langgraph langchain-openai
+
+from typing import TypedDict, Annotated, Sequence
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
+from langchain.tools import tool
+from langgraph.graph import StateGraph, END
+from langgraph.prebuilt import ToolNode
+import operator
+
+# Define the state schema
+class AgentState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], operator.add]
+
+# Define tools
+@tool
+def search(query: str) -> str:
+    """Search for information on the web."""
+    # Simulated search
+    if "weather" in query.lower():
+        return "Current weather: 72F, sunny"
+    if "news" in query.lower():
+        return "Top news: AI advances continue to accelerate"
+    return f"Search results for: {query}"
+
+@tool
+def calculator(expression: str) -> str:
+    """Evaluate a mathematical expression."""
+    try:
+        return str(eval(expression))
+    except Exception as e:
+        return f"Error: {e}"
+
+tools = [search, calculator]
+
+# Initialize the LLM with tools
+llm = ChatOpenAI(model="gpt-4o", temperature=0)
+llm_with_tools = llm.bind_tools(tools)
+
+# Define the nodes
+def call_model(state: AgentState) -> dict:
+    """Call the LLM with the current messages."""
+    messages = state["messages"]
+    response = llm_with_tools.invoke(messages)
+    return {"messages": [response]}
+
+def should_continue(state: AgentState) -> str:
+    """Determine if we should continue or end."""
+    last_message = state["messages"][-1]
+
+    # If the LLM made tool calls, continue to tool execution
+    if hasattr(last_message, "tool_calls") and last_message.tool_calls:
+        return "tools"
+
+    # Otherwise, end the conversation
+    return END
+
+# Build the graph
+workflow = StateGraph(AgentState)
+
+# Add nodes
+workflow.add_node("agent", call_model)
+workflow.add_node("tools", ToolNode(tools))
+
+# Set the entry point
+workflow.set_entry_point("agent")
+
+# Add conditional edges
+workflow.add_conditional_edges(
+    "agent",
+    should_continue,
+    {
+        "tools": "tools",
+        END: END
+    }
+)
+
+# Tools always go back to the agent
+workflow.add_edge("tools", "agent")
+
+# Compile the graph
+app = workflow.compile()
+
+# Run the agent
+def run_agent(user_input: str):
+    """Run the agent with user input."""
+    initial_state = {
+        "messages": [HumanMessage(content=user_input)]
+    }
+
+    # Stream the execution
+    for event in app.stream(initial_state):
+        for node_name, node_output in event.items():
+            print(f"\n--- {node_name} ---")
+            if "messages" in node_output:
+                for msg in node_output["messages"]:
+                    print(f"{msg.type}: {msg.content if hasattr(msg, 'content') else msg}")
+
+    # Get final result
+    final_state = app.invoke(initial_state)
+    return final_state["messages"][-1].content
+
+# Example usage
+result = run_agent("What's the weather like? Also calculate 25 * 4.5")
+print(f"\nFinal Answer: {result}")</code></pre>
+                    </div>
+
+                    <h4>Advanced: Multi-Agent Workflow</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">from langgraph.graph import StateGraph, END
+from typing import TypedDict, Literal
+
+class MultiAgentState(TypedDict):
+    task: str
+    research_results: str
+    draft: str
+    final_output: str
+
+def researcher(state: MultiAgentState) -> dict:
+    """Research agent that gathers information."""
+    task = state["task"]
+    # In production, this would use tools to search
+    results = f"Research findings for: {task}\n- Finding 1\n- Finding 2\n- Finding 3"
+    return {"research_results": results}
+
+def writer(state: MultiAgentState) -> dict:
+    """Writer agent that creates content based on research."""
+    research = state["research_results"]
+    draft = f"Based on research:\n{research}\n\nDraft article: [Generated content here]"
+    return {"draft": draft}
+
+def editor(state: MultiAgentState) -> dict:
+    """Editor agent that reviews and finalizes content."""
+    draft = state["draft"]
+    final = f"Edited and polished version:\n{draft}\n[With improvements]"
+    return {"final_output": final}
+
+def route_after_research(state: MultiAgentState) -> Literal["writer", END]:
+    """Decide what to do after research."""
+    if state.get("research_results"):
+        return "writer"
+    return END
+
+# Build multi-agent workflow
+multi_workflow = StateGraph(MultiAgentState)
+
+# Add nodes (each could be a different LLM or agent)
+multi_workflow.add_node("researcher", researcher)
+multi_workflow.add_node("writer", writer)
+multi_workflow.add_node("editor", editor)
+
+# Define the flow
+multi_workflow.set_entry_point("researcher")
+multi_workflow.add_conditional_edges("researcher", route_after_research)
+multi_workflow.add_edge("writer", "editor")
+multi_workflow.add_edge("editor", END)
+
+# Compile
+multi_agent_app = multi_workflow.compile()
+
+# Run
+result = multi_agent_app.invoke({"task": "Write about AI agents"})
+print(result["final_output"])</code></pre>
+                    </div>
+
+                    <div class="warning-box">
+                        <strong>LangGraph vs LangChain Agents:</strong> Use LangGraph when you need explicit control over the execution flow, multiple agents collaborating, or complex conditional logic. Use simple LangChain agents for straightforward tool-use scenarios.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 3: ENGINEERING INSIGHTS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">3. Engineering Insights</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Agent Loops and Recursion Limits</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Agent Loop Problem</h4>
+                    <p>Agents can get stuck in infinite loops, repeating the same actions or cycling between states. This wastes tokens, increases costs, and frustrates users.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    A[User Query] --> B[Agent Thinks]
+    B --> C[Calls Tool A]
+    C --> D[Gets Result]
+    D --> B
+    B --> E[Calls Tool A Again]
+    E --> D
+
+    style E fill:#ef4444,color:#fff
+                        </div>
+                    </div>
+
+                    <h4>Strategies for Loop Prevention</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">from typing import List, Dict, Set
+import hashlib
+import time
+
+class AgentLoopGuard:
+    """Prevents agent loops through multiple strategies."""
+
+    def __init__(
+        self,
+        max_iterations: int = 10,
+        max_same_action: int = 2,
+        timeout_seconds: int = 60
+    ):
+        self.max_iterations = max_iterations
+        self.max_same_action = max_same_action
+        self.timeout_seconds = timeout_seconds
+
+        self.iteration_count = 0
+        self.action_history: List[str] = []
+        self.state_hashes: Set[str] = set()
+        self.start_time = time.time()
+
+    def _hash_action(self, action: str, args: dict) -> str:
+        """Create a hash of the action for deduplication."""
+        action_str = f"{action}:{sorted(args.items())}"
+        return hashlib.md5(action_str.encode()).hexdigest()
+
+    def check_and_record(self, action: str, args: dict) -> tuple[bool, str]:
+        """
+        Check if action is allowed and record it.
+        Returns (is_allowed, reason_if_blocked)
+        """
+        self.iteration_count += 1
+
+        # Check iteration limit
+        if self.iteration_count > self.max_iterations:
+            return False, f"Max iterations ({self.max_iterations}) exceeded"
+
+        # Check timeout
+        elapsed = time.time() - self.start_time
+        if elapsed > self.timeout_seconds:
+            return False, f"Timeout ({self.timeout_seconds}s) exceeded"
+
+        # Check for repeated actions
+        action_hash = self._hash_action(action, args)
+        same_action_count = self.action_history.count(action_hash)
+
+        if same_action_count >= self.max_same_action:
+            return False, f"Action '{action}' repeated too many times"
+
+        # Check for state loops (same sequence of actions)
+        self.action_history.append(action_hash)
+
+        # Look for cycles in recent history
+        if len(self.action_history) >= 4:
+            recent = tuple(self.action_history[-4:])
+            if recent in self.state_hashes:
+                return False, "Detected action cycle"
+            self.state_hashes.add(recent)
+
+        return True, ""
+
+    def get_summary(self) -> Dict:
+        """Get execution summary."""
+        return {
+            "iterations": self.iteration_count,
+            "unique_actions": len(set(self.action_history)),
+            "elapsed_seconds": time.time() - self.start_time
+        }
+
+# Usage in agent loop
+def run_guarded_agent(user_input: str, llm, tools):
+    guard = AgentLoopGuard(max_iterations=10, max_same_action=2)
+
+    messages = [{"role": "user", "content": user_input}]
+
+    while True:
+        response = llm.generate(messages, tools=tools)
+
+        if not response.tool_calls:
+            return response.content
+
+        for tool_call in response.tool_calls:
+            allowed, reason = guard.check_and_record(
+                tool_call.name,
+                tool_call.args
+            )
+
+            if not allowed:
+                # Force the agent to give a final answer
+                messages.append({
+                    "role": "system",
+                    "content": f"STOP: {reason}. Provide your best answer now."
+                })
+                final_response = llm.generate(messages)
+                return final_response.content
+
+            # Execute tool and continue
+            result = execute_tool(tool_call)
+            messages.append({"role": "tool", "content": result})</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Error Handling and Retries</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Types of Agent Errors</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Error Type</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Cause</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Recovery Strategy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Tool Execution Error</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">API failure, invalid input</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Retry with exponential backoff, inform agent of error</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">LLM Parsing Error</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Malformed JSON, invalid tool name</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Re-prompt with clearer instructions, provide example</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Rate Limit</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Too many API calls</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Exponential backoff, queue requests</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Context Overflow</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Too many messages/tool results</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Summarize history, truncate old messages</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Semantic Error</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Agent misunderstands the task</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Human-in-the-loop, clarification request</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Robust Error Handling Pattern</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">import time
+import random
+from typing import Callable, Any, Optional
+from dataclasses import dataclass
+from enum import Enum
+
+class ErrorSeverity(Enum):
+    RECOVERABLE = "recoverable"      # Retry might help
+    RETRYABLE = "retryable"          # Definitely retry
+    FATAL = "fatal"                  # Give up
+
+@dataclass
+class AgentError:
+    message: str
+    severity: ErrorSeverity
+    original_exception: Optional[Exception] = None
+    context: dict = None
+
+def retry_with_backoff(
+    func: Callable,
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+    max_delay: float = 60.0,
+    jitter: bool = True
+) -> Any:
+    """Execute function with exponential backoff retry."""
+
+    last_exception = None
+
+    for attempt in range(max_retries + 1):
+        try:
+            return func()
+        except Exception as e:
+            last_exception = e
+
+            if attempt == max_retries:
+                raise
+
+            # Calculate delay with exponential backoff
+            delay = min(base_delay * (2 ** attempt), max_delay)
+
+            # Add jitter to prevent thundering herd
+            if jitter:
+                delay *= (0.5 + random.random())
+
+            print(f"Attempt {attempt + 1} failed: {e}. Retrying in {delay:.1f}s")
+            time.sleep(delay)
+
+    raise last_exception
+
+class RobustAgentExecutor:
+    """Agent executor with comprehensive error handling."""
+
+    def __init__(self, llm, tools, max_retries: int = 3):
+        self.llm = llm
+        self.tools = {t.name: t for t in tools}
+        self.max_retries = max_retries
+
+    def execute_tool(self, tool_name: str, args: dict) -> tuple[bool, Any]:
+        """Execute a tool with error handling."""
+
+        if tool_name not in self.tools:
+            return False, AgentError(
+                message=f"Unknown tool: {tool_name}",
+                severity=ErrorSeverity.FATAL
+            )
+
+        tool = self.tools[tool_name]
+
+        try:
+            # Wrap tool execution in retry logic
+            result = retry_with_backoff(
+                lambda: tool.invoke(args),
+                max_retries=self.max_retries
+            )
+            return True, result
+
+        except TimeoutError as e:
+            return False, AgentError(
+                message=f"Tool '{tool_name}' timed out",
+                severity=ErrorSeverity.RETRYABLE,
+                original_exception=e
+            )
+        except ValueError as e:
+            return False, AgentError(
+                message=f"Invalid arguments for '{tool_name}': {e}",
+                severity=ErrorSeverity.RECOVERABLE,
+                context={"args": args}
+            )
+        except Exception as e:
+            return False, AgentError(
+                message=f"Tool '{tool_name}' failed: {e}",
+                severity=ErrorSeverity.RECOVERABLE,
+                original_exception=e
+            )
+
+    def handle_error(self, error: AgentError, messages: list) -> str:
+        """Generate a helpful message for the agent based on the error."""
+
+        if error.severity == ErrorSeverity.FATAL:
+            return f"CRITICAL ERROR: {error.message}. This tool cannot be used."
+
+        if error.severity == ErrorSeverity.RETRYABLE:
+            return f"TEMPORARY ERROR: {error.message}. Please try again."
+
+        # RECOVERABLE - give the agent context to adapt
+        return f"ERROR: {error.message}. Try a different approach or tool."</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Memory in Agents</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Types of Agent Memory</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    subgraph "Short-Term Memory"
+        C[Conversation History]
+        S[Scratchpad / Working Memory]
+    end
+
+    subgraph "Long-Term Memory"
+        E[Entity Memory - Facts about users/topics]
+        EP[Episodic Memory - Past interactions]
+        SM[Semantic Memory - Knowledge base]
+    end
+
+    subgraph "Agent"
+        A[LLM Agent]
+    end
+
+    C --> A
+    S --> A
+    E --> A
+    EP --> A
+    SM --> A
+                        </div>
+                    </div>
+
+                    <h4>Implementing Conversation Memory</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">from typing import List, Dict, Optional
+from datetime import datetime
+import json
+
+class ConversationMemory:
+    """Manages conversation history with summarization."""
+
+    def __init__(
+        self,
+        max_messages: int = 20,
+        summarize_threshold: int = 15,
+        llm=None
+    ):
+        self.messages: List[Dict] = []
+        self.max_messages = max_messages
+        self.summarize_threshold = summarize_threshold
+        self.summary: Optional[str] = None
+        self.llm = llm
+
+    def add_message(self, role: str, content: str):
+        """Add a message to the conversation."""
+        self.messages.append({
+            "role": role,
+            "content": content,
+            "timestamp": datetime.now().isoformat()
+        })
+
+        # Check if we need to summarize
+        if len(self.messages) > self.summarize_threshold:
+            self._summarize_and_trim()
+
+    def _summarize_and_trim(self):
+        """Summarize old messages and keep recent ones."""
+        if not self.llm:
+            # Simple truncation if no LLM available
+            self.messages = self.messages[-self.max_messages:]
+            return
+
+        # Summarize the older half of messages
+        split_point = len(self.messages) // 2
+        old_messages = self.messages[:split_point]
+
+        # Create summary prompt
+        summary_prompt = f"""Summarize the following conversation, preserving key facts,
+decisions, and context that might be relevant for future interactions:
+
+{json.dumps(old_messages, indent=2)}
+
+Summary:"""
+
+        # Generate summary (simplified - use your LLM here)
+        self.summary = self.llm.generate(summary_prompt)
+
+        # Keep only recent messages
+        self.messages = self.messages[split_point:]
+
+    def get_context(self) -> List[Dict]:
+        """Get the context to include in LLM calls."""
+        context = []
+
+        # Include summary if available
+        if self.summary:
+            context.append({
+                "role": "system",
+                "content": f"Previous conversation summary: {self.summary}"
+            })
+
+        # Include recent messages
+        context.extend([
+            {"role": m["role"], "content": m["content"]}
+            for m in self.messages
+        ])
+
+        return context
+
+class EntityMemory:
+    """Tracks entities mentioned in conversations."""
+
+    def __init__(self):
+        self.entities: Dict[str, Dict] = {}
+
+    def update_entity(self, name: str, info: Dict):
+        """Update information about an entity."""
+        if name not in self.entities:
+            self.entities[name] = {
+                "first_mentioned": datetime.now().isoformat(),
+                "info": {}
+            }
+
+        self.entities[name]["info"].update(info)
+        self.entities[name]["last_updated"] = datetime.now().isoformat()
+
+    def get_entity(self, name: str) -> Optional[Dict]:
+        """Get stored information about an entity."""
+        return self.entities.get(name)
+
+    def get_context_string(self) -> str:
+        """Get entity context for LLM."""
+        if not self.entities:
+            return ""
+
+        context_parts = ["Known entities:"]
+        for name, data in self.entities.items():
+            info = ", ".join(f"{k}: {v}" for k, v in data["info"].items())
+            context_parts.append(f"- {name}: {info}")
+
+        return "\n".join(context_parts)
+
+# Example usage with both memory types
+class MemoryEnabledAgent:
+    def __init__(self, llm, tools):
+        self.llm = llm
+        self.tools = tools
+        self.conversation = ConversationMemory(llm=llm)
+        self.entities = EntityMemory()
+
+    def chat(self, user_input: str) -> str:
+        # Build context with memories
+        system_prompt = f"""You are a helpful assistant with memory of past conversations.
+
+{self.entities.get_context_string()}
+
+Use the available tools when needed."""
+
+        messages = [{"role": "system", "content": system_prompt}]
+        messages.extend(self.conversation.get_context())
+        messages.append({"role": "user", "content": user_input})
+
+        # Run agent loop (simplified)
+        response = self._run_agent_loop(messages)
+
+        # Update memories
+        self.conversation.add_message("user", user_input)
+        self.conversation.add_message("assistant", response)
+
+        # Extract and store entities (would use NER in production)
+        # self._extract_entities(user_input + " " + response)
+
+        return response</code></pre>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Production Tip:</strong> For long-running agents, persist memory to a database (Redis, PostgreSQL, vector store). This allows sessions to resume and enables cross-session learning.
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- ACTIVE RECALL QUESTIONS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Active Recall Questions</h2>
+
+            <div class="quiz-question">
+                <h4>Q1: What distinguishes an AI agent from a simple LLM chatbot?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> An AI agent has three key capabilities beyond a simple chatbot: (1) <strong>Tool use</strong> - it can call external functions to search, calculate, or interact with systems; (2) <strong>Iterative reasoning</strong> - it runs in a loop, observing results and deciding next actions until the task is complete; (3) <strong>Planning</strong> - it can decompose complex tasks into steps. A chatbot generates a single response; an agent can take multiple actions to accomplish a goal.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q2: Explain the three components of the ReAct pattern and why each is important.</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> The ReAct pattern has three components: (1) <strong>Thought</strong> - the reasoning step where the agent explains what it needs to do and why, which helps with planning and makes the agent's logic transparent; (2) <strong>Action</strong> - the tool call with specific inputs, grounding the agent's reasoning in actual operations; (3) <strong>Observation</strong> - the result from the tool execution, which provides real-world feedback. Together, these create a traceable chain of reasoning + action that is more reliable than pure reasoning (which can hallucinate) or pure action (which lacks planning).
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q3: Why is tool description quality critical for agent performance?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> The LLM only sees tool names, descriptions, and parameter schemas - it cannot see the actual implementation. A vague description leads to: (1) Wrong tool selection - the agent picks the wrong tool for a task; (2) Incorrect parameters - the agent doesn't understand what values to provide; (3) Misuse - the agent uses a tool in unintended ways. Good descriptions include: what the tool does, when to use it, example use cases, and clear parameter explanations. Think of it as writing documentation for a junior developer who cannot see the source code.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q4: What are three strategies to prevent agent loops?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> (1) <strong>Iteration limits</strong> - set a maximum number of steps (e.g., 10 iterations) after which the agent must provide its best answer; (2) <strong>Action deduplication</strong> - track the hash of each action+arguments and limit how many times the same action can be repeated; (3) <strong>Cycle detection</strong> - look for repeating patterns in action history (e.g., A->B->A->B) and break the cycle; (4) <strong>Timeout</strong> - set a wall-clock time limit for the entire task; (5) <strong>Token budget</strong> - track cumulative tokens and stop when budget is exhausted.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q5: When would you use LangGraph instead of a simple LangChain agent?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> Use LangGraph when you need: (1) <strong>Explicit control flow</strong> - you want to define exactly which states are valid and how transitions happen; (2) <strong>Multi-agent collaboration</strong> - different specialized agents hand off to each other; (3) <strong>Complex conditional logic</strong> - the next step depends on multiple factors, not just "has tool calls"; (4) <strong>Human-in-the-loop</strong> - you need approval steps or human review nodes; (5) <strong>Parallel execution</strong> - multiple branches can execute simultaneously. Use simple LangChain agents for straightforward tool-use scenarios where the default loop is sufficient.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q6: What are the different types of memory an agent might use?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> Agents use multiple types of memory: (1) <strong>Short-term / Working memory</strong> - the current conversation history and scratchpad, limited by context window; (2) <strong>Entity memory</strong> - facts about specific entities (users, topics) extracted from conversations; (3) <strong>Episodic memory</strong> - records of past interactions that can be retrieved when relevant; (4) <strong>Semantic memory</strong> - general knowledge, often stored in a vector database for retrieval; (5) <strong>Procedural memory</strong> - learned patterns or skills, often encoded as tools or fine-tuned behavior. Different memory types require different storage (context, database, vector store) and retrieval strategies.
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <h4>Q7: How should you handle errors from tool execution in an agent?</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Answer</button>
+                <div class="quiz-answer">
+                    <strong>Answer:</strong> Error handling should be layered: (1) <strong>Classify severity</strong> - is it retryable (network timeout), recoverable (bad input), or fatal (tool doesn't exist); (2) <strong>For retryable errors</strong> - use exponential backoff with jitter to retry; (3) <strong>For recoverable errors</strong> - return a helpful error message to the agent so it can try a different approach; (4) <strong>For fatal errors</strong> - inform the agent the tool cannot be used and it should proceed without it; (5) <strong>Always return structured errors</strong> - include error type, message, and suggestions rather than just failing silently or crashing.
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- MINI PROJECT -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Mini Project: Build a ReAct Agent with Custom Tools</h2>
+
+            <div class="mini-project">
+                <h4>Project: Research Assistant Agent</h4>
+                <p>Build a ReAct-style research assistant that can search the web, calculate, and take notes. The agent should be able to answer complex questions that require multiple steps.</p>
+
+                <h4>Requirements:</h4>
+                <ol>
+                    <li>Implement at least 3 custom tools: search, calculator, note-taking</li>
+                    <li>Use the ReAct pattern with explicit Thought/Action/Observation</li>
+                    <li>Include loop prevention (max iterations, action deduplication)</li>
+                    <li>Handle tool errors gracefully</li>
+                    <li>Maintain conversation memory</li>
+                </ol>
+
+                <h4>Starter Code:</h4>
+                <div class="code-block">
+                    <pre><code class="language-python">"""
+Research Assistant Agent - Mini Project
+
+Build a ReAct agent with custom tools for research tasks.
+"""
+
+from typing import Dict, List, Optional, Callable
+from dataclasses import dataclass
+import json
+import re
+
+# ============== TOOL DEFINITIONS ==============
+
+@dataclass
+class Tool:
+    name: str
+    description: str
+    func: Callable
+    parameters: Dict
+
+class ToolRegistry:
+    def __init__(self):
+        self.tools: Dict[str, Tool] = {}
+
+    def register(self, tool: Tool):
+        self.tools[tool.name] = tool
+
+    def get_tool_descriptions(self) -> str:
+        """Format tool descriptions for the prompt."""
+        descriptions = []
+        for name, tool in self.tools.items():
+            params = ", ".join(tool.parameters.keys())
+            descriptions.append(f"- {name}({params}): {tool.description}")
+        return "\n".join(descriptions)
+
+    def execute(self, name: str, args: Dict) -> str:
+        """Execute a tool by name with given arguments."""
+        if name not in self.tools:
+            return f"Error: Unknown tool '{name}'"
+        try:
+            result = self.tools[name].func(**args)
+            return str(result)
+        except Exception as e:
+            return f"Error executing {name}: {str(e)}"
+
+# ============== IMPLEMENT YOUR TOOLS ==============
+
+def search_web(query: str) -> str:
+    """Simulate web search. In production, use a real search API."""
+    # TODO: Implement search functionality
+    # For now, return simulated results
+    results = {
+        "population paris": "Paris has a population of approximately 2.1 million in the city proper.",
+        "python creator": "Python was created by Guido van Rossum and first released in 1991.",
+        "largest planet": "Jupiter is the largest planet in our solar system.",
+    }
+
+    for key, value in results.items():
+        if key in query.lower():
+            return value
+
+    return f"Search results for '{query}': [No specific results found. Try rephrasing.]"
+
+def calculate(expression: str) -> str:
+    """Evaluate a mathematical expression."""
+    # TODO: Implement safe calculation
+    pass
+
+def save_note(title: str, content: str) -> str:
+    """Save a note for later reference."""
+    # TODO: Implement note storage
+    pass
+
+def get_notes() -> str:
+    """Retrieve all saved notes."""
+    # TODO: Implement note retrieval
+    pass
+
+# ============== REACT AGENT ==============
+
+class ReActAgent:
+    def __init__(self, llm_func: Callable, tools: ToolRegistry):
+        """
+        Initialize the ReAct agent.
+
+        Args:
+            llm_func: Function that takes a prompt and returns LLM response
+            tools: Registry of available tools
+        """
+        self.llm = llm_func
+        self.tools = tools
+        self.max_iterations = 10
+        self.action_history: List[str] = []
+
+    def _build_prompt(self, question: str, history: List[str]) -> str:
+        """Build the ReAct prompt with tool descriptions and history."""
+        # TODO: Implement prompt building
+        pass
+
+    def _parse_response(self, response: str) -> tuple[str, Optional[str], Optional[Dict]]:
+        """
+        Parse the LLM response to extract thought, action, and action input.
+
+        Returns:
+            (thought, action_name, action_args) or (thought, None, None) if final answer
+        """
+        # TODO: Implement response parsing
+        pass
+
+    def run(self, question: str) -> str:
+        """
+        Run the ReAct loop to answer a question.
+
+        Args:
+            question: The user's question
+
+        Returns:
+            The final answer
+        """
+        # TODO: Implement the ReAct loop
+        # 1. Build initial prompt with question
+        # 2. Loop:
+        #    a. Call LLM
+        #    b. Parse response for thought/action
+        #    c. If final answer, return it
+        #    d. If action, execute tool and add observation
+        #    e. Check for loops
+        # 3. If max iterations reached, return best attempt
+        pass
+
+# ============== TEST YOUR IMPLEMENTATION ==============
+
+def mock_llm(prompt: str) -> str:
+    """
+    Mock LLM for testing. Replace with real LLM call.
+    """
+    # This is a simple mock - in reality, use OpenAI API or similar
+    if "population" in prompt.lower() and "paris" in prompt.lower():
+        return """Thought: I need to search for the population of Paris.
+Action: search_web
+Action Input: {"query": "population paris"}"""
+
+    if "2.1 million" in prompt:
+        return """Thought: I found that Paris has a population of about 2.1 million.
+I should calculate what 15% of that is.
+Action: calculate
+Action Input: {"expression": "2100000 * 0.15"}"""
+
+    if "315000" in prompt:
+        return """Thought: I now have all the information needed.
+Final Answer: Paris has a population of approximately 2.1 million people.
+15% of that population is 315,000 people."""
+
+    return """Thought: I need more information.
+Final Answer: I couldn't find enough information to answer this question."""
+
+def main():
+    # Setup tools
+    registry = ToolRegistry()
+
+    registry.register(Tool(
+        name="search_web",
+        description="Search the web for information",
+        func=search_web,
+        parameters={"query": "string"}
+    ))
+
+    # TODO: Register calculate and note tools
+
+    # Create agent
+    agent = ReActAgent(mock_llm, registry)
+
+    # Test questions
+    questions = [
+        "What is the population of Paris and what is 15% of that?",
+        "Who created Python and when?",
+    ]
+
+    for q in questions:
+        print(f"\nQuestion: {q}")
+        print("-" * 50)
+        answer = agent.run(q)
+        print(f"\nFinal Answer: {answer}")
+
+if __name__ == "__main__":
+    main()</code></pre>
+                </div>
+
+                <h4>Extension Ideas:</h4>
+                <ul>
+                    <li>Add a real web search API (SerpAPI, Brave Search)</li>
+                    <li>Implement conversation memory that persists across questions</li>
+                    <li>Add a "code_executor" tool that can run Python snippets safely</li>
+                    <li>Build a simple UI with Streamlit or Gradio</li>
+                    <li>Add streaming output so users see thoughts in real-time</li>
+                </ul>
+
+                <h4>Solution Outline:</h4>
+                <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'">Reveal Solution Outline</button>
+                <div class="quiz-answer">
+                    <div class="code-block">
+                        <pre><code class="language-python"># Key implementation points:
+
+def calculate(expression: str) -> str:
+    """Safe calculator implementation."""
+    allowed = set("0123456789+-*/.() ")
+    if not all(c in allowed for c in expression):
+        return "Error: Invalid characters"
+    try:
+        result = eval(expression)
+        return f"Result: {result}"
+    except Exception as e:
+        return f"Error: {e}"
+
+# Notes storage (in-memory for simplicity)
+notes_storage = {}
+
+def save_note(title: str, content: str) -> str:
+    notes_storage[title] = content
+    return f"Note '{title}' saved successfully"
+
+def get_notes() -> str:
+    if not notes_storage:
+        return "No notes saved yet"
+    return "\n".join(f"- {k}: {v}" for k, v in notes_storage.items())
+
+class ReActAgent:
+    def _build_prompt(self, question: str, history: List[str]) -> str:
+        return f"""You are a research assistant. Use the available tools to answer questions.
+
+Available tools:
+{self.tools.get_tool_descriptions()}
+
+Format your response as:
+Thought: [your reasoning]
+Action: [tool_name]
+Action Input: {{"param": "value"}}
+
+OR if you have the final answer:
+Thought: [your reasoning]
+Final Answer: [your answer]
+
+Question: {question}
+
+{chr(10).join(history)}"""
+
+    def _parse_response(self, response: str) -> tuple:
+        # Extract thought
+        thought_match = re.search(r"Thought:\s*(.+?)(?=Action:|Final Answer:|$)",
+                                   response, re.DOTALL)
+        thought = thought_match.group(1).strip() if thought_match else ""
+
+        # Check for final answer
+        final_match = re.search(r"Final Answer:\s*(.+)", response, re.DOTALL)
+        if final_match:
+            return thought, None, None, final_match.group(1).strip()
+
+        # Extract action
+        action_match = re.search(r"Action:\s*(\w+)", response)
+        input_match = re.search(r"Action Input:\s*(\{.+?\})", response, re.DOTALL)
+
+        if action_match and input_match:
+            action = action_match.group(1)
+            args = json.loads(input_match.group(1))
+            return thought, action, args, None
+
+        return thought, None, None, None
+
+    def run(self, question: str) -> str:
+        history = []
+
+        for i in range(self.max_iterations):
+            prompt = self._build_prompt(question, history)
+            response = self.llm(prompt)
+
+            thought, action, args, final_answer = self._parse_response(response)
+
+            if final_answer:
+                return final_answer
+
+            if action:
+                # Check for loops
+                action_key = f"{action}:{json.dumps(args, sort_keys=True)}"
+                if self.action_history.count(action_key) >= 2:
+                    return "I seem to be stuck. Here's my best answer based on what I found."
+                self.action_history.append(action_key)
+
+                # Execute tool
+                observation = self.tools.execute(action, args)
+
+                history.append(f"Thought: {thought}")
+                history.append(f"Action: {action}")
+                history.append(f"Action Input: {json.dumps(args)}")
+                history.append(f"Observation: {observation}")
+
+        return "Max iterations reached. Could not complete the task."</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- CHECKPOINT SUMMARY -->
+            <!-- ============================================ -->
+            <div class="checkpoint-summary">
+                <h2>Checkpoint Summary</h2>
+                <p>After completing this module, you should be able to:</p>
+                <ul>
+                    <li><strong>Understand Agents:</strong> Explain what makes an AI agent different from a chatbot - tool use, iteration, and planning</li>
+                    <li><strong>Implement ReAct:</strong> Build an agent using the Thought/Action/Observation pattern for grounded reasoning</li>
+                    <li><strong>Design Tools:</strong> Create well-documented, robust tools that LLMs can use effectively</li>
+                    <li><strong>Use OpenAI Functions:</strong> Implement function calling with proper schemas and response handling</li>
+                    <li><strong>Build with LangChain:</strong> Create agents using LangChain's tools, chains, and agent executors</li>
+                    <li><strong>Orchestrate with LangGraph:</strong> Design stateful multi-step workflows with explicit control flow</li>
+                    <li><strong>Handle Edge Cases:</strong> Implement loop prevention, error handling, and memory management</li>
+                </ul>
+
+                <h4>Key Concepts to Remember:</h4>
+                <div class="math-box">
+                    <strong>ReAct Loop:</strong> Question -> Thought -> Action -> Observation -> (repeat) -> Final Answer<br><br>
+                    <strong>Tool Schema:</strong> Name + Description + Parameters (JSON Schema)<br><br>
+                    <strong>Agent Safety:</strong> Max iterations + Action limits + Timeouts + Error handling<br><br>
+                    <strong>Memory Types:</strong> Short-term (context) + Entity + Episodic + Semantic
+                </div>
+
+                <h4>When to Use What:</h4>
+                <ul>
+                    <li><strong>Simple chat:</strong> Direct LLM call with good prompting</li>
+                    <li><strong>Single tool use:</strong> OpenAI function calling</li>
+                    <li><strong>Multiple tools, simple flow:</strong> LangChain agent</li>
+                    <li><strong>Complex workflows, multi-agent:</strong> LangGraph</li>
+                </ul>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex flex-between mt-4">
+                <a href="module-09.html" class="btn btn-secondary">&larr; Previous: RAG Implementation</a>
+                <a href="module-11.html" class="btn btn-primary">Next: Context Engineering &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 7: Optimization Hacks - Generative AI Engineering</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* KV Cache Visualization */
+        .kv-cache-demo {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            color: white;
+        }
+        .token-sequence {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        .token-box {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+        .token-box.cached {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            box-shadow: 0 2px 10px rgba(72, 187, 120, 0.4);
+        }
+        .token-box.new {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+            box-shadow: 0 2px 10px rgba(246, 173, 85, 0.4);
+        }
+        .token-box.computing {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Quantization Visualization */
+        .quant-demo {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            color: white;
+        }
+        .weight-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0.25rem;
+            margin: 1rem 0;
+        }
+        .weight-cell {
+            aspect-ratio: 1;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-family: 'Fira Code', monospace;
+            transition: all 0.3s ease;
+        }
+        .weight-cell.fp32 { background: rgba(102, 126, 234, 0.8); }
+        .weight-cell.fp16 { background: rgba(246, 173, 85, 0.8); }
+        .weight-cell.int8 { background: rgba(72, 187, 120, 0.8); }
+        .weight-cell.int4 { background: rgba(236, 72, 153, 0.8); }
+
+        /* LoRA Visualization */
+        .lora-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        .matrix-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .matrix {
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .matrix.frozen {
+            background: rgba(100, 100, 100, 0.5);
+            border-color: #888;
+        }
+        .matrix.trainable {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+        .matrix-label {
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        /* Code comparison */
+        .code-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        @media (max-width: 768px) {
+            .code-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+        .code-comparison-item h5 {
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        /* Stats cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-top: 0.25rem;
+        }
+
+        /* Flash Attention Diagram */
+        .attention-blocks {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .attention-block {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        .attention-block.hbm { background: rgba(239, 68, 68, 0.7); }
+        .attention-block.sram { background: rgba(72, 187, 120, 0.7); }
+        .attention-block.computing { background: rgba(102, 126, 234, 0.7); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Setup + Core Math
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Terminology + MNIST
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">LLM Deep Dive</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>LLM Basics
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Attention Mechanisms
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>LLM Coding: GPT
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Training at Scale
+                    </a>
+                    <a href="module-07.html" class="sidebar-link active" data-module="7">
+                        <span class="sidebar-link-number">7</span>Optimization Hacks
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">RAG & Retrieval</div>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>RAG Fundamentals
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>RAG Implementation
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Agents & Systems</div>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>AI Agents
+                    </a>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Context Engineering
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>AI Engineering
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-13.html" class="sidebar-link" data-module="13">
+                        <span class="sidebar-link-number">13</span>Thinking Models
+                    </a>
+                    <a href="module-14.html" class="sidebar-link" data-module="14">
+                        <span class="sidebar-link-number">14</span>Multi-modal Models
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Capstone & Career</div>
+                    <a href="module-15.html" class="sidebar-link" data-module="15">
+                        <span class="sidebar-link-number">15</span>Capstone Project
+                    </a>
+                    <a href="module-16.html" class="sidebar-link" data-module="16">
+                        <span class="sidebar-link-number">16</span>Career Goals
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 7: Optimization Hacks</h1>
+            <p class="text-muted mb-3">KV Caching, Quantization, LoRA, and techniques that make LLMs production-ready</p>
+
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Why KV caching is essential for fast inference and how to implement it</li>
+                    <li>Quantization techniques: INT8, INT4, GPTQ, AWQ</li>
+                    <li>LoRA and QLoRA for efficient fine-tuning</li>
+                    <li>Flash Attention and memory-efficient attention mechanisms</li>
+                    <li>Speculative decoding for faster generation</li>
+                    <li>Pruning strategies for model compression</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 1: KV CACHING -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">1. KV Caching: Why Regenerating Attention is Wasteful</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The Restaurant Analogy:</strong> Imagine a waiter who, every time you order a new dish,
+                        forgets everything you've already ordered and re-reads the entire menu from scratch.
+                        That's what LLMs do without KV caching - they recompute attention for ALL previous tokens
+                        every time they generate a new one.
+                    </div>
+
+                    <p><strong>The Core Problem:</strong></p>
+                    <p>In autoregressive generation, to predict token N+1, the model needs to attend to tokens 1 through N.
+                    Without caching, this means:</p>
+                    <ul>
+                        <li>Token 1: Compute attention for 1 token</li>
+                        <li>Token 2: Recompute attention for 1, then compute for 2</li>
+                        <li>Token N: Recompute attention for 1, 2, ..., N-1, then compute for N</li>
+                    </ul>
+                    <p>This is O(N^2) in sequence length - catastrophically slow for long sequences.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Without KV Cache"
+        A1[Token 1] --> C1[Compute K,V]
+        A2[Token 2] --> C2[Recompute K,V for 1,2]
+        A3[Token 3] --> C3[Recompute K,V for 1,2,3]
+        A4[Token N] --> C4[Recompute K,V for ALL]
+    end
+
+    subgraph "With KV Cache"
+        B1[Token 1] --> D1[Compute & Cache K,V]
+        B2[Token 2] --> D2[Lookup Cache + New K,V]
+        B3[Token 3] --> D3[Lookup Cache + New K,V]
+        B4[Token N] --> D4[Lookup Cache + New K,V]
+    end
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>What Gets Cached?</h4>
+                    <p>In self-attention: <code>Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) * V</code></p>
+                    <ul>
+                        <li><strong>Keys (K):</strong> Representations of what each token "offers" for attention</li>
+                        <li><strong>Values (V):</strong> Representations of what information each token contains</li>
+                        <li><strong>Queries (Q):</strong> NOT cached - only the current token needs a query</li>
+                    </ul>
+
+                    <h4 class="mt-3">Why Only K and V?</h4>
+                    <p>In causal (decoder-only) models:</p>
+                    <ul>
+                        <li>Each new token only needs to compute its own Q</li>
+                        <li>It attends to all previous K and V (which don't change)</li>
+                        <li>The K and V for past tokens are computed once and reused</li>
+                    </ul>
+
+                    <div class="kv-cache-demo">
+                        <h4>KV Cache Visualization</h4>
+                        <p class="text-muted">Watch how tokens accumulate in the cache during generation:</p>
+
+                        <div style="margin: 1.5rem 0;">
+                            <p><strong>Prompt:</strong> "The quick brown"</p>
+                            <div class="token-sequence" id="kv-demo-tokens">
+                                <div class="token-box cached">The</div>
+                                <div class="token-box cached">quick</div>
+                                <div class="token-box cached">brown</div>
+                            </div>
+
+                            <p style="margin-top: 1rem;"><strong>KV Cache State:</strong></p>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-value" id="cache-size">3</div>
+                                    <div class="stat-label">Cached Tokens</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="cache-memory">2.4 MB</div>
+                                    <div class="stat-label">Memory Used</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="speedup">1x</div>
+                                    <div class="stat-label">Speedup</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="addTokenToCache()">Generate Next Token</button>
+                        <button class="btn btn-secondary" onclick="resetCache()">Reset</button>
+                    </div>
+
+                    <h4 class="mt-3">Memory Cost of KV Cache</h4>
+                    <p>For a model with:</p>
+                    <ul>
+                        <li>L layers</li>
+                        <li>H attention heads</li>
+                        <li>d_head dimension per head</li>
+                        <li>S sequence length</li>
+                        <li>B batch size</li>
+                    </ul>
+                    <p><strong>KV Cache Size = 2 * B * L * H * S * d_head * bytes_per_element</strong></p>
+
+                    <div class="callout callout-warning">
+                        <div class="callout-title">Memory Warning</div>
+                        For Llama-2 70B with 4K context: KV cache alone is ~2.5GB per sequence in FP16!
+                        This is why techniques like PagedAttention (vLLM) and quantized KV caches matter.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Math / Theory (Only What Matters)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Standard Attention (No Cache)</h4>
+                    <p>For generating token t+1, we compute:</p>
+                    <div class="code-block">
+<code># For each layer:
+Q = X @ W_q  # All tokens: [batch, seq_len, d_model]
+K = X @ W_k  # All tokens: [batch, seq_len, d_model]
+V = X @ W_v  # All tokens: [batch, seq_len, d_model]
+
+# Attention computation
+attn_scores = Q @ K.T / sqrt(d_k)  # O(seq_len^2)
+attn_probs = softmax(mask(attn_scores))
+output = attn_probs @ V</code>
+                    </div>
+
+                    <h4 class="mt-3">Attention with KV Cache</h4>
+                    <div class="code-block">
+<code># For generating token t+1:
+q_new = x_new @ W_q  # Only new token: [batch, 1, d_model]
+k_new = x_new @ W_k  # Only new token: [batch, 1, d_model]
+v_new = x_new @ W_v  # Only new token: [batch, 1, d_model]
+
+# Append to cache
+K_cached = concat(K_cached, k_new)  # [batch, t+1, d_model]
+V_cached = concat(V_cached, v_new)  # [batch, t+1, d_model]
+
+# Attention only for new query against all cached K,V
+attn_scores = q_new @ K_cached.T / sqrt(d_k)  # O(seq_len), not O(seq_len^2)!
+attn_probs = softmax(attn_scores)
+output = attn_probs @ V_cached</code>
+                    </div>
+
+                    <h4 class="mt-3">Complexity Analysis</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Aspect</th>
+                                <th>Without KV Cache</th>
+                                <th>With KV Cache</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Time per token</td>
+                                <td>O(n^2)</td>
+                                <td class="highlight">O(n)</td>
+                            </tr>
+                            <tr>
+                                <td>Total generation time</td>
+                                <td>O(n^3)</td>
+                                <td class="highlight">O(n^2)</td>
+                            </tr>
+                            <tr>
+                                <td>Memory</td>
+                                <td>O(n) per step</td>
+                                <td>O(n) persistent</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Implementing KV Cache</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Minimal KV Cache Implementation</h4>
+                    <div class="code-block">
+<code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from typing import Optional, Tuple
+
+class CausalSelfAttentionWithKVCache(nn.Module):
+    """Self-attention with KV cache for efficient inference."""
+
+    def __init__(self, d_model: int, n_heads: int, dropout: float = 0.1):
+        super().__init__()
+        assert d_model % n_heads == 0
+
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_head = d_model // n_heads
+
+        # Projections
+        self.W_q = nn.Linear(d_model, d_model)
+        self.W_k = nn.Linear(d_model, d_model)
+        self.W_v = nn.Linear(d_model, d_model)
+        self.W_o = nn.Linear(d_model, d_model)
+
+        self.dropout = nn.Dropout(dropout)
+        self.scale = self.d_head ** -0.5
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        kv_cache: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        use_cache: bool = True
+    ) -> Tuple[torch.Tensor, Optional[Tuple[torch.Tensor, torch.Tensor]]]:
+        """
+        Args:
+            x: Input tensor [batch, seq_len, d_model]
+            kv_cache: Tuple of (cached_keys, cached_values) or None
+            use_cache: Whether to return updated cache
+
+        Returns:
+            output: Attention output [batch, seq_len, d_model]
+            new_cache: Updated (keys, values) cache if use_cache=True
+        """
+        batch_size, seq_len, _ = x.shape
+
+        # Compute Q, K, V for current input
+        q = self.W_q(x)  # [batch, seq_len, d_model]
+        k = self.W_k(x)
+        v = self.W_v(x)
+
+        # Reshape to [batch, n_heads, seq_len, d_head]
+        q = q.view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)
+        k = k.view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)
+        v = v.view(batch_size, seq_len, self.n_heads, self.d_head).transpose(1, 2)
+
+        # Handle KV cache
+        if kv_cache is not None:
+            # Concatenate cached K, V with new K, V
+            cached_k, cached_v = kv_cache
+            k = torch.cat([cached_k, k], dim=2)  # [batch, n_heads, total_seq, d_head]
+            v = torch.cat([cached_v, v], dim=2)
+
+        # Prepare cache for return
+        new_cache = (k, v) if use_cache else None
+
+        # Compute attention scores
+        # q: [batch, n_heads, seq_len, d_head]
+        # k: [batch, n_heads, total_seq, d_head]
+        attn_scores = torch.matmul(q, k.transpose(-2, -1)) * self.scale
+        # attn_scores: [batch, n_heads, seq_len, total_seq]
+
+        # Apply causal mask (only needed for training or prefill)
+        total_seq = k.size(2)
+        if seq_len > 1:
+            # Create causal mask for prefill phase
+            causal_mask = torch.triu(
+                torch.ones(seq_len, total_seq, dtype=torch.bool, device=x.device),
+                diagonal=total_seq - seq_len + 1
+            )
+            attn_scores = attn_scores.masked_fill(causal_mask, float('-inf'))
+
+        # Softmax and dropout
+        attn_probs = F.softmax(attn_scores, dim=-1)
+        attn_probs = self.dropout(attn_probs)
+
+        # Apply attention to values
+        output = torch.matmul(attn_probs, v)
+        # output: [batch, n_heads, seq_len, d_head]
+
+        # Reshape back
+        output = output.transpose(1, 2).contiguous().view(batch_size, seq_len, self.d_model)
+        output = self.W_o(output)
+
+        return output, new_cache
+
+
+class TransformerBlockWithCache(nn.Module):
+    """Transformer block with KV cache support."""
+
+    def __init__(self, d_model: int, n_heads: int, d_ff: int, dropout: float = 0.1):
+        super().__init__()
+        self.attention = CausalSelfAttentionWithKVCache(d_model, n_heads, dropout)
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.GELU(),
+            nn.Linear(d_ff, d_model),
+            nn.Dropout(dropout)
+        )
+        self.ln1 = nn.LayerNorm(d_model)
+        self.ln2 = nn.LayerNorm(d_model)
+
+    def forward(self, x, kv_cache=None, use_cache=True):
+        # Pre-norm architecture
+        attn_out, new_cache = self.attention(
+            self.ln1(x), kv_cache=kv_cache, use_cache=use_cache
+        )
+        x = x + attn_out
+        x = x + self.ffn(self.ln2(x))
+        return x, new_cache
+
+
+# Example usage with generation
+def generate_with_kv_cache(model, tokenizer, prompt, max_new_tokens=50):
+    """Efficient generation using KV cache."""
+    device = next(model.parameters()).device
+
+    # Tokenize prompt
+    input_ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
+
+    # Initialize cache (list of None for each layer)
+    past_key_values = [None] * model.num_layers
+
+    # Prefill: process entire prompt at once
+    with torch.no_grad():
+        logits, past_key_values = model(input_ids, past_key_values=past_key_values)
+
+    # Get next token
+    next_token = torch.argmax(logits[:, -1, :], dim=-1, keepdim=True)
+    generated = [next_token.item()]
+
+    # Decode: generate one token at a time using cache
+    for _ in range(max_new_tokens - 1):
+        with torch.no_grad():
+            # Only pass the new token - cache handles history
+            logits, past_key_values = model(
+                next_token,  # Just 1 token!
+                past_key_values=past_key_values
+            )
+
+        next_token = torch.argmax(logits[:, -1, :], dim=-1, keepdim=True)
+        generated.append(next_token.item())
+
+        if next_token.item() == tokenizer.eos_token_id:
+            break
+
+    return tokenizer.decode(generated)</code>
+                    </div>
+
+                    <h4 class="mt-3">Using HuggingFace Transformers KV Cache</h4>
+                    <div class="code-block">
+<code>from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
+
+# KV cache is enabled by default in generate()
+inputs = tokenizer("The quick brown fox", return_tensors="pt")
+
+# Without cache (slower)
+outputs_no_cache = model.generate(
+    **inputs,
+    max_new_tokens=50,
+    use_cache=False  # Explicitly disable
+)
+
+# With cache (faster, default)
+outputs_with_cache = model.generate(
+    **inputs,
+    max_new_tokens=50,
+    use_cache=True
+)
+
+# Manual control with past_key_values
+outputs = model(**inputs, use_cache=True)
+past_key_values = outputs.past_key_values  # Cache state
+
+# Continue generation
+next_input = tokenizer(" jumps", return_tensors="pt")
+outputs = model(
+    **next_input,
+    past_key_values=past_key_values,  # Reuse cache
+    use_cache=True
+)</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights: How Companies Do KV Caching</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>vLLM's PagedAttention</h4>
+                    <p>Traditional KV caching allocates contiguous memory per sequence. PagedAttention (used by vLLM)
+                    treats KV cache like virtual memory:</p>
+                    <ul>
+                        <li><strong>Problem:</strong> Variable sequence lengths waste memory (fragmentation)</li>
+                        <li><strong>Solution:</strong> Store KV cache in non-contiguous "pages" of fixed size</li>
+                        <li><strong>Benefit:</strong> ~24x improvement in memory efficiency, enables larger batches</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    subgraph "Traditional KV Cache"
+        T1[Seq 1: 100 tokens - allocated 512]
+        T2[Seq 2: 50 tokens - allocated 512]
+        T3[Seq 3: 200 tokens - allocated 512]
+        TW[Wasted: 674 tokens worth]
+    end
+
+    subgraph "PagedAttention"
+        P1[Page 1] --> S1[Seq 1]
+        P2[Page 2] --> S1
+        P3[Page 3] --> S2[Seq 2]
+        P4[Page 4] --> S3[Seq 3]
+        P5[Page 5] --> S3
+        P6[Page 6] --> S3
+        P7[Page 7] --> S3
+        PF[Free pages for new seqs]
+    end
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Quantized KV Cache</h4>
+                    <p>Companies like Anthropic and OpenAI likely use quantized KV caches:</p>
+                    <ul>
+                        <li>Store K,V in INT8 or FP8 instead of FP16</li>
+                        <li>50% memory reduction with minimal quality loss</li>
+                        <li>Critical for serving long-context models (100K+ tokens)</li>
+                    </ul>
+
+                    <h4 class="mt-3">Multi-Query Attention (MQA) and Grouped-Query Attention (GQA)</h4>
+                    <p>Reduce KV cache size by sharing K,V across attention heads:</p>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Architecture</th>
+                                <th>K,V Heads</th>
+                                <th>KV Cache Size</th>
+                                <th>Used By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Multi-Head (MHA)</td>
+                                <td>32 (all)</td>
+                                <td>100%</td>
+                                <td>GPT-3, Llama-1</td>
+                            </tr>
+                            <tr>
+                                <td>Multi-Query (MQA)</td>
+                                <td>1</td>
+                                <td class="highlight">3%</td>
+                                <td>PaLM, Falcon</td>
+                            </tr>
+                            <tr>
+                                <td>Grouped-Query (GQA)</td>
+                                <td>8</td>
+                                <td class="highlight">25%</td>
+                                <td>Llama-2, Mistral</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Common Mistakes</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 1: Forgetting to Update Cache</div>
+                        <p>Not returning/storing the updated cache after each forward pass leads to incorrect attention.</p>
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 2: Wrong Sequence Dimension</div>
+                        <p>Concatenating along the wrong dimension corrupts the cache. K,V should grow along the sequence dimension.</p>
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 3: Not Clearing Cache Between Sequences</div>
+                        <p>Reusing cache across different prompts causes the model to "remember" unrelated context.</p>
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 4: Memory Leaks in Long Conversations</div>
+                        <p>KV cache grows unboundedly. Implement sliding window attention or periodic cache clearing.</p>
+                    </div>
+
+                    <div class="code-block">
+<code># WRONG: Cache not updated
+output, _ = model(input_ids, past_key_values=cache)  # Ignoring new cache!
+
+# CORRECT: Always update cache
+output, cache = model(input_ids, past_key_values=cache)
+
+# WRONG: Not clearing between sequences
+for prompt in prompts:
+    output = model(prompt, past_key_values=cache)  # Same cache for all!
+
+# CORRECT: Reset cache for each sequence
+for prompt in prompts:
+    cache = None  # Fresh cache
+    output, cache = model(prompt, past_key_values=cache)</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 2: QUANTIZATION -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">2. Quantization: Making Models Smaller and Faster</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The MP3 Analogy:</strong> Just like MP3 compresses audio by removing frequencies humans
+                        can't hear, quantization compresses neural networks by reducing numerical precision in ways
+                        that don't significantly affect outputs. A 32-bit float has WAY more precision than neural
+                        networks actually need.
+                    </div>
+
+                    <p><strong>Why Quantization Works:</strong></p>
+                    <ul>
+                        <li><strong>Redundancy:</strong> Neural network weights are highly redundant</li>
+                        <li><strong>Noise tolerance:</strong> Models trained with dropout are inherently noise-resistant</li>
+                        <li><strong>Weight distribution:</strong> Most weights cluster around zero - don't need high precision there</li>
+                    </ul>
+
+                    <div class="quant-demo">
+                        <h4>Quantization Visualization</h4>
+                        <p class="text-muted">See how the same weights look in different precisions:</p>
+
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 1.5rem;">
+                            <div>
+                                <h5>FP32 (32 bits) - 4 bytes per weight</h5>
+                                <div class="weight-grid" id="fp32-grid"></div>
+                                <p style="font-size: 0.8rem; color: #a0aec0;">Full precision: 3.14159265...</p>
+                            </div>
+                            <div>
+                                <h5>FP16 (16 bits) - 2 bytes per weight</h5>
+                                <div class="weight-grid" id="fp16-grid"></div>
+                                <p style="font-size: 0.8rem; color: #a0aec0;">Half precision: 3.1416</p>
+                            </div>
+                            <div>
+                                <h5>INT8 (8 bits) - 1 byte per weight</h5>
+                                <div class="weight-grid" id="int8-grid"></div>
+                                <p style="font-size: 0.8rem; color: #a0aec0;">256 possible values: 3.14 -> 3</p>
+                            </div>
+                            <div>
+                                <h5>INT4 (4 bits) - 0.5 bytes per weight</h5>
+                                <div class="weight-grid" id="int4-grid"></div>
+                                <p style="font-size: 0.8rem; color: #a0aec0;">16 possible values: 3.14 -> 3</p>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid" style="margin-top: 1.5rem;">
+                            <div class="stat-card">
+                                <div class="stat-value">70B</div>
+                                <div class="stat-label">Llama-2 FP16</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">140GB</div>
+                                <div class="stat-label">FP16 Size</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">35GB</div>
+                                <div class="stat-label">INT4 Size</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">4x</div>
+                                <div class="stat-label">Compression</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: Quantization Types</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Post-Training Quantization (PTQ)</h4>
+                    <p>Quantize a pre-trained model without additional training:</p>
+                    <ul>
+                        <li><strong>Pros:</strong> Fast, no training data needed, simple to apply</li>
+                        <li><strong>Cons:</strong> Quality degradation, especially at low bits (INT4)</li>
+                        <li><strong>Use when:</strong> Quick deployment, INT8 quantization, large models</li>
+                    </ul>
+
+                    <h4 class="mt-3">Quantization-Aware Training (QAT)</h4>
+                    <p>Simulate quantization during training so model learns to be robust:</p>
+                    <ul>
+                        <li><strong>Pros:</strong> Better quality, can go lower bits</li>
+                        <li><strong>Cons:</strong> Requires training, more complex, needs data</li>
+                        <li><strong>Use when:</strong> Quality critical, have compute budget, targeting INT4</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Post-Training Quantization"
+        A[Trained FP32 Model] --> B[Calibration Data]
+        B --> C[Compute Scale/Zero-point]
+        C --> D[Quantized Model]
+    end
+
+    subgraph "Quantization-Aware Training"
+        E[FP32 Model] --> F[Fake Quantize Forward]
+        F --> G[FP32 Backward]
+        G --> H[Update Weights]
+        H --> F
+        H --> I[Final Quantized Model]
+    end
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Modern Quantization Methods</h4>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Type</th>
+                                <th>Bits</th>
+                                <th>Key Innovation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>GPTQ</strong></td>
+                                <td>PTQ</td>
+                                <td>4-bit</td>
+                                <td>Layer-by-layer quantization with Hessian-based error correction</td>
+                            </tr>
+                            <tr>
+                                <td><strong>AWQ</strong></td>
+                                <td>PTQ</td>
+                                <td>4-bit</td>
+                                <td>Activation-aware - protects important weights</td>
+                            </tr>
+                            <tr>
+                                <td><strong>GGML/GGUF</strong></td>
+                                <td>PTQ</td>
+                                <td>2-8 bit</td>
+                                <td>CPU-optimized, mixed precision per layer</td>
+                            </tr>
+                            <tr>
+                                <td><strong>bitsandbytes</strong></td>
+                                <td>PTQ</td>
+                                <td>4-8 bit</td>
+                                <td>Easy HuggingFace integration, NF4 format</td>
+                            </tr>
+                            <tr>
+                                <td><strong>SmoothQuant</strong></td>
+                                <td>PTQ</td>
+                                <td>8-bit</td>
+                                <td>Migrates difficulty from activations to weights</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Math / Theory: How Quantization Works</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Linear Quantization</h4>
+                    <p>Map floating point values to integers:</p>
+
+                    <div class="code-block">
+<code># Quantization formula
+# x_q = round(x / scale) + zero_point
+
+# Dequantization formula
+# x_approx = (x_q - zero_point) * scale
+
+# For symmetric quantization (zero_point = 0):
+# scale = max(|x|) / (2^(bits-1) - 1)
+
+# For asymmetric quantization:
+# scale = (max(x) - min(x)) / (2^bits - 1)
+# zero_point = round(-min(x) / scale)</code>
+                    </div>
+
+                    <h4 class="mt-3">Example: INT8 Quantization</h4>
+                    <div class="code-block">
+<code># Original FP32 weights
+weights = [-0.8, -0.2, 0.0, 0.3, 0.9]
+
+# Symmetric INT8 (range: -127 to 127)
+max_abs = 0.9
+scale = max_abs / 127  # = 0.00709
+
+# Quantize
+weights_int8 = [round(w / scale) for w in weights]
+# = [-113, -28, 0, 42, 127]
+
+# Dequantize
+weights_approx = [w * scale for w in weights_int8]
+# = [-0.801, -0.199, 0.0, 0.298, 0.900]
+
+# Error is minimal!</code>
+                    </div>
+
+                    <h4 class="mt-3">Why GPTQ is Special</h4>
+                    <p>GPTQ uses the Hessian (second derivative) to determine which weights are most important:</p>
+                    <ul>
+                        <li>Weights with high Hessian are quantized more carefully</li>
+                        <li>Compensates for quantization error by adjusting remaining weights</li>
+                        <li>Processes one column at a time for efficiency</li>
+                    </ul>
+
+                    <h4 class="mt-3">Why AWQ is Special</h4>
+                    <p>AWQ observes that a small fraction of weights (0.1-1%) are critical:</p>
+                    <ul>
+                        <li>Identifies important weights by looking at activation magnitudes</li>
+                        <li>Scales important weights UP before quantization (preserves precision)</li>
+                        <li>Scales activations DOWN to compensate (mathematically equivalent)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Practical Quantization</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Using bitsandbytes (Easiest)</h4>
+                    <div class="code-block">
+<code>from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+import torch
+
+# 8-bit quantization
+model_8bit = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-2-7b-hf",
+    load_in_8bit=True,
+    device_map="auto"
+)
+
+# 4-bit quantization with NF4 (recommended)
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",  # NormalFloat4 - better than regular INT4
+    bnb_4bit_compute_dtype=torch.float16,  # Compute in FP16
+    bnb_4bit_use_double_quant=True,  # Quantize the quantization constants too!
+)
+
+model_4bit = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-2-7b-hf",
+    quantization_config=bnb_config,
+    device_map="auto"
+)
+
+# Check memory usage
+print(f"8-bit model memory: {model_8bit.get_memory_footprint() / 1e9:.2f} GB")
+print(f"4-bit model memory: {model_4bit.get_memory_footprint() / 1e9:.2f} GB")</code>
+                    </div>
+
+                    <h4 class="mt-3">Using GPTQ with AutoGPTQ</h4>
+                    <div class="code-block">
+<code>from auto_gptq import AutoGPTQForCausalLM, BaseQuantizeConfig
+from transformers import AutoTokenizer
+
+# Load pre-quantized model
+model = AutoGPTQForCausalLM.from_quantized(
+    "TheBloke/Llama-2-7B-GPTQ",
+    device_map="auto",
+    use_safetensors=True,
+)
+
+# Or quantize your own model
+quantize_config = BaseQuantizeConfig(
+    bits=4,
+    group_size=128,  # Quantize in groups for better accuracy
+    desc_act=True,   # Activation order descending
+)
+
+# Load base model
+from transformers import AutoModelForCausalLM
+base_model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
+
+# Prepare calibration data
+calibration_data = [
+    tokenizer(text, return_tensors="pt")
+    for text in ["Example text 1...", "Example text 2...", ...]
+]
+
+# Quantize
+model = AutoGPTQForCausalLM.from_pretrained(base_model, quantize_config)
+model.quantize(calibration_data)
+
+# Save
+model.save_quantized("./llama2-7b-gptq-4bit")</code>
+                    </div>
+
+                    <h4 class="mt-3">Using AWQ with AutoAWQ</h4>
+                    <div class="code-block">
+<code>from awq import AutoAWQForCausalLM
+from transformers import AutoTokenizer
+
+# Load pre-quantized
+model = AutoAWQForCausalLM.from_quantized(
+    "TheBloke/Llama-2-7B-AWQ",
+    device_map="auto",
+)
+
+# Or quantize your own
+model = AutoAWQForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
+
+quant_config = {
+    "zero_point": True,
+    "q_group_size": 128,
+    "w_bit": 4,
+    "version": "GEMM"  # or "GEMV" for batch_size=1
+}
+
+# Calibration data
+calib_data = [
+    "The quick brown fox jumps over the lazy dog.",
+    "Machine learning is transforming the world.",
+    # ... more diverse examples
+]
+
+model.quantize(tokenizer, quant_config=quant_config, calib_data=calib_data)
+model.save_quantized("./llama2-7b-awq-4bit")</code>
+                    </div>
+
+                    <h4 class="mt-3">Manual INT8 Quantization (Educational)</h4>
+                    <div class="code-block">
+<code>import torch
+import torch.nn as nn
+
+class QuantizedLinear(nn.Module):
+    """Simple INT8 quantized linear layer."""
+
+    def __init__(self, in_features, out_features, weight_fp32):
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+
+        # Compute quantization parameters
+        self.scale = weight_fp32.abs().max() / 127.0
+
+        # Quantize weights to INT8
+        weight_int8 = torch.round(weight_fp32 / self.scale).clamp(-128, 127).to(torch.int8)
+        self.register_buffer('weight_int8', weight_int8)
+
+    def forward(self, x):
+        # Dequantize on-the-fly (for simplicity)
+        # In practice, use optimized INT8 matmul kernels
+        weight_fp32 = self.weight_int8.float() * self.scale
+        return x @ weight_fp32.T
+
+
+def quantize_model(model):
+    """Replace Linear layers with quantized versions."""
+    for name, module in model.named_children():
+        if isinstance(module, nn.Linear):
+            quantized = QuantizedLinear(
+                module.in_features,
+                module.out_features,
+                module.weight.data
+            )
+            setattr(model, name, quantized)
+        else:
+            quantize_model(module)  # Recurse
+    return model</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>How Companies Choose Quantization</h4>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Use Case</th>
+                                <th>Recommended</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Server inference (A100/H100)</td>
+                                <td>FP8 or INT8</td>
+                                <td>Hardware support, minimal quality loss</td>
+                            </tr>
+                            <tr>
+                                <td>Consumer GPU (RTX 4090)</td>
+                                <td>4-bit AWQ/GPTQ</td>
+                                <td>Fit larger models in VRAM</td>
+                            </tr>
+                            <tr>
+                                <td>CPU inference</td>
+                                <td>GGUF Q4_K_M</td>
+                                <td>Optimized for CPU, good quality</td>
+                            </tr>
+                            <tr>
+                                <td>Mobile/Edge</td>
+                                <td>INT4 with QAT</td>
+                                <td>Maximum compression, QAT recovers quality</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 class="mt-3">Quality vs Speed Tradeoffs</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    FP32[FP32<br/>Best Quality<br/>Slowest] --> FP16[FP16<br/>~Same Quality<br/>2x Faster]
+    FP16 --> INT8[INT8<br/>0.5% Degradation<br/>2-4x Faster]
+    INT8 --> INT4[INT4<br/>1-3% Degradation<br/>2x Faster again]
+    INT4 --> INT2[INT2<br/>Significant Loss<br/>Research only]
+                        </div>
+                    </div>
+
+                    <div class="interview-tip">
+                        <strong>When asked about quantization tradeoffs:</strong>
+                        <ul>
+                            <li>INT8 is nearly lossless for most models - default choice</li>
+                            <li>4-bit needs careful calibration (AWQ > GPTQ for most cases)</li>
+                            <li>Mixed precision: keep attention in higher precision, FFN can go lower</li>
+                            <li>Always benchmark on YOUR task - perplexity doesn't tell the whole story</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 3: LoRA -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">3. LoRA: Low-Rank Adaptation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The Sticky Note Analogy:</strong> Instead of rewriting an entire textbook (full fine-tuning),
+                        LoRA adds small sticky notes with corrections (low-rank adapters). The original book stays intact,
+                        and the notes are tiny but capture the key changes needed.
+                    </div>
+
+                    <p><strong>The Insight:</strong> When fine-tuning a pre-trained model, the weight updates have LOW RANK.
+                    This means you don't need to update all parameters - you can approximate the update with much smaller matrices.</p>
+
+                    <div class="quant-demo">
+                        <h4>LoRA Architecture</h4>
+                        <div class="lora-diagram">
+                            <div class="matrix-box">
+                                <div class="matrix frozen" style="width: 120px; height: 120px;">
+                                    W<br/>(frozen)<br/>d x d
+                                </div>
+                                <span class="matrix-label">Original Weights</span>
+                            </div>
+
+                            <div style="font-size: 2rem; color: #a0aec0;">+</div>
+
+                            <div class="matrix-box">
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <div class="matrix trainable" style="width: 40px; height: 120px;">
+                                        B<br/>d x r
+                                    </div>
+                                    <span style="color: #a0aec0;">x</span>
+                                    <div class="matrix trainable" style="width: 120px; height: 40px;">
+                                        A (r x d)
+                                    </div>
+                                </div>
+                                <span class="matrix-label">LoRA Adapters (trainable)</span>
+                            </div>
+
+                            <div style="font-size: 2rem; color: #a0aec0;">=</div>
+
+                            <div class="matrix-box">
+                                <div class="matrix" style="width: 120px; height: 120px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+                                    W'<br/>(adapted)<br/>d x d
+                                </div>
+                                <span class="matrix-label">Effective Weights</span>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid" style="margin-top: 1.5rem;">
+                            <div class="stat-card">
+                                <div class="stat-value">7B</div>
+                                <div class="stat-label">Original Params</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">~4M</div>
+                                <div class="stat-label">LoRA Params (r=8)</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">0.06%</div>
+                                <div class="stat-label">Trainable %</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">~16MB</div>
+                                <div class="stat-label">Adapter Size</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Low-Rank Hypothesis</h4>
+                    <p>The paper "LoRA: Low-Rank Adaptation of Large Language Models" showed that weight updates
+                    during fine-tuning have intrinsically low rank. This means:</p>
+                    <ul>
+                        <li>A d x d weight update can be approximated by two smaller matrices: B(d x r) and A(r x d)</li>
+                        <li>r (the rank) can be very small (4, 8, 16) while still capturing the task-specific adaptation</li>
+                        <li>Parameter reduction: d^2 -> 2dr (e.g., 4096^2 = 16M -> 2 x 4096 x 8 = 65K)</li>
+                    </ul>
+
+                    <h4 class="mt-3">Key LoRA Parameters</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Description</th>
+                                <th>Typical Values</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>r (rank)</strong></td>
+                                <td>Dimension of low-rank matrices</td>
+                                <td>4, 8, 16, 32, 64</td>
+                            </tr>
+                            <tr>
+                                <td><strong>alpha</strong></td>
+                                <td>Scaling factor (effective lr = alpha/r)</td>
+                                <td>16, 32 (often 2x r)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>target_modules</strong></td>
+                                <td>Which layers to adapt</td>
+                                <td>q_proj, v_proj, k_proj, o_proj</td>
+                            </tr>
+                            <tr>
+                                <td><strong>dropout</strong></td>
+                                <td>Dropout on LoRA layers</td>
+                                <td>0.05 - 0.1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 class="mt-3">Why LoRA is Amazing</h4>
+                    <ul>
+                        <li><strong>Memory efficient:</strong> Only adapter gradients in memory, not full model</li>
+                        <li><strong>No inference overhead:</strong> Merge adapters into base weights</li>
+                        <li><strong>Swappable:</strong> Multiple adapters for different tasks, same base model</li>
+                        <li><strong>Composable:</strong> Can combine adapters (though not trivial)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Math / Theory</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>LoRA Forward Pass</h4>
+                    <div class="code-block">
+<code># Standard linear layer
+h = W @ x  # W is d_out x d_in
+
+# LoRA-adapted linear layer
+h = W @ x + (B @ A) @ x * (alpha / r)
+# W: frozen, d_out x d_in
+# B: trainable, d_out x r
+# A: trainable, r x d_in
+# alpha/r: scaling factor
+
+# Can be rearranged as:
+h = (W + B @ A * (alpha / r)) @ x
+# This is why we can MERGE adapters at inference!</code>
+                    </div>
+
+                    <h4 class="mt-3">Why Rank r Works</h4>
+                    <p>The intrinsic dimensionality of fine-tuning is low because:</p>
+                    <ul>
+                        <li>Pre-training already captures general language understanding</li>
+                        <li>Task adaptation only needs to "steer" existing representations</li>
+                        <li>Empirically, r=8 captures most of the signal for many tasks</li>
+                    </ul>
+
+                    <h4 class="mt-3">Parameter Count</h4>
+                    <div class="code-block">
+<code># For a single linear layer W (d_in x d_out):
+# Full fine-tune params: d_in * d_out
+# LoRA params: r * (d_in + d_out)
+
+# Example: Llama-2 7B attention
+d_model = 4096
+n_layers = 32
+modules_per_layer = 4  # q, k, v, o projections
+r = 8
+
+# Full fine-tune attention
+full_params = n_layers * modules_per_layer * d_model * d_model
+# = 32 * 4 * 4096 * 4096 = 2.1B params
+
+# LoRA
+lora_params = n_layers * modules_per_layer * 2 * r * d_model
+# = 32 * 4 * 2 * 8 * 4096 = 8.4M params
+
+# Reduction: 250x fewer parameters!</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: LoRA with PEFT</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Basic LoRA Fine-tuning</h4>
+                    <div class="code-block">
+<code>from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+from peft import LoraConfig, get_peft_model, TaskType
+from datasets import load_dataset
+from trl import SFTTrainer
+
+# Load base model
+model = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-2-7b-hf",
+    torch_dtype=torch.float16,
+    device_map="auto"
+)
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
+tokenizer.pad_token = tokenizer.eos_token
+
+# Configure LoRA
+lora_config = LoraConfig(
+    r=8,                        # Rank
+    lora_alpha=16,              # Alpha (scaling)
+    target_modules=[            # Which modules to adapt
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",            # Can also adapt FFN
+        "up_proj",
+        "down_proj"
+    ],
+    lora_dropout=0.05,
+    bias="none",
+    task_type=TaskType.CAUSAL_LM
+)
+
+# Wrap model with LoRA
+model = get_peft_model(model, lora_config)
+
+# Check trainable parameters
+model.print_trainable_parameters()
+# Output: trainable params: 4,194,304 || all params: 6,742,609,920 || trainable%: 0.06%
+
+# Training setup
+training_args = TrainingArguments(
+    output_dir="./llama2-lora-finetuned",
+    num_train_epochs=3,
+    per_device_train_batch_size=4,
+    gradient_accumulation_steps=4,
+    learning_rate=2e-4,
+    fp16=True,
+    logging_steps=10,
+    save_strategy="epoch"
+)
+
+# Load dataset
+dataset = load_dataset("json", data_files="training_data.jsonl")
+
+# Train with SFTTrainer (handles formatting)
+trainer = SFTTrainer(
+    model=model,
+    train_dataset=dataset["train"],
+    args=training_args,
+    tokenizer=tokenizer,
+    dataset_text_field="text",
+    max_seq_length=512,
+)
+
+trainer.train()
+
+# Save only the adapter (tiny!)
+model.save_pretrained("./llama2-lora-adapter")
+# This saves ~16MB instead of 14GB!</code>
+                    </div>
+
+                    <h4 class="mt-3">Loading and Using LoRA Adapters</h4>
+                    <div class="code-block">
+<code>from peft import PeftModel, PeftConfig
+
+# Load base model
+base_model = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-2-7b-hf",
+    torch_dtype=torch.float16,
+    device_map="auto"
+)
+
+# Load adapter
+model = PeftModel.from_pretrained(
+    base_model,
+    "./llama2-lora-adapter"
+)
+
+# For inference - merge adapter into base (no overhead!)
+model = model.merge_and_unload()
+
+# Or keep separate for hot-swapping adapters
+# model.set_adapter("adapter1")  # Switch to adapter1
+# model.set_adapter("adapter2")  # Switch to adapter2
+
+# Generate
+inputs = tokenizer("Hello, how are you?", return_tensors="pt").to(model.device)
+outputs = model.generate(**inputs, max_new_tokens=50)
+print(tokenizer.decode(outputs[0]))</code>
+                    </div>
+
+                    <h4 class="mt-3">LoRA from Scratch (Educational)</h4>
+                    <div class="code-block">
+<code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class LoRALinear(nn.Module):
+    """Linear layer with LoRA adaptation."""
+
+    def __init__(
+        self,
+        in_features: int,
+        out_features: int,
+        r: int = 8,
+        alpha: int = 16,
+        dropout: float = 0.0
+    ):
+        super().__init__()
+        self.r = r
+        self.alpha = alpha
+        self.scaling = alpha / r
+
+        # Original (frozen) weight
+        self.weight = nn.Parameter(torch.empty(out_features, in_features))
+        self.weight.requires_grad = False
+
+        # LoRA matrices (trainable)
+        self.lora_A = nn.Parameter(torch.zeros(r, in_features))
+        self.lora_B = nn.Parameter(torch.zeros(out_features, r))
+
+        # Dropout
+        self.dropout = nn.Dropout(dropout) if dropout > 0 else nn.Identity()
+
+        # Initialize
+        nn.init.kaiming_uniform_(self.lora_A, a=5**0.5)
+        nn.init.zeros_(self.lora_B)  # Start with zero effect
+
+    def forward(self, x):
+        # Original forward
+        result = F.linear(x, self.weight)
+
+        # Add LoRA
+        lora_result = self.dropout(x) @ self.lora_A.T @ self.lora_B.T
+        result = result + lora_result * self.scaling
+
+        return result
+
+    def merge_weights(self):
+        """Merge LoRA into base weights for inference."""
+        self.weight.data += (self.lora_B @ self.lora_A) * self.scaling
+        # Can now delete lora_A and lora_B
+
+    @classmethod
+    def from_linear(cls, linear: nn.Linear, r: int = 8, alpha: int = 16):
+        """Convert existing Linear to LoRALinear."""
+        lora_linear = cls(
+            linear.in_features,
+            linear.out_features,
+            r=r,
+            alpha=alpha
+        )
+        lora_linear.weight.data = linear.weight.data.clone()
+        return lora_linear
+
+
+def add_lora_to_model(model, r=8, alpha=16, target_modules=None):
+    """Add LoRA to specified modules in a model."""
+    if target_modules is None:
+        target_modules = ['q_proj', 'v_proj']
+
+    for name, module in model.named_modules():
+        if any(target in name for target in target_modules):
+            if isinstance(module, nn.Linear):
+                # Replace with LoRA version
+                parent_name = '.'.join(name.split('.')[:-1])
+                child_name = name.split('.')[-1]
+                parent = model.get_submodule(parent_name) if parent_name else model
+
+                lora_linear = LoRALinear.from_linear(module, r=r, alpha=alpha)
+                setattr(parent, child_name, lora_linear)
+
+    # Freeze all except LoRA
+    for param in model.parameters():
+        param.requires_grad = False
+
+    for name, param in model.named_parameters():
+        if 'lora_' in name:
+            param.requires_grad = True
+
+    return model</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 4: QLoRA -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">4. QLoRA: Combining Quantization and LoRA</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The Best of Both Worlds:</strong> QLoRA quantizes the base model to 4-bit (saves memory)
+                        while training LoRA adapters in full precision (maintains quality). This enables fine-tuning
+                        a 65B model on a single 48GB GPU!
+                    </div>
+
+                    <h4>Key Innovations in QLoRA</h4>
+                    <ul>
+                        <li><strong>4-bit NormalFloat (NF4):</strong> Information-theoretically optimal 4-bit quantization for normally distributed weights</li>
+                        <li><strong>Double Quantization:</strong> Quantize the quantization constants too (saves additional memory)</li>
+                        <li><strong>Paged Optimizers:</strong> Use CPU memory for optimizer states when GPU runs out</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    subgraph "Memory Comparison"
+        A[Full Fine-tune 65B<br/>780GB GPU Memory]
+        B[LoRA 65B<br/>130GB GPU Memory]
+        C[QLoRA 65B<br/>48GB GPU Memory]
+    end
+
+    A -->|6x reduction| B
+    B -->|2.7x reduction| C
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">QLoRA Forward Pass</h4>
+                    <div class="code-block">
+<code># QLoRA forward pass (simplified)
+def qlora_forward(x, W_4bit, lora_A, lora_B, scale, alpha, r):
+    # Dequantize base weights to FP16 for computation
+    W_fp16 = dequantize_nf4(W_4bit, scale)
+
+    # Base model forward (in FP16)
+    h = x @ W_fp16.T
+
+    # LoRA forward (in FP16/FP32)
+    h_lora = (x @ lora_A.T @ lora_B.T) * (alpha / r)
+
+    return h + h_lora</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: QLoRA Fine-tuning</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+<code>import torch
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    TrainingArguments
+)
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from trl import SFTTrainer
+from datasets import load_dataset
+
+# QLoRA configuration
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",           # NormalFloat4 - key innovation
+    bnb_4bit_compute_dtype=torch.float16,
+    bnb_4bit_use_double_quant=True,      # Double quantization
+)
+
+# Load model in 4-bit
+model = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-2-70b-hf",
+    quantization_config=bnb_config,
+    device_map="auto",
+    trust_remote_code=True
+)
+
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-70b-hf")
+tokenizer.pad_token = tokenizer.eos_token
+
+# Prepare model for k-bit training
+# This handles gradient checkpointing and casting
+model = prepare_model_for_kbit_training(model)
+
+# LoRA config
+lora_config = LoraConfig(
+    r=64,                      # Higher rank for larger models
+    lora_alpha=128,
+    target_modules=[
+        "q_proj", "k_proj", "v_proj", "o_proj",
+        "gate_proj", "up_proj", "down_proj"
+    ],
+    lora_dropout=0.05,
+    bias="none",
+    task_type="CAUSAL_LM"
+)
+
+# Add LoRA adapters
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
+
+# Training arguments for QLoRA
+training_args = TrainingArguments(
+    output_dir="./llama2-70b-qlora",
+    num_train_epochs=1,
+    per_device_train_batch_size=1,       # Small batch for memory
+    gradient_accumulation_steps=16,       # Effective batch = 16
+    learning_rate=2e-4,
+    fp16=True,
+    logging_steps=10,
+    save_strategy="steps",
+    save_steps=100,
+    optim="paged_adamw_8bit",            # Paged optimizer - key for memory
+    max_grad_norm=0.3,
+    warmup_ratio=0.03,
+    lr_scheduler_type="cosine",
+    gradient_checkpointing=True,          # Trade compute for memory
+)
+
+# Dataset
+dataset = load_dataset("json", data_files="training_data.jsonl")
+
+# Train
+trainer = SFTTrainer(
+    model=model,
+    train_dataset=dataset["train"],
+    args=training_args,
+    tokenizer=tokenizer,
+    dataset_text_field="text",
+    max_seq_length=2048,
+    packing=True,  # Pack multiple examples into one sequence
+)
+
+trainer.train()
+
+# Save adapter
+model.save_pretrained("./llama2-70b-qlora-adapter")</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 5: FLASH ATTENTION -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">5. Flash Attention: Memory-Efficient Attention</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The Streaming Analogy:</strong> Standard attention is like downloading an entire movie
+                        before watching - it loads the full N x N attention matrix into GPU memory. Flash Attention
+                        is like streaming - it processes the attention in chunks, never storing the full matrix.
+                    </div>
+
+                    <h4>The Memory Problem</h4>
+                    <p>Standard attention computes: <code>softmax(QK^T) @ V</code></p>
+                    <ul>
+                        <li>QK^T is a <strong>seq_len x seq_len</strong> matrix</li>
+                        <li>For seq_len = 8192: that's 67M elements = 268MB in FP32 per head per batch</li>
+                        <li>With 32 heads and batch 8: <strong>68GB</strong> just for attention scores!</li>
+                    </ul>
+
+                    <div class="quant-demo">
+                        <h4>Memory Hierarchy Matters</h4>
+                        <p class="text-muted">The key insight: GPU SRAM (on-chip) is 10-100x faster than HBM (off-chip GPU memory)</p>
+
+                        <div style="display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; margin: 1.5rem 0;">
+                            <div style="text-align: center;">
+                                <div class="attention-block sram" style="width: 80px; height: 80px;">SRAM<br/>20MB<br/>19TB/s</div>
+                                <p style="font-size: 0.8rem; color: #a0aec0; margin-top: 0.5rem;">On-chip (fast, small)</p>
+                            </div>
+                            <div style="display: flex; align-items: center; font-size: 2rem; color: #a0aec0;">→</div>
+                            <div style="text-align: center;">
+                                <div class="attention-block hbm" style="width: 80px; height: 80px;">HBM<br/>80GB<br/>2TB/s</div>
+                                <p style="font-size: 0.8rem; color: #a0aec0; margin-top: 0.5rem;">Off-chip (slow, large)</p>
+                            </div>
+                        </div>
+
+                        <p><strong>Standard attention:</strong> Writes full NxN matrix to HBM, then reads back</p>
+                        <p><strong>Flash attention:</strong> Computes attention in SRAM-sized blocks, never materializes full matrix</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: How Flash Attention Works</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Tiling Approach</h4>
+                    <p>Flash Attention processes Q, K, V in blocks that fit in SRAM:</p>
+                    <ol>
+                        <li>Split Q into blocks: Q1, Q2, ..., Qn</li>
+                        <li>Split K, V into blocks: K1, V1, K2, V2, ...</li>
+                        <li>For each Qi, iterate through all Kj, Vj blocks</li>
+                        <li>Accumulate softmax using the "online softmax" trick</li>
+                    </ol>
+
+                    <h4 class="mt-3">The Online Softmax Trick</h4>
+                    <p>The challenge: softmax needs the max over ALL elements, but we're processing blocks.</p>
+                    <p>Solution: Track running max and rescale accumulated results:</p>
+
+                    <div class="code-block">
+<code># Standard softmax
+softmax(x) = exp(x - max(x)) / sum(exp(x - max(x)))
+
+# Online softmax (for streaming)
+# When we see new values, we:
+# 1. Update the running max
+# 2. Rescale previous results by exp(old_max - new_max)
+# 3. Add new contributions
+
+# Pseudocode:
+m_prev = -inf
+l_prev = 0
+o_prev = 0
+
+for block in blocks:
+    m_curr = max(m_prev, max(block))
+    l_curr = exp(m_prev - m_curr) * l_prev + sum(exp(block - m_curr))
+    o_curr = exp(m_prev - m_curr) * o_prev + exp(block - m_curr) @ V_block
+
+    m_prev, l_prev, o_prev = m_curr, l_curr, o_curr
+
+output = o_prev / l_prev</code>
+                    </div>
+
+                    <h4 class="mt-3">Memory and Speed Benefits</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Aspect</th>
+                                <th>Standard Attention</th>
+                                <th>Flash Attention</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Memory</td>
+                                <td>O(N^2)</td>
+                                <td class="highlight">O(N)</td>
+                            </tr>
+                            <tr>
+                                <td>IO Complexity</td>
+                                <td>O(N^2 d)</td>
+                                <td class="highlight">O(N^2 d^2 / M)</td>
+                            </tr>
+                            <tr>
+                                <td>Wall-clock Speed</td>
+                                <td>1x</td>
+                                <td class="highlight">2-4x faster</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Using Flash Attention</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Using Flash Attention 2 in HuggingFace</h4>
+                    <div class="code-block">
+<code># Install flash-attn first:
+# pip install flash-attn --no-build-isolation
+
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+# Load with Flash Attention 2
+model = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-2-7b-hf",
+    torch_dtype=torch.float16,
+    attn_implementation="flash_attention_2",  # Enable Flash Attention
+    device_map="auto"
+)
+
+# That's it! Model now uses Flash Attention automatically
+
+# For custom models, use the flash_attn library directly
+from flash_attn import flash_attn_func
+
+# flash_attn_func(q, k, v, dropout_p=0.0, softmax_scale=None, causal=False)
+# q, k, v: (batch, seqlen, nheads, headdim)
+
+output = flash_attn_func(
+    q, k, v,
+    dropout_p=0.0 if not training else 0.1,
+    softmax_scale=1.0 / (head_dim ** 0.5),
+    causal=True  # For autoregressive models
+)</code>
+                    </div>
+
+                    <h4 class="mt-3">Checking Flash Attention Availability</h4>
+                    <div class="code-block">
+<code>import torch
+from transformers import AutoModelForCausalLM
+
+# Check if Flash Attention is available
+def check_flash_attention():
+    try:
+        from flash_attn import flash_attn_func
+        print("Flash Attention is installed!")
+
+        # Check GPU compatibility (needs Ampere or newer)
+        if torch.cuda.is_available():
+            capability = torch.cuda.get_device_capability()
+            if capability[0] >= 8:  # SM 8.0+ (Ampere, Hopper)
+                print(f"GPU {torch.cuda.get_device_name()} supports Flash Attention")
+                return True
+            else:
+                print(f"GPU {torch.cuda.get_device_name()} may not support Flash Attention efficiently")
+        return False
+    except ImportError:
+        print("Flash Attention not installed. Install with: pip install flash-attn")
+        return False
+
+check_flash_attention()
+
+# Fall back gracefully
+model = AutoModelForCausalLM.from_pretrained(
+    "meta-llama/Llama-2-7b-hf",
+    torch_dtype=torch.float16,
+    attn_implementation="flash_attention_2" if check_flash_attention() else "eager",
+    device_map="auto"
+)</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 6: SPECULATIVE DECODING -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">6. Speculative Decoding: Draft and Verify</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The Editor Analogy:</strong> Instead of having a senior editor write every word (slow),
+                        have a junior writer draft several words, then the senior editor reviews and corrects them all
+                        at once. If the draft is mostly good, you save time!
+                    </div>
+
+                    <h4>The Core Idea</h4>
+                    <p>LLM inference is memory-bound, not compute-bound. The GPU is idle waiting for memory transfers.
+                    Speculative decoding exploits this:</p>
+                    <ol>
+                        <li><strong>Draft:</strong> Small model generates K candidate tokens quickly</li>
+                        <li><strong>Verify:</strong> Large model validates all K tokens in ONE forward pass</li>
+                        <li><strong>Accept/Reject:</strong> Keep accepted tokens, regenerate from first rejection</li>
+                    </ol>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant D as Draft Model (7B)
+    participant T as Target Model (70B)
+
+    D->>D: Generate token 1
+    D->>D: Generate token 2
+    D->>D: Generate token 3
+    D->>D: Generate token 4
+
+    D->>T: Send [1, 2, 3, 4]
+    T->>T: Verify all at once
+    T-->>D: Accept [1, 2], Reject [3, 4]
+    T->>T: Generate correct token 3
+
+    Note over D,T: Net: 3 tokens in 2 model calls!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Speculative Decoding</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Basic Implementation</h4>
+                    <div class="code-block">
+<code>import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+def speculative_decode(
+    target_model,
+    draft_model,
+    tokenizer,
+    prompt,
+    max_tokens=100,
+    K=4,  # Number of draft tokens
+    temperature=1.0
+):
+    """
+    Speculative decoding with draft and target models.
+    """
+    device = next(target_model.parameters()).device
+    input_ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
+    generated = input_ids.clone()
+
+    total_draft_tokens = 0
+    accepted_tokens = 0
+
+    while generated.shape[1] - input_ids.shape[1] < max_tokens:
+        # Step 1: Draft K tokens with small model
+        draft_tokens = []
+        draft_probs = []
+        current = generated.clone()
+
+        for _ in range(K):
+            with torch.no_grad():
+                outputs = draft_model(current)
+                logits = outputs.logits[:, -1, :] / temperature
+                probs = torch.softmax(logits, dim=-1)
+                next_token = torch.multinomial(probs, 1)
+
+                draft_tokens.append(next_token.item())
+                draft_probs.append(probs[0, next_token.item()].item())
+                current = torch.cat([current, next_token], dim=-1)
+
+        total_draft_tokens += K
+
+        # Step 2: Verify with target model (ONE forward pass)
+        draft_sequence = torch.cat([generated] + [torch.tensor([[t]]).to(device) for t in draft_tokens], dim=-1)
+
+        with torch.no_grad():
+            target_outputs = target_model(draft_sequence)
+            target_logits = target_outputs.logits / temperature
+
+        # Step 3: Accept/Reject using target probabilities
+        accepted = []
+        for i, (token, draft_prob) in enumerate(zip(draft_tokens, draft_probs)):
+            # Position in target_logits for this token
+            pos = generated.shape[1] + i - 1
+            target_probs = torch.softmax(target_logits[0, pos, :], dim=-1)
+            target_prob = target_probs[token].item()
+
+            # Accept with probability min(1, target_prob / draft_prob)
+            # This ensures we sample from the target distribution
+            accept_prob = min(1.0, target_prob / (draft_prob + 1e-10))
+
+            if torch.rand(1).item() < accept_prob:
+                accepted.append(token)
+                accepted_tokens += 1
+            else:
+                # Rejection: sample from adjusted distribution
+                adjusted_probs = torch.clamp(target_probs - draft_model_probs, min=0)
+                adjusted_probs = adjusted_probs / adjusted_probs.sum()
+                resampled = torch.multinomial(adjusted_probs, 1)
+                accepted.append(resampled.item())
+                accepted_tokens += 1
+                break  # Stop at first rejection
+
+        # Update generated sequence
+        for token in accepted:
+            generated = torch.cat([generated, torch.tensor([[token]]).to(device)], dim=-1)
+
+        # Check for EOS
+        if tokenizer.eos_token_id in accepted:
+            break
+
+    print(f"Acceptance rate: {accepted_tokens / total_draft_tokens:.2%}")
+    return tokenizer.decode(generated[0])
+
+
+# Usage
+target_model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-2-70b-hf")
+draft_model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
+
+result = speculative_decode(
+    target_model, draft_model, tokenizer,
+    "The quick brown fox",
+    max_tokens=50
+)</code>
+                    </div>
+
+                    <h4 class="mt-3">Using HuggingFace's Built-in Speculative Decoding</h4>
+                    <div class="code-block">
+<code>from transformers import AutoModelForCausalLM, AutoTokenizer
+
+# Load models
+target = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-2-70b-hf")
+draft = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
+
+inputs = tokenizer("The future of AI is", return_tensors="pt")
+
+# Speculative decoding with assistant model
+outputs = target.generate(
+    **inputs,
+    max_new_tokens=100,
+    assistant_model=draft,
+    do_sample=True,
+    temperature=0.7
+)
+
+print(tokenizer.decode(outputs[0]))</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 7: PRUNING -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">7. Pruning: Removing Unimportant Weights</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The Bonsai Analogy:</strong> Like pruning a bonsai tree where you remove branches
+                        that don't contribute to the desired shape, neural network pruning removes weights
+                        (connections) that contribute least to the output.
+                    </div>
+
+                    <h4>Types of Pruning</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>What's Removed</th>
+                                <th>Speedup</th>
+                                <th>Complexity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Unstructured</strong></td>
+                                <td>Individual weights</td>
+                                <td>Limited (sparse ops needed)</td>
+                                <td>Simple</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Structured</strong></td>
+                                <td>Entire neurons/heads</td>
+                                <td class="highlight">Direct speedup</td>
+                                <td>Medium</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Block Sparse</strong></td>
+                                <td>Groups of weights</td>
+                                <td>Good with hardware</td>
+                                <td>Medium</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 class="mt-3">Pruning Criteria</h4>
+                    <ul>
+                        <li><strong>Magnitude:</strong> Remove weights with smallest absolute values</li>
+                        <li><strong>Gradient:</strong> Remove weights with smallest gradient contributions</li>
+                        <li><strong>Sensitivity:</strong> Remove weights that change output least</li>
+                        <li><strong>Movement:</strong> Track weight changes during training, prune stable ones</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Simple Pruning</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+<code>import torch
+import torch.nn as nn
+import torch.nn.utils.prune as prune
+
+# Magnitude-based unstructured pruning
+def prune_model_unstructured(model, amount=0.3):
+    """Prune 30% of smallest magnitude weights."""
+    for name, module in model.named_modules():
+        if isinstance(module, nn.Linear):
+            prune.l1_unstructured(module, name='weight', amount=amount)
+            # Make pruning permanent
+            prune.remove(module, 'weight')
+    return model
+
+# Structured pruning (remove entire neurons)
+def prune_model_structured(model, amount=0.2):
+    """Prune 20% of least important neurons."""
+    for name, module in model.named_modules():
+        if isinstance(module, nn.Linear):
+            prune.ln_structured(
+                module,
+                name='weight',
+                amount=amount,
+                n=2,  # L2 norm
+                dim=0  # Prune along output dimension (neurons)
+            )
+            prune.remove(module, 'weight')
+    return model
+
+# Attention head pruning for transformers
+def prune_attention_heads(model, heads_to_prune):
+    """
+    Prune specific attention heads.
+    heads_to_prune: dict of {layer_idx: [head_indices]}
+    """
+    for layer_idx, heads in heads_to_prune.items():
+        layer = model.transformer.h[layer_idx].attn
+
+        # Get dimensions
+        n_heads = layer.num_heads
+        head_dim = layer.head_dim
+
+        # Create mask (1 for keep, 0 for prune)
+        mask = torch.ones(n_heads)
+        mask[heads] = 0
+
+        # Apply mask to Q, K, V projections
+        mask = mask.repeat_interleave(head_dim)
+        layer.c_attn.weight.data *= mask.unsqueeze(0)
+
+    return model
+
+# Example usage
+model = AutoModelForCausalLM.from_pretrained("gpt2")
+
+# Prune 30% of weights
+pruned_model = prune_model_unstructured(model, amount=0.3)
+
+# Check sparsity
+total_params = 0
+zero_params = 0
+for param in pruned_model.parameters():
+    total_params += param.numel()
+    zero_params += (param == 0).sum().item()
+
+print(f"Sparsity: {zero_params / total_params:.2%}")</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- ACTIVE RECALL QUESTIONS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Active Recall Questions</h2>
+            <div class="card">
+                <ol>
+                    <li class="mb-2"><strong>Why does KV caching reduce time complexity from O(N^3) to O(N^2) for full sequence generation?</strong></li>
+                    <li class="mb-2"><strong>In LoRA, why do we initialize B to zero and A with Kaiming init?</strong></li>
+                    <li class="mb-2"><strong>Explain why Flash Attention reduces memory from O(N^2) to O(N) without approximation.</strong></li>
+                    <li class="mb-2"><strong>What problem does the "online softmax trick" solve in Flash Attention?</strong></li>
+                    <li class="mb-2"><strong>Why does QLoRA use NF4 instead of regular INT4 quantization?</strong></li>
+                    <li class="mb-2"><strong>In speculative decoding, why can we verify K draft tokens in a single forward pass?</strong></li>
+                    <li class="mb-2"><strong>What's the key difference between GPTQ and AWQ quantization methods?</strong></li>
+                    <li class="mb-2"><strong>Why does Grouped-Query Attention (GQA) reduce KV cache size compared to Multi-Head Attention?</strong></li>
+                    <li class="mb-2"><strong>Explain the LoRA scaling factor alpha/r. What happens if alpha equals r?</strong></li>
+                    <li class="mb-2"><strong>Why is unstructured pruning harder to speed up than structured pruning?</strong></li>
+                </ol>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- MINI PROJECT -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Mini Project: Build an Optimized Inference Server</h2>
+            <div class="card">
+                <h4>Project: Optimize a 7B Model for Single-GPU Inference</h4>
+                <p>Build an inference server that can serve Llama-2-7B on a consumer GPU (8-16GB VRAM) with competitive speed.</p>
+
+                <h5>Requirements:</h5>
+                <ol>
+                    <li>Load model with 4-bit quantization (AWQ or GPTQ)</li>
+                    <li>Implement KV caching for efficient generation</li>
+                    <li>Enable Flash Attention if available</li>
+                    <li>Measure and report tokens/second</li>
+                    <li>Compare memory usage vs FP16 baseline</li>
+                </ol>
+
+                <h5>Bonus Challenges:</h5>
+                <ul>
+                    <li>Add a fine-tuned LoRA adapter for a specific task</li>
+                    <li>Implement continuous batching for multiple concurrent requests</li>
+                    <li>Add speculative decoding with a 1B draft model</li>
+                </ul>
+
+                <h5>Starter Code:</h5>
+                <div class="code-block">
+<code>import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+import time
+
+class OptimizedInferenceServer:
+    def __init__(self, model_name="meta-llama/Llama-2-7b-hf"):
+        # TODO: Load model with 4-bit quantization
+        # TODO: Enable Flash Attention
+        pass
+
+    def generate(self, prompt, max_tokens=100):
+        # TODO: Implement generation with KV caching
+        pass
+
+    def benchmark(self, prompts, num_tokens=100):
+        # TODO: Measure tokens/second
+        pass
+
+# Your implementation here
+server = OptimizedInferenceServer()
+result = server.generate("Explain quantum computing in simple terms:")
+print(result)</code>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- CHECKPOINT SUMMARY -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Checkpoint Summary</h2>
+            <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(56, 239, 125, 0.1) 100%); border: 2px solid rgba(16, 185, 129, 0.3);">
+                <h4>Key Takeaways</h4>
+                <ul>
+                    <li><strong>KV Caching:</strong> Cache keys and values to avoid O(N^2) recomputation per token. Essential for any LLM deployment.</li>
+                    <li><strong>Quantization:</strong> Reduce precision (FP16 -> INT8 -> INT4) for smaller models and faster inference. AWQ/GPTQ for 4-bit, bitsandbytes for easy integration.</li>
+                    <li><strong>LoRA:</strong> Fine-tune only low-rank adapter matrices (~0.1% of parameters). Enables fine-tuning on consumer hardware.</li>
+                    <li><strong>QLoRA:</strong> Combine 4-bit quantization with LoRA for fine-tuning 70B models on single GPUs.</li>
+                    <li><strong>Flash Attention:</strong> Tile attention computation to fit in SRAM, avoiding O(N^2) memory. 2-4x speedup.</li>
+                    <li><strong>Speculative Decoding:</strong> Use small model to draft, large model to verify. Works because LLM inference is memory-bound.</li>
+                    <li><strong>Pruning:</strong> Remove unimportant weights. Structured pruning gives direct speedup, unstructured needs sparse hardware.</li>
+                </ul>
+
+                <h4 class="mt-3">How This Connects Forward</h4>
+                <ul>
+                    <li><strong>Module 8 (RAG):</strong> These optimizations make it practical to run retrieval + generation in real-time</li>
+                    <li><strong>Module 10 (Agents):</strong> Fast inference enables responsive agents that can iterate quickly</li>
+                    <li><strong>Module 12 (AI Engineering):</strong> Understanding these tradeoffs is crucial for production system design</li>
+                </ul>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex flex-between mt-4">
+                <a href="module-06.html" class="btn btn-secondary">&larr; Previous: Training at Scale</a>
+                <a href="module-08.html" class="btn btn-primary">Next: RAG Fundamentals &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        // Sidebar toggle
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        }
+
+        // KV Cache Demo
+        const kvTokens = ['The', 'quick', 'brown'];
+        const nextTokens = ['fox', 'jumps', 'over', 'the', 'lazy', 'dog'];
+        let tokenIndex = 0;
+
+        function addTokenToCache() {
+            if (tokenIndex >= nextTokens.length) {
+                tokenIndex = 0;
+                resetCache();
+                return;
+            }
+
+            const container = document.getElementById('kv-demo-tokens');
+            const newToken = document.createElement('div');
+            newToken.className = 'token-box new';
+            newToken.textContent = nextTokens[tokenIndex];
+            container.appendChild(newToken);
+
+            // Animate
+            setTimeout(() => {
+                newToken.classList.remove('new');
+                newToken.classList.add('cached');
+            }, 500);
+
+            tokenIndex++;
+
+            // Update stats
+            const cacheSize = 3 + tokenIndex;
+            document.getElementById('cache-size').textContent = cacheSize;
+            document.getElementById('cache-memory').textContent = (cacheSize * 0.8).toFixed(1) + ' MB';
+            document.getElementById('speedup').textContent = Math.min(cacheSize, 10) + 'x';
+        }
+
+        function resetCache() {
+            const container = document.getElementById('kv-demo-tokens');
+            container.innerHTML = `
+                <div class="token-box cached">The</div>
+                <div class="token-box cached">quick</div>
+                <div class="token-box cached">brown</div>
+            `;
+            tokenIndex = 0;
+            document.getElementById('cache-size').textContent = '3';
+            document.getElementById('cache-memory').textContent = '2.4 MB';
+            document.getElementById('speedup').textContent = '1x';
+        }
+
+        // Quantization visualization
+        function initQuantGrids() {
+            const gridIds = ['fp32-grid', 'fp16-grid', 'int8-grid', 'int4-grid'];
+            const classes = ['fp32', 'fp16', 'int8', 'int4'];
+
+            gridIds.forEach((id, idx) => {
+                const grid = document.getElementById(id);
+                if (grid) {
+                    for (let i = 0; i < 64; i++) {
+                        const cell = document.createElement('div');
+                        cell.className = `weight-cell ${classes[idx]}`;
+                        grid.appendChild(cell);
+                    }
+                }
+            });
+        }
+
+        initQuantGrids();
+    </script>
+</body>
+</html>

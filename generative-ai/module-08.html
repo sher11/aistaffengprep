@@ -1,0 +1,2095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 8: RAG Fundamentals - Generative AI Engineering</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* RAG Pipeline Visualization */
+        .rag-demo {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            color: white;
+        }
+        .pipeline-step {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 0.5rem;
+            margin: 0.5rem 0;
+            transition: all 0.3s ease;
+        }
+        .pipeline-step.active {
+            background: rgba(102, 126, 234, 0.3);
+            border: 2px solid #667eea;
+        }
+        .pipeline-step.completed {
+            background: rgba(72, 187, 120, 0.2);
+            border-left: 4px solid #48bb78;
+        }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .step-title {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        .step-desc {
+            font-size: 0.85rem;
+            color: #a0aec0;
+        }
+
+        /* Chunk Visualization */
+        .chunk-demo {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            color: white;
+        }
+        .document-preview {
+            background: rgba(0,0,0,0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .chunk {
+            display: inline;
+            padding: 2px 4px;
+            border-radius: 3px;
+            margin: 1px;
+        }
+        .chunk-1 { background: rgba(102, 126, 234, 0.4); border-bottom: 2px solid #667eea; }
+        .chunk-2 { background: rgba(236, 72, 153, 0.4); border-bottom: 2px solid #ec4899; }
+        .chunk-3 { background: rgba(72, 187, 120, 0.4); border-bottom: 2px solid #48bb78; }
+        .chunk-4 { background: rgba(246, 173, 85, 0.4); border-bottom: 2px solid #f6ad55; }
+        .overlap { background: rgba(255, 255, 255, 0.2); }
+
+        /* Vector Space Visualization */
+        .vector-space {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        .vector-point {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .vector-point:hover {
+            transform: scale(1.3);
+            z-index: 10;
+        }
+        .vector-point.query { background: #f6ad55; }
+        .vector-point.doc { background: #667eea; }
+        .vector-point.relevant { background: #48bb78; box-shadow: 0 0 10px #48bb78; }
+        .vector-line {
+            position: absolute;
+            height: 2px;
+            background: rgba(255,255,255,0.3);
+            transform-origin: left center;
+        }
+        .vector-line.highlight { background: #48bb78; }
+
+        /* Stats cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-top: 0.25rem;
+        }
+
+        /* Similarity Score Bar */
+        .similarity-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+        .similarity-label {
+            width: 80px;
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+        .similarity-track {
+            flex: 1;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .similarity-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .similarity-fill.high { background: linear-gradient(90deg, #48bb78, #38a169); }
+        .similarity-fill.medium { background: linear-gradient(90deg, #f6ad55, #ed8936); }
+        .similarity-fill.low { background: linear-gradient(90deg, #f56565, #e53e3e); }
+        .similarity-value {
+            width: 50px;
+            text-align: right;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+        }
+
+        /* Index visualization */
+        .index-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .index-layer {
+            background: rgba(255,255,255,0.05);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .index-layer h5 {
+            margin-bottom: 0.5rem;
+            color: #667eea;
+        }
+        .node-cluster {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            justify-content: center;
+        }
+        .node {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+        }
+        .node.selected { background: #48bb78; }
+        .node.candidate { background: #f6ad55; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Setup + Core Math
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Terminology + MNIST
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">LLM Deep Dive</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>LLM Basics
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Attention Mechanisms
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>LLM Coding: GPT
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Training at Scale
+                    </a>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Optimization Hacks
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">RAG & Retrieval</div>
+                    <a href="module-08.html" class="sidebar-link active" data-module="8">
+                        <span class="sidebar-link-number">8</span>RAG Fundamentals
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>RAG Implementation
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Agents & Systems</div>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>AI Agents
+                    </a>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Context Engineering
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>AI Engineering
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-13.html" class="sidebar-link" data-module="13">
+                        <span class="sidebar-link-number">13</span>Thinking Models
+                    </a>
+                    <a href="module-14.html" class="sidebar-link" data-module="14">
+                        <span class="sidebar-link-number">14</span>Multi-modal Models
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Capstone & Career</div>
+                    <a href="module-15.html" class="sidebar-link" data-module="15">
+                        <span class="sidebar-link-number">15</span>Capstone Project
+                    </a>
+                    <a href="module-16.html" class="sidebar-link" data-module="16">
+                        <span class="sidebar-link-number">16</span>Career Goals
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 8: The RAG Problem</h1>
+            <p class="text-muted mb-3">Retrieval-Augmented Generation: Chunking, Embeddings, Vector DBs, and Reranking</p>
+
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Why RAG exists and what problems it solves</li>
+                    <li>Chunking strategies: fixed-size, semantic, recursive</li>
+                    <li>Embedding models and how to choose them</li>
+                    <li>Vector similarity: cosine, dot product, euclidean</li>
+                    <li>Vector databases: Pinecone, Chroma, Weaviate, Qdrant</li>
+                    <li>Indexing strategies: HNSW, IVF, PQ</li>
+                    <li>Reranking and hybrid search</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 1: WHY RAG EXISTS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">1. Why RAG Exists: The Knowledge Cutoff Problem</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The Library Analogy:</strong> LLMs are like a scholar who memorized many books years ago
+                        but has been in isolation since. They know a lot but nothing recent, nothing proprietary to
+                        your company, and they might misremember details. RAG is like giving them access to a library
+                        where they can look up facts before answering.
+                    </div>
+
+                    <h4>The Three Core Problems RAG Solves</h4>
+
+                    <div class="card mt-2" style="border-left: 4px solid var(--danger-color);">
+                        <h5>1. Knowledge Cutoff</h5>
+                        <p>LLMs are trained on data up to a certain date. They don't know about:</p>
+                        <ul>
+                            <li>Recent events, news, discoveries</li>
+                            <li>Updated documentation, APIs, libraries</li>
+                            <li>Your company's internal data</li>
+                        </ul>
+                    </div>
+
+                    <div class="card mt-2" style="border-left: 4px solid var(--warning-color);">
+                        <h5>2. Hallucination</h5>
+                        <p>LLMs confidently generate plausible-sounding but incorrect information:</p>
+                        <ul>
+                            <li>Made-up citations, fake statistics</li>
+                            <li>Incorrect technical details</li>
+                            <li>Mixing up similar concepts</li>
+                        </ul>
+                        <p><strong>RAG provides grounding</strong> - the model can cite specific sources.</p>
+                    </div>
+
+                    <div class="card mt-2" style="border-left: 4px solid var(--primary-color);">
+                        <h5>3. Context Window Limits</h5>
+                        <p>Even with 100K+ token windows, you can't fit all relevant documents:</p>
+                        <ul>
+                            <li>A codebase might be millions of tokens</li>
+                            <li>Documentation can be thousands of pages</li>
+                            <li>Cost scales with tokens ($$$ for long contexts)</li>
+                        </ul>
+                        <p><strong>RAG retrieves only what's relevant</strong> for each query.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Core Concepts: The RAG Pipeline</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    subgraph "Indexing (Offline)"
+        D[Documents] --> C[Chunk]
+        C --> E[Embed]
+        E --> V[(Vector DB)]
+    end
+
+    subgraph "Retrieval (Online)"
+        Q[Query] --> QE[Embed Query]
+        QE --> S[Search Vector DB]
+        V --> S
+        S --> R[Top-K Results]
+    end
+
+    subgraph "Generation"
+        R --> P[Build Prompt]
+        Q --> P
+        P --> L[LLM]
+        L --> A[Answer]
+    end
+                        </div>
+                    </div>
+
+                    <div class="rag-demo">
+                        <h4>RAG Pipeline Walkthrough</h4>
+                        <p class="text-muted">Click each step to see it in action:</p>
+
+                        <div class="pipeline-step" id="step-1" onclick="activateStep(1)">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <div class="step-title">Chunk Documents</div>
+                                <div class="step-desc">Split documents into smaller pieces (512-1024 tokens)</div>
+                            </div>
+                        </div>
+
+                        <div class="pipeline-step" id="step-2" onclick="activateStep(2)">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <div class="step-title">Embed Chunks</div>
+                                <div class="step-desc">Convert text to dense vectors using embedding model</div>
+                            </div>
+                        </div>
+
+                        <div class="pipeline-step" id="step-3" onclick="activateStep(3)">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <div class="step-title">Store in Vector DB</div>
+                                <div class="step-desc">Index vectors for fast similarity search</div>
+                            </div>
+                        </div>
+
+                        <div class="pipeline-step" id="step-4" onclick="activateStep(4)">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <div class="step-title">Embed Query</div>
+                                <div class="step-desc">Convert user question to same vector space</div>
+                            </div>
+                        </div>
+
+                        <div class="pipeline-step" id="step-5" onclick="activateStep(5)">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <div class="step-title">Retrieve Similar</div>
+                                <div class="step-desc">Find top-K most similar chunks</div>
+                            </div>
+                        </div>
+
+                        <div class="pipeline-step" id="step-6" onclick="activateStep(6)">
+                            <div class="step-number">6</div>
+                            <div class="step-content">
+                                <div class="step-title">Generate Answer</div>
+                                <div class="step-desc">LLM answers using retrieved context</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">RAG vs Fine-tuning vs Long Context</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Approach</th>
+                                <th>Best For</th>
+                                <th>Limitations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>RAG</strong></td>
+                                <td>Dynamic knowledge, citations needed, large corpus</td>
+                                <td>Retrieval can miss relevant info</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Fine-tuning</strong></td>
+                                <td>Style/format changes, specialized tasks</td>
+                                <td>Can't easily update, no citations</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Long Context</strong></td>
+                                <td>Small, static corpus (&lt;100K tokens)</td>
+                                <td>Expensive, "lost in the middle" problem</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 2: CHUNKING -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">2. Chunking Strategies</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The Goldilocks Problem:</strong> Chunks too small lose context ("the" is meaningless alone).
+                        Chunks too large dilute relevance (a whole chapter when you need one paragraph).
+                        You need chunks that are "just right" - self-contained units of meaning.
+                    </div>
+
+                    <h4>Why Chunking Matters</h4>
+                    <ul>
+                        <li><strong>Embedding models have limits:</strong> Most max out at 512-8192 tokens</li>
+                        <li><strong>Retrieval precision:</strong> Smaller chunks = more precise matches</li>
+                        <li><strong>Context coherence:</strong> Chunks need enough context to be useful</li>
+                        <li><strong>LLM context window:</strong> Need room for multiple chunks + query</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: Chunking Methods</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>1. Fixed-Size Chunking</h4>
+                    <p>Split at fixed token/character counts. Simple but can break mid-sentence.</p>
+
+                    <div class="chunk-demo">
+                        <h5>Fixed-Size Example (chunk_size=100, overlap=20)</h5>
+                        <div class="document-preview">
+                            <span class="chunk chunk-1">Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed. It focuses on</span><span class="chunk overlap chunk-1 chunk-2"> the development of</span><span class="chunk chunk-2"> computer programs that can access data and use it to learn for themselves. The process begins with observations or data, such as examples, direct experience, or</span><span class="chunk overlap chunk-2 chunk-3"> instruction, in order</span><span class="chunk chunk-3"> to look for patterns in data and make better decisions in the future.</span>
+                        </div>
+                        <p class="text-muted mt-2">Notice: Overlap (highlighted) prevents losing context at boundaries</p>
+                    </div>
+
+                    <h4 class="mt-3">2. Recursive Character Splitting</h4>
+                    <p>Try to split on natural boundaries in order: paragraphs, sentences, words, characters.</p>
+
+                    <div class="code-block">
+<code># LangChain's RecursiveCharacterTextSplitter logic (simplified)
+separators = ["\n\n", "\n", ". ", " ", ""]
+
+def recursive_split(text, chunk_size):
+    for separator in separators:
+        if separator in text:
+            chunks = text.split(separator)
+            # Merge small chunks, split large ones recursively
+            return process_chunks(chunks, separator, chunk_size)
+    return [text]  # Base case: can't split further</code>
+                    </div>
+
+                    <h4 class="mt-3">3. Semantic Chunking</h4>
+                    <p>Use embeddings to find natural breakpoints where meaning shifts.</p>
+
+                    <div class="code-block">
+<code># Semantic chunking approach
+def semantic_chunk(text, threshold=0.5):
+    sentences = split_sentences(text)
+    embeddings = embed(sentences)
+
+    chunks = []
+    current_chunk = [sentences[0]]
+
+    for i in range(1, len(sentences)):
+        similarity = cosine_similarity(embeddings[i-1], embeddings[i])
+
+        if similarity < threshold:  # Topic shift detected
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [sentences[i]]
+        else:
+            current_chunk.append(sentences[i])
+
+    chunks.append(" ".join(current_chunk))
+    return chunks</code>
+                    </div>
+
+                    <h4 class="mt-3">4. Document-Structure-Aware Chunking</h4>
+                    <p>Respect document structure: headers, sections, code blocks, tables.</p>
+
+                    <table class="comparison-table mt-3">
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Pros</th>
+                                <th>Cons</th>
+                                <th>Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Fixed-Size</td>
+                                <td>Simple, predictable</td>
+                                <td>Breaks context</td>
+                                <td>Homogeneous text</td>
+                            </tr>
+                            <tr>
+                                <td>Recursive</td>
+                                <td>Respects boundaries</td>
+                                <td>Variable sizes</td>
+                                <td>General purpose</td>
+                            </tr>
+                            <tr>
+                                <td>Semantic</td>
+                                <td>Topic coherence</td>
+                                <td>Slower, complex</td>
+                                <td>Topic modeling</td>
+                            </tr>
+                            <tr>
+                                <td>Structure-Aware</td>
+                                <td>Preserves meaning</td>
+                                <td>Format-specific</td>
+                                <td>Markdown, HTML, Code</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Chunking Implementations</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Using LangChain Text Splitters</h4>
+                    <div class="code-block">
+<code>from langchain.text_splitter import (
+    RecursiveCharacterTextSplitter,
+    CharacterTextSplitter,
+    TokenTextSplitter,
+    MarkdownTextSplitter,
+    PythonCodeTextSplitter
+)
+
+# Basic recursive splitting (most common)
+recursive_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,      # Max characters per chunk
+    chunk_overlap=200,    # Overlap between chunks
+    length_function=len,
+    separators=["\n\n", "\n", ". ", " ", ""]
+)
+
+text = """Your long document here..."""
+chunks = recursive_splitter.split_text(text)
+
+# Token-based splitting (better for LLMs)
+from transformers import AutoTokenizer
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+
+token_splitter = TokenTextSplitter(
+    chunk_size=512,
+    chunk_overlap=50,
+    encoding_name="gpt2"  # Uses tiktoken
+)
+chunks = token_splitter.split_text(text)
+
+# Markdown-aware splitting
+md_splitter = MarkdownTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=100
+)
+# Splits on: headers (#, ##), code blocks, lists, etc.
+
+# Code-aware splitting
+code_splitter = PythonCodeTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=100
+)
+# Splits on: class definitions, function definitions, etc.</code>
+                    </div>
+
+                    <h4 class="mt-3">Custom Semantic Chunker</h4>
+                    <div class="code-block">
+<code>import numpy as np
+from sentence_transformers import SentenceTransformer
+import nltk
+nltk.download('punkt')
+
+class SemanticChunker:
+    def __init__(
+        self,
+        model_name="all-MiniLM-L6-v2",
+        similarity_threshold=0.5,
+        min_chunk_size=100,
+        max_chunk_size=1000
+    ):
+        self.model = SentenceTransformer(model_name)
+        self.threshold = similarity_threshold
+        self.min_size = min_chunk_size
+        self.max_size = max_chunk_size
+
+    def chunk(self, text):
+        # Split into sentences
+        sentences = nltk.sent_tokenize(text)
+        if len(sentences) <= 1:
+            return [text]
+
+        # Embed all sentences
+        embeddings = self.model.encode(sentences)
+
+        # Find breakpoints where similarity drops
+        chunks = []
+        current_chunk = [sentences[0]]
+        current_embedding = embeddings[0]
+
+        for i in range(1, len(sentences)):
+            # Compute similarity with running average of chunk
+            similarity = np.dot(current_embedding, embeddings[i]) / (
+                np.linalg.norm(current_embedding) * np.linalg.norm(embeddings[i])
+            )
+
+            chunk_text = " ".join(current_chunk)
+
+            # Decision: start new chunk?
+            if (similarity < self.threshold and len(chunk_text) >= self.min_size) or \
+               len(chunk_text) + len(sentences[i]) > self.max_size:
+                chunks.append(chunk_text)
+                current_chunk = [sentences[i]]
+                current_embedding = embeddings[i]
+            else:
+                current_chunk.append(sentences[i])
+                # Update running embedding (simple average)
+                current_embedding = np.mean(
+                    [embeddings[j] for j in range(i - len(current_chunk) + 1, i + 1)],
+                    axis=0
+                )
+
+        # Don't forget the last chunk
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+
+        return chunks
+
+# Usage
+chunker = SemanticChunker(similarity_threshold=0.6)
+chunks = chunker.chunk(long_document)</code>
+                    </div>
+
+                    <h4 class="mt-3">Overlap and Context Preservation</h4>
+                    <div class="code-block">
+<code>def chunk_with_context(text, chunk_size=500, overlap=100, context_header=True):
+    """
+    Create chunks with overlap and optional context headers.
+    """
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=overlap
+    )
+    raw_chunks = splitter.split_text(text)
+
+    if not context_header:
+        return raw_chunks
+
+    # Add context headers showing chunk position
+    enhanced_chunks = []
+    for i, chunk in enumerate(raw_chunks):
+        header = f"[Chunk {i+1}/{len(raw_chunks)}]\n"
+        enhanced_chunks.append(header + chunk)
+
+    return enhanced_chunks
+
+# Parent-child chunking: store small chunks, retrieve with parent context
+def parent_child_chunk(text, parent_size=2000, child_size=400):
+    """
+    Create parent chunks, then split into child chunks.
+    Retrieve children, but include parent in context.
+    """
+    parent_splitter = RecursiveCharacterTextSplitter(chunk_size=parent_size)
+    child_splitter = RecursiveCharacterTextSplitter(chunk_size=child_size)
+
+    parents = parent_splitter.split_text(text)
+
+    chunks = []
+    for parent_idx, parent in enumerate(parents):
+        children = child_splitter.split_text(parent)
+        for child_idx, child in enumerate(children):
+            chunks.append({
+                "child_text": child,          # Embed this
+                "parent_text": parent,        # Return this for context
+                "parent_idx": parent_idx,
+                "child_idx": child_idx
+            })
+
+    return chunks</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Common Mistakes in Chunking</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 1: No Overlap</div>
+                        <p>Important information at chunk boundaries gets split and lost. Always use 10-20% overlap.</p>
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 2: Ignoring Document Structure</div>
+                        <p>Splitting a code function in the middle, or a table across chunks, destroys meaning.</p>
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 3: Same Chunk Size for Everything</div>
+                        <p>Code needs smaller chunks than prose. Tables need special handling. Adapt to content type.</p>
+                    </div>
+
+                    <div class="callout callout-danger">
+                        <div class="callout-title">Mistake 4: Not Preserving Metadata</div>
+                        <p>Losing document title, section headers, or source URL makes retrieval results less useful.</p>
+                    </div>
+
+                    <div class="interview-tip">
+                        <strong>Rule of Thumb:</strong>
+                        <ul>
+                            <li>Start with 500-1000 tokens, 10-20% overlap</li>
+                            <li>Use recursive splitting for general text</li>
+                            <li>Add parent-child for complex documents</li>
+                            <li>Always preserve and return metadata with chunks</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 3: EMBEDDINGS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">3. Embedding Models</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The Map Analogy:</strong> Embeddings are like GPS coordinates for meaning.
+                        Just as similar locations have similar coordinates, similar texts have similar embeddings.
+                        "Happy" and "joyful" are close together; "happy" and "screwdriver" are far apart.
+                    </div>
+
+                    <h4>What Embeddings Capture</h4>
+                    <ul>
+                        <li><strong>Semantic similarity:</strong> "dog" and "puppy" are close</li>
+                        <li><strong>Analogies:</strong> king - man + woman ≈ queen</li>
+                        <li><strong>Topic clustering:</strong> Medical terms cluster together</li>
+                    </ul>
+
+                    <div class="rag-demo">
+                        <h4>Vector Space Visualization</h4>
+                        <p class="text-muted">Embeddings map text to points in high-dimensional space. Similar texts are close together.</p>
+
+                        <div class="vector-space" id="vector-space">
+                            <!-- Points will be added by JS -->
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+                            <div><span class="vector-point query" style="position: static; display: inline-block;"></span> Query</div>
+                            <div><span class="vector-point doc" style="position: static; display: inline-block;"></span> Document</div>
+                            <div><span class="vector-point relevant" style="position: static; display: inline-block;"></span> Relevant</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: Embedding Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Popular Embedding Models</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Dimensions</th>
+                                <th>Max Tokens</th>
+                                <th>Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>OpenAI text-embedding-3-small</strong></td>
+                                <td>1536</td>
+                                <td>8191</td>
+                                <td>General purpose, easy API</td>
+                            </tr>
+                            <tr>
+                                <td><strong>OpenAI text-embedding-3-large</strong></td>
+                                <td>3072</td>
+                                <td>8191</td>
+                                <td>Higher quality, more $$</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cohere embed-v3</strong></td>
+                                <td>1024</td>
+                                <td>512</td>
+                                <td>Multilingual, search-optimized</td>
+                            </tr>
+                            <tr>
+                                <td><strong>BGE-large-en</strong></td>
+                                <td>1024</td>
+                                <td>512</td>
+                                <td>Open source, top MTEB scores</td>
+                            </tr>
+                            <tr>
+                                <td><strong>all-MiniLM-L6-v2</strong></td>
+                                <td>384</td>
+                                <td>256</td>
+                                <td>Fast, lightweight, local</td>
+                            </tr>
+                            <tr>
+                                <td><strong>E5-large-v2</strong></td>
+                                <td>1024</td>
+                                <td>512</td>
+                                <td>Strong general performance</td>
+                            </tr>
+                            <tr>
+                                <td><strong>GTE-large</strong></td>
+                                <td>1024</td>
+                                <td>8192</td>
+                                <td>Long context embeddings</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 class="mt-3">Vector Similarity Metrics</h4>
+
+                    <div class="code-block">
+<code>import numpy as np
+
+def cosine_similarity(a, b):
+    """Most common. Range: [-1, 1]. Normalized, ignores magnitude."""
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+def dot_product(a, b):
+    """Faster. Not normalized. Works if vectors are already normalized."""
+    return np.dot(a, b)
+
+def euclidean_distance(a, b):
+    """L2 distance. Smaller = more similar. Range: [0, inf)"""
+    return np.linalg.norm(a - b)
+
+# For normalized vectors (most embeddings):
+# cosine_similarity == dot_product
+# euclidean_distance == sqrt(2 - 2 * cosine_similarity)</code>
+                    </div>
+
+                    <h4 class="mt-3">When to Use Which Metric</h4>
+                    <ul>
+                        <li><strong>Cosine:</strong> Default choice. Works with any embedding. Interpretable (1 = identical).</li>
+                        <li><strong>Dot Product:</strong> Use when embeddings are normalized (OpenAI, most sentence transformers). Faster.</li>
+                        <li><strong>Euclidean:</strong> Use when magnitude matters (rare in text). Some vector DBs optimize for it.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Using Embedding Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>OpenAI Embeddings</h4>
+                    <div class="code-block">
+<code>from openai import OpenAI
+import numpy as np
+
+client = OpenAI()
+
+def get_openai_embedding(text, model="text-embedding-3-small"):
+    """Get embedding from OpenAI API."""
+    response = client.embeddings.create(
+        input=text,
+        model=model
+    )
+    return np.array(response.data[0].embedding)
+
+# Batch embedding (more efficient)
+def batch_embed(texts, model="text-embedding-3-small", batch_size=100):
+    """Embed multiple texts efficiently."""
+    embeddings = []
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i+batch_size]
+        response = client.embeddings.create(input=batch, model=model)
+        batch_embeddings = [np.array(d.embedding) for d in response.data]
+        embeddings.extend(batch_embeddings)
+    return np.array(embeddings)
+
+# Example
+query = "What is machine learning?"
+docs = [
+    "Machine learning is a type of artificial intelligence.",
+    "The weather today is sunny.",
+    "Deep learning is a subset of machine learning."
+]
+
+query_embedding = get_openai_embedding(query)
+doc_embeddings = batch_embed(docs)
+
+# Find most similar
+similarities = [
+    np.dot(query_embedding, doc_emb)  # Cosine (normalized vectors)
+    for doc_emb in doc_embeddings
+]
+print(list(zip(docs, similarities)))</code>
+                    </div>
+
+                    <h4 class="mt-3">Sentence Transformers (Local, Free)</h4>
+                    <div class="code-block">
+<code>from sentence_transformers import SentenceTransformer
+import numpy as np
+
+# Load model (downloads on first use)
+model = SentenceTransformer('all-MiniLM-L6-v2')  # Fast, small
+# model = SentenceTransformer('BAAI/bge-large-en-v1.5')  # Higher quality
+
+def embed_texts(texts):
+    """Embed texts using sentence transformers."""
+    return model.encode(
+        texts,
+        normalize_embeddings=True,  # For cosine similarity
+        show_progress_bar=True
+    )
+
+# Embed documents
+docs = ["Machine learning is AI.", "The sky is blue.", "Deep learning uses neural networks."]
+doc_embeddings = embed_texts(docs)
+
+# Embed query
+query_embedding = embed_texts(["What is machine learning?"])[0]
+
+# Compute similarities
+similarities = doc_embeddings @ query_embedding  # Dot product (normalized)
+ranked_indices = np.argsort(similarities)[::-1]
+
+for idx in ranked_indices:
+    print(f"{similarities[idx]:.4f}: {docs[idx]}")</code>
+                    </div>
+
+                    <h4 class="mt-3">Choosing the Right Model</h4>
+                    <div class="code-block">
+<code># Decision tree for embedding model selection
+
+def choose_embedding_model(
+    need_multilingual: bool,
+    latency_critical: bool,
+    max_context_length: int,
+    budget: str  # "free", "low", "high"
+):
+    if budget == "free" or latency_critical:
+        if max_context_length > 512:
+            return "BAAI/bge-large-en-v1.5"  # Good quality, local
+        return "all-MiniLM-L6-v2"  # Fastest
+
+    if need_multilingual:
+        return "cohere-embed-multilingual-v3"
+
+    if budget == "high":
+        return "text-embedding-3-large"
+
+    return "text-embedding-3-small"  # Best balance</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 4: VECTOR DATABASES -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">4. Vector Databases</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The Library Catalog Analogy:</strong> A vector database is like a magical library catalog
+                        that can find books by concept, not just title. Ask for "stories about redemption" and it finds
+                        relevant books even if "redemption" isn't in their titles.
+                    </div>
+
+                    <h4>Why Specialized Vector DBs?</h4>
+                    <p>Why not just use PostgreSQL with pgvector? You can, but specialized vector DBs offer:</p>
+                    <ul>
+                        <li><strong>Approximate Nearest Neighbor (ANN):</strong> 100x faster than exact search</li>
+                        <li><strong>Optimized indexing:</strong> HNSW, IVF, PQ algorithms</li>
+                        <li><strong>Scalability:</strong> Billions of vectors, distributed sharding</li>
+                        <li><strong>Hybrid search:</strong> Combine vector + keyword search</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: Vector DB Comparison</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Database</th>
+                                <th>Type</th>
+                                <th>Best For</th>
+                                <th>Pricing</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Pinecone</strong></td>
+                                <td>Managed cloud</td>
+                                <td>Production, managed infra</td>
+                                <td>Free tier, then $/vector</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Chroma</strong></td>
+                                <td>Embedded/Server</td>
+                                <td>Prototyping, local dev</td>
+                                <td>Free (open source)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Weaviate</strong></td>
+                                <td>Self-hosted/Cloud</td>
+                                <td>Hybrid search, GraphQL</td>
+                                <td>Free + cloud option</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Qdrant</strong></td>
+                                <td>Self-hosted/Cloud</td>
+                                <td>Performance, filtering</td>
+                                <td>Free + cloud option</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Milvus</strong></td>
+                                <td>Self-hosted</td>
+                                <td>Scale, enterprise</td>
+                                <td>Free (open source)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>pgvector</strong></td>
+                                <td>PostgreSQL extension</td>
+                                <td>Existing Postgres, simple needs</td>
+                                <td>Free</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 class="mt-3">Indexing Algorithms</h4>
+
+                    <div class="rag-demo">
+                        <h5>HNSW (Hierarchical Navigable Small World)</h5>
+                        <p class="text-muted">Most popular. Creates a multi-layer graph for fast navigation.</p>
+
+                        <div class="index-demo">
+                            <div class="index-layer">
+                                <h5>Layer 2 (Sparse)</h5>
+                                <div class="node-cluster">
+                                    <div class="node selected"></div>
+                                    <div class="node"></div>
+                                    <div class="node"></div>
+                                </div>
+                            </div>
+                            <div class="index-layer">
+                                <h5>Layer 1 (Medium)</h5>
+                                <div class="node-cluster">
+                                    <div class="node selected"></div>
+                                    <div class="node candidate"></div>
+                                    <div class="node"></div>
+                                    <div class="node candidate"></div>
+                                    <div class="node"></div>
+                                    <div class="node"></div>
+                                </div>
+                            </div>
+                            <div class="index-layer">
+                                <h5>Layer 0 (Dense)</h5>
+                                <div class="node-cluster">
+                                    <div class="node"></div>
+                                    <div class="node selected"></div>
+                                    <div class="node candidate"></div>
+                                    <div class="node"></div>
+                                    <div class="node"></div>
+                                    <div class="node candidate"></div>
+                                    <div class="node"></div>
+                                    <div class="node"></div>
+                                    <div class="node selected"></div>
+                                    <div class="node"></div>
+                                    <div class="node"></div>
+                                    <div class="node"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">O(log n)</div>
+                                <div class="stat-label">Search Time</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">High</div>
+                                <div class="stat-label">Memory Usage</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">>95%</div>
+                                <div class="stat-label">Recall</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Index Comparison</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Index Type</th>
+                                <th>Search Speed</th>
+                                <th>Memory</th>
+                                <th>Build Time</th>
+                                <th>Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Flat (Brute Force)</strong></td>
+                                <td>Slow (exact)</td>
+                                <td>Low</td>
+                                <td>None</td>
+                                <td>&lt;10K vectors</td>
+                            </tr>
+                            <tr>
+                                <td><strong>HNSW</strong></td>
+                                <td class="highlight">Very Fast</td>
+                                <td>High</td>
+                                <td>Slow</td>
+                                <td>Most use cases</td>
+                            </tr>
+                            <tr>
+                                <td><strong>IVF</strong></td>
+                                <td>Fast</td>
+                                <td>Medium</td>
+                                <td>Medium</td>
+                                <td>Large scale, updatable</td>
+                            </tr>
+                            <tr>
+                                <td><strong>PQ (Product Quantization)</strong></td>
+                                <td>Medium</td>
+                                <td class="highlight">Very Low</td>
+                                <td>Fast</td>
+                                <td>Memory constrained</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Vector Database Usage</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Chroma (Local, Quick Start)</h4>
+                    <div class="code-block">
+<code>import chromadb
+from chromadb.utils import embedding_functions
+
+# Initialize client
+client = chromadb.Client()  # In-memory
+# client = chromadb.PersistentClient(path="./chroma_db")  # Persistent
+
+# Create collection with embedding function
+embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+    model_name="all-MiniLM-L6-v2"
+)
+collection = client.create_collection(
+    name="documents",
+    embedding_function=embedding_fn,
+    metadata={"hnsw:space": "cosine"}  # Use cosine similarity
+)
+
+# Add documents
+documents = [
+    "Machine learning is a subset of artificial intelligence.",
+    "Deep learning uses neural networks with many layers.",
+    "Natural language processing deals with text and speech.",
+    "Computer vision focuses on image understanding."
+]
+
+collection.add(
+    documents=documents,
+    metadatas=[{"source": f"doc_{i}"} for i in range(len(documents))],
+    ids=[f"id_{i}" for i in range(len(documents))]
+)
+
+# Query
+results = collection.query(
+    query_texts=["How do neural networks work?"],
+    n_results=2,
+    include=["documents", "distances", "metadatas"]
+)
+
+print("Top results:")
+for doc, dist, meta in zip(
+    results['documents'][0],
+    results['distances'][0],
+    results['metadatas'][0]
+):
+    print(f"  Score: {1-dist:.4f}, Source: {meta['source']}")
+    print(f"  Text: {doc}\n")</code>
+                    </div>
+
+                    <h4 class="mt-3">Pinecone (Managed Cloud)</h4>
+                    <div class="code-block">
+<code>from pinecone import Pinecone, ServerlessSpec
+import numpy as np
+
+# Initialize
+pc = Pinecone(api_key="your-api-key")
+
+# Create index
+pc.create_index(
+    name="rag-index",
+    dimension=1536,  # OpenAI embedding dimension
+    metric="cosine",
+    spec=ServerlessSpec(
+        cloud="aws",
+        region="us-east-1"
+    )
+)
+
+index = pc.Index("rag-index")
+
+# Upsert vectors
+vectors = [
+    {
+        "id": "doc_1",
+        "values": embedding_1.tolist(),  # Your embedding
+        "metadata": {
+            "text": "Original document text...",
+            "source": "manual.pdf",
+            "page": 5
+        }
+    },
+    # ... more vectors
+]
+
+index.upsert(vectors=vectors)
+
+# Query
+query_embedding = get_embedding("What is machine learning?")
+
+results = index.query(
+    vector=query_embedding.tolist(),
+    top_k=5,
+    include_metadata=True,
+    filter={"source": {"$eq": "manual.pdf"}}  # Optional filtering
+)
+
+for match in results['matches']:
+    print(f"Score: {match['score']:.4f}")
+    print(f"Text: {match['metadata']['text']}\n")</code>
+                    </div>
+
+                    <h4 class="mt-3">Qdrant (High Performance)</h4>
+                    <div class="code-block">
+<code>from qdrant_client import QdrantClient
+from qdrant_client.models import (
+    Distance, VectorParams, PointStruct,
+    Filter, FieldCondition, MatchValue
+)
+
+# Initialize (local or cloud)
+client = QdrantClient(":memory:")  # In-memory
+# client = QdrantClient(host="localhost", port=6333)  # Local server
+# client = QdrantClient(url="https://xxx.qdrant.io", api_key="...")  # Cloud
+
+# Create collection
+client.create_collection(
+    collection_name="documents",
+    vectors_config=VectorParams(
+        size=1536,
+        distance=Distance.COSINE
+    )
+)
+
+# Add vectors with metadata
+points = [
+    PointStruct(
+        id=i,
+        vector=embeddings[i].tolist(),
+        payload={
+            "text": documents[i],
+            "source": sources[i],
+            "category": categories[i]
+        }
+    )
+    for i in range(len(documents))
+]
+
+client.upsert(collection_name="documents", points=points)
+
+# Search with filtering
+results = client.search(
+    collection_name="documents",
+    query_vector=query_embedding.tolist(),
+    limit=5,
+    query_filter=Filter(
+        must=[
+            FieldCondition(
+                key="category",
+                match=MatchValue(value="technical")
+            )
+        ]
+    )
+)
+
+for result in results:
+    print(f"Score: {result.score:.4f}")
+    print(f"Text: {result.payload['text']}\n")</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 5: RERANKING -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">5. Reranking: Why Retrieval Order Matters</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>The Two-Stage Filter Analogy:</strong> Initial retrieval (bi-encoder) is like a fast
+                        keyword search that grabs 100 potentially relevant documents. Reranking (cross-encoder)
+                        is like a careful human reader who scores each of those 100 for true relevance.
+                    </div>
+
+                    <h4>Why Rerank?</h4>
+                    <ul>
+                        <li><strong>Bi-encoders are fast but imprecise:</strong> They encode query and documents separately</li>
+                        <li><strong>Cross-encoders are slow but accurate:</strong> They see query and document together</li>
+                        <li><strong>Solution:</strong> Use bi-encoder to get top-100, cross-encoder to rerank to top-5</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    Q[Query] --> BE[Bi-Encoder<br/>Fast Retrieval]
+    D[(1M Documents)] --> BE
+    BE --> T100[Top 100]
+    T100 --> CE[Cross-Encoder<br/>Reranking]
+    CE --> T5[Top 5<br/>High Quality]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: Bi-Encoder vs Cross-Encoder</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-comparison">
+                        <div class="code-comparison-item">
+                            <h5>Bi-Encoder (Retrieval)</h5>
+                            <div class="code-block">
+<code># Encode separately
+q_emb = encode(query)      # [1, 768]
+d_emb = encode(documents)  # [N, 768]
+
+# Compare all at once
+scores = q_emb @ d_emb.T   # [1, N]
+
+# Speed: O(1) per document (pre-computed)
+# Quality: Good but not great</code>
+                            </div>
+                        </div>
+                        <div class="code-comparison-item">
+                            <h5>Cross-Encoder (Reranking)</h5>
+                            <div class="code-block">
+<code># Encode together
+for doc in documents:
+    score = model(query + " [SEP] " + doc)
+
+# Must process each pair
+# Speed: O(N) forward passes
+# Quality: Excellent</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Reranking Improves Quality</h4>
+                    <div class="rag-demo">
+                        <h5>Before Reranking (Bi-Encoder Only)</h5>
+                        <div class="similarity-bar">
+                            <span class="similarity-label">Doc A</span>
+                            <div class="similarity-track"><div class="similarity-fill high" style="width: 85%;"></div></div>
+                            <span class="similarity-value">0.85</span>
+                        </div>
+                        <div class="similarity-bar">
+                            <span class="similarity-label">Doc B</span>
+                            <div class="similarity-track"><div class="similarity-fill high" style="width: 82%;"></div></div>
+                            <span class="similarity-value">0.82</span>
+                        </div>
+                        <div class="similarity-bar">
+                            <span class="similarity-label">Doc C</span>
+                            <div class="similarity-track"><div class="similarity-fill medium" style="width: 78%;"></div></div>
+                            <span class="similarity-value">0.78</span>
+                        </div>
+
+                        <h5 class="mt-3">After Reranking (Cross-Encoder)</h5>
+                        <div class="similarity-bar">
+                            <span class="similarity-label">Doc C</span>
+                            <div class="similarity-track"><div class="similarity-fill high" style="width: 95%;"></div></div>
+                            <span class="similarity-value">0.95</span>
+                        </div>
+                        <div class="similarity-bar">
+                            <span class="similarity-label">Doc A</span>
+                            <div class="similarity-track"><div class="similarity-fill medium" style="width: 72%;"></div></div>
+                            <span class="similarity-value">0.72</span>
+                        </div>
+                        <div class="similarity-bar">
+                            <span class="similarity-label">Doc B</span>
+                            <div class="similarity-track"><div class="similarity-fill low" style="width: 45%;"></div></div>
+                            <span class="similarity-value">0.45</span>
+                        </div>
+                        <p class="text-muted mt-2">Doc C was actually most relevant but ranked 3rd by bi-encoder!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Reranking</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Using Cohere Reranker (API)</h4>
+                    <div class="code-block">
+<code>import cohere
+
+co = cohere.Client("your-api-key")
+
+def rerank_cohere(query, documents, top_n=5):
+    """Rerank documents using Cohere's reranker."""
+    results = co.rerank(
+        model="rerank-english-v3.0",
+        query=query,
+        documents=documents,
+        top_n=top_n,
+        return_documents=True
+    )
+
+    reranked = []
+    for r in results.results:
+        reranked.append({
+            "text": r.document.text,
+            "score": r.relevance_score,
+            "index": r.index
+        })
+    return reranked
+
+# Example
+query = "How does photosynthesis work?"
+docs = [
+    "Photosynthesis converts light energy to chemical energy in plants.",
+    "The mitochondria is the powerhouse of the cell.",
+    "Plants use chlorophyll to absorb sunlight for photosynthesis.",
+    "Animals obtain energy by eating other organisms."
+]
+
+reranked = rerank_cohere(query, docs, top_n=2)
+for doc in reranked:
+    print(f"Score: {doc['score']:.4f} - {doc['text']}")</code>
+                    </div>
+
+                    <h4 class="mt-3">Using Sentence Transformers Cross-Encoder (Local)</h4>
+                    <div class="code-block">
+<code>from sentence_transformers import CrossEncoder
+
+# Load cross-encoder model
+model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+# Other options:
+# 'cross-encoder/ms-marco-MiniLM-L-12-v2' (more accurate)
+# 'BAAI/bge-reranker-large' (very accurate)
+
+def rerank_local(query, documents, top_n=5):
+    """Rerank using local cross-encoder."""
+    # Create query-document pairs
+    pairs = [[query, doc] for doc in documents]
+
+    # Score all pairs
+    scores = model.predict(pairs)
+
+    # Sort by score
+    scored_docs = list(zip(documents, scores))
+    scored_docs.sort(key=lambda x: x[1], reverse=True)
+
+    return scored_docs[:top_n]
+
+# Example
+query = "What causes climate change?"
+docs = [
+    "Climate change is caused by greenhouse gas emissions.",
+    "The weather today is sunny with a chance of rain.",
+    "Burning fossil fuels releases CO2 into the atmosphere.",
+    "Deforestation reduces the Earth's capacity to absorb carbon.",
+    "Electric vehicles can help reduce emissions."
+]
+
+reranked = rerank_local(query, docs, top_n=3)
+for doc, score in reranked:
+    print(f"Score: {score:.4f} - {doc}")</code>
+                    </div>
+
+                    <h4 class="mt-3">Complete RAG Pipeline with Reranking</h4>
+                    <div class="code-block">
+<code>from sentence_transformers import SentenceTransformer, CrossEncoder
+import chromadb
+
+class RAGPipeline:
+    def __init__(self):
+        # Bi-encoder for initial retrieval
+        self.bi_encoder = SentenceTransformer('all-MiniLM-L6-v2')
+
+        # Cross-encoder for reranking
+        self.cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+
+        # Vector store
+        self.client = chromadb.Client()
+        self.collection = self.client.create_collection("docs")
+
+    def index(self, documents, metadatas=None):
+        """Index documents."""
+        embeddings = self.bi_encoder.encode(documents).tolist()
+        self.collection.add(
+            documents=documents,
+            embeddings=embeddings,
+            metadatas=metadatas or [{} for _ in documents],
+            ids=[f"doc_{i}" for i in range(len(documents))]
+        )
+
+    def retrieve(self, query, initial_k=20, final_k=5):
+        """Retrieve with reranking."""
+        # Stage 1: Fast bi-encoder retrieval
+        results = self.collection.query(
+            query_texts=[query],
+            n_results=initial_k,
+            include=["documents", "metadatas"]
+        )
+
+        candidates = results['documents'][0]
+        metadatas = results['metadatas'][0]
+
+        if len(candidates) == 0:
+            return []
+
+        # Stage 2: Accurate cross-encoder reranking
+        pairs = [[query, doc] for doc in candidates]
+        scores = self.cross_encoder.predict(pairs)
+
+        # Sort and return top-k
+        scored = list(zip(candidates, metadatas, scores))
+        scored.sort(key=lambda x: x[2], reverse=True)
+
+        return [
+            {"text": text, "metadata": meta, "score": score}
+            for text, meta, score in scored[:final_k]
+        ]
+
+# Usage
+rag = RAGPipeline()
+rag.index([
+    "Python is a programming language.",
+    "Machine learning uses algorithms to learn from data.",
+    "Deep learning is a subset of machine learning.",
+    "JavaScript runs in web browsers.",
+    "Neural networks are inspired by the human brain."
+])
+
+results = rag.retrieve("How do neural networks learn?")
+for r in results:
+    print(f"{r['score']:.4f}: {r['text']}")</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 6: HYBRID SEARCH -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">6. Hybrid Search: Combining Dense and Sparse Retrieval</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="key-insight">
+                        <strong>Best of Both Worlds:</strong> Dense (vector) search understands meaning but can miss
+                        exact keywords. Sparse (BM25) search matches keywords but misses synonyms. Hybrid combines
+                        both for better recall.
+                    </div>
+
+                    <h4>Dense vs Sparse Retrieval</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Aspect</th>
+                                <th>Dense (Vectors)</th>
+                                <th>Sparse (BM25/TF-IDF)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Matching</td>
+                                <td>Semantic similarity</td>
+                                <td>Exact keyword match</td>
+                            </tr>
+                            <tr>
+                                <td>Handles synonyms</td>
+                                <td class="highlight">Yes</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>Handles typos</td>
+                                <td>Sometimes</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>Exact terms (names, codes)</td>
+                                <td>Can miss</td>
+                                <td class="highlight">Excellent</td>
+                            </tr>
+                            <tr>
+                                <td>Index size</td>
+                                <td>Large</td>
+                                <td>Small</td>
+                            </tr>
+                            <tr>
+                                <td>Domain adaptation</td>
+                                <td>May need fine-tuning</td>
+                                <td>Works out of box</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 class="mt-3">BM25 Explained</h4>
+                    <p>BM25 is the standard for sparse retrieval. It scores documents based on:</p>
+                    <ul>
+                        <li><strong>Term Frequency (TF):</strong> How often the term appears in the document</li>
+                        <li><strong>Inverse Document Frequency (IDF):</strong> Rare terms are more important</li>
+                        <li><strong>Document Length Normalization:</strong> Don't favor long documents</li>
+                    </ul>
+
+                    <div class="code-block">
+<code># BM25 scoring formula (simplified)
+def bm25_score(query_terms, document, corpus):
+    k1 = 1.5  # Term frequency saturation
+    b = 0.75  # Document length normalization
+
+    score = 0
+    doc_len = len(document)
+    avg_doc_len = average_length(corpus)
+
+    for term in query_terms:
+        tf = document.count(term)
+        df = count_documents_with_term(corpus, term)
+        idf = log((len(corpus) - df + 0.5) / (df + 0.5))
+
+        # BM25 formula
+        numerator = tf * (k1 + 1)
+        denominator = tf + k1 * (1 - b + b * doc_len / avg_doc_len)
+        score += idf * numerator / denominator
+
+    return score</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Hybrid Search</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Hybrid Search with Reciprocal Rank Fusion</h4>
+                    <div class="code-block">
+<code>from rank_bm25 import BM25Okapi
+from sentence_transformers import SentenceTransformer
+import numpy as np
+
+class HybridSearch:
+    def __init__(self, documents):
+        self.documents = documents
+
+        # Dense: sentence transformer
+        self.dense_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.dense_embeddings = self.dense_model.encode(documents)
+
+        # Sparse: BM25
+        tokenized = [doc.lower().split() for doc in documents]
+        self.bm25 = BM25Okapi(tokenized)
+
+    def search(self, query, k=5, alpha=0.5):
+        """
+        Hybrid search combining dense and sparse.
+        alpha: weight for dense (1-alpha for sparse)
+        """
+        # Dense search
+        query_embedding = self.dense_model.encode([query])[0]
+        dense_scores = np.dot(self.dense_embeddings, query_embedding)
+        dense_scores = (dense_scores - dense_scores.min()) / (dense_scores.max() - dense_scores.min() + 1e-6)
+
+        # Sparse search
+        sparse_scores = np.array(self.bm25.get_scores(query.lower().split()))
+        sparse_scores = (sparse_scores - sparse_scores.min()) / (sparse_scores.max() - sparse_scores.min() + 1e-6)
+
+        # Combine scores
+        combined_scores = alpha * dense_scores + (1 - alpha) * sparse_scores
+
+        # Get top-k
+        top_indices = np.argsort(combined_scores)[::-1][:k]
+
+        return [
+            {
+                "document": self.documents[i],
+                "score": combined_scores[i],
+                "dense_score": dense_scores[i],
+                "sparse_score": sparse_scores[i]
+            }
+            for i in top_indices
+        ]
+
+    def search_rrf(self, query, k=5, rrf_k=60):
+        """
+        Reciprocal Rank Fusion - better than linear combination.
+        """
+        # Get rankings from both methods
+        query_embedding = self.dense_model.encode([query])[0]
+        dense_scores = np.dot(self.dense_embeddings, query_embedding)
+        dense_ranks = np.argsort(np.argsort(-dense_scores))  # 0 = best
+
+        sparse_scores = np.array(self.bm25.get_scores(query.lower().split()))
+        sparse_ranks = np.argsort(np.argsort(-sparse_scores))
+
+        # RRF formula: 1 / (k + rank)
+        rrf_scores = 1 / (rrf_k + dense_ranks) + 1 / (rrf_k + sparse_ranks)
+
+        top_indices = np.argsort(rrf_scores)[::-1][:k]
+
+        return [
+            {"document": self.documents[i], "rrf_score": rrf_scores[i]}
+            for i in top_indices
+        ]
+
+# Usage
+docs = [
+    "Python programming language tutorial",
+    "Machine learning with scikit-learn",
+    "Deep learning neural networks PyTorch",
+    "Web development with JavaScript and React",
+    "Data science pandas numpy tutorial"
+]
+
+searcher = HybridSearch(docs)
+
+# Pure dense might miss "PyTorch" as keyword
+# Pure sparse might miss semantic relevance
+# Hybrid gets both!
+results = searcher.search_rrf("PyTorch deep learning tutorial", k=3)
+for r in results:
+    print(f"{r['rrf_score']:.4f}: {r['document']}")</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- ACTIVE RECALL QUESTIONS -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Active Recall Questions</h2>
+            <div class="card">
+                <ol>
+                    <li class="mb-2"><strong>What are the three main problems RAG solves?</strong></li>
+                    <li class="mb-2"><strong>Why is chunk overlap important? What happens without it?</strong></li>
+                    <li class="mb-2"><strong>Explain the difference between cosine similarity and dot product for normalized vectors.</strong></li>
+                    <li class="mb-2"><strong>Why does HNSW achieve O(log n) search time? What's the tradeoff?</strong></li>
+                    <li class="mb-2"><strong>Why use a cross-encoder for reranking instead of just using a better bi-encoder?</strong></li>
+                    <li class="mb-2"><strong>When would sparse retrieval (BM25) outperform dense retrieval?</strong></li>
+                    <li class="mb-2"><strong>What is Reciprocal Rank Fusion and why is it better than simple score averaging?</strong></li>
+                    <li class="mb-2"><strong>Explain the "lost in the middle" problem and how RAG helps address it.</strong></li>
+                    <li class="mb-2"><strong>What's the purpose of parent-child chunking?</strong></li>
+                    <li class="mb-2"><strong>How do you decide between Pinecone, Chroma, and pgvector for a new project?</strong></li>
+                </ol>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- MINI PROJECT -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Mini Project: Build a Documentation Q&A System</h2>
+            <div class="card">
+                <h4>Project: Create a RAG system for technical documentation</h4>
+                <p>Build a Q&A system that can answer questions about a technical documentation corpus (e.g., Python docs, a library's README).</p>
+
+                <h5>Requirements:</h5>
+                <ol>
+                    <li>Load and chunk documentation (use recursive splitting)</li>
+                    <li>Embed chunks using a sentence transformer</li>
+                    <li>Store in Chroma (local) or Pinecone (cloud)</li>
+                    <li>Implement hybrid search (dense + BM25)</li>
+                    <li>Add reranking with a cross-encoder</li>
+                    <li>Generate answers using an LLM with retrieved context</li>
+                </ol>
+
+                <h5>Bonus Challenges:</h5>
+                <ul>
+                    <li>Implement parent-child chunking for better context</li>
+                    <li>Add citation links to source documents</li>
+                    <li>Evaluate retrieval quality with a test set</li>
+                    <li>Compare different chunk sizes and overlap values</li>
+                </ul>
+
+                <h5>Starter Code:</h5>
+                <div class="code-block">
+<code>from langchain.text_splitter import RecursiveCharacterTextSplitter
+from sentence_transformers import SentenceTransformer, CrossEncoder
+import chromadb
+
+class DocQASystem:
+    def __init__(self):
+        self.embedder = SentenceTransformer('all-MiniLM-L6-v2')
+        self.reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+        self.client = chromadb.Client()
+        self.collection = None
+
+    def load_documents(self, docs_path):
+        # TODO: Load and chunk documents
+        pass
+
+    def index(self, chunks):
+        # TODO: Embed and store chunks
+        pass
+
+    def retrieve(self, query, k=5):
+        # TODO: Hybrid search + reranking
+        pass
+
+    def answer(self, query):
+        # TODO: Retrieve context and generate answer with LLM
+        pass
+
+# Your implementation here
+qa = DocQASystem()
+qa.load_documents("./docs/")
+answer = qa.answer("How do I install the library?")
+print(answer)</code>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- CHECKPOINT SUMMARY -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Checkpoint Summary</h2>
+            <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(56, 239, 125, 0.1) 100%); border: 2px solid rgba(16, 185, 129, 0.3);">
+                <h4>Key Takeaways</h4>
+                <ul>
+                    <li><strong>RAG Pipeline:</strong> Chunk -> Embed -> Store -> Retrieve -> Rerank -> Generate</li>
+                    <li><strong>Chunking:</strong> Use recursive splitting with overlap. Consider document structure.</li>
+                    <li><strong>Embeddings:</strong> OpenAI for ease, BGE/E5 for quality, MiniLM for speed.</li>
+                    <li><strong>Vector DBs:</strong> Chroma for dev, Pinecone/Qdrant for production.</li>
+                    <li><strong>Indexing:</strong> HNSW is the default. Use IVF for very large scale.</li>
+                    <li><strong>Reranking:</strong> Always rerank! Cross-encoders significantly improve quality.</li>
+                    <li><strong>Hybrid Search:</strong> Combine dense (semantic) and sparse (keyword) for best results.</li>
+                </ul>
+
+                <h4 class="mt-3">How This Connects Forward</h4>
+                <ul>
+                    <li><strong>Module 9:</strong> RAG Implementation - Building production RAG systems</li>
+                    <li><strong>Module 10:</strong> AI Agents - Agents use RAG for knowledge retrieval</li>
+                    <li><strong>Module 11:</strong> Context Engineering - Managing context windows with RAG</li>
+                </ul>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex flex-between mt-4">
+                <a href="module-07.html" class="btn btn-secondary">&larr; Previous: Optimization Hacks</a>
+                <a href="module-09.html" class="btn btn-primary">Next: RAG Implementation &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        // Sidebar toggle
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        }
+
+        // Pipeline step activation
+        let currentStep = 0;
+
+        function activateStep(step) {
+            // Reset all steps
+            for (let i = 1; i <= 6; i++) {
+                const el = document.getElementById(`step-${i}`);
+                el.classList.remove('active', 'completed');
+            }
+
+            // Mark previous as completed
+            for (let i = 1; i < step; i++) {
+                document.getElementById(`step-${i}`).classList.add('completed');
+            }
+
+            // Mark current as active
+            document.getElementById(`step-${step}`).classList.add('active');
+            currentStep = step;
+        }
+
+        // Vector space visualization
+        function initVectorSpace() {
+            const space = document.getElementById('vector-space');
+            if (!space) return;
+
+            // Clear existing
+            space.innerHTML = '';
+
+            // Add query point
+            const query = document.createElement('div');
+            query.className = 'vector-point query';
+            query.style.left = '50%';
+            query.style.top = '50%';
+            query.textContent = 'Q';
+            query.title = 'Query: "machine learning"';
+            space.appendChild(query);
+
+            // Add document points
+            const docs = [
+                { x: 45, y: 35, relevant: true, label: 'ML basics' },
+                { x: 55, y: 40, relevant: true, label: 'Deep learning' },
+                { x: 60, y: 55, relevant: true, label: 'Neural nets' },
+                { x: 20, y: 70, relevant: false, label: 'Cooking recipes' },
+                { x: 80, y: 20, relevant: false, label: 'Sports news' },
+                { x: 30, y: 25, relevant: false, label: 'Weather data' },
+                { x: 70, y: 75, relevant: false, label: 'Movie reviews' },
+                { x: 40, y: 60, relevant: true, label: 'AI research' },
+            ];
+
+            docs.forEach((doc, i) => {
+                const point = document.createElement('div');
+                point.className = `vector-point ${doc.relevant ? 'relevant' : 'doc'}`;
+                point.style.left = `${doc.x}%`;
+                point.style.top = `${doc.y}%`;
+                point.textContent = i + 1;
+                point.title = doc.label;
+                space.appendChild(point);
+            });
+        }
+
+        initVectorSpace();
+    </script>
+</body>
+</html>

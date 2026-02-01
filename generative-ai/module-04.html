@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 4: Deep Dive into LLMs - QKV, Cross/Self/Multi-Head Attention</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        .math-block {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-left: 4px solid #667eea;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+            font-family: 'Georgia', serif;
+            overflow-x: auto;
+        }
+        .insight-box {
+            background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(56, 161, 105, 0.1) 100%);
+            border-left: 4px solid #48bb78;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .warning-box {
+            background: linear-gradient(135deg, rgba(237, 137, 54, 0.1) 0%, rgba(221, 107, 32, 0.1) 100%);
+            border-left: 4px solid #ed8936;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .mistake-box {
+            background: linear-gradient(135deg, rgba(245, 101, 101, 0.1) 0%, rgba(229, 62, 62, 0.1) 100%);
+            border-left: 4px solid #f56565;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .recall-question {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        .recall-question:hover {
+            background: rgba(139, 92, 246, 0.2);
+        }
+        .recall-answer {
+            display: none;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .recall-question.open .recall-answer {
+            display: block;
+        }
+        .checkpoint-summary {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin: 2rem 0;
+        }
+        .qkv-visual {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+        .qkv-box {
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            min-width: 150px;
+        }
+        .qkv-box.query { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .qkv-box.key { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .qkv-box.value { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .qkv-box h4 { margin: 0 0 0.5rem 0; color: white; }
+        .qkv-box p { margin: 0; color: rgba(255,255,255,0.9); font-size: 0.9rem; }
+        .attention-matrix {
+            display: grid;
+            gap: 2px;
+            margin: 1rem auto;
+            width: fit-content;
+        }
+        .attention-cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+        .head-viz {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+        .head-box {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            min-width: 120px;
+        }
+        .head-box.h1 { background: rgba(239, 68, 68, 0.3); border: 2px solid #ef4444; }
+        .head-box.h2 { background: rgba(59, 130, 246, 0.3); border: 2px solid #3b82f6; }
+        .head-box.h3 { background: rgba(34, 197, 94, 0.3); border: 2px solid #22c55e; }
+        .head-box.h4 { background: rgba(168, 85, 247, 0.3); border: 2px solid #a855f7; }
+        .pos-encoding-viz {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .pos-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .pos-label {
+            width: 80px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .pos-values {
+            display: flex;
+            gap: 2px;
+        }
+        .pos-cell {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .interactive-demo {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        .demo-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .demo-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .demo-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Setup + Core Math
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Terminology + MNIST
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">LLM Deep Dive</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>LLM Basics
+                    </a>
+                    <a href="module-04.html" class="sidebar-link active" data-module="4">
+                        <span class="sidebar-link-number">4</span>Attention Mechanisms
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>LLM Coding: GPT
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Training at Scale
+                    </a>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Optimization Hacks
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">RAG & Retrieval</div>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>RAG Fundamentals
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>RAG Implementation
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Agents & Systems</div>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>AI Agents
+                    </a>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Context Engineering
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>AI Engineering
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-13.html" class="sidebar-link" data-module="13">
+                        <span class="sidebar-link-number">13</span>Thinking Models
+                    </a>
+                    <a href="module-14.html" class="sidebar-link" data-module="14">
+                        <span class="sidebar-link-number">14</span>Multi-modal Models
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Capstone & Career</div>
+                    <a href="module-15.html" class="sidebar-link" data-module="15">
+                        <span class="sidebar-link-number">15</span>Capstone Project
+                    </a>
+                    <a href="module-16.html" class="sidebar-link" data-module="16">
+                        <span class="sidebar-link-number">16</span>Career Goals
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Mobile sidebar toggle -->
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Module 4: Deep Dive into LLMs</h1>
+            <p class="text-muted">QKV Matrices, Cross-Attention, Self-Attention, Multi-Head Attention, and Positional Encoding</p>
+
+            <!-- Learning Objectives -->
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Why we need separate Query, Key, and Value projections</li>
+                    <li>The database query analogy for understanding QKV</li>
+                    <li>Self-attention: how tokens attend to each other within a sequence</li>
+                    <li>Cross-attention: how one sequence attends to another</li>
+                    <li>Why we scale dot products and the exact formula</li>
+                    <li>Multi-head attention: attending to multiple aspects simultaneously</li>
+                    <li>Positional encoding: giving transformers a sense of order</li>
+                    <li>Building a complete attention block from scratch</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 1: QKV EXPLAINED -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">1. Query, Key, Value: The Attention Triad</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Model: The Library Search</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Engineering Analogy:</strong> Imagine a library search system:</p>
+                    <ul>
+                        <li><strong>Query (Q):</strong> Your search term - "machine learning books"</li>
+                        <li><strong>Key (K):</strong> The index card for each book - title, author, keywords</li>
+                        <li><strong>Value (V):</strong> The actual book content</li>
+                    </ul>
+
+                    <p>The search engine compares your Query against all Keys to find matches, then returns the Values (book content) of matching books.</p>
+
+                    <div class="qkv-visual">
+                        <div class="qkv-box query">
+                            <h4>Query (Q)</h4>
+                            <p>"What am I looking for?"</p>
+                            <p style="font-size: 0.8rem; margin-top: 0.5rem;">The question/search</p>
+                        </div>
+                        <div class="qkv-box key">
+                            <h4>Key (K)</h4>
+                            <p>"What do I contain?"</p>
+                            <p style="font-size: 0.8rem; margin-top: 0.5rem;">The index/label</p>
+                        </div>
+                        <div class="qkv-box value">
+                            <h4>Value (V)</h4>
+                            <p>"Here's my content"</p>
+                            <p style="font-size: 0.8rem; margin-top: 0.5rem;">The actual information</p>
+                        </div>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    Q["Query: 'ML books'"] --> M["Match against Keys"]
+    K1["Key 1: 'Deep Learning'"] --> M
+    K2["Key 2: 'Web Dev'"] --> M
+    K3["Key 3: 'Neural Networks'"] --> M
+    M --> W["Weights: [0.6, 0.05, 0.35]"]
+    W --> V["Weighted sum of Values"]
+    V --> O["Output: Blended content<br/>mostly DL + some NN"]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concept: Why Separate Q, K, V?</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Key Insight:</strong> In basic attention, we directly use embeddings for both matching (computing scores) AND as the returned content. But these are fundamentally different roles!</p>
+
+                    <h4>Without QKV (Basic Attention)</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Basic attention: embeddings serve dual purpose
+embeddings = get_embeddings(tokens)  # (seq_len, d_model)
+
+# Use same embeddings for matching AND content
+scores = embeddings @ embeddings.T  # Match: embed vs embed
+output = softmax(scores) @ embeddings  # Content: weighted embeds</code></pre>
+                    </div>
+
+                    <h4>With QKV (Transformer Attention)</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># With QKV: specialized representations for each role
+embeddings = get_embeddings(tokens)  # (seq_len, d_model)
+
+# Project to specialized spaces
+Q = embeddings @ W_Q  # What am I looking for?
+K = embeddings @ W_K  # How should I be indexed?
+V = embeddings @ W_V  # What content should I provide?
+
+# Now matching (Q@K) is separate from content (V)
+scores = Q @ K.T
+output = softmax(scores) @ V</code></pre>
+                    </div>
+
+                    <h4>Why This Matters</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Aspect</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Without QKV</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">With QKV</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Role separation</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Embeddings must be good at everything</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Specialized projections for each role</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Flexibility</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Limited - same representation for all</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Model can learn different aspects matter for matching vs content</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Parameters</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">No extra parameters</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">3 projection matrices (W_Q, W_K, W_V)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Expressiveness</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Symmetric attention</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Asymmetric - "A attends to B" can differ from "B attends to A"</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="insight-box">
+                        <strong>Real-World Example:</strong> When translating "The cat sat on the mat", the word "sat" might need to:
+                        <ul>
+                            <li><strong>Query for:</strong> Subject (who is sitting?) - finds "cat"</li>
+                            <li><strong>Be keyed as:</strong> A verb in past tense</li>
+                            <li><strong>Provide value:</strong> Information about the action itself</li>
+                        </ul>
+                        These are different roles requiring different representations!
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Math / Theory: QKV Dimensions</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="math-block">
+                        <p><strong>Input:</strong> X of shape (batch_size, seq_len, d_model)</p>
+                        <p><strong>Projection matrices:</strong></p>
+                        <ul>
+                            <li>W_Q: (d_model, d_k) - Query projection</li>
+                            <li>W_K: (d_model, d_k) - Key projection</li>
+                            <li>W_V: (d_model, d_v) - Value projection</li>
+                        </ul>
+                        <p><strong>Projections:</strong></p>
+                        <ul>
+                            <li>Q = X @ W_Q : (batch, seq_len, d_k)</li>
+                            <li>K = X @ W_K : (batch, seq_len, d_k)</li>
+                            <li>V = X @ W_V : (batch, seq_len, d_v)</li>
+                        </ul>
+                        <p><strong>Note:</strong> d_k and d_v are typically equal to d_model / num_heads</p>
+                    </div>
+
+                    <h4>Typical Dimensions in Practice</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Model</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">d_model</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">num_heads</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">d_k = d_v</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">GPT-2 Small</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">768</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">12</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">64</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">GPT-3 175B</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">12288</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">96</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">128</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">LLaMA 7B</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">4096</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">32</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">128</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 2: SELF-ATTENTION -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">2. Self-Attention: Tokens Attending to Each Other</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Model: The Team Meeting</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Engineering Analogy:</strong> Imagine a team meeting where everyone needs to update their understanding based on what others know:</p>
+                    <ul>
+                        <li>Each person asks questions (Query) to the group</li>
+                        <li>Each person advertises what they know (Key)</li>
+                        <li>When asked, each person shares their knowledge (Value)</li>
+                        <li>Everyone updates their understanding based on relevant responses</li>
+                    </ul>
+
+                    <p>This is <strong>self-attention</strong>: the same sequence provides Q, K, and V. Each token can attend to any other token in the sequence (including itself).</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    subgraph "Self-Attention: 'The cat sat'"
+        T1["The"] --> Q1["Q"]
+        T2["cat"] --> Q2["Q"]
+        T3["sat"] --> Q3["Q"]
+
+        T1 --> K1["K"]
+        T2 --> K2["K"]
+        T3 --> K3["K"]
+
+        T1 --> V1["V"]
+        T2 --> V2["V"]
+        T3 --> V3["V"]
+
+        Q1 & K1 & K2 & K3 --> A1["Attention<br/>weights"]
+        Q2 & K1 & K2 & K3 --> A2["Attention<br/>weights"]
+        Q3 & K1 & K2 & K3 --> A3["Attention<br/>weights"]
+
+        A1 & V1 & V2 & V3 --> O1["Output 1"]
+        A2 & V1 & V2 & V3 --> O2["Output 2"]
+        A3 & V1 & V2 & V3 --> O3["Output 3"]
+    end
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concept: The Self-Attention Matrix</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Self-attention produces a (seq_len x seq_len) attention matrix. Each row shows how much one token attends to all others.</p>
+
+                    <h4>Visualizing Attention Weights</h4>
+                    <p>For the sentence "The cat sat on the mat":</p>
+
+                    <div style="overflow-x: auto;">
+                        <table style="margin: 1rem auto; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th style="padding: 0.5rem; border: 1px solid var(--border-color);"></th>
+                                    <th style="padding: 0.5rem; border: 1px solid var(--border-color);">The</th>
+                                    <th style="padding: 0.5rem; border: 1px solid var(--border-color);">cat</th>
+                                    <th style="padding: 0.5rem; border: 1px solid var(--border-color);">sat</th>
+                                    <th style="padding: 0.5rem; border: 1px solid var(--border-color);">on</th>
+                                    <th style="padding: 0.5rem; border: 1px solid var(--border-color);">the</th>
+                                    <th style="padding: 0.5rem; border: 1px solid var(--border-color);">mat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); font-weight: bold;">The</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.3);">0.4</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.5);">0.5</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.1);">0.05</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.05);">0.02</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.02);">0.02</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.01);">0.01</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); font-weight: bold;">cat</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.3);">0.3</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.2);">0.2</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.4);">0.4</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.05);">0.05</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.02);">0.02</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.03);">0.03</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); font-weight: bold;">sat</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.1);">0.1</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.5);">0.5</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.1);">0.1</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.1);">0.1</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.05);">0.05</td>
+                                    <td style="padding: 0.5rem; border: 1px solid var(--border-color); background: rgba(102, 126, 234, 0.15);">0.15</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p><strong>Interpretation:</strong> "sat" attends heavily to "cat" (0.5) because it needs to know WHO is sitting. This is how self-attention captures dependencies!</p>
+
+                    <div class="warning-box">
+                        <strong>Causal Masking:</strong> In decoder-only models (GPT), we mask future tokens so each position can only attend to previous positions. This prevents "cheating" during generation.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Self-Attention Implementation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
+
+class SelfAttention(nn.Module):
+    """
+    Single-head self-attention mechanism.
+    """
+    def __init__(self, d_model, d_k=None, d_v=None):
+        super().__init__()
+        self.d_model = d_model
+        self.d_k = d_k or d_model
+        self.d_v = d_v or d_model
+
+        # QKV projection matrices
+        self.W_Q = nn.Linear(d_model, self.d_k, bias=False)
+        self.W_K = nn.Linear(d_model, self.d_k, bias=False)
+        self.W_V = nn.Linear(d_model, self.d_v, bias=False)
+
+        # Output projection
+        self.W_O = nn.Linear(self.d_v, d_model, bias=False)
+
+    def forward(self, x, mask=None, return_attention=False):
+        """
+        Args:
+            x: (batch_size, seq_len, d_model) - input sequence
+            mask: (batch_size, seq_len, seq_len) - attention mask
+            return_attention: bool - whether to return attention weights
+
+        Returns:
+            output: (batch_size, seq_len, d_model)
+            attention_weights: (batch_size, seq_len, seq_len) if return_attention
+        """
+        batch_size, seq_len, _ = x.shape
+
+        # Project to Q, K, V
+        Q = self.W_Q(x)  # (batch, seq_len, d_k)
+        K = self.W_K(x)  # (batch, seq_len, d_k)
+        V = self.W_V(x)  # (batch, seq_len, d_v)
+
+        # Compute attention scores
+        # Q @ K^T: (batch, seq_len, d_k) @ (batch, d_k, seq_len)
+        #        = (batch, seq_len, seq_len)
+        scores = torch.bmm(Q, K.transpose(1, 2))
+
+        # Scale by sqrt(d_k) to prevent softmax saturation
+        scores = scores / math.sqrt(self.d_k)
+
+        # Apply mask (set masked positions to -inf)
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, float('-inf'))
+
+        # Softmax to get attention weights
+        attention_weights = F.softmax(scores, dim=-1)
+
+        # Weighted sum of values
+        # (batch, seq_len, seq_len) @ (batch, seq_len, d_v)
+        # = (batch, seq_len, d_v)
+        context = torch.bmm(attention_weights, V)
+
+        # Project back to d_model
+        output = self.W_O(context)
+
+        if return_attention:
+            return output, attention_weights
+        return output
+
+
+# Example usage
+d_model = 512
+seq_len = 10
+batch_size = 2
+
+attention = SelfAttention(d_model)
+x = torch.randn(batch_size, seq_len, d_model)
+
+# Without mask (full attention)
+output, weights = attention(x, return_attention=True)
+print(f"Output shape: {output.shape}")  # (2, 10, 512)
+print(f"Attention weights shape: {weights.shape}")  # (2, 10, 10)
+
+# Verify weights sum to 1 for each query position
+print(f"Weight sums: {weights[0].sum(dim=-1)}")  # Should be all 1s</code></pre>
+                    </div>
+
+                    <h4>Adding Causal Masking</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python">def create_causal_mask(seq_len, device='cpu'):
+    """
+    Create causal mask to prevent attending to future tokens.
+    Returns lower triangular matrix of 1s.
+    """
+    mask = torch.tril(torch.ones(seq_len, seq_len, device=device))
+    return mask
+
+# Visualize the causal mask
+causal_mask = create_causal_mask(5)
+print("Causal Mask:")
+print(causal_mask)
+# tensor([[1., 0., 0., 0., 0.],
+#         [1., 1., 0., 0., 0.],
+#         [1., 1., 1., 0., 0.],
+#         [1., 1., 1., 1., 0.],
+#         [1., 1., 1., 1., 1.]])
+
+# Token 0 can only attend to itself
+# Token 1 can attend to tokens 0, 1
+# Token 4 can attend to all tokens 0-4
+
+# Use in self-attention
+mask = create_causal_mask(seq_len).unsqueeze(0)  # Add batch dim
+output, weights = attention(x, mask=mask, return_attention=True)
+
+# Check that future positions have zero attention
+print(f"Attention from position 2 to position 4: {weights[0, 2, 4]}")  # ~0
+print(f"Attention from position 4 to position 2: {weights[0, 4, 2]}")  # Non-zero</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 3: CROSS-ATTENTION -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">3. Cross-Attention: One Sequence Attending to Another</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Model: The Translator</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Engineering Analogy:</strong> Imagine a simultaneous translator:</p>
+                    <ul>
+                        <li>The source sentence (encoder output) provides Keys and Values</li>
+                        <li>The target sentence being generated provides Queries</li>
+                        <li>When generating each target word, the translator "looks back" at the source</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    subgraph "Encoder (Source: 'Hello world')"
+        E1["Hello"] --> EK1["K"] & EV1["V"]
+        E2["world"] --> EK2["K"] & EV2["V"]
+    end
+
+    subgraph "Decoder (Target: 'Bonjour monde')"
+        D1["Bonjour"] --> DQ1["Q"]
+        D2["monde"] --> DQ2["Q"]
+    end
+
+    subgraph "Cross-Attention"
+        DQ1 --> CA1["Match Q vs all K"]
+        EK1 --> CA1
+        EK2 --> CA1
+        CA1 --> W1["Weights"]
+        W1 --> O1["Output"]
+        EV1 --> O1
+        EV2 --> O1
+    end
+                        </div>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Key Difference from Self-Attention:</strong>
+                        <ul>
+                            <li><strong>Self-attention:</strong> Q, K, V all come from the SAME sequence</li>
+                            <li><strong>Cross-attention:</strong> Q comes from decoder, K and V come from encoder</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Cross-Attention Implementation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">class CrossAttention(nn.Module):
+    """
+    Cross-attention: queries from one sequence, keys/values from another.
+    Used in encoder-decoder architectures (like original Transformer for translation).
+    """
+    def __init__(self, d_model, d_k=None, d_v=None):
+        super().__init__()
+        self.d_model = d_model
+        self.d_k = d_k or d_model
+        self.d_v = d_v or d_model
+
+        # Query projection (for decoder)
+        self.W_Q = nn.Linear(d_model, self.d_k, bias=False)
+
+        # Key and Value projections (for encoder)
+        self.W_K = nn.Linear(d_model, self.d_k, bias=False)
+        self.W_V = nn.Linear(d_model, self.d_v, bias=False)
+
+        # Output projection
+        self.W_O = nn.Linear(self.d_v, d_model, bias=False)
+
+    def forward(self, decoder_hidden, encoder_output, encoder_mask=None):
+        """
+        Args:
+            decoder_hidden: (batch, tgt_len, d_model) - decoder states (source of Q)
+            encoder_output: (batch, src_len, d_model) - encoder output (source of K, V)
+            encoder_mask: (batch, 1, src_len) - mask for encoder padding
+
+        Returns:
+            output: (batch, tgt_len, d_model)
+        """
+        # Queries from decoder
+        Q = self.W_Q(decoder_hidden)  # (batch, tgt_len, d_k)
+
+        # Keys and Values from encoder
+        K = self.W_K(encoder_output)  # (batch, src_len, d_k)
+        V = self.W_V(encoder_output)  # (batch, src_len, d_v)
+
+        # Attention scores: (batch, tgt_len, src_len)
+        scores = torch.bmm(Q, K.transpose(1, 2)) / math.sqrt(self.d_k)
+
+        # Apply encoder padding mask
+        if encoder_mask is not None:
+            scores = scores.masked_fill(encoder_mask == 0, float('-inf'))
+
+        # Attention weights and context
+        attention_weights = F.softmax(scores, dim=-1)
+        context = torch.bmm(attention_weights, V)
+
+        return self.W_O(context)
+
+
+# Example: Translation scenario
+d_model = 512
+src_len = 8   # Source sentence length
+tgt_len = 10  # Target sentence length
+batch_size = 2
+
+cross_attention = CrossAttention(d_model)
+
+# Encoder output (from encoding source sentence)
+encoder_output = torch.randn(batch_size, src_len, d_model)
+
+# Decoder hidden states (from decoder self-attention)
+decoder_hidden = torch.randn(batch_size, tgt_len, d_model)
+
+# Source padding mask (1 = real token, 0 = padding)
+encoder_mask = torch.ones(batch_size, 1, src_len)
+encoder_mask[0, :, 6:] = 0  # First sequence has padding at end
+
+output = cross_attention(decoder_hidden, encoder_output, encoder_mask)
+print(f"Cross-attention output: {output.shape}")  # (2, 10, 512)</code></pre>
+                    </div>
+
+                    <h4>Where Cross-Attention Appears</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Architecture</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Uses Cross-Attention?</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Encoder-Decoder (T5, BART)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Yes</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Decoder attends to encoder output</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Decoder-only (GPT)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">No</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Only self-attention</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Vision-Language (CLIP, Flamingo)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Yes</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Text attends to image features</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Stable Diffusion</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Yes</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Image generation attends to text prompt</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 4: SCALED DOT-PRODUCT ATTENTION -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">4. Scaled Dot-Product Attention: The Formula</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>The Complete Attention Formula</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="math-block">
+                        <h4>Scaled Dot-Product Attention</h4>
+                        <p style="font-size: 1.2rem; text-align: center;">
+                            Attention(Q, K, V) = softmax(QK<sup>T</sup> / sqrt(d_k)) * V
+                        </p>
+                    </div>
+
+                    <h4>Step-by-Step Breakdown</h4>
+                    <ol>
+                        <li><strong>QK<sup>T</sup>:</strong> Compute raw attention scores via dot product</li>
+                        <li><strong>/ sqrt(d_k):</strong> Scale down to prevent gradient vanishing</li>
+                        <li><strong>+ mask:</strong> Apply causal or padding mask (set to -inf)</li>
+                        <li><strong>softmax:</strong> Convert to probability distribution</li>
+                        <li><strong>* V:</strong> Weighted sum of values</li>
+                    </ol>
+
+                    <h4>Why Scale by sqrt(d_k)?</h4>
+                    <div class="code-block">
+                        <pre><code class="language-python"># Without scaling: dot products grow with dimension
+import torch
+
+d_k = 64
+q = torch.randn(d_k)  # variance ≈ 1
+k = torch.randn(d_k)  # variance ≈ 1
+
+# Dot product: sum of d_k terms, each with variance 1
+# Total variance ≈ d_k
+dot_product = torch.dot(q, k)
+print(f"Without scaling - dot product: {dot_product:.2f}")
+
+# With many keys, some dots will be very large
+# This causes softmax saturation:
+scores = torch.randn(100) * 8  # High variance
+probs = torch.softmax(scores, dim=0)
+print(f"Max prob with high variance: {probs.max():.4f}")  # ~1.0 (saturated!)
+print(f"Entropy: {-(probs * probs.log()).sum():.4f}")  # Low entropy
+
+# With scaling: divide by sqrt(d_k) to get variance ≈ 1
+scaled = torch.randn(100)  # Normal variance
+probs_scaled = torch.softmax(scaled, dim=0)
+print(f"Max prob with scaled: {probs_scaled.max():.4f}")  # ~0.02 (distributed)
+print(f"Entropy: {-(probs_scaled * probs_scaled.log()).sum():.4f}")  # Higher</code></pre>
+                    </div>
+
+                    <div class="insight-box">
+                        <strong>Intuition:</strong> Without scaling, the softmax becomes very "peaky" (puts nearly all weight on one position). This is bad because:
+                        <ol>
+                            <li>Gradients for non-max positions become tiny</li>
+                            <li>Model can't express "partial attention" to multiple tokens</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 5: MULTI-HEAD ATTENTION -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">5. Multi-Head Attention: Attending to Multiple Aspects</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Model: Multiple Experts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Engineering Analogy:</strong> Imagine reviewing a code PR with multiple reviewers:</p>
+                    <ul>
+                        <li><strong>Head 1 (Security Expert):</strong> Focuses on auth, input validation, SQL injection</li>
+                        <li><strong>Head 2 (Performance Expert):</strong> Looks at algorithms, caching, database queries</li>
+                        <li><strong>Head 3 (Style Expert):</strong> Checks naming, patterns, readability</li>
+                        <li><strong>Head 4 (Architecture Expert):</strong> Reviews overall design, dependencies</li>
+                    </ul>
+
+                    <p>Each head can focus on different aspects, then their findings are combined.</p>
+
+                    <div class="head-viz">
+                        <div class="head-box h1">
+                            <strong>Head 1</strong>
+                            <p style="font-size: 0.8rem;">Syntactic relations</p>
+                        </div>
+                        <div class="head-box h2">
+                            <strong>Head 2</strong>
+                            <p style="font-size: 0.8rem;">Positional patterns</p>
+                        </div>
+                        <div class="head-box h3">
+                            <strong>Head 3</strong>
+                            <p style="font-size: 0.8rem;">Rare words</p>
+                        </div>
+                        <div class="head-box h4">
+                            <strong>Head 4</strong>
+                            <p style="font-size: 0.8rem;">Coreference</p>
+                        </div>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    X["Input X"] --> S["Split into h heads"]
+    S --> H1["Head 1:<br/>QKV Attention"]
+    S --> H2["Head 2:<br/>QKV Attention"]
+    S --> H3["Head 3:<br/>QKV Attention"]
+    S --> H4["...Head h"]
+    H1 & H2 & H3 & H4 --> C["Concatenate"]
+    C --> P["Project W_O"]
+    P --> O["Output"]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Math / Theory: Multi-Head Computation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="math-block">
+                        <p><strong>Multi-Head Attention Formula:</strong></p>
+                        <p>MultiHead(Q, K, V) = Concat(head_1, ..., head_h) @ W_O</p>
+                        <p>where head_i = Attention(Q @ W_Q_i, K @ W_K_i, V @ W_V_i)</p>
+                        <hr style="margin: 1rem 0; border-color: rgba(255,255,255,0.1);">
+                        <p><strong>Dimensions:</strong></p>
+                        <ul>
+                            <li>d_model = 512, num_heads = 8</li>
+                            <li>d_k = d_v = d_model / num_heads = 64</li>
+                            <li>Each head operates on 64-dim space</li>
+                            <li>Concatenation: 8 * 64 = 512</li>
+                            <li>W_O: (512, 512) - mixes head outputs</li>
+                        </ul>
+                    </div>
+
+                    <h4>Why Multiple Heads Instead of One Large Head?</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Single Large Head</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Multiple Small Heads</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">One attention pattern per layer</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Multiple attention patterns simultaneously</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Same computational cost</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Same computational cost (d_k * h = d_model)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Must blend all information</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Specialized subspaces</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Multi-Head Attention Implementation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">class MultiHeadAttention(nn.Module):
+    """
+    Multi-Head Attention as described in "Attention Is All You Need".
+    """
+    def __init__(self, d_model, num_heads, dropout=0.1):
+        super().__init__()
+        assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
+
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.d_k = d_model // num_heads
+
+        # Combined QKV projection (more efficient than separate)
+        self.W_qkv = nn.Linear(d_model, 3 * d_model, bias=False)
+
+        # Output projection
+        self.W_o = nn.Linear(d_model, d_model, bias=False)
+
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x, mask=None, return_attention=False):
+        """
+        Args:
+            x: (batch_size, seq_len, d_model)
+            mask: (batch_size, 1, seq_len, seq_len) or (batch_size, 1, 1, seq_len)
+            return_attention: whether to return attention weights
+
+        Returns:
+            output: (batch_size, seq_len, d_model)
+        """
+        batch_size, seq_len, _ = x.shape
+
+        # Project to QKV in one operation
+        qkv = self.W_qkv(x)  # (batch, seq, 3*d_model)
+
+        # Split into Q, K, V
+        qkv = qkv.reshape(batch_size, seq_len, 3, self.num_heads, self.d_k)
+        qkv = qkv.permute(2, 0, 3, 1, 4)  # (3, batch, heads, seq, d_k)
+        Q, K, V = qkv[0], qkv[1], qkv[2]
+
+        # Scaled dot-product attention for all heads in parallel
+        # (batch, heads, seq, d_k) @ (batch, heads, d_k, seq) -> (batch, heads, seq, seq)
+        scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.d_k)
+
+        # Apply mask
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, float('-inf'))
+
+        # Softmax and dropout
+        attention_weights = F.softmax(scores, dim=-1)
+        attention_weights = self.dropout(attention_weights)
+
+        # Apply attention to values
+        # (batch, heads, seq, seq) @ (batch, heads, seq, d_k) -> (batch, heads, seq, d_k)
+        context = torch.matmul(attention_weights, V)
+
+        # Concatenate heads
+        # (batch, heads, seq, d_k) -> (batch, seq, heads, d_k) -> (batch, seq, d_model)
+        context = context.transpose(1, 2).contiguous().reshape(batch_size, seq_len, self.d_model)
+
+        # Final projection
+        output = self.W_o(context)
+
+        if return_attention:
+            return output, attention_weights
+        return output
+
+
+# Example usage
+d_model = 512
+num_heads = 8
+seq_len = 20
+batch_size = 4
+
+mha = MultiHeadAttention(d_model, num_heads)
+x = torch.randn(batch_size, seq_len, d_model)
+
+# Create causal mask for all heads
+causal_mask = torch.tril(torch.ones(seq_len, seq_len))
+causal_mask = causal_mask.unsqueeze(0).unsqueeze(0)  # (1, 1, seq, seq)
+
+output, weights = mha(x, mask=causal_mask, return_attention=True)
+print(f"Output shape: {output.shape}")  # (4, 20, 512)
+print(f"Attention weights shape: {weights.shape}")  # (4, 8, 20, 20)
+
+# Each head has different attention patterns
+for head_idx in range(num_heads):
+    print(f"Head {head_idx} - max attention: {weights[0, head_idx].max():.3f}")</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Engineering Insights: What Different Heads Learn</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Research has shown that different attention heads learn specialized roles:</p>
+
+                    <h4>Empirically Observed Head Specializations</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Head Type</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Behavior</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Positional heads</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Attend to fixed relative positions</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Previous token, BOS token</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Syntactic heads</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Track grammatical relationships</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Subject-verb, noun-adjective</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Coreference heads</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Link pronouns to referents</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"it" -> "the cat"</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Induction heads</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Copy patterns from context</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">[A][B]...[A] -> predict [B]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="insight-box">
+                        <strong>Production Insight:</strong> Tools like BertViz and Anthropic's work on interpretability let you visualize attention patterns. This is valuable for debugging model behavior and understanding failures.
+                    </div>
+
+                    <h4>Attention Head Pruning</h4>
+                    <p>Research shows many heads can be removed without significant quality loss:</p>
+                    <ul>
+                        <li>BERT: ~40% of heads can be pruned</li>
+                        <li>Some heads are "critical" - removing them breaks the model</li>
+                        <li>This is used for model compression in production</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 6: POSITIONAL ENCODING -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">6. Positional Encoding: Giving Models a Sense of Order</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Model: The Problem with Permutation Invariance</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>The Problem:</strong> Self-attention is permutation-invariant. If you shuffle the input tokens, the output (before positional encoding) would be the same shuffled output!</p>
+
+                    <div class="code-block">
+                        <pre><code class="language-python"># Attention doesn't care about order!
+# These produce related outputs (just permuted):
+"The cat sat"  -> Attention -> [out1, out2, out3]
+"sat The cat"  -> Attention -> [out3, out1, out2]
+
+# But meaning is VERY different:
+"Dog bites man" vs "Man bites dog"</code></pre>
+                    </div>
+
+                    <p><strong>The Solution:</strong> Add position information to the input embeddings. Each position gets a unique "signature" that the model can use.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph LR
+    T["Token<br/>Embedding"] --> A["Add"]
+    P["Position<br/>Encoding"] --> A
+    A --> O["Position-Aware<br/>Embedding"]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Sinusoidal Positional Encoding</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>The original Transformer used sinusoidal functions:</p>
+
+                    <div class="math-block">
+                        <p>PE(pos, 2i) = sin(pos / 10000^(2i/d_model))</p>
+                        <p>PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))</p>
+                        <p>Where:</p>
+                        <ul>
+                            <li>pos = position in sequence (0, 1, 2, ...)</li>
+                            <li>i = dimension index</li>
+                            <li>d_model = embedding dimension</li>
+                        </ul>
+                    </div>
+
+                    <h4>Why Sinusoids?</h4>
+                    <ul>
+                        <li><strong>Unique encoding:</strong> Each position has a unique pattern</li>
+                        <li><strong>Relative positions:</strong> PE(pos+k) can be expressed as a linear function of PE(pos)</li>
+                        <li><strong>Extrapolation:</strong> Can handle positions longer than training (theoretically)</li>
+                        <li><strong>No learned parameters:</strong> Deterministic, saves parameters</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+
+def sinusoidal_positional_encoding(max_len, d_model):
+    """
+    Create sinusoidal positional encodings.
+    """
+    pe = np.zeros((max_len, d_model))
+    position = np.arange(max_len)[:, np.newaxis]  # (max_len, 1)
+    div_term = np.exp(np.arange(0, d_model, 2) * (-np.log(10000.0) / d_model))
+
+    pe[:, 0::2] = np.sin(position * div_term)  # Even dimensions
+    pe[:, 1::2] = np.cos(position * div_term)  # Odd dimensions
+
+    return pe
+
+# Visualize
+pe = sinusoidal_positional_encoding(100, 64)
+print(f"PE shape: {pe.shape}")  # (100, 64)
+
+# Each row is a unique position encoding
+print(f"Position 0: {pe[0, :8]}")
+print(f"Position 1: {pe[1, :8]}")
+print(f"Position 99: {pe[99, :8]}")</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Learned Positional Embeddings</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Modern models (GPT, BERT) often use learned positional embeddings:</p>
+
+                    <div class="code-block">
+                        <pre><code class="language-python">class LearnedPositionalEncoding(nn.Module):
+    """
+    Learned positional embeddings - just another embedding table!
+    """
+    def __init__(self, max_len, d_model):
+        super().__init__()
+        # Simple learnable embedding for each position
+        self.position_embedding = nn.Embedding(max_len, d_model)
+
+    def forward(self, x):
+        """
+        x: (batch_size, seq_len, d_model)
+        """
+        seq_len = x.size(1)
+        positions = torch.arange(seq_len, device=x.device)  # (seq_len,)
+        pos_emb = self.position_embedding(positions)  # (seq_len, d_model)
+        return x + pos_emb
+
+
+class SinusoidalPositionalEncoding(nn.Module):
+    """
+    Fixed sinusoidal positional encoding.
+    """
+    def __init__(self, max_len, d_model):
+        super().__init__()
+
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(max_len).unsqueeze(1).float()
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+
+        # Register as buffer (not a parameter, but moves with model)
+        self.register_buffer('pe', pe.unsqueeze(0))  # (1, max_len, d_model)
+
+    def forward(self, x):
+        """
+        x: (batch_size, seq_len, d_model)
+        """
+        seq_len = x.size(1)
+        return x + self.pe[:, :seq_len]
+
+
+# Comparison
+d_model = 512
+max_len = 1024
+
+learned_pe = LearnedPositionalEncoding(max_len, d_model)
+sinusoidal_pe = SinusoidalPositionalEncoding(max_len, d_model)
+
+print(f"Learned PE parameters: {sum(p.numel() for p in learned_pe.parameters())}")
+# 524,288 parameters
+
+print(f"Sinusoidal PE parameters: {sum(p.numel() for p in sinusoidal_pe.parameters())}")
+# 0 parameters (it's a buffer, not learned)</code></pre>
+                    </div>
+
+                    <h4>Sinusoidal vs Learned Comparison</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Aspect</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Sinusoidal</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Learned</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Parameters</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">0</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">max_len * d_model</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Extrapolation</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Works (theoretically)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fails beyond max_len</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Performance</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Good</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Slightly better in practice</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Used by</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Original Transformer, T5</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">GPT, BERT, most modern LLMs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Modern Approaches: RoPE and ALiBi</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Modern LLMs use more sophisticated positional encodings:</p>
+
+                    <h4>RoPE (Rotary Position Embedding)</h4>
+                    <p>Used in: LLaMA, GPT-NeoX, PaLM</p>
+                    <ul>
+                        <li>Encodes position by rotating query/key vectors</li>
+                        <li>Relative positions emerge naturally from rotation</li>
+                        <li>Better length extrapolation than learned embeddings</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <pre><code class="language-python">def apply_rotary_pos_emb(q, k, cos, sin):
+    """
+    Simplified RoPE application.
+    Rotates q and k vectors based on their position.
+    """
+    # Rotate queries
+    q_embed = (q * cos) + (rotate_half(q) * sin)
+    # Rotate keys
+    k_embed = (k * cos) + (rotate_half(k) * sin)
+    return q_embed, k_embed
+
+def rotate_half(x):
+    """Rotate half the hidden dims."""
+    x1, x2 = x[..., :x.shape[-1]//2], x[..., x.shape[-1]//2:]
+    return torch.cat((-x2, x1), dim=-1)</code></pre>
+                    </div>
+
+                    <h4>ALiBi (Attention with Linear Biases)</h4>
+                    <p>Used in: BLOOM, MPT</p>
+                    <ul>
+                        <li>No positional embedding at all!</li>
+                        <li>Adds linear bias based on distance to attention scores</li>
+                        <li>Excellent length extrapolation</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <pre><code class="language-python"># ALiBi: Add bias based on distance
+# For each head, multiply distance by a slope
+# Closer tokens get higher attention (less negative bias)
+
+# scores shape: (batch, heads, seq, seq)
+# alibi_bias shape: (heads, seq, seq)
+
+def get_alibi_bias(num_heads, seq_len):
+    """Create ALiBi bias matrix."""
+    # Different slopes for each head
+    slopes = torch.tensor([2**(-8*i/num_heads) for i in range(num_heads)])
+
+    # Distance matrix
+    positions = torch.arange(seq_len)
+    distance = positions.unsqueeze(0) - positions.unsqueeze(1)  # (seq, seq)
+
+    # Negative bias (larger distance = more negative)
+    alibi = slopes.unsqueeze(1).unsqueeze(1) * distance.unsqueeze(0)
+    return alibi  # (heads, seq, seq)
+
+# In attention computation:
+# scores = Q @ K^T / sqrt(d_k) + alibi_bias</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- SECTION 7: FULL ATTENTION BLOCK -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">7. Full Attention Block Implementation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Putting It All Together</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>A complete Transformer attention block includes:</p>
+                    <ol>
+                        <li>Multi-head attention</li>
+                        <li>Residual connection + LayerNorm</li>
+                        <li>Feed-forward network</li>
+                        <li>Another residual connection + LayerNorm</li>
+                    </ol>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+graph TB
+    X["Input X"] --> A["Multi-Head<br/>Attention"]
+    X --> R1["Add (Residual)"]
+    A --> R1
+    R1 --> N1["LayerNorm"]
+    N1 --> F["Feed-Forward<br/>Network"]
+    N1 --> R2["Add (Residual)"]
+    F --> R2
+    R2 --> N2["LayerNorm"]
+    N2 --> O["Output"]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code: Complete Transformer Block</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <pre><code class="language-python">class TransformerBlock(nn.Module):
+    """
+    Complete Transformer block with attention, FFN, and residual connections.
+    """
+    def __init__(self, d_model, num_heads, d_ff=None, dropout=0.1):
+        super().__init__()
+        d_ff = d_ff or 4 * d_model  # Standard: FFN is 4x model dim
+
+        # Multi-head attention
+        self.attention = MultiHeadAttention(d_model, num_heads, dropout)
+
+        # Feed-forward network
+        self.ffn = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.GELU(),  # GPT uses GELU, original Transformer used ReLU
+            nn.Dropout(dropout),
+            nn.Linear(d_ff, d_model),
+            nn.Dropout(dropout)
+        )
+
+        # Layer normalization
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+
+        # Dropout for residual
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x, mask=None):
+        """
+        Args:
+            x: (batch_size, seq_len, d_model)
+            mask: attention mask
+
+        Returns:
+            output: (batch_size, seq_len, d_model)
+        """
+        # Pre-norm variant (used in GPT-2 and later)
+        # Self-attention with residual
+        attn_out = self.attention(self.norm1(x), mask=mask)
+        x = x + self.dropout(attn_out)
+
+        # FFN with residual
+        ffn_out = self.ffn(self.norm2(x))
+        x = x + ffn_out
+
+        return x
+
+
+class TransformerEncoder(nn.Module):
+    """
+    Stack of Transformer blocks with embedding and positional encoding.
+    """
+    def __init__(self, vocab_size, d_model, num_heads, num_layers,
+                 max_len=512, d_ff=None, dropout=0.1):
+        super().__init__()
+
+        # Token embedding
+        self.token_embedding = nn.Embedding(vocab_size, d_model)
+
+        # Positional encoding
+        self.position_encoding = LearnedPositionalEncoding(max_len, d_model)
+
+        # Transformer blocks
+        self.layers = nn.ModuleList([
+            TransformerBlock(d_model, num_heads, d_ff, dropout)
+            for _ in range(num_layers)
+        ])
+
+        # Final layer norm
+        self.final_norm = nn.LayerNorm(d_model)
+
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x, mask=None):
+        """
+        Args:
+            x: (batch_size, seq_len) - token IDs
+            mask: attention mask
+
+        Returns:
+            output: (batch_size, seq_len, d_model)
+        """
+        # Embed tokens
+        x = self.token_embedding(x)
+
+        # Add positional encoding
+        x = self.position_encoding(x)
+        x = self.dropout(x)
+
+        # Pass through transformer blocks
+        for layer in self.layers:
+            x = layer(x, mask)
+
+        # Final normalization
+        x = self.final_norm(x)
+
+        return x
+
+
+# Create a small model
+model = TransformerEncoder(
+    vocab_size=10000,
+    d_model=256,
+    num_heads=8,
+    num_layers=6,
+    max_len=512,
+    dropout=0.1
+)
+
+# Count parameters
+total_params = sum(p.numel() for p in model.parameters())
+print(f"Total parameters: {total_params:,}")  # ~3.4M for this small model
+
+# Forward pass
+batch_size = 4
+seq_len = 128
+tokens = torch.randint(0, 10000, (batch_size, seq_len))
+
+# Create causal mask
+causal_mask = torch.tril(torch.ones(seq_len, seq_len))
+causal_mask = causal_mask.unsqueeze(0).unsqueeze(0)  # (1, 1, seq, seq)
+
+output = model(tokens, mask=causal_mask)
+print(f"Output shape: {output.shape}")  # (4, 128, 256)</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- COMMON MISTAKES -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Common Mistakes</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>What Engineers Misunderstand</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="mistake-box">
+                        <h4>Mistake 1: Forgetting to scale attention scores</h4>
+                        <p>Without dividing by sqrt(d_k), attention becomes too "peaky" and gradients vanish for non-max positions. Always scale!</p>
+                    </div>
+
+                    <div class="mistake-box">
+                        <h4>Mistake 2: Wrong mask dimensions</h4>
+                        <p>Mask shape must broadcast correctly. For multi-head attention, mask is typically (batch, 1, seq, seq) or (batch, 1, 1, seq).</p>
+                    </div>
+
+                    <div class="mistake-box">
+                        <h4>Mistake 3: Confusing pre-norm vs post-norm</h4>
+                        <p>Original Transformer: LayerNorm AFTER attention (post-norm). GPT-2+: LayerNorm BEFORE attention (pre-norm). Pre-norm trains more stably.</p>
+                    </div>
+
+                    <div class="mistake-box">
+                        <h4>Mistake 4: Not using residual connections</h4>
+                        <p>Deep transformers (12+ layers) won't train without residual connections. The gradient signal needs a "highway" through the network.</p>
+                    </div>
+
+                    <div class="mistake-box">
+                        <h4>Mistake 5: Thinking Q=K=V always</h4>
+                        <p>In self-attention, Q, K, V come from the same source but through DIFFERENT projections. They're not the same!</p>
+                    </div>
+
+                    <div class="mistake-box">
+                        <h4>Mistake 6: Ignoring memory for long sequences</h4>
+                        <p>Attention is O(n^2) in memory. A 32K context with 4K hidden dim uses ~4GB just for attention scores. This is why context windows were limited.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- ACTIVE RECALL -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Active Recall Questions</h2>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q1:</strong> Why do we need separate Q, K, V projections instead of using embeddings directly?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> Different roles require different representations. Q represents "what I'm looking for", K represents "what I contain/how I should be indexed", and V represents "what content I provide". Separate projections let the model learn specialized representations for each role, enabling asymmetric attention (A attending to B differently than B to A).
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q2:</strong> What's the difference between self-attention and cross-attention?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> In self-attention, Q, K, and V all come from the same sequence - tokens attend to each other within one sequence. In cross-attention, Q comes from one sequence (decoder) while K and V come from another (encoder). Cross-attention is used when one sequence needs to "look at" another, like in translation or vision-language models.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q3:</strong> Explain why we divide by sqrt(d_k) in scaled dot-product attention.
+                <div class="recall-answer">
+                    <strong>Answer:</strong> Dot products have variance proportional to d_k. Without scaling, large dot products cause softmax to saturate (nearly all weight on one position), leading to vanishing gradients for other positions. Dividing by sqrt(d_k) normalizes variance to approximately 1, keeping softmax in a regime with meaningful gradients.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q4:</strong> Why use multiple attention heads instead of one large head?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> Multiple heads allow the model to attend to different aspects simultaneously (syntax, semantics, position, coreference). Each head operates in a lower-dimensional subspace, enabling specialization. The total computation is similar to one large head, but the representational power is greater because each head can learn different patterns.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q5:</strong> Why do Transformers need positional encoding?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> Self-attention is permutation-invariant - it treats input as a set, not a sequence. Without positional information, "dog bites man" and "man bites dog" would produce the same output (just permuted). Positional encoding adds unique position signatures so the model can distinguish positions and learn position-dependent patterns.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q6:</strong> What are the tradeoffs between sinusoidal and learned positional encodings?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> Sinusoidal: no parameters, can theoretically extrapolate to longer sequences, good performance. Learned: more parameters (max_len * d_model), cannot extrapolate beyond training length, but often slightly better empirical performance. Modern approaches like RoPE and ALiBi offer better length extrapolation while maintaining good performance.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q7:</strong> What is causal masking and when is it used?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> Causal masking prevents tokens from attending to future positions, enforcing that position i can only see positions 0 to i. It's used in decoder-only models (GPT) for autoregressive generation - when generating token i, the model shouldn't "cheat" by seeing tokens i+1, i+2, etc. Implemented by setting future positions to -inf before softmax.
+                </div>
+            </div>
+
+            <div class="recall-question" onclick="this.classList.toggle('open')">
+                <strong>Q8:</strong> What's the purpose of the feed-forward network in each Transformer block?
+                <div class="recall-answer">
+                    <strong>Answer:</strong> The FFN processes each position independently, providing per-token transformation and non-linearity. Attention mixes information across positions but is essentially linear in values. The FFN adds depth and non-linear processing capacity. It's typically 4x the model dimension and can be thought of as "processing the gathered information."
+                </div>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- MINI PROJECT -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">Mini Project: Visualize Attention Patterns</h2>
+
+            <div class="card">
+                <h4>Project Goal</h4>
+                <p>Build an attention visualization tool that shows what different heads are attending to in a pre-trained model.</p>
+
+                <h4>Requirements</h4>
+                <ol>
+                    <li>Load a pre-trained model (GPT-2 or BERT) using Hugging Face</li>
+                    <li>Extract attention weights from all layers and heads</li>
+                    <li>Create visualizations showing attention patterns</li>
+                    <li>Identify heads with interpretable behavior (positional, syntactic, etc.)</li>
+                    <li>Compare patterns for different input sentences</li>
+                </ol>
+
+                <h4>Starter Code</h4>
+                <div class="code-block">
+                    <pre><code class="language-python">from transformers import GPT2Model, GPT2Tokenizer
+import torch
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load model
+tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+model = GPT2Model.from_pretrained('gpt2', output_attentions=True)
+model.eval()
+
+# Tokenize input
+text = "The cat sat on the mat because it was tired."
+inputs = tokenizer(text, return_tensors='pt')
+tokens = tokenizer.convert_ids_to_tokens(inputs['input_ids'][0])
+
+# Get attention weights
+with torch.no_grad():
+    outputs = model(**inputs)
+
+# outputs.attentions is a tuple of (num_layers,) tensors
+# Each tensor: (batch, num_heads, seq_len, seq_len)
+attentions = outputs.attentions
+
+print(f"Number of layers: {len(attentions)}")
+print(f"Attention shape per layer: {attentions[0].shape}")
+
+# YOUR TASK:
+# 1. Create heatmap visualizations for different heads
+# 2. Find heads that attend to previous token (positional)
+# 3. Find heads that might be doing coreference ("it" -> "cat")
+# 4. Analyze how patterns change across layers</code></pre>
+                </div>
+
+                <h4>Expected Outcomes</h4>
+                <ul>
+                    <li>Heatmap visualizations of attention patterns</li>
+                    <li>Identification of at least 3 different head behaviors</li>
+                    <li>Understanding of how attention changes through layers</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- HOW THIS CONNECTS FORWARD -->
+            <!-- ============================================ -->
+            <h2 class="mt-4">How This Connects Forward</h2>
+
+            <div class="card">
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph LR
+    A["Module 4<br/>QKV & Multi-Head<br/>Attention"] --> B["Module 5<br/>Build GPT<br/>from Scratch"]
+    B --> C["Module 6<br/>Training at Scale"]
+    B --> D["Module 7<br/>Optimization<br/>(KV Caching)"]
+
+    A --> E["Module 13<br/>Thinking Models<br/>(CoT uses attention)"]
+
+    style A fill:#8b5cf6,color:#fff
+    style B fill:#3b82f6,color:#fff
+    style C fill:#22c55e,color:#fff
+    style D fill:#f97316,color:#fff
+    style E fill:#ec4899,color:#fff
+                    </div>
+                </div>
+
+                <h4>Building on These Concepts</h4>
+                <ul>
+                    <li><strong>Module 5:</strong> We'll combine attention blocks to build a complete GPT model with causal masking</li>
+                    <li><strong>Module 6:</strong> Understanding attention complexity is crucial for distributed training strategies</li>
+                    <li><strong>Module 7:</strong> KV caching for inference optimization relies on understanding KV computation</li>
+                    <li><strong>Module 13:</strong> Chain-of-thought reasoning works through attention - the model attends to its own reasoning</li>
+                </ul>
+            </div>
+
+            <!-- ============================================ -->
+            <!-- CHECKPOINT SUMMARY -->
+            <!-- ============================================ -->
+            <div class="checkpoint-summary">
+                <h2>Checkpoint Summary</h2>
+
+                <h4>Core Concepts Mastered</h4>
+                <ul>
+                    <li><strong>QKV Projections:</strong> Separate transformations for queries (what to find), keys (how to be indexed), and values (what to provide)</li>
+                    <li><strong>Self-Attention:</strong> Tokens attending to each other within the same sequence</li>
+                    <li><strong>Cross-Attention:</strong> One sequence attending to another (decoder to encoder)</li>
+                    <li><strong>Scaled Dot-Product:</strong> Attention(Q,K,V) = softmax(QK^T/sqrt(d_k))V</li>
+                    <li><strong>Multi-Head Attention:</strong> Multiple parallel attention mechanisms for different aspects</li>
+                    <li><strong>Positional Encoding:</strong> Adding position information to permutation-invariant attention</li>
+                </ul>
+
+                <h4>Key Implementation Details</h4>
+                <ul>
+                    <li>Always scale by sqrt(d_k) to prevent softmax saturation</li>
+                    <li>Causal mask: lower triangular matrix, -inf for future positions</li>
+                    <li>Pre-norm (GPT-2+) vs Post-norm (original Transformer)</li>
+                    <li>FFN typically 4x model dimension</li>
+                    <li>Residual connections are essential for deep networks</li>
+                </ul>
+
+                <h4>Production Knowledge</h4>
+                <ul>
+                    <li>Attention is O(n^2) in both compute and memory</li>
+                    <li>Different heads learn specialized roles (positional, syntactic, semantic)</li>
+                    <li>RoPE and ALiBi provide better length extrapolation than learned positions</li>
+                    <li>Many attention heads can be pruned without quality loss</li>
+                </ul>
+
+                <h4>Ready for Module 5</h4>
+                <p>You now have all the pieces. In Module 5, we'll assemble them into a complete GPT model, implement the full training loop, and generate text!</p>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex flex-between mt-4">
+                <a href="module-03.html" class="btn btn-secondary">&larr; Module 3: LLM Basics</a>
+                <a href="module-05.html" class="btn btn-primary">Module 5: LLM Coding: GPT &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        // Sidebar toggle for mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('open');
+                    sidebarOverlay.classList.toggle('open');
+                });
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('open');
+                });
+            }
+
+            // Collapsible sections
+            document.querySelectorAll('.collapsible-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    header.parentElement.classList.toggle('open');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 12: AI Engineering - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        .decision-matrix {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            color: white;
+        }
+        .decision-node {
+            background: rgba(255,255,255,0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .decision-node:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        .decision-node.prompt { border: 2px solid #48bb78; }
+        .decision-node.rag { border: 2px solid #4facfe; }
+        .decision-node.finetune { border: 2px solid #f093fb; }
+        .cost-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+        .cost-bar-fill {
+            height: 20px;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .eval-score {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        .eval-score.high { background: #d1fae5; color: #065f46; }
+        .eval-score.medium { background: #fef3c7; color: #92400e; }
+        .eval-score.low { background: #fee2e2; color: #991b1b; }
+        .tradeoff-card {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.1), rgba(0, 242, 254, 0.1));
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 4px solid #4facfe;
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+        .recall-question {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 0.75rem 0;
+        }
+        .recall-question summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #8b5cf6;
+        }
+        .recall-question .answer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        .workflow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 0.5rem;
+            margin: 0.5rem 0;
+        }
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+        .comparison-table th {
+            background: var(--border-color);
+        }
+        .comparison-table tr:nth-child(even) {
+            background: rgba(0,0,0,0.02);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Setup + Core Math
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Terminology + MNIST
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">LLM Deep Dive</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>LLM Basics
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Attention Mechanisms
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>LLM Coding: GPT
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Training at Scale
+                    </a>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Optimization Hacks
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">RAG &amp; Retrieval</div>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>RAG Fundamentals
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>RAG Implementation
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Agents &amp; Systems</div>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>AI Agents
+                    </a>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Context Engineering
+                    </a>
+                    <a href="module-12.html" class="sidebar-link active" data-module="12">
+                        <span class="sidebar-link-number">12</span>AI Engineering
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-13.html" class="sidebar-link" data-module="13">
+                        <span class="sidebar-link-number">13</span>Thinking Models
+                    </a>
+                    <a href="module-14.html" class="sidebar-link" data-module="14">
+                        <span class="sidebar-link-number">14</span>Multi-modal Models
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Capstone &amp; Career</div>
+                    <a href="module-15.html" class="sidebar-link" data-module="15">
+                        <span class="sidebar-link-number">15</span>Capstone Project
+                    </a>
+                    <a href="module-16.html" class="sidebar-link" data-module="16">
+                        <span class="sidebar-link-number">16</span>Career Goals
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 12: AI Engineering</h1>
+            <p class="text-muted">Evals, Tradeoffs, and the Prompt vs RAG vs Fine-tuning Decision Framework</p>
+
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Master the AI engineering decision framework</li>
+                    <li>Know when to prompt, when to RAG, when to fine-tune</li>
+                    <li>Build comprehensive evaluation systems</li>
+                    <li>Implement LLM-as-judge evaluation patterns</li>
+                    <li>Design A/B testing for AI features</li>
+                    <li>Manage prompts at scale with version control</li>
+                    <li>Understand LoRA fine-tuning workflow</li>
+                </ul>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 1: THE AI ENGINEERING DECISION FRAMEWORK -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">1. The AI Engineering Decision Framework</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1)); border-left: 4px solid #48bb78;">
+                        <h4>The Restaurant Kitchen Analogy</h4>
+                        <p>Think of improving AI systems like improving a restaurant:</p>
+                        <ul>
+                            <li><strong>Prompt Engineering</strong> = Better recipe instructions (same chef, same ingredients, clearer directions)</li>
+                            <li><strong>RAG</strong> = Access to a recipe book (chef can look up information when needed)</li>
+                            <li><strong>Fine-tuning</strong> = Training a new specialized chef (expensive, takes time, but masters specific cuisine)</li>
+                        </ul>
+                        <p>You don't hire a new chef (fine-tune) when you just need clearer instructions (prompts)!</p>
+                    </div>
+
+                    <div class="card mt-2" style="background: linear-gradient(135deg, rgba(79, 172, 254, 0.1), rgba(0, 242, 254, 0.1)); border-left: 4px solid #4facfe;">
+                        <h4>The Investment Portfolio Analogy</h4>
+                        <p>Each approach has different risk/reward profiles:</p>
+                        <ul>
+                            <li><strong>Prompting</strong> = Cash (liquid, low risk, low effort, immediate results)</li>
+                            <li><strong>RAG</strong> = Bonds (moderate effort, good returns, reliable)</li>
+                            <li><strong>Fine-tuning</strong> = Stocks (high effort, potentially high returns, more risk)</li>
+                        </ul>
+                        <p>Smart AI engineers diversify their approach based on the problem!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: The Decision Tree</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TD
+    Start[Need to Improve AI System] --> Q1{Does the model have<br/>the knowledge?}
+
+    Q1 -->|No, needs external data| RAG[Use RAG]
+    Q1 -->|Yes, but wrong format/style| Q2{Is it a formatting/<br/>style issue?}
+
+    Q2 -->|Yes| Prompt[Better Prompting]
+    Q2 -->|No, needs behavior change| Q3{Do you have 1000+<br/>quality examples?}
+
+    Q3 -->|No| Prompt2[Better Prompting + Few-shot]
+    Q3 -->|Yes| Q4{Is latency critical<br/>and budget available?}
+
+    Q4 -->|Yes| FineTune[Fine-tune]
+    Q4 -->|No| RAG2[RAG or Better Prompting]
+
+    style Start fill:#667eea
+    style Prompt fill:#48bb78
+    style Prompt2 fill:#48bb78
+    style RAG fill:#4facfe
+    style RAG2 fill:#4facfe
+    style FineTune fill:#f093fb
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">When to Use Each Approach</h4>
+
+                    <div class="decision-matrix">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div class="decision-node prompt">
+                                <h4>Prompt Engineering</h4>
+                                <p>Best when:</p>
+                                <ul style="text-align: left; font-size: 0.9rem;">
+                                    <li>Model knows the information</li>
+                                    <li>Need different output format</li>
+                                    <li>Quick iteration needed</li>
+                                    <li>Limited examples available</li>
+                                </ul>
+                                <div class="cost-bar">
+                                    <span>Cost:</span>
+                                    <div style="flex:1; height:8px; background:#333; border-radius:4px;">
+                                        <div class="cost-bar-fill" style="width:20%; background:#48bb78;"></div>
+                                    </div>
+                                    <span>Low</span>
+                                </div>
+                            </div>
+
+                            <div class="decision-node rag">
+                                <h4>RAG (Retrieval)</h4>
+                                <p>Best when:</p>
+                                <ul style="text-align: left; font-size: 0.9rem;">
+                                    <li>Need external/updated data</li>
+                                    <li>Domain-specific knowledge</li>
+                                    <li>Data changes frequently</li>
+                                    <li>Need citations/sources</li>
+                                </ul>
+                                <div class="cost-bar">
+                                    <span>Cost:</span>
+                                    <div style="flex:1; height:8px; background:#333; border-radius:4px;">
+                                        <div class="cost-bar-fill" style="width:50%; background:#4facfe;"></div>
+                                    </div>
+                                    <span>Medium</span>
+                                </div>
+                            </div>
+
+                            <div class="decision-node finetune">
+                                <h4>Fine-tuning</h4>
+                                <p>Best when:</p>
+                                <ul style="text-align: left; font-size: 0.9rem;">
+                                    <li>Specific style/behavior needed</li>
+                                    <li>1000+ quality examples</li>
+                                    <li>Latency is critical</li>
+                                    <li>Reducing prompt size matters</li>
+                                </ul>
+                                <div class="cost-bar">
+                                    <span>Cost:</span>
+                                    <div style="flex:1; height:8px; background:#333; border-radius:4px;">
+                                        <div class="cost-bar-fill" style="width:90%; background:#f093fb;"></div>
+                                    </div>
+                                    <span>High</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Detailed Comparison</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Factor</th>
+                                <th>Prompting</th>
+                                <th>RAG</th>
+                                <th>Fine-tuning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Setup Time</strong></td>
+                                <td>Minutes-Hours</td>
+                                <td>Days-Weeks</td>
+                                <td>Weeks-Months</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Data Required</strong></td>
+                                <td>0-10 examples</td>
+                                <td>Documents/KB</td>
+                                <td>1000+ examples</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Iteration Speed</strong></td>
+                                <td>Instant</td>
+                                <td>Hours</td>
+                                <td>Days</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Latency Impact</strong></td>
+                                <td>None</td>
+                                <td>+100-500ms</td>
+                                <td>Can reduce</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cost Structure</strong></td>
+                                <td>Per-token</td>
+                                <td>Storage + retrieval + per-token</td>
+                                <td>Training + inference</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Knowledge Update</strong></td>
+                                <td>Edit prompt</td>
+                                <td>Update index</td>
+                                <td>Retrain model</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Behavior Change</strong></td>
+                                <td>Limited</td>
+                                <td>Limited</td>
+                                <td>Significant</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Decision Framework Implementation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+<code>from dataclasses import dataclass
+from enum import Enum
+from typing import Optional, List
+
+class ApproachRecommendation(Enum):
+    PROMPTING = "prompting"
+    FEW_SHOT = "few_shot"
+    RAG = "rag"
+    FINE_TUNING = "fine_tuning"
+    HYBRID_RAG_PROMPT = "hybrid_rag_prompt"
+    HYBRID_RAG_FINETUNE = "hybrid_rag_finetune"
+
+@dataclass
+class ProblemCharacteristics:
+    """Characterize your AI problem to get approach recommendation."""
+
+    # Knowledge requirements
+    needs_external_data: bool = False
+    data_changes_frequently: bool = False
+    needs_citations: bool = False
+
+    # Data availability
+    num_examples_available: int = 0
+    examples_are_high_quality: bool = False
+
+    # Performance requirements
+    latency_critical: bool = False
+    max_latency_ms: int = 1000
+
+    # Behavior requirements
+    needs_specific_style: bool = False
+    needs_specific_format: bool = False
+    current_accuracy_acceptable: bool = True
+
+    # Resource constraints
+    has_ml_expertise: bool = False
+    has_compute_budget: bool = False
+    time_to_production_days: int = 30
+
+
+class AIEngineeringAdvisor:
+    """
+    Recommends the best approach for improving AI systems.
+    Based on real-world engineering tradeoffs.
+    """
+
+    def recommend(self, problem: ProblemCharacteristics) -> dict:
+        """Get recommended approach with reasoning."""
+
+        recommendations = []
+        reasoning = []
+
+        # Check if RAG is needed
+        if problem.needs_external_data or problem.data_changes_frequently:
+            recommendations.append(ApproachRecommendation.RAG)
+            reasoning.append(
+                "RAG recommended: External/changing data requires retrieval"
+            )
+
+        # Check if fine-tuning is viable
+        finetune_viable = (
+            problem.num_examples_available >= 1000 and
+            problem.examples_are_high_quality and
+            problem.has_ml_expertise and
+            problem.has_compute_budget and
+            problem.time_to_production_days >= 14
+        )
+
+        if finetune_viable and problem.needs_specific_style:
+            recommendations.append(ApproachRecommendation.FINE_TUNING)
+            reasoning.append(
+                "Fine-tuning viable: Sufficient data, expertise, and budget available"
+            )
+
+        # Check prompting options
+        if problem.needs_specific_format and not problem.needs_specific_style:
+            recommendations.append(ApproachRecommendation.PROMPTING)
+            reasoning.append(
+                "Prompting recommended: Format issues can be solved with better instructions"
+            )
+
+        if 5 <= problem.num_examples_available < 1000:
+            recommendations.append(ApproachRecommendation.FEW_SHOT)
+            reasoning.append(
+                "Few-shot recommended: Examples available but not enough for fine-tuning"
+            )
+
+        # Handle latency constraints
+        if problem.latency_critical and problem.max_latency_ms < 500:
+            if ApproachRecommendation.RAG in recommendations:
+                reasoning.append(
+                    "Warning: RAG adds latency. Consider caching or pre-computation"
+                )
+            if finetune_viable:
+                reasoning.append(
+                    "Fine-tuning can reduce latency by removing few-shot examples"
+                )
+
+        # Default recommendation
+        if not recommendations:
+            recommendations.append(ApproachRecommendation.PROMPTING)
+            reasoning.append(
+                "Default: Start with prompting - lowest effort, fastest iteration"
+            )
+
+        # Determine primary recommendation
+        primary = self._prioritize_recommendations(recommendations, problem)
+
+        return {
+            "primary_recommendation": primary.value,
+            "all_recommendations": [r.value for r in recommendations],
+            "reasoning": reasoning,
+            "next_steps": self._get_next_steps(primary),
+            "estimated_timeline": self._estimate_timeline(primary, problem)
+        }
+
+    def _prioritize_recommendations(
+        self,
+        recommendations: List[ApproachRecommendation],
+        problem: ProblemCharacteristics
+    ) -> ApproachRecommendation:
+        """Prioritize based on effort vs impact."""
+
+        # Priority order (generally start simple)
+        priority = [
+            ApproachRecommendation.PROMPTING,
+            ApproachRecommendation.FEW_SHOT,
+            ApproachRecommendation.RAG,
+            ApproachRecommendation.FINE_TUNING,
+        ]
+
+        # If accuracy is unacceptable and fine-tuning is viable, prioritize it
+        if (not problem.current_accuracy_acceptable and
+            ApproachRecommendation.FINE_TUNING in recommendations):
+            return ApproachRecommendation.FINE_TUNING
+
+        # If external data needed, RAG takes priority
+        if problem.needs_external_data:
+            return ApproachRecommendation.RAG
+
+        # Otherwise, follow priority order
+        for p in priority:
+            if p in recommendations:
+                return p
+
+        return ApproachRecommendation.PROMPTING
+
+    def _get_next_steps(self, approach: ApproachRecommendation) -> List[str]:
+        steps = {
+            ApproachRecommendation.PROMPTING: [
+                "1. Document current prompt and failure cases",
+                "2. Add clear instructions and output format",
+                "3. Test with diverse inputs",
+                "4. Iterate based on failure analysis"
+            ],
+            ApproachRecommendation.FEW_SHOT: [
+                "1. Curate 5-10 high-quality examples",
+                "2. Ensure examples cover edge cases",
+                "3. Format examples consistently",
+                "4. Test example ordering impact"
+            ],
+            ApproachRecommendation.RAG: [
+                "1. Inventory your data sources",
+                "2. Choose embedding model and vector store",
+                "3. Implement chunking strategy",
+                "4. Build retrieval pipeline",
+                "5. Evaluate retrieval quality"
+            ],
+            ApproachRecommendation.FINE_TUNING: [
+                "1. Prepare training dataset (1000+ examples)",
+                "2. Split into train/val/test sets",
+                "3. Choose base model and method (LoRA vs full)",
+                "4. Set up evaluation metrics",
+                "5. Train and evaluate iteratively"
+            ]
+        }
+        return steps.get(approach, [])
+
+    def _estimate_timeline(
+        self,
+        approach: ApproachRecommendation,
+        problem: ProblemCharacteristics
+    ) -> str:
+        timelines = {
+            ApproachRecommendation.PROMPTING: "1-3 days",
+            ApproachRecommendation.FEW_SHOT: "3-7 days",
+            ApproachRecommendation.RAG: "1-3 weeks",
+            ApproachRecommendation.FINE_TUNING: "2-6 weeks"
+        }
+        return timelines.get(approach, "Unknown")
+
+
+# Usage Example
+advisor = AIEngineeringAdvisor()
+
+# Example 1: Customer support bot needs company-specific info
+problem1 = ProblemCharacteristics(
+    needs_external_data=True,
+    data_changes_frequently=True,
+    needs_citations=True,
+    num_examples_available=50
+)
+result1 = advisor.recommend(problem1)
+print("Customer Support Bot:", result1["primary_recommendation"])
+# Output: "rag"
+
+# Example 2: Code review tool needs specific style
+problem2 = ProblemCharacteristics(
+    needs_specific_style=True,
+    num_examples_available=5000,
+    examples_are_high_quality=True,
+    has_ml_expertise=True,
+    has_compute_budget=True,
+    current_accuracy_acceptable=False
+)
+result2 = advisor.recommend(problem2)
+print("Code Review Tool:", result2["primary_recommendation"])
+# Output: "fine_tuning"
+
+# Example 3: Simple formatting task
+problem3 = ProblemCharacteristics(
+    needs_specific_format=True,
+    num_examples_available=3
+)
+result3 = advisor.recommend(problem3)
+print("Formatting Task:", result3["primary_recommendation"])
+# Output: "prompting"</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 2: EVALUATION FUNDAMENTALS -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">2. Evaluation Fundamentals</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(139, 92, 246, 0.1)); border-left: 4px solid #ec4899;">
+                        <h4>The Quality Control Factory Analogy</h4>
+                        <p>LLM evaluation is like quality control in manufacturing:</p>
+                        <ul>
+                            <li><strong>Unit Tests</strong> = Spot-checking individual products (specific inputs)</li>
+                            <li><strong>Statistical Sampling</strong> = Testing random batches (eval datasets)</li>
+                            <li><strong>Expert Inspection</strong> = Human evaluators checking quality</li>
+                            <li><strong>Automated QC</strong> = LLM-as-judge (machines checking machines)</li>
+                            <li><strong>Customer Feedback</strong> = Production monitoring and user ratings</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts: What to Measure</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Evaluation Hierarchy</h4>
+
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">Accuracy</div>
+                            <div class="metric-label">Is the answer correct?</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">Relevance</div>
+                            <div class="metric-label">Does it answer the question?</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">Coherence</div>
+                            <div class="metric-label">Is it well-structured?</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">Harmlessness</div>
+                            <div class="metric-label">Is it safe?</div>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Evaluation Types</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Method</th>
+                                <th>Best For</th>
+                                <th>Limitations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Exact Match</strong></td>
+                                <td>output == expected</td>
+                                <td>Classification, extraction</td>
+                                <td>Too strict for generation</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Contains/Regex</strong></td>
+                                <td>Pattern matching</td>
+                                <td>Required elements</td>
+                                <td>Misses semantic equivalence</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Semantic Similarity</strong></td>
+                                <td>Embedding cosine sim</td>
+                                <td>Meaning preservation</td>
+                                <td>Doesn't catch errors</td>
+                            </tr>
+                            <tr>
+                                <td><strong>LLM-as-Judge</strong></td>
+                                <td>Another LLM evaluates</td>
+                                <td>Complex quality assessment</td>
+                                <td>Expensive, potential bias</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Human Evaluation</strong></td>
+                                <td>Human raters</td>
+                                <td>Ground truth, edge cases</td>
+                                <td>Slow, expensive, inconsistent</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4 class="mt-3">Key Metrics by Task Type</h4>
+                    <div class="card">
+                        <h5>Classification/Extraction</h5>
+                        <ul>
+                            <li><strong>Accuracy:</strong> % correct predictions</li>
+                            <li><strong>Precision/Recall/F1:</strong> For imbalanced classes</li>
+                            <li><strong>Confusion Matrix:</strong> Error analysis</li>
+                        </ul>
+                    </div>
+
+                    <div class="card mt-2">
+                        <h5>Text Generation</h5>
+                        <ul>
+                            <li><strong>BLEU/ROUGE:</strong> N-gram overlap with reference</li>
+                            <li><strong>BERTScore:</strong> Semantic similarity</li>
+                            <li><strong>Perplexity:</strong> Model confidence</li>
+                            <li><strong>Human preference:</strong> A/B comparison</li>
+                        </ul>
+                    </div>
+
+                    <div class="card mt-2">
+                        <h5>RAG Systems</h5>
+                        <ul>
+                            <li><strong>Retrieval precision:</strong> % retrieved docs relevant</li>
+                            <li><strong>Answer correctness:</strong> Is answer factually correct?</li>
+                            <li><strong>Faithfulness:</strong> Does answer match retrieved context?</li>
+                            <li><strong>Answer relevance:</strong> Does it address the question?</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Code Walkthrough: Evaluation System</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+<code>from dataclasses import dataclass, field
+from typing import List, Dict, Callable, Any, Optional
+from enum import Enum
+import json
+import numpy as np
+from openai import OpenAI
+from sentence_transformers import SentenceTransformer
+
+class EvalMetricType(Enum):
+    EXACT_MATCH = "exact_match"
+    CONTAINS = "contains"
+    SEMANTIC_SIMILARITY = "semantic_similarity"
+    LLM_JUDGE = "llm_judge"
+    CUSTOM = "custom"
+
+@dataclass
+class EvalExample:
+    """A single evaluation example."""
+    input: str
+    expected_output: str
+    metadata: dict = field(default_factory=dict)
+
+@dataclass
+class EvalResult:
+    """Result of evaluating a single example."""
+    input: str
+    expected: str
+    actual: str
+    score: float
+    passed: bool
+    metric_details: dict = field(default_factory=dict)
+
+class LLMEvaluator:
+    """
+    Comprehensive evaluation system for LLM outputs.
+    Supports multiple evaluation strategies.
+    """
+
+    def __init__(self, openai_client: OpenAI = None):
+        self.client = openai_client or OpenAI()
+        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+
+    # ============================================
+    # BASIC METRICS
+    # ============================================
+
+    def exact_match(self, expected: str, actual: str) -> float:
+        """Exact string match (case-insensitive, stripped)."""
+        return 1.0 if expected.strip().lower() == actual.strip().lower() else 0.0
+
+    def contains_match(self, expected: str, actual: str,
+                       required_phrases: List[str] = None) -> float:
+        """Check if output contains required content."""
+        actual_lower = actual.lower()
+
+        if required_phrases:
+            matches = sum(1 for p in required_phrases if p.lower() in actual_lower)
+            return matches / len(required_phrases)
+
+        return 1.0 if expected.lower() in actual_lower else 0.0
+
+    def semantic_similarity(self, expected: str, actual: str) -> float:
+        """Embedding-based semantic similarity."""
+        embeddings = self.embedding_model.encode([expected, actual])
+        similarity = np.dot(embeddings[0], embeddings[1]) / (
+            np.linalg.norm(embeddings[0]) * np.linalg.norm(embeddings[1])
+        )
+        return float(similarity)
+
+    # ============================================
+    # LLM-AS-JUDGE
+    # ============================================
+
+    def llm_judge(
+        self,
+        input_text: str,
+        expected: str,
+        actual: str,
+        criteria: str = "correctness and completeness"
+    ) -> Dict[str, Any]:
+        """
+        Use LLM to judge output quality.
+        Returns score and reasoning.
+        """
+        prompt = f"""You are evaluating an AI assistant's response.
+
+TASK INPUT:
+{input_text}
+
+EXPECTED OUTPUT:
+{expected}
+
+ACTUAL OUTPUT:
+{actual}
+
+EVALUATION CRITERIA: {criteria}
+
+Rate the actual output on a scale of 1-5:
+1 = Completely wrong or harmful
+2 = Mostly wrong with some correct elements
+3 = Partially correct but missing key information
+4 = Mostly correct with minor issues
+5 = Fully correct and complete
+
+Return JSON:
+{{"score": <1-5>, "reasoning": "<explanation>", "issues": ["<issue1>", "<issue2>"]}}"""
+
+        response = self.client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            temperature=0
+        )
+
+        try:
+            result = json.loads(response.choices[0].message.content)
+            return {
+                "score": result.get("score", 0) / 5.0,  # Normalize to 0-1
+                "raw_score": result.get("score", 0),
+                "reasoning": result.get("reasoning", ""),
+                "issues": result.get("issues", [])
+            }
+        except json.JSONDecodeError:
+            return {"score": 0, "reasoning": "Failed to parse judge response", "issues": []}
+
+    def pairwise_comparison(
+        self,
+        input_text: str,
+        output_a: str,
+        output_b: str,
+        criteria: str = "overall quality"
+    ) -> Dict[str, Any]:
+        """
+        Compare two outputs and determine which is better.
+        Useful for A/B testing and model comparison.
+        """
+        prompt = f"""Compare these two AI responses to the same input.
+
+INPUT:
+{input_text}
+
+RESPONSE A:
+{output_a}
+
+RESPONSE B:
+{output_b}
+
+EVALUATION CRITERIA: {criteria}
+
+Which response is better? Consider:
+- Correctness
+- Completeness
+- Clarity
+- Helpfulness
+
+Return JSON:
+{{"winner": "A" or "B" or "tie", "reasoning": "<explanation>", "a_score": <1-5>, "b_score": <1-5>}}"""
+
+        response = self.client.chat.completions.create(
+            model="gpt-4o",  # Use stronger model for comparison
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            temperature=0
+        )
+
+        try:
+            return json.loads(response.choices[0].message.content)
+        except json.JSONDecodeError:
+            return {"winner": "tie", "reasoning": "Failed to parse", "a_score": 3, "b_score": 3}
+
+    # ============================================
+    # RAG-SPECIFIC METRICS
+    # ============================================
+
+    def evaluate_rag_faithfulness(
+        self,
+        context: str,
+        answer: str
+    ) -> Dict[str, Any]:
+        """
+        Check if answer is faithful to retrieved context.
+        Detects hallucination.
+        """
+        prompt = f"""Evaluate if the answer is faithful to the provided context.
+The answer should only contain information that can be derived from the context.
+
+CONTEXT:
+{context}
+
+ANSWER:
+{answer}
+
+Check for:
+1. Claims not supported by context (hallucinations)
+2. Contradictions with context
+3. Appropriate uncertainty when context is insufficient
+
+Return JSON:
+{{"faithfulness_score": <0-1>, "hallucinations": ["<claim1>", ...], "reasoning": "<explanation>"}}"""
+
+        response = self.client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+            temperature=0
+        )
+
+        try:
+            return json.loads(response.choices[0].message.content)
+        except json.JSONDecodeError:
+            return {"faithfulness_score": 0, "hallucinations": [], "reasoning": "Parse error"}
+
+    # ============================================
+    # BATCH EVALUATION
+    # ============================================
+
+    def evaluate_batch(
+        self,
+        examples: List[EvalExample],
+        model_fn: Callable[[str], str],
+        metrics: List[EvalMetricType] = None
+    ) -> Dict[str, Any]:
+        """
+        Evaluate a batch of examples with multiple metrics.
+
+        Args:
+            examples: List of evaluation examples
+            model_fn: Function that takes input and returns model output
+            metrics: Which metrics to compute
+
+        Returns:
+            Aggregate scores and per-example results
+        """
+        metrics = metrics or [EvalMetricType.EXACT_MATCH, EvalMetricType.SEMANTIC_SIMILARITY]
+
+        results = []
+        for example in examples:
+            actual = model_fn(example.input)
+
+            scores = {}
+            for metric in metrics:
+                if metric == EvalMetricType.EXACT_MATCH:
+                    scores["exact_match"] = self.exact_match(example.expected_output, actual)
+                elif metric == EvalMetricType.SEMANTIC_SIMILARITY:
+                    scores["semantic_similarity"] = self.semantic_similarity(
+                        example.expected_output, actual
+                    )
+                elif metric == EvalMetricType.LLM_JUDGE:
+                    judge_result = self.llm_judge(
+                        example.input, example.expected_output, actual
+                    )
+                    scores["llm_judge"] = judge_result["score"]
+                    scores["llm_judge_details"] = judge_result
+
+            results.append(EvalResult(
+                input=example.input,
+                expected=example.expected_output,
+                actual=actual,
+                score=np.mean(list(scores.values())[:3]),  # Average main scores
+                passed=scores.get("exact_match", 0) == 1.0 or
+                       scores.get("semantic_similarity", 0) > 0.8,
+                metric_details=scores
+            ))
+
+        # Aggregate statistics
+        return {
+            "total_examples": len(results),
+            "pass_rate": sum(1 for r in results if r.passed) / len(results),
+            "average_scores": {
+                metric: np.mean([r.metric_details.get(metric, 0) for r in results])
+                for metric in ["exact_match", "semantic_similarity", "llm_judge"]
+                if any(metric in r.metric_details for r in results)
+            },
+            "results": results
+        }
+
+
+# Usage Example
+evaluator = LLMEvaluator()
+
+# Create evaluation dataset
+eval_examples = [
+    EvalExample(
+        input="What is the capital of France?",
+        expected_output="Paris",
+        metadata={"category": "geography"}
+    ),
+    EvalExample(
+        input="Explain photosynthesis in one sentence.",
+        expected_output="Photosynthesis is the process by which plants convert sunlight, water, and carbon dioxide into glucose and oxygen.",
+        metadata={"category": "science"}
+    )
+]
+
+# Define model function
+def my_model(input_text: str) -> str:
+    # Your model call here
+    return "Paris is the capital of France"
+
+# Run evaluation
+results = evaluator.evaluate_batch(
+    eval_examples,
+    my_model,
+    metrics=[EvalMetricType.EXACT_MATCH, EvalMetricType.SEMANTIC_SIMILARITY, EvalMetricType.LLM_JUDGE]
+)
+
+print(f"Pass rate: {results['pass_rate']:.2%}")
+print(f"Average scores: {results['average_scores']}")</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 3: BUILDING EVALUATION DATASETS -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">3. Building Evaluation Datasets</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Golden Dataset Structure</h4>
+                    <div class="code-block">
+<code># eval_dataset.json structure
+{
+    "metadata": {
+        "name": "Customer Support Eval v1.2",
+        "created": "2024-01-15",
+        "description": "Evaluation set for customer support bot",
+        "categories": ["refund", "technical", "billing", "general"]
+    },
+    "examples": [
+        {
+            "id": "eval_001",
+            "input": "I want to cancel my subscription",
+            "expected_output": "I can help you cancel your subscription...",
+            "category": "billing",
+            "difficulty": "easy",
+            "required_elements": ["acknowledge", "process explanation", "confirmation"],
+            "tags": ["cancellation", "subscription"]
+        },
+        {
+            "id": "eval_002",
+            "input": "Your app keeps crashing on my iPhone",
+            "expected_output": "I'm sorry to hear about the crashes...",
+            "category": "technical",
+            "difficulty": "medium",
+            "required_elements": ["empathy", "troubleshooting steps", "escalation option"],
+            "context": "User has iPhone 14, iOS 17.2"
+        }
+    ]
+}</code>
+                    </div>
+
+                    <h4 class="mt-3">Dataset Collection Strategies</h4>
+
+                    <div class="workflow-step">
+                        <div class="step-number">1</div>
+                        <div>
+                            <strong>Production Mining</strong>
+                            <p>Extract real user queries from production logs. Filter for diverse, representative examples. Get human annotations for expected outputs.</p>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="step-number">2</div>
+                        <div>
+                            <strong>Synthetic Generation</strong>
+                            <p>Use LLMs to generate variations of seed examples. Cover edge cases and rare scenarios. Human review for quality.</p>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="step-number">3</div>
+                        <div>
+                            <strong>Adversarial Examples</strong>
+                            <p>Red team your model. Find inputs that break it. Include jailbreak attempts and confusing queries.</p>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="step-number">4</div>
+                        <div>
+                            <strong>Expert Curation</strong>
+                            <p>Domain experts create high-quality golden examples. Focus on cases that matter most for business.</p>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Dataset Size Guidelines</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Purpose</th>
+                                <th>Minimum Size</th>
+                                <th>Recommended</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Quick sanity check</td>
+                                <td>10-20 examples</td>
+                                <td>50 examples</td>
+                            </tr>
+                            <tr>
+                                <td>Development evaluation</td>
+                                <td>50-100 examples</td>
+                                <td>200-500 examples</td>
+                            </tr>
+                            <tr>
+                                <td>Production evaluation</td>
+                                <td>200 examples</td>
+                                <td>500-1000 examples</td>
+                            </tr>
+                            <tr>
+                                <td>Fine-tuning validation</td>
+                                <td>500 examples</td>
+                                <td>1000+ examples</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 4: A/B TESTING AI FEATURES -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">4. A/B Testing AI Features</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Core Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Why A/B Test AI?</h4>
+                    <p>Offline evals don't tell the full story. A/B testing measures <strong>real user impact</strong>:</p>
+                    <ul>
+                        <li>User satisfaction and engagement</li>
+                        <li>Task completion rates</li>
+                        <li>Time to resolution</li>
+                        <li>Downstream business metrics</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph "A/B Test Setup"
+        Users[Users] -->|50%| A[Model A<br/>Current]
+        Users -->|50%| B[Model B<br/>New]
+    end
+
+    subgraph "Metrics"
+        A --> MA[Metrics A]
+        B --> MB[Metrics B]
+        MA --> Compare[Statistical<br/>Comparison]
+        MB --> Compare
+    end
+
+    Compare --> Decision{Significant<br/>Difference?}
+    Decision -->|Yes, B better| Ship[Ship Model B]
+    Decision -->|No| Continue[Continue Test]
+    Decision -->|Yes, A better| Keep[Keep Model A]
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">A/B Testing Implementation</h4>
+                    <div class="code-block">
+<code>from dataclasses import dataclass
+from typing import Dict, List, Optional
+import hashlib
+import random
+from datetime import datetime
+import scipy.stats as stats
+
+@dataclass
+class ABExperiment:
+    """Configuration for an A/B test."""
+    name: str
+    control_config: dict  # Model A configuration
+    treatment_config: dict  # Model B configuration
+    traffic_split: float = 0.5  # % of traffic to treatment
+    start_date: datetime = None
+    end_date: datetime = None
+
+@dataclass
+class ExperimentResult:
+    """Metrics for a single request in an experiment."""
+    experiment: str
+    variant: str  # "control" or "treatment"
+    user_id: str
+    timestamp: datetime
+    response_time_ms: float
+    user_rating: Optional[int] = None  # 1-5
+    task_completed: Optional[bool] = None
+    follow_up_needed: Optional[bool] = None
+
+class ABTestingFramework:
+    """
+    A/B testing framework for AI systems.
+    """
+
+    def __init__(self):
+        self.experiments: Dict[str, ABExperiment] = {}
+        self.results: List[ExperimentResult] = []
+
+    def create_experiment(self, experiment: ABExperiment):
+        """Register a new experiment."""
+        self.experiments[experiment.name] = experiment
+
+    def get_variant(self, experiment_name: str, user_id: str) -> str:
+        """
+        Deterministically assign user to variant.
+        Same user always gets same variant (sticky assignment).
+        """
+        experiment = self.experiments.get(experiment_name)
+        if not experiment:
+            return "control"
+
+        # Hash user_id + experiment name for deterministic assignment
+        hash_input = f"{user_id}:{experiment_name}"
+        hash_value = int(hashlib.md5(hash_input.encode()).hexdigest(), 16)
+        normalized = (hash_value % 1000) / 1000
+
+        return "treatment" if normalized < experiment.traffic_split else "control"
+
+    def get_model_config(self, experiment_name: str, user_id: str) -> dict:
+        """Get the model configuration for this user."""
+        experiment = self.experiments.get(experiment_name)
+        variant = self.get_variant(experiment_name, user_id)
+
+        if variant == "treatment":
+            return experiment.treatment_config
+        return experiment.control_config
+
+    def log_result(self, result: ExperimentResult):
+        """Log experiment result."""
+        self.results.append(result)
+
+    def analyze_experiment(self, experiment_name: str) -> Dict:
+        """
+        Analyze experiment results with statistical significance.
+        """
+        exp_results = [r for r in self.results if r.experiment == experiment_name]
+
+        control = [r for r in exp_results if r.variant == "control"]
+        treatment = [r for r in exp_results if r.variant == "treatment"]
+
+        if not control or not treatment:
+            return {"error": "Insufficient data"}
+
+        analysis = {
+            "control_n": len(control),
+            "treatment_n": len(treatment),
+            "metrics": {}
+        }
+
+        # Analyze response time
+        control_times = [r.response_time_ms for r in control]
+        treatment_times = [r.response_time_ms for r in treatment]
+
+        t_stat, p_value = stats.ttest_ind(control_times, treatment_times)
+        analysis["metrics"]["response_time"] = {
+            "control_mean": sum(control_times) / len(control_times),
+            "treatment_mean": sum(treatment_times) / len(treatment_times),
+            "p_value": p_value,
+            "significant": p_value < 0.05
+        }
+
+        # Analyze user ratings (if available)
+        control_ratings = [r.user_rating for r in control if r.user_rating]
+        treatment_ratings = [r.user_rating for r in treatment if r.user_rating]
+
+        if control_ratings and treatment_ratings:
+            t_stat, p_value = stats.ttest_ind(control_ratings, treatment_ratings)
+            analysis["metrics"]["user_rating"] = {
+                "control_mean": sum(control_ratings) / len(control_ratings),
+                "treatment_mean": sum(treatment_ratings) / len(treatment_ratings),
+                "p_value": p_value,
+                "significant": p_value < 0.05
+            }
+
+        # Analyze task completion rate
+        control_completed = [r.task_completed for r in control if r.task_completed is not None]
+        treatment_completed = [r.task_completed for r in treatment if r.task_completed is not None]
+
+        if control_completed and treatment_completed:
+            control_rate = sum(control_completed) / len(control_completed)
+            treatment_rate = sum(treatment_completed) / len(treatment_completed)
+
+            # Chi-square test for proportions
+            contingency = [
+                [sum(control_completed), len(control_completed) - sum(control_completed)],
+                [sum(treatment_completed), len(treatment_completed) - sum(treatment_completed)]
+            ]
+            chi2, p_value = stats.chi2_contingency(contingency)[:2]
+
+            analysis["metrics"]["task_completion"] = {
+                "control_rate": control_rate,
+                "treatment_rate": treatment_rate,
+                "lift": (treatment_rate - control_rate) / control_rate * 100,
+                "p_value": p_value,
+                "significant": p_value < 0.05
+            }
+
+        # Overall recommendation
+        significant_improvements = sum(
+            1 for m in analysis["metrics"].values()
+            if m.get("significant") and m.get("treatment_mean", m.get("treatment_rate", 0)) >
+               m.get("control_mean", m.get("control_rate", 0))
+        )
+        significant_regressions = sum(
+            1 for m in analysis["metrics"].values()
+            if m.get("significant") and m.get("treatment_mean", m.get("treatment_rate", 0)) <
+               m.get("control_mean", m.get("control_rate", 0))
+        )
+
+        if significant_regressions > 0:
+            analysis["recommendation"] = "DO NOT SHIP - significant regression detected"
+        elif significant_improvements > 0:
+            analysis["recommendation"] = "SHIP - significant improvement detected"
+        else:
+            analysis["recommendation"] = "CONTINUE TEST - no significant difference yet"
+
+        return analysis
+
+
+# Usage Example
+ab_framework = ABTestingFramework()
+
+# Create experiment
+ab_framework.create_experiment(ABExperiment(
+    name="new_prompt_v2",
+    control_config={
+        "model": "gpt-4o-mini",
+        "prompt_version": "v1.0",
+        "temperature": 0.7
+    },
+    treatment_config={
+        "model": "gpt-4o-mini",
+        "prompt_version": "v2.0",  # New prompt being tested
+        "temperature": 0.7
+    },
+    traffic_split=0.5
+))
+
+# In your application
+user_id = "user_123"
+config = ab_framework.get_model_config("new_prompt_v2", user_id)
+variant = ab_framework.get_variant("new_prompt_v2", user_id)
+
+# After getting response, log result
+ab_framework.log_result(ExperimentResult(
+    experiment="new_prompt_v2",
+    variant=variant,
+    user_id=user_id,
+    timestamp=datetime.now(),
+    response_time_ms=245,
+    user_rating=4,
+    task_completed=True
+))
+
+# Analyze results
+analysis = ab_framework.analyze_experiment("new_prompt_v2")
+print(f"Recommendation: {analysis['recommendation']}")</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 5: PROMPT ENGINEERING AT SCALE -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">5. Prompt Engineering at Scale</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Version Control for Prompts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The Prompt Registry Pattern</h4>
+                    <div class="code-block">
+<code>from dataclasses import dataclass, field
+from typing import Dict, List, Optional
+from datetime import datetime
+import json
+import hashlib
+
+@dataclass
+class PromptVersion:
+    """A versioned prompt template."""
+    name: str
+    version: str
+    template: str
+    variables: List[str]
+    created_at: datetime = field(default_factory=datetime.now)
+    created_by: str = ""
+    description: str = ""
+    eval_score: Optional[float] = None
+    is_active: bool = False
+    metadata: dict = field(default_factory=dict)
+
+    @property
+    def hash(self) -> str:
+        """Content hash for change detection."""
+        return hashlib.sha256(self.template.encode()).hexdigest()[:12]
+
+class PromptRegistry:
+    """
+    Centralized prompt management with versioning.
+    Enables safe prompt iteration and rollback.
+    """
+
+    def __init__(self, storage_path: str = "prompts/"):
+        self.storage_path = storage_path
+        self.prompts: Dict[str, Dict[str, PromptVersion]] = {}
+        self._load_prompts()
+
+    def _load_prompts(self):
+        """Load prompts from storage."""
+        # In production, this would load from database/file system
+        pass
+
+    def register(self, prompt: PromptVersion) -> str:
+        """Register a new prompt version."""
+        if prompt.name not in self.prompts:
+            self.prompts[prompt.name] = {}
+
+        # Auto-generate version if not provided
+        if not prompt.version:
+            existing_versions = list(self.prompts[prompt.name].keys())
+            if existing_versions:
+                last_version = max(existing_versions)
+                major, minor = last_version.split(".")
+                prompt.version = f"{major}.{int(minor) + 1}"
+            else:
+                prompt.version = "1.0"
+
+        self.prompts[prompt.name][prompt.version] = prompt
+        return prompt.version
+
+    def get(self, name: str, version: str = None) -> Optional[PromptVersion]:
+        """
+        Get a prompt by name and optional version.
+        If no version specified, returns active version.
+        """
+        if name not in self.prompts:
+            return None
+
+        if version:
+            return self.prompts[name].get(version)
+
+        # Return active version
+        for v in self.prompts[name].values():
+            if v.is_active:
+                return v
+
+        # Return latest if no active
+        latest_version = max(self.prompts[name].keys())
+        return self.prompts[name][latest_version]
+
+    def activate(self, name: str, version: str):
+        """Set a version as the active production version."""
+        if name not in self.prompts or version not in self.prompts[name]:
+            raise ValueError(f"Prompt {name}:{version} not found")
+
+        # Deactivate all other versions
+        for v in self.prompts[name].values():
+            v.is_active = False
+
+        # Activate specified version
+        self.prompts[name][version].is_active = True
+
+    def render(self, name: str, variables: dict, version: str = None) -> str:
+        """Render a prompt with variables."""
+        prompt = self.get(name, version)
+        if not prompt:
+            raise ValueError(f"Prompt {name} not found")
+
+        # Validate all required variables are provided
+        missing = set(prompt.variables) - set(variables.keys())
+        if missing:
+            raise ValueError(f"Missing variables: {missing}")
+
+        # Render template
+        result = prompt.template
+        for key, value in variables.items():
+            result = result.replace(f"{{{{{key}}}}}", str(value))
+
+        return result
+
+    def list_versions(self, name: str) -> List[Dict]:
+        """List all versions of a prompt with metadata."""
+        if name not in self.prompts:
+            return []
+
+        return [
+            {
+                "version": v.version,
+                "hash": v.hash,
+                "created_at": v.created_at.isoformat(),
+                "is_active": v.is_active,
+                "eval_score": v.eval_score,
+                "description": v.description
+            }
+            for v in sorted(self.prompts[name].values(),
+                          key=lambda x: x.version, reverse=True)
+        ]
+
+    def diff(self, name: str, version_a: str, version_b: str) -> Dict:
+        """Compare two versions of a prompt."""
+        prompt_a = self.get(name, version_a)
+        prompt_b = self.get(name, version_b)
+
+        if not prompt_a or not prompt_b:
+            raise ValueError("One or both versions not found")
+
+        return {
+            "version_a": version_a,
+            "version_b": version_b,
+            "template_changed": prompt_a.template != prompt_b.template,
+            "variables_a": prompt_a.variables,
+            "variables_b": prompt_b.variables,
+            "variables_added": list(set(prompt_b.variables) - set(prompt_a.variables)),
+            "variables_removed": list(set(prompt_a.variables) - set(prompt_b.variables)),
+            "eval_score_change": (prompt_b.eval_score or 0) - (prompt_a.eval_score or 0)
+        }
+
+
+# Usage Example
+registry = PromptRegistry()
+
+# Register initial version
+registry.register(PromptVersion(
+    name="customer_support",
+    version="1.0",
+    template="""You are a helpful customer support agent for {{company_name}}.
+
+Customer query: {{query}}
+
+Please respond helpfully and professionally.""",
+    variables=["company_name", "query"],
+    description="Initial customer support prompt"
+))
+
+# Register improved version
+registry.register(PromptVersion(
+    name="customer_support",
+    version="1.1",
+    template="""You are a helpful customer support agent for {{company_name}}.
+Your tone should be friendly but professional.
+
+CUSTOMER CONTEXT:
+- Account type: {{account_type}}
+- Previous interactions: {{interaction_count}}
+
+CURRENT QUERY:
+{{query}}
+
+GUIDELINES:
+1. Acknowledge the customer's concern
+2. Provide clear, actionable solutions
+3. Offer follow-up if needed
+
+Respond now:""",
+    variables=["company_name", "query", "account_type", "interaction_count"],
+    description="Added customer context and guidelines",
+    eval_score=0.85
+))
+
+# Activate the new version
+registry.activate("customer_support", "1.1")
+
+# Use in application
+prompt = registry.render(
+    "customer_support",
+    {
+        "company_name": "TechCorp",
+        "query": "My subscription isn't working",
+        "account_type": "premium",
+        "interaction_count": "3"
+    }
+)
+print(prompt)</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 6: FINE-TUNING -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">6. Fine-tuning: When It Makes Sense</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Mental Models</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: linear-gradient(135deg, rgba(240, 147, 251, 0.1), rgba(245, 87, 108, 0.1)); border-left: 4px solid #f093fb;">
+                        <h4>When Fine-tuning Makes Sense</h4>
+                        <ul>
+                            <li><strong>Consistent style/format:</strong> Legal documents, medical reports, code in specific style</li>
+                            <li><strong>Latency reduction:</strong> Remove few-shot examples from prompts</li>
+                            <li><strong>Cost reduction:</strong> Smaller fine-tuned model vs larger base model</li>
+                            <li><strong>Proprietary behavior:</strong> Company-specific terminology, processes</li>
+                        </ul>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--error-bg); border-left: 4px solid var(--danger-color);">
+                        <h4>When Fine-tuning Does NOT Make Sense</h4>
+                        <ul>
+                            <li><strong>Adding knowledge:</strong> Use RAG instead</li>
+                            <li><strong>Small improvements:</strong> Better prompting is cheaper</li>
+                            <li><strong>Rapidly changing requirements:</strong> Fine-tuning is slow to iterate</li>
+                            <li><strong>Limited data:</strong> Need 1000+ quality examples</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>LoRA Fine-tuning Workflow</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>What is LoRA?</h4>
+                    <p><strong>Low-Rank Adaptation (LoRA)</strong> fine-tunes only a small number of parameters by adding trainable low-rank matrices to existing layers. Benefits:</p>
+                    <ul>
+                        <li>90-99% fewer trainable parameters</li>
+                        <li>Can run on consumer GPUs</li>
+                        <li>Easy to swap adapters for different tasks</li>
+                        <li>Original model weights preserved</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph "Full Fine-tuning"
+        W1[Original Weights<br/>100% trainable]
+    end
+
+    subgraph "LoRA"
+        W2[Original Weights<br/>Frozen]
+        A[Adapter A<br/>~1% params]
+        B[Adapter B<br/>~1% params]
+        W2 --> A
+        W2 --> B
+    end
+
+    style W1 fill:#f56565
+    style W2 fill:#48bb78
+    style A fill:#4facfe
+    style B fill:#f093fb
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">LoRA Implementation</h4>
+                    <div class="code-block">
+<code># Complete LoRA fine-tuning workflow with Hugging Face
+from datasets import Dataset
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    TrainingArguments,
+    Trainer,
+    DataCollatorForLanguageModeling
+)
+from peft import LoraConfig, get_peft_model, TaskType
+import torch
+
+# ============================================
+# STEP 1: Prepare Dataset
+# ============================================
+
+def prepare_dataset(examples: list) -> Dataset:
+    """
+    Prepare training data in instruction format.
+    Each example: {"instruction": "...", "input": "...", "output": "..."}
+    """
+    formatted = []
+    for ex in examples:
+        # Format as conversation
+        text = f"""### Instruction:
+{ex['instruction']}
+
+### Input:
+{ex.get('input', '')}
+
+### Response:
+{ex['output']}"""
+        formatted.append({"text": text})
+
+    return Dataset.from_list(formatted)
+
+# Example training data
+training_examples = [
+    {
+        "instruction": "Convert this customer complaint to a professional response",
+        "input": "Your product sucks and I want my money back!!!",
+        "output": "Dear Customer, I sincerely apologize for your experience..."
+    },
+    # ... 1000+ more examples
+]
+
+dataset = prepare_dataset(training_examples)
+
+# ============================================
+# STEP 2: Load Model and Tokenizer
+# ============================================
+
+model_name = "meta-llama/Llama-2-7b-hf"  # Or your chosen base model
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer.pad_token = tokenizer.eos_token
+
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype=torch.float16,
+    device_map="auto",
+    load_in_8bit=True  # Use quantization to reduce memory
+)
+
+# ============================================
+# STEP 3: Configure LoRA
+# ============================================
+
+lora_config = LoraConfig(
+    r=16,  # Rank of update matrices (higher = more capacity, more params)
+    lora_alpha=32,  # Scaling factor
+    target_modules=[  # Which layers to add adapters to
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+    ],
+    lora_dropout=0.05,
+    bias="none",
+    task_type=TaskType.CAUSAL_LM
+)
+
+# Apply LoRA to model
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
+# Output: trainable params: 4,194,304 || all params: 6,742,609,920 || trainable%: 0.0622
+
+# ============================================
+# STEP 4: Tokenize Dataset
+# ============================================
+
+def tokenize_function(examples):
+    return tokenizer(
+        examples["text"],
+        truncation=True,
+        max_length=512,
+        padding="max_length"
+    )
+
+tokenized_dataset = dataset.map(tokenize_function, batched=True)
+
+# Split into train/eval
+split = tokenized_dataset.train_test_split(test_size=0.1)
+train_dataset = split["train"]
+eval_dataset = split["test"]
+
+# ============================================
+# STEP 5: Training Configuration
+# ============================================
+
+training_args = TrainingArguments(
+    output_dir="./lora-finetuned",
+    num_train_epochs=3,
+    per_device_train_batch_size=4,
+    per_device_eval_batch_size=4,
+    gradient_accumulation_steps=4,  # Effective batch size = 16
+    learning_rate=2e-4,
+    weight_decay=0.01,
+    warmup_ratio=0.03,
+    lr_scheduler_type="cosine",
+    logging_steps=10,
+    evaluation_strategy="steps",
+    eval_steps=100,
+    save_strategy="steps",
+    save_steps=100,
+    load_best_model_at_end=True,
+    fp16=True,  # Mixed precision training
+    report_to="wandb"  # Optional: log to Weights & Biases
+)
+
+# ============================================
+# STEP 6: Train
+# ============================================
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_dataset,
+    eval_dataset=eval_dataset,
+    data_collator=DataCollatorForLanguageModeling(tokenizer, mlm=False)
+)
+
+trainer.train()
+
+# ============================================
+# STEP 7: Save and Load Adapter
+# ============================================
+
+# Save only the LoRA adapter (small file ~50MB vs 14GB full model)
+model.save_pretrained("./lora-adapter-customer-support")
+
+# Later: Load base model + adapter
+from peft import PeftModel
+
+base_model = AutoModelForCausalLM.from_pretrained(model_name)
+model_with_adapter = PeftModel.from_pretrained(
+    base_model,
+    "./lora-adapter-customer-support"
+)
+
+# ============================================
+# STEP 8: Inference
+# ============================================
+
+def generate_response(instruction: str, input_text: str = "") -> str:
+    prompt = f"""### Instruction:
+{instruction}
+
+### Input:
+{input_text}
+
+### Response:"""
+
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=256,
+        temperature=0.7,
+        do_sample=True
+    )
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    # Extract just the response part
+    return response.split("### Response:")[-1].strip()
+
+# Test
+response = generate_response(
+    "Convert this customer complaint to a professional response",
+    "This is the worst service ever!!!"
+)
+print(response)</code>
+                    </div>
+
+                    <h4 class="mt-3">Fine-tuning vs Instruction Tuning</h4>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Aspect</th>
+                                <th>Task-Specific Fine-tuning</th>
+                                <th>Instruction Tuning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Goal</strong></td>
+                                <td>Excel at one specific task</td>
+                                <td>Follow diverse instructions</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Data Format</strong></td>
+                                <td>Input -> Output pairs</td>
+                                <td>Instruction + Input -> Output</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Flexibility</strong></td>
+                                <td>Limited to trained task</td>
+                                <td>Generalizes to new instructions</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Data Required</strong></td>
+                                <td>1000+ task-specific</td>
+                                <td>10,000+ diverse instructions</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Use Case</strong></td>
+                                <td>Sentiment analysis, NER</td>
+                                <td>General assistant, ChatGPT-like</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- SECTION 7: PRODUCTION DEPLOYMENT -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">7. Production Deployment Considerations</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Deployment Checklist</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card">
+                        <h4>Pre-Deployment Checklist</h4>
+                        <ul>
+                            <li><input type="checkbox"> Evaluation suite passes with acceptable scores</li>
+                            <li><input type="checkbox"> A/B test shows no regression (or clear improvement)</li>
+                            <li><input type="checkbox"> Safety/guardrails evaluation passes</li>
+                            <li><input type="checkbox"> Latency within SLA requirements</li>
+                            <li><input type="checkbox"> Cost projections reviewed and approved</li>
+                            <li><input type="checkbox"> Rollback plan documented and tested</li>
+                            <li><input type="checkbox"> Monitoring and alerting configured</li>
+                            <li><input type="checkbox"> Rate limiting and error handling in place</li>
+                        </ul>
+                    </div>
+
+                    <h4 class="mt-3">Monitoring Production AI Systems</h4>
+                    <div class="code-block">
+<code>from dataclasses import dataclass
+from datetime import datetime
+from typing import Optional
+import statistics
+
+@dataclass
+class AIRequestLog:
+    timestamp: datetime
+    request_id: str
+    model: str
+    prompt_version: str
+    input_tokens: int
+    output_tokens: int
+    latency_ms: float
+    success: bool
+    error_type: Optional[str] = None
+    user_feedback: Optional[int] = None  # 1-5 rating
+
+class AIProductionMonitor:
+    """Monitor AI system health in production."""
+
+    def __init__(self):
+        self.logs: list[AIRequestLog] = []
+        self.alert_thresholds = {
+            "error_rate": 0.05,  # 5% error rate
+            "p99_latency_ms": 3000,  # 3 second p99
+            "avg_rating_min": 3.5  # Minimum 3.5/5 rating
+        }
+
+    def log_request(self, log: AIRequestLog):
+        self.logs.append(log)
+        self._check_alerts()
+
+    def _check_alerts(self):
+        """Check if any metrics exceed thresholds."""
+        recent = self._get_recent_logs(minutes=15)
+        if len(recent) < 10:
+            return  # Not enough data
+
+        # Check error rate
+        error_rate = sum(1 for l in recent if not l.success) / len(recent)
+        if error_rate > self.alert_thresholds["error_rate"]:
+            self._send_alert(f"High error rate: {error_rate:.1%}")
+
+        # Check latency
+        latencies = sorted(l.latency_ms for l in recent if l.success)
+        if latencies:
+            p99 = latencies[int(len(latencies) * 0.99)]
+            if p99 > self.alert_thresholds["p99_latency_ms"]:
+                self._send_alert(f"High p99 latency: {p99:.0f}ms")
+
+        # Check user feedback
+        ratings = [l.user_feedback for l in recent if l.user_feedback]
+        if ratings:
+            avg_rating = statistics.mean(ratings)
+            if avg_rating < self.alert_thresholds["avg_rating_min"]:
+                self._send_alert(f"Low user ratings: {avg_rating:.2f}/5")
+
+    def get_dashboard_metrics(self) -> dict:
+        """Get metrics for monitoring dashboard."""
+        recent = self._get_recent_logs(minutes=60)
+
+        if not recent:
+            return {"status": "no_data"}
+
+        successful = [l for l in recent if l.success]
+
+        return {
+            "total_requests": len(recent),
+            "success_rate": len(successful) / len(recent),
+            "avg_latency_ms": statistics.mean(l.latency_ms for l in successful) if successful else 0,
+            "p50_latency_ms": statistics.median(sorted(l.latency_ms for l in successful)) if successful else 0,
+            "p99_latency_ms": sorted(l.latency_ms for l in successful)[int(len(successful) * 0.99)] if len(successful) > 1 else 0,
+            "total_tokens": sum(l.input_tokens + l.output_tokens for l in recent),
+            "avg_rating": statistics.mean(l.user_feedback for l in recent if l.user_feedback) if any(l.user_feedback for l in recent) else None,
+            "error_breakdown": self._get_error_breakdown(recent),
+            "by_model": self._get_by_model_metrics(recent)
+        }
+
+    def _get_recent_logs(self, minutes: int) -> list:
+        cutoff = datetime.now().timestamp() - (minutes * 60)
+        return [l for l in self.logs if l.timestamp.timestamp() > cutoff]
+
+    def _get_error_breakdown(self, logs) -> dict:
+        errors = [l.error_type for l in logs if l.error_type]
+        breakdown = {}
+        for e in errors:
+            breakdown[e] = breakdown.get(e, 0) + 1
+        return breakdown
+
+    def _get_by_model_metrics(self, logs) -> dict:
+        by_model = {}
+        for log in logs:
+            if log.model not in by_model:
+                by_model[log.model] = {"count": 0, "success": 0, "latencies": []}
+            by_model[log.model]["count"] += 1
+            if log.success:
+                by_model[log.model]["success"] += 1
+                by_model[log.model]["latencies"].append(log.latency_ms)
+
+        return {
+            model: {
+                "count": data["count"],
+                "success_rate": data["success"] / data["count"],
+                "avg_latency": statistics.mean(data["latencies"]) if data["latencies"] else 0
+            }
+            for model, data in by_model.items()
+        }
+
+    def _send_alert(self, message: str):
+        # Integration with PagerDuty, Slack, etc.
+        print(f"ALERT: {message}")</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- ACTIVE RECALL QUESTIONS -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">Active Recall Questions</h2>
+
+            <details class="recall-question">
+                <summary>1. When should you choose RAG over fine-tuning?</summary>
+                <div class="answer">
+                    <p><strong>Choose RAG when:</strong></p>
+                    <ul>
+                        <li>You need external or frequently changing data</li>
+                        <li>You need citations and source attribution</li>
+                        <li>You have limited training examples (&lt;1000)</li>
+                        <li>You need to update knowledge without retraining</li>
+                    </ul>
+                    <p><strong>Choose fine-tuning when:</strong></p>
+                    <ul>
+                        <li>You need consistent style/behavior</li>
+                        <li>Latency is critical (remove few-shot from prompts)</li>
+                        <li>You have 1000+ high-quality examples</li>
+                        <li>The model's knowledge is sufficient, but format/style needs changing</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>2. What are the key differences between LLM-as-judge and human evaluation?</summary>
+                <div class="answer">
+                    <p><strong>LLM-as-judge:</strong> Fast, cheap, consistent, scalable. But may have biases (prefers longer responses, struggles with domain expertise, can be gamed).</p>
+                    <p><strong>Human evaluation:</strong> Ground truth for quality, catches edge cases, domain expertise. But slow, expensive, inconsistent between raters, doesn't scale.</p>
+                    <p><strong>Best practice:</strong> Use LLM-as-judge for rapid iteration, human eval for critical decisions and calibration.</p>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>3. What is LoRA and why is it preferred over full fine-tuning?</summary>
+                <div class="answer">
+                    <p><strong>LoRA (Low-Rank Adaptation):</strong> Adds small trainable matrices to existing model layers instead of updating all weights.</p>
+                    <p><strong>Benefits:</strong></p>
+                    <ul>
+                        <li>90-99% fewer trainable parameters</li>
+                        <li>Can train on consumer GPUs (16GB VRAM vs 80GB+)</li>
+                        <li>Original model preserved - can swap adapters</li>
+                        <li>Faster training and inference</li>
+                        <li>Small adapter files (~50MB vs 14GB full model)</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>4. How do you ensure deterministic A/B test assignment?</summary>
+                <div class="answer">
+                    <p>Use <strong>hash-based assignment</strong>: Hash the user_id + experiment_name to get a deterministic value between 0-1. Compare to traffic split threshold.</p>
+                    <div class="code-block" style="font-size: 0.85rem;">
+<code>hash_value = hash(f"{user_id}:{experiment_name}")
+normalized = (hash_value % 1000) / 1000
+variant = "treatment" if normalized < traffic_split else "control"</code>
+                    </div>
+                    <p>This ensures the same user always sees the same variant (sticky assignment) while maintaining proper traffic distribution.</p>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>5. What metrics should you monitor for a production RAG system?</summary>
+                <div class="answer">
+                    <ul>
+                        <li><strong>Retrieval precision:</strong> % of retrieved docs that are relevant</li>
+                        <li><strong>Answer correctness:</strong> Is the answer factually correct?</li>
+                        <li><strong>Faithfulness:</strong> Does answer only use info from retrieved context?</li>
+                        <li><strong>Answer relevance:</strong> Does it actually address the question?</li>
+                        <li><strong>Latency:</strong> Retrieval time + generation time</li>
+                        <li><strong>Hallucination rate:</strong> % of responses with unsupported claims</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details class="recall-question">
+                <summary>6. Why is prompt versioning important and what should you track?</summary>
+                <div class="answer">
+                    <p><strong>Why:</strong> Prompts are code - they need version control for reproducibility, rollback, and auditing.</p>
+                    <p><strong>Track:</strong></p>
+                    <ul>
+                        <li>Prompt template text and content hash</li>
+                        <li>Required variables</li>
+                        <li>Version number and creation date</li>
+                        <li>Evaluation scores on test set</li>
+                        <li>Which version is active in production</li>
+                        <li>Creator and change description</li>
+                    </ul>
+                </div>
+            </details>
+
+            <!-- ============================================== -->
+            <!-- MINI PROJECT -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">Mini Project: Build an Eval Pipeline</h2>
+
+            <div class="card">
+                <h4>Project: Automated Evaluation Pipeline</h4>
+                <p>Build a complete evaluation system for an AI feature.</p>
+
+                <h5>Requirements:</h5>
+                <ol>
+                    <li>Create evaluation dataset (50+ examples with expected outputs)</li>
+                    <li>Implement at least 3 evaluation metrics (exact match, semantic similarity, LLM-as-judge)</li>
+                    <li>Build automated pipeline that runs on prompt changes</li>
+                    <li>Generate evaluation report with pass/fail and scores</li>
+                </ol>
+
+                <h5>Bonus Challenges:</h5>
+                <ul>
+                    <li>Add regression detection (compare to previous version)</li>
+                    <li>Implement pairwise comparison for A/B testing</li>
+                    <li>Create dashboard visualization of eval results</li>
+                </ul>
+
+                <div class="code-block">
+<code># Starter structure
+class EvalPipeline:
+    def __init__(self, eval_dataset_path: str):
+        self.dataset = self.load_dataset(eval_dataset_path)
+        self.evaluator = LLMEvaluator()
+        self.registry = PromptRegistry()
+
+    def run_evaluation(self, prompt_name: str, prompt_version: str) -> dict:
+        """Run full evaluation pipeline."""
+        # 1. Get prompt
+        prompt = self.registry.get(prompt_name, prompt_version)
+
+        # 2. Run model on all examples
+        predictions = []
+        for example in self.dataset:
+            rendered_prompt = self.registry.render(
+                prompt_name,
+                {"query": example["input"]},
+                prompt_version
+            )
+            prediction = self.call_model(rendered_prompt)
+            predictions.append(prediction)
+
+        # 3. Evaluate with multiple metrics
+        results = self.evaluator.evaluate_batch(
+            self.dataset,
+            lambda x: predictions[self.dataset.index(x)],
+            metrics=[EvalMetricType.EXACT_MATCH,
+                    EvalMetricType.SEMANTIC_SIMILARITY,
+                    EvalMetricType.LLM_JUDGE]
+        )
+
+        # 4. Generate report
+        return self.generate_report(results, prompt)
+
+    def compare_versions(self, prompt_name: str,
+                        version_a: str, version_b: str) -> dict:
+        """Compare two prompt versions."""
+        results_a = self.run_evaluation(prompt_name, version_a)
+        results_b = self.run_evaluation(prompt_name, version_b)
+
+        return {
+            "version_a": results_a,
+            "version_b": results_b,
+            "improvement": results_b["pass_rate"] - results_a["pass_rate"],
+            "recommendation": "ship" if results_b["pass_rate"] > results_a["pass_rate"] else "keep_current"
+        }</code>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- HOW THIS CONNECTS FORWARD -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">How This Connects Forward</h2>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(79, 172, 254, 0.1), rgba(0, 242, 254, 0.1));">
+                <h4>Next Module: Thinking Models</h4>
+                <ul>
+                    <li><strong>Chain-of-thought:</strong> A prompting technique - when does it help vs fine-tuning?</li>
+                    <li><strong>Reasoning evals:</strong> How do you evaluate reasoning quality?</li>
+                    <li><strong>Production tradeoffs:</strong> CoT adds tokens (cost/latency) - when is it worth it?</li>
+                </ul>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- CHECKPOINT SUMMARY -->
+            <!-- ============================================== -->
+            <h2 class="mt-4">Checkpoint Summary</h2>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2)); border: 2px solid rgba(139, 92, 246, 0.5);">
+                <h4>Key Takeaways</h4>
+                <ol>
+                    <li><strong>Start with prompting</strong> - It's the lowest effort, fastest iteration approach</li>
+                    <li><strong>Use RAG for knowledge</strong> - External/changing data belongs in retrieval, not fine-tuning</li>
+                    <li><strong>Fine-tune for behavior</strong> - Style, format, and consistent output patterns</li>
+                    <li><strong>Evaluation is non-negotiable</strong> - Can't improve what you don't measure</li>
+                    <li><strong>LLM-as-judge scales</strong> - Use it for rapid iteration, humans for calibration</li>
+                    <li><strong>Version control prompts</strong> - They're code, treat them that way</li>
+                    <li><strong>A/B test everything</strong> - Offline evals don't tell the full production story</li>
+                    <li><strong>LoRA makes fine-tuning accessible</strong> - Consumer GPUs can fine-tune 7B+ models</li>
+                </ol>
+
+                <h4 class="mt-3">Decision Framework Summary</h4>
+                <table class="comparison-table">
+                    <tr>
+                        <td>Need external data?</td>
+                        <td>RAG</td>
+                    </tr>
+                    <tr>
+                        <td>Format/style issue?</td>
+                        <td>Better prompting</td>
+                    </tr>
+                    <tr>
+                        <td>1000+ examples + behavior change?</td>
+                        <td>Fine-tuning</td>
+                    </tr>
+                    <tr>
+                        <td>Not sure?</td>
+                        <td>Start with prompting, measure, iterate</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="module-11.html" class="btn btn-secondary">&larr; Previous: Context Engineering</a>
+                <a href="module-13.html" class="btn btn-primary">Next: Thinking Models &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        // Sidebar toggle
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        }
+
+        // Collapsible sections
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const collapsible = header.parentElement;
+                collapsible.classList.toggle('open');
+            });
+        });
+    </script>
+</body>
+</html>

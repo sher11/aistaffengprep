@@ -2,11 +2,12 @@
 
 ## Project Overview
 
-This is an interactive GitHub Pages site for staff engineer interview preparation, covering four domains:
+This is an interactive GitHub Pages site for staff engineer interview preparation, covering five domains:
 1. **Coding Rounds** - Algorithms, data structures, problem-solving patterns
 2. **System Design** - Scalability, distributed systems, architectural patterns
 3. **Company-Specific** - Interview processes for top tech companies
 4. **Behavioral** - STAR method, leadership stories, communication
+5. **Generative AI Engineering** - LLMs, RAG, Agents, and Production AI Systems
 
 **Live Site**: Served from repository root via GitHub Pages
 
@@ -35,6 +36,9 @@ This is an interactive GitHub Pages site for staff engineer interview preparatio
 ├── behavioral/
 │   ├── index.html            # Course overview (6 modules)
 │   └── module-01.html - module-06.html
+├── generative-ai/
+│   ├── index.html            # Course overview (16 modules)
+│   └── module-01.html - module-16.html
 ```
 
 ## Technology Stack
@@ -125,6 +129,27 @@ Every module MUST include:
 .code-block            /* Code snippet */
 ```
 
+### Displaying Code Blocks (Markdown & HTML)
+
+- **Markdown pages:** Use fenced code blocks with a language hint so syntax highlighters work. Example:
+
+```markdown
+```html
+<div class="example">Hello</div>
+```
+```
+
+- **Raw HTML pages:** Wrap code in a `<pre><code>` block and HTML-escape special characters (`<`, `>`, `&`) so the browser renders the code instead of interpreting it. Example:
+
+```html
+<pre><code class="language-html">&lt;div class="example"&gt;Hello&lt;/div&gt;</code></pre>
+```
+
+- **Avoid executing code:** If inserting snippets via `<script>` or templates, ensure they are treated as text (e.g., `text/template`) or inserted via `textContent`/`innerText` so they are not executed.
+
+- **Syntax highlighting:** Include a client-side highlighter (Prism.js, highlight.js) and style `.code-block` to make snippets readable.
+
+
 ### Card Template (Clickable)
 ```html
 <div class="card" onclick="window.location.href='module-01.html'" style="cursor: pointer;">
@@ -133,7 +158,75 @@ Every module MUST include:
 </div>
 ```
 
+### Interactivity & Animations
+
+- **Make content interactive:** Wherever it aids understanding, include interactive examples (live, step-through, or adjustable demos). Examples: collapsible walkthroughs, small runnable code panes, sliders to change input sizes, or embedded sandboxes (CodePen/Gist/StackBlitz) for larger snippets.
+
+- **Use animations to teach flows:** Animations and micro-interactions can make complex concepts tangible — e.g., animating request flows, buffer fill/drain, or stepwise state machines. Prefer declarative approaches (CSS transitions, SVG animations, Lottie) and keep sequences short and focused.
+
+- **Accessibility & user preferences:** Respect `prefers-reduced-motion` and provide controls to pause/step animations. Ensure interactive controls are keyboard accessible and use semantic HTML + ARIA where needed.
+
+- **Performance considerations:** Avoid layout-thrashing animations; animate `transform` and `opacity` where possible. Throttle expensive updates and provide static snapshots as a fallback for low-end devices.
+
+- **Progressive enhancement & fallbacks:** Ensure content remains understandable without JS. Provide static images or textual step descriptions when dynamic content cannot run.
+
+- **Styling & classes:** Tag interactive pieces with `.interactive` and animated elements with `.animated` so authors can target them for styles and `prefers-reduced-motion` rules.
+
+- **Short examples:**
+
+Collapsible (CSS + JS):
+
+```html
+<button class="collapsible-toggle" aria-expanded="false">Show details</button>
+<div class="collapsible-panel" hidden>
+    <p>Step-by-step explanation...</p>
+</div>
+
+<style>
+.collapsible-panel { transition: max-height 300ms ease; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .collapsible-panel { transition: none; } }
+</style>
+
+<script>
+document.querySelectorAll('.collapsible-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const panel = btn.nextElementSibling;
+        const open = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!open));
+        if (open) panel.setAttribute('hidden', ''); else panel.removeAttribute('hidden');
+    });
+});
+</script>
+```
+
+- **Libraries:** For richer interaction/animation consider lightweight libraries only when necessary (e.g., Lottie for vector animations, anime.js for sequences, or small widgets). Document third-party dependencies in the module.
+
+
 ## Adding New Content
+
+## Retention & Learning Aids
+
+- **Spaced repetition:** Provide optional flashcard exports (CSV/Anki) or a simple built-in scheduler to surface high-value cards over time. Encourage creating 1–2 concise Q/A cards per key concept rather than verbatim notes.
+
+- **Active recall & self-testing:** Include short module-end quizzes, in-line quick checks, and coding practice problems that force retrieval rather than passive review.
+
+- **Interleaving & varied practice:** Mix related problem types and concepts across modules (e.g., different caching strategies, then compare their trade-offs) to strengthen transfer and discrimination.
+
+- **Summarization & teach-back:** Ask authors to provide a 2–3 sentence "tl;dr" and a "How I'd teach this" paragraph. Encourage learners to write their own one-paragraph summary after reading.
+
+- **Project-based checkpoints:** Provide mini-projects or guided exercises with progressive milestones to turn passive knowledge into applied skill.
+
+- **Note-linking & progressive elaboration:** Recommend linking notes across modules (Zettelkasten style) and updating notes when deeper understanding emerges.
+
+- **Multimodal reinforcement:** Combine diagrams, animated walkthroughs, code snippets, and short quizzes to support different memory systems.
+
+- **Practical suggestions for authors:**
+    - Add a short quiz (3–6 questions) at the end of each module.
+    - Supply 5 suggested flashcard Q/A pairs for conversion to Anki or CSV.
+    - Add one practical exercise or mini-project with a sample solution and test cases.
+
+- **Human factors:** Recommend spaced study sessions, sleep between reviews, and short focused sessions (25–50 minutes) with active practice.
+
 
 ### Module Page Structure
 ```html

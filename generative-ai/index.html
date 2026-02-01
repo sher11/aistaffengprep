@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative AI Engineering - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link active">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Setup + Core Math
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Terminology + MNIST
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">LLM Deep Dive</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>LLM Basics
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Attention Mechanisms
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>LLM Coding: GPT
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Training at Scale
+                    </a>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Optimization Hacks
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">RAG & Retrieval</div>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>RAG Fundamentals
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>RAG Implementation
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Agents & Systems</div>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>AI Agents
+                    </a>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Context Engineering
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>AI Engineering
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-13.html" class="sidebar-link" data-module="13">
+                        <span class="sidebar-link-number">13</span>Thinking Models
+                    </a>
+                    <a href="module-14.html" class="sidebar-link" data-module="14">
+                        <span class="sidebar-link-number">14</span>Multi-modal Models
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Capstone & Career</div>
+                    <a href="module-15.html" class="sidebar-link" data-module="15">
+                        <span class="sidebar-link-number">15</span>Capstone Project
+                    </a>
+                    <a href="module-16.html" class="sidebar-link" data-module="16">
+                        <span class="sidebar-link-number">16</span>Career Goals
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Mobile sidebar toggle -->
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content-wide">
+            <h1>Generative AI Engineering</h1>
+            <p class="text-muted mb-3">Master LLMs, RAG, Agents, and Production AI Systems. Become a strong AI Engineer who can design, build, and ship LLM systems.</p>
+
+            <!-- Progress -->
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span><strong>Course Progress</strong></span>
+                    <span class="progress-label" id="progress-label">0% Complete</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Course Philosophy -->
+            <div class="card mt-3" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%); border: 2px solid rgba(139, 92, 246, 0.3);">
+                <h3 style="color: #8b5cf6;">Course Philosophy</h3>
+                <ul>
+                    <li><strong>Code-first, intuition-first</strong> - Math only when it builds understanding</li>
+                    <li><strong>Real-world engineering</strong> - Every concept connects to production decisions</li>
+                    <li><strong>WHY before HOW</strong> - Understand the reasoning, not just the implementation</li>
+                    <li><strong>Active learning</strong> - Spaced repetition, mini challenges, and hands-on projects</li>
+                </ul>
+            </div>
+
+            <!-- Target Audience -->
+            <div class="card mt-3">
+                <h3>Who This Course Is For</h3>
+                <ul>
+                    <li>Senior software engineers / backend engineers</li>
+                    <li>Comfortable with Python, basic ML, system design</li>
+                    <li>Goal: Become a strong AI Engineer who can design, build, and ship LLM systems</li>
+                </ul>
+            </div>
+
+            <!-- Course Outline -->
+            <h2 class="mt-4">Course Modules</h2>
+
+            <!-- Foundations Section -->
+            <h3 class="mt-3">Foundations</h3>
+            <div class="card-grid">
+                <div class="card" onclick="window.location.href='module-01.html'" style="cursor: pointer;">
+                    <h4>Module 1: Setup + Core Math</h4>
+                    <p>Environment setup, essential linear algebra, calculus intuition, and probability foundations for AI engineering.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+                <div class="card" onclick="window.location.href='module-02.html'" style="cursor: pointer;">
+                    <h4>Module 2: Terminology + MNIST</h4>
+                    <p>Neural network fundamentals, backpropagation, gradient descent, and hands-on MNIST from scratch.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+            </div>
+
+            <!-- LLM Deep Dive Section -->
+            <h3 class="mt-3">LLM Deep Dive</h3>
+            <div class="card-grid">
+                <div class="card" onclick="window.location.href='module-03.html'" style="cursor: pointer;">
+                    <h4>Module 3: LLM Basics</h4>
+                    <p>Tokenization, vectorization, embeddings, and the attention mechanism that powers modern LLMs.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+                <div class="card" onclick="window.location.href='module-04.html'" style="cursor: pointer;">
+                    <h4>Module 4: Attention Mechanisms</h4>
+                    <p>QKV matrices, cross-attention, self-attention, multi-head attention, and positional encoding.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+                <div class="card" onclick="window.location.href='module-05.html'" style="cursor: pointer;">
+                    <h4>Module 5: LLM Coding: GPT</h4>
+                    <p>Causal masking, building a GPT from scratch, and understanding autoregressive generation.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+                <div class="card" onclick="window.location.href='module-06.html'" style="cursor: pointer;">
+                    <h4>Module 6: Training at Scale</h4>
+                    <p>How massive models are trained: distributed training, data parallelism, pipeline parallelism, and RLHF.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+                <div class="card" onclick="window.location.href='module-07.html'" style="cursor: pointer;">
+                    <h4>Module 7: Optimization Hacks</h4>
+                    <p>KV caching, quantization, LoRA, pruning, and other techniques to make LLMs production-ready.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+            </div>
+
+            <!-- RAG Section -->
+            <h3 class="mt-3">RAG & Retrieval</h3>
+            <div class="card-grid">
+                <div class="card" onclick="window.location.href='module-08.html'" style="cursor: pointer;">
+                    <h4>Module 8: RAG Fundamentals</h4>
+                    <p>What is RAG, chunking strategies, reranking, vector databases, and hybrid search.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+                <div class="card" onclick="window.location.href='module-09.html'" style="cursor: pointer;">
+                    <h4>Module 9: RAG Implementation</h4>
+                    <p>Safety, guardrails, production RAG systems, and building a complete RAG pipeline.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+            </div>
+
+            <!-- Agents Section -->
+            <h3 class="mt-3">Agents & Systems</h3>
+            <div class="card-grid">
+                <div class="card" onclick="window.location.href='module-10.html'" style="cursor: pointer;">
+                    <h4>Module 10: AI Agents</h4>
+                    <p>ReAct pattern, tool calling, function calling, LangChain, and LangGraph for agent orchestration.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+                <div class="card" onclick="window.location.href='module-11.html'" style="cursor: pointer;">
+                    <h4>Module 11: Context Engineering</h4>
+                    <p>Memory systems, MCP (Model Context Protocol), multi-agent systems, and context management.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+                <div class="card" onclick="window.location.href='module-12.html'" style="cursor: pointer;">
+                    <h4>Module 12: AI Engineering</h4>
+                    <p>Evals, tradeoffs, fine-tuning vs RAG vs prompting, and production AI system design.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+            </div>
+
+            <!-- Advanced Topics Section -->
+            <h3 class="mt-3">Advanced Topics</h3>
+            <div class="card-grid">
+                <div class="card" onclick="window.location.href='module-13.html'" style="cursor: pointer;">
+                    <h4>Module 13: Thinking Models</h4>
+                    <p>Reasoning, chain of thought, tree of thought, self-consistency, and emergent capabilities.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+                <div class="card" onclick="window.location.href='module-14.html'" style="cursor: pointer;">
+                    <h4>Module 14: Multi-modal Models</h4>
+                    <p>Vision-language models, CLIP, diffusion models, image generation, and video understanding.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+            </div>
+
+            <!-- Capstone Section -->
+            <h3 class="mt-3">Capstone & Career</h3>
+            <div class="card-grid">
+                <div class="card" onclick="window.location.href='module-15.html'" style="cursor: pointer;">
+                    <h4>Module 15: Capstone Project</h4>
+                    <p>Build your own AI project from scratch, applying everything learned throughout the course.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+                <div class="card" onclick="window.location.href='module-16.html'" style="cursor: pointer;">
+                    <h4>Module 16: Career Goals</h4>
+                    <p>How to transition to AI Engineering, portfolio building, interview prep, and industry insights.</p>
+                    <span class="card-link">Start Module &rarr;</span>
+                </div>
+            </div>
+
+            <!-- Learning Path -->
+            <h2 class="mt-4">Recommended Learning Path</h2>
+            <div class="card">
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph LR
+    subgraph "Week 1-2: Foundations"
+        A[Setup + Math] --> B[Terminology + MNIST]
+    end
+    subgraph "Week 3-4: LLM Deep Dive"
+        B --> C[LLM Basics]
+        C --> D[Attention]
+        D --> E[Code GPT]
+    end
+    subgraph "Week 5: Production"
+        E --> F[Training at Scale]
+        F --> G[Optimization]
+    end
+    subgraph "Week 6: RAG"
+        G --> H[RAG Fundamentals]
+        H --> I[RAG Code]
+    end
+    subgraph "Week 7: Agents"
+        I --> J[AI Agents]
+        J --> K[Context Engineering]
+    end
+    subgraph "Week 8: Advanced"
+        K --> L[AI Engineering]
+        L --> M[Thinking Models]
+        M --> N[Multi-modal]
+    end
+    subgraph "Week 9-10: Capstone"
+        N --> O[Capstone Project]
+        O --> P[Career Goals]
+    end
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prerequisites -->
+            <h2 class="mt-4">Prerequisites</h2>
+            <div class="card">
+                <h4>Required Knowledge</h4>
+                <ul>
+                    <li><strong>Python proficiency</strong> - Classes, decorators, async/await, type hints</li>
+                    <li><strong>Basic ML concepts</strong> - What is a model, training vs inference, overfitting</li>
+                    <li><strong>System design basics</strong> - APIs, databases, caching, scalability concepts</li>
+                </ul>
+                <h4 class="mt-3">Helpful but Not Required</h4>
+                <ul>
+                    <li>Linear algebra (matrices, vectors) - We'll cover what you need</li>
+                    <li>PyTorch or TensorFlow experience - We'll use PyTorch</li>
+                    <li>Prior NLP experience - Helpful but not necessary</li>
+                </ul>
+            </div>
+
+            <!-- Resources -->
+            <h2 class="mt-4">Additional Resources</h2>
+            <div class="card">
+                <h4>Recommended Reading</h4>
+                <ul>
+                    <li><a href="https://www.deeplearningbook.org/" target="_blank">Deep Learning Book</a> - Goodfellow, Bengio, Courville</li>
+                    <li><a href="https://arxiv.org/abs/1706.03762" target="_blank">Attention Is All You Need</a> - The Transformer paper</li>
+                    <li><a href="https://jalammar.github.io/illustrated-transformer/" target="_blank">The Illustrated Transformer</a> - Jay Alammar</li>
+                    <li><a href="https://karpathy.ai/" target="_blank">Andrej Karpathy's Blog</a> - Neural networks explained</li>
+                </ul>
+                <h4 class="mt-3">Tools We'll Use</h4>
+                <ul>
+                    <li><strong>PyTorch</strong> - Primary deep learning framework</li>
+                    <li><strong>Hugging Face Transformers</strong> - Pre-trained models and tokenizers</li>
+                    <li><strong>LangChain / LangGraph</strong> - Agent orchestration</li>
+                    <li><strong>Vector databases</strong> - Pinecone, Chroma, Weaviate</li>
+                    <li><strong>OpenAI / Anthropic APIs</strong> - Commercial LLM access</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+        // Sidebar toggle functionality
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        }
+    </script>
+</body>
+</html>
