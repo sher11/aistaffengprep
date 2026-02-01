@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Lot System - LLD Problem</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/animations.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../../system-design/index.html">System Design</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">LLD</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+                <li><a href="../../generative-ai/index.html">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="../index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="../module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Design Principles
+                    </a>
+                    <a href="../module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">2</span>UML & Class Diagrams
+                    </a>
+                    <a href="../module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">3</span>Interview Framework
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Design Patterns</div>
+                    <a href="../module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">4</span>Creational Patterns
+                    </a>
+                    <a href="../module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">5</span>Structural Patterns
+                    </a>
+                    <a href="../module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">6</span>Behavioral Patterns
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Practice Problems</div>
+                    <a href="parking-lot.html" class="sidebar-link active">
+                        <span class="sidebar-link-number">P1</span>Parking Lot
+                    </a>
+                    <a href="elevator-system.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P2</span>Elevator System
+                    </a>
+                    <a href="vending-machine.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P3</span>Vending Machine
+                    </a>
+                    <a href="library-system.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P4</span>Library System
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Design a Parking Lot System</h1>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(72, 187, 120, 0.15), rgba(56, 161, 105, 0.15)); border-left: 4px solid #48bb78;">
+                <p><strong>Difficulty:</strong> Classic LLD Problem | <strong>Time:</strong> 35-45 minutes</p>
+                <p>The parking lot problem is the "Hello World" of LLD interviews. It tests your ability to identify entities, model relationships, and handle state management.</p>
+            </div>
+
+            <h2 class="mt-4">1. Requirements Clarification</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Functional Requirements</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li>The parking lot has multiple floors</li>
+                        <li>Each floor has multiple parking spots</li>
+                        <li>Support different vehicle types: Motorcycle, Car, Truck</li>
+                        <li>Support different spot sizes: Compact, Regular, Large</li>
+                        <li>Vehicles should be assigned appropriate spots (motorcycle can park in any, car in regular/large, truck only in large)</li>
+                        <li>Issue tickets on entry, calculate fee on exit</li>
+                        <li>Support multiple entry/exit points</li>
+                        <li>Track available spots per floor and type</li>
+                    </ul>
+
+                    <h4 class="mt-3">Clarifying Questions to Ask</h4>
+                    <ul>
+                        <li>"Is the parking lot multi-floor?" (Yes)</li>
+                        <li>"What vehicle types do we support?" (Motorcycle, Car, Truck)</li>
+                        <li>"How is pricing calculated?" (Hourly rate based on vehicle type)</li>
+                        <li>"Do we need reserved/handicapped spots?" (Not for MVP)</li>
+                        <li>"Multiple entry/exit points?" (Yes, for concurrency consideration)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">2. Core Entities</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Entity Identification</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Entity</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Responsibility</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Key Attributes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>ParkingLot</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Singleton managing entire lot</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">floors, entryPanels, exitPanels</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>ParkingFloor</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Manages spots on a floor</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">floorNumber, spots, displayBoard</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>ParkingSpot</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Individual parking space</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">spotId, spotType, isAvailable, vehicle</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Vehicle</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Vehicle being parked</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">licensePlate, vehicleType</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>ParkingTicket</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Tracks parking session</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">ticketId, entryTime, exitTime, spot, vehicle</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Payment</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Handles fee calculation</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">amount, paymentMethod, status</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="mt-4">3. Class Diagram</h2>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+classDiagram
+    class ParkingLot {
+        -static instance: ParkingLot
+        -floors: List~ParkingFloor~
+        -entryPanels: List~EntryPanel~
+        -exitPanels: List~ExitPanel~
+        +getInstance(): ParkingLot
+        +addFloor(floor: ParkingFloor)
+        +findAvailableSpot(vehicleType): ParkingSpot
+        +isFull(): boolean
+    }
+
+    class ParkingFloor {
+        -floorNumber: int
+        -spots: Map~SpotType, List~ParkingSpot~~
+        -displayBoard: DisplayBoard
+        +getAvailableSpots(type: SpotType): int
+        +findSpot(vehicleType): ParkingSpot
+        +updateDisplayBoard()
+    }
+
+    class ParkingSpot {
+        -spotId: String
+        -spotType: SpotType
+        -isAvailable: boolean
+        -vehicle: Vehicle
+        +assignVehicle(vehicle): boolean
+        +removeVehicle(): Vehicle
+        +canFitVehicle(type): boolean
+    }
+
+    class Vehicle {
+        &lt;&lt;abstract&gt;&gt;
+        -licensePlate: String
+        -vehicleType: VehicleType
+        +getLicensePlate(): String
+        +getType(): VehicleType
+    }
+
+    class Car {
+    }
+
+    class Motorcycle {
+    }
+
+    class Truck {
+    }
+
+    class ParkingTicket {
+        -ticketId: String
+        -entryTime: LocalDateTime
+        -exitTime: LocalDateTime
+        -vehicle: Vehicle
+        -spot: ParkingSpot
+        -status: TicketStatus
+        +calculateFee(): double
+    }
+
+    class EntryPanel {
+        -panelId: String
+        +issueTicket(vehicle): ParkingTicket
+    }
+
+    class ExitPanel {
+        -panelId: String
+        +processExit(ticket): Payment
+    }
+
+    ParkingLot "1" *-- "*" ParkingFloor
+    ParkingFloor "1" *-- "*" ParkingSpot
+    ParkingSpot "1" o-- "0..1" Vehicle
+    Vehicle <|-- Car
+    Vehicle <|-- Motorcycle
+    Vehicle <|-- Truck
+    ParkingTicket "1" --> "1" Vehicle
+    ParkingTicket "1" --> "1" ParkingSpot
+    ParkingLot "1" *-- "*" EntryPanel
+    ParkingLot "1" *-- "*" ExitPanel
+                </div>
+            </div>
+
+            <h2 class="mt-4">4. Java Implementation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Enums and Constants</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">// Vehicle Types
+public enum VehicleType {
+    MOTORCYCLE,
+    CAR,
+    TRUCK
+}
+
+// Spot Types with capacity constraints
+public enum SpotType {
+    COMPACT(1),    // Fits motorcycle only
+    REGULAR(2),    // Fits motorcycle, car
+    LARGE(3);      // Fits all vehicles
+
+    private final int capacity;
+
+    SpotType(int capacity) {
+        this.capacity = capacity;
+    }
+
+    public boolean canFit(VehicleType vehicleType) {
+        return this.capacity >= getVehicleSize(vehicleType);
+    }
+
+    private int getVehicleSize(VehicleType type) {
+        return switch (type) {
+            case MOTORCYCLE -> 1;
+            case CAR -> 2;
+            case TRUCK -> 3;
+        };
+    }
+}
+
+// Ticket Status
+public enum TicketStatus {
+    ACTIVE,
+    PAID,
+    LOST
+}
+
+// Hourly rates by vehicle type
+public class ParkingRates {
+    public static final Map&lt;VehicleType, Double&gt; HOURLY_RATES = Map.of(
+        VehicleType.MOTORCYCLE, 1.0,
+        VehicleType.CAR, 2.0,
+        VehicleType.TRUCK, 4.0
+    );
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Vehicle Hierarchy</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">// Abstract base class for vehicles
+public abstract class Vehicle {
+    private final String licensePlate;
+    private final VehicleType type;
+
+    protected Vehicle(String licensePlate, VehicleType type) {
+        this.licensePlate = licensePlate;
+        this.type = type;
+    }
+
+    public String getLicensePlate() {
+        return licensePlate;
+    }
+
+    public VehicleType getType() {
+        return type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Vehicle)) return false;
+        Vehicle vehicle = (Vehicle) o;
+        return licensePlate.equals(vehicle.licensePlate);
+    }
+
+    @Override
+    public int hashCode() {
+        return licensePlate.hashCode();
+    }
+}
+
+// Concrete vehicle types
+public class Car extends Vehicle {
+    public Car(String licensePlate) {
+        super(licensePlate, VehicleType.CAR);
+    }
+}
+
+public class Motorcycle extends Vehicle {
+    public Motorcycle(String licensePlate) {
+        super(licensePlate, VehicleType.MOTORCYCLE);
+    }
+}
+
+public class Truck extends Vehicle {
+    public Truck(String licensePlate) {
+        super(licensePlate, VehicleType.TRUCK);
+    }
+}
+
+// Factory for creating vehicles
+public class VehicleFactory {
+    public static Vehicle createVehicle(VehicleType type, String licensePlate) {
+        return switch (type) {
+            case MOTORCYCLE -> new Motorcycle(licensePlate);
+            case CAR -> new Car(licensePlate);
+            case TRUCK -> new Truck(licensePlate);
+        };
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>ParkingSpot - Thread-Safe Implementation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">import java.util.concurrent.locks.ReentrantLock;
+
+public class ParkingSpot {
+    private final String spotId;
+    private final SpotType spotType;
+    private final int floorNumber;
+    private Vehicle parkedVehicle;
+    private final ReentrantLock lock = new ReentrantLock();
+
+    public ParkingSpot(String spotId, SpotType spotType, int floorNumber) {
+        this.spotId = spotId;
+        this.spotType = spotType;
+        this.floorNumber = floorNumber;
+    }
+
+    public String getSpotId() {
+        return spotId;
+    }
+
+    public SpotType getSpotType() {
+        return spotType;
+    }
+
+    public int getFloorNumber() {
+        return floorNumber;
+    }
+
+    public boolean isAvailable() {
+        lock.lock();
+        try {
+            return parkedVehicle == null;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public boolean canFitVehicle(VehicleType vehicleType) {
+        return spotType.canFit(vehicleType);
+    }
+
+    /**
+     * Attempts to assign a vehicle to this spot.
+     * Thread-safe - uses lock to prevent race conditions.
+     *
+     * @return true if vehicle was successfully assigned, false if spot was taken
+     */
+    public boolean assignVehicle(Vehicle vehicle) {
+        if (!canFitVehicle(vehicle.getType())) {
+            return false;
+        }
+
+        lock.lock();
+        try {
+            if (parkedVehicle != null) {
+                return false; // Spot already taken
+            }
+            parkedVehicle = vehicle;
+            return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Removes the vehicle from this spot.
+     *
+     * @return the removed vehicle, or null if spot was empty
+     */
+    public Vehicle removeVehicle() {
+        lock.lock();
+        try {
+            Vehicle vehicle = parkedVehicle;
+            parkedVehicle = null;
+            return vehicle;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public Vehicle getParkedVehicle() {
+        lock.lock();
+        try {
+            return parkedVehicle;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Spot[%s, %s, Floor %d, %s]",
+            spotId, spotType, floorNumber,
+            isAvailable() ? "Available" : "Occupied");
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>ParkingFloor</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class ParkingFloor {
+    private final int floorNumber;
+    private final Map&lt;SpotType, List&lt;ParkingSpot&gt;&gt; spotsByType;
+    private final Map&lt;SpotType, AtomicInteger&gt; availableCount;
+
+    public ParkingFloor(int floorNumber) {
+        this.floorNumber = floorNumber;
+        this.spotsByType = new ConcurrentHashMap&lt;&gt;();
+        this.availableCount = new ConcurrentHashMap&lt;&gt;();
+
+        // Initialize for each spot type
+        for (SpotType type : SpotType.values()) {
+            spotsByType.put(type, Collections.synchronizedList(new ArrayList&lt;&gt;()));
+            availableCount.put(type, new AtomicInteger(0));
+        }
+    }
+
+    public void addSpot(ParkingSpot spot) {
+        spotsByType.get(spot.getSpotType()).add(spot);
+        availableCount.get(spot.getSpotType()).incrementAndGet();
+    }
+
+    public int getFloorNumber() {
+        return floorNumber;
+    }
+
+    public int getAvailableSpots(SpotType type) {
+        return availableCount.get(type).get();
+    }
+
+    public int getTotalAvailableSpots() {
+        return availableCount.values().stream()
+            .mapToInt(AtomicInteger::get)
+            .sum();
+    }
+
+    /**
+     * Finds an available spot for the given vehicle type.
+     * Strategy: Find the smallest spot that can fit the vehicle.
+     */
+    public Optional&lt;ParkingSpot&gt; findAvailableSpot(VehicleType vehicleType) {
+        // Try spots in order of size (smallest first that can fit)
+        for (SpotType spotType : SpotType.values()) {
+            if (!spotType.canFit(vehicleType)) {
+                continue;
+            }
+
+            List&lt;ParkingSpot&gt; spots = spotsByType.get(spotType);
+            for (ParkingSpot spot : spots) {
+                if (spot.isAvailable()) {
+                    return Optional.of(spot);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Updates available count when a spot is taken or freed.
+     */
+    public void updateAvailability(SpotType type, boolean isNowAvailable) {
+        if (isNowAvailable) {
+            availableCount.get(type).incrementAndGet();
+        } else {
+            availableCount.get(type).decrementAndGet();
+        }
+    }
+
+    public Map&lt;SpotType, Integer&gt; getAvailabilityDisplay() {
+        Map&lt;SpotType, Integer&gt; display = new EnumMap&lt;&gt;(SpotType.class);
+        for (SpotType type : SpotType.values()) {
+            display.put(type, availableCount.get(type).get());
+        }
+        return display;
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>ParkingTicket and Payment</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">import java.time.LocalDateTime;
+import java.time.Duration;
+import java.util.UUID;
+
+public class ParkingTicket {
+    private final String ticketId;
+    private final Vehicle vehicle;
+    private final ParkingSpot spot;
+    private final LocalDateTime entryTime;
+    private LocalDateTime exitTime;
+    private TicketStatus status;
+
+    public ParkingTicket(Vehicle vehicle, ParkingSpot spot) {
+        this.ticketId = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        this.vehicle = vehicle;
+        this.spot = spot;
+        this.entryTime = LocalDateTime.now();
+        this.status = TicketStatus.ACTIVE;
+    }
+
+    public String getTicketId() { return ticketId; }
+    public Vehicle getVehicle() { return vehicle; }
+    public ParkingSpot getSpot() { return spot; }
+    public LocalDateTime getEntryTime() { return entryTime; }
+    public LocalDateTime getExitTime() { return exitTime; }
+    public TicketStatus getStatus() { return status; }
+
+    public void markExit() {
+        this.exitTime = LocalDateTime.now();
+    }
+
+    public void markPaid() {
+        this.status = TicketStatus.PAID;
+    }
+
+    public void markLost() {
+        this.status = TicketStatus.LOST;
+    }
+
+    /**
+     * Calculates parking fee based on duration and vehicle type.
+     * Minimum charge: 1 hour
+     * Lost ticket: 24 hour charge
+     */
+    public double calculateFee() {
+        if (status == TicketStatus.LOST) {
+            return ParkingRates.HOURLY_RATES.get(vehicle.getType()) * 24;
+        }
+
+        LocalDateTime end = exitTime != null ? exitTime : LocalDateTime.now();
+        Duration duration = Duration.between(entryTime, end);
+
+        // Round up to nearest hour, minimum 1 hour
+        long hours = Math.max(1, (long) Math.ceil(duration.toMinutes() / 60.0));
+
+        return ParkingRates.HOURLY_RATES.get(vehicle.getType()) * hours;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Ticket[%s, %s, %s, Entry: %s, Status: %s]",
+            ticketId, vehicle.getLicensePlate(), spot.getSpotId(),
+            entryTime, status);
+    }
+}
+
+// Payment handling with Strategy pattern
+public interface PaymentStrategy {
+    boolean processPayment(double amount);
+}
+
+public class CashPayment implements PaymentStrategy {
+    @Override
+    public boolean processPayment(double amount) {
+        System.out.println("Processing cash payment: $" + amount);
+        return true;
+    }
+}
+
+public class CardPayment implements PaymentStrategy {
+    private final String cardNumber;
+
+    public CardPayment(String cardNumber) {
+        this.cardNumber = cardNumber;
+    }
+
+    @Override
+    public boolean processPayment(double amount) {
+        System.out.println("Processing card payment: $" + amount + " on card " +
+            cardNumber.substring(cardNumber.length() - 4));
+        return true;
+    }
+}
+
+public class Payment {
+    private final ParkingTicket ticket;
+    private final double amount;
+    private final PaymentStrategy paymentStrategy;
+    private final LocalDateTime paymentTime;
+    private boolean isSuccessful;
+
+    public Payment(ParkingTicket ticket, PaymentStrategy strategy) {
+        this.ticket = ticket;
+        this.amount = ticket.calculateFee();
+        this.paymentStrategy = strategy;
+        this.paymentTime = LocalDateTime.now();
+    }
+
+    public boolean process() {
+        this.isSuccessful = paymentStrategy.processPayment(amount);
+        if (isSuccessful) {
+            ticket.markPaid();
+        }
+        return isSuccessful;
+    }
+
+    public double getAmount() { return amount; }
+    public boolean isSuccessful() { return isSuccessful; }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>ParkingLot - Singleton with Thread Safety</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class ParkingLot {
+    // Singleton instance - thread-safe initialization
+    private static volatile ParkingLot instance;
+    private static final Object lock = new Object();
+
+    private final String name;
+    private final List&lt;ParkingFloor&gt; floors;
+    private final Map&lt;String, ParkingTicket&gt; activeTickets; // ticketId -> ticket
+    private final Map&lt;String, ParkingTicket&gt; vehicleTickets; // licensePlate -> ticket
+
+    private ParkingLot(String name) {
+        this.name = name;
+        this.floors = Collections.synchronizedList(new ArrayList&lt;&gt;());
+        this.activeTickets = new ConcurrentHashMap&lt;&gt;();
+        this.vehicleTickets = new ConcurrentHashMap&lt;&gt;();
+    }
+
+    public static ParkingLot getInstance(String name) {
+        if (instance == null) {
+            synchronized (lock) {
+                if (instance == null) {
+                    instance = new ParkingLot(name);
+                }
+            }
+        }
+        return instance;
+    }
+
+    // For testing - reset singleton
+    public static void resetInstance() {
+        synchronized (lock) {
+            instance = null;
+        }
+    }
+
+    public void addFloor(ParkingFloor floor) {
+        floors.add(floor);
+    }
+
+    public int getTotalCapacity() {
+        return floors.stream()
+            .flatMap(f -> Arrays.stream(SpotType.values())
+                .mapToInt(t -> f.getAvailableSpots(t)).boxed())
+            .mapToInt(Integer::intValue)
+            .sum();
+    }
+
+    public boolean isFull() {
+        return floors.stream()
+            .allMatch(floor -> floor.getTotalAvailableSpots() == 0);
+    }
+
+    /**
+     * Parks a vehicle and issues a ticket.
+     * Finds the first available spot across all floors.
+     *
+     * @return ParkingTicket if successful, empty if lot is full
+     */
+    public Optional&lt;ParkingTicket&gt; parkVehicle(Vehicle vehicle) {
+        // Check if vehicle is already parked
+        if (vehicleTickets.containsKey(vehicle.getLicensePlate())) {
+            throw new IllegalStateException(
+                "Vehicle " + vehicle.getLicensePlate() + " is already parked");
+        }
+
+        // Find available spot across floors
+        for (ParkingFloor floor : floors) {
+            Optional&lt;ParkingSpot&gt; spotOpt = floor.findAvailableSpot(vehicle.getType());
+
+            if (spotOpt.isPresent()) {
+                ParkingSpot spot = spotOpt.get();
+
+                // Try to assign vehicle (may fail due to race condition)
+                if (spot.assignVehicle(vehicle)) {
+                    // Update floor availability
+                    floor.updateAvailability(spot.getSpotType(), false);
+
+                    // Create and store ticket
+                    ParkingTicket ticket = new ParkingTicket(vehicle, spot);
+                    activeTickets.put(ticket.getTicketId(), ticket);
+                    vehicleTickets.put(vehicle.getLicensePlate(), ticket);
+
+                    return Optional.of(ticket);
+                }
+                // If assignment failed, continue to next spot
+            }
+        }
+
+        return Optional.empty(); // Lot is full for this vehicle type
+    }
+
+    /**
+     * Processes vehicle exit.
+     *
+     * @return Payment object with calculated fee
+     */
+    public Payment exitVehicle(String ticketId, PaymentStrategy paymentStrategy) {
+        ParkingTicket ticket = activeTickets.get(ticketId);
+
+        if (ticket == null) {
+            throw new IllegalArgumentException("Invalid ticket: " + ticketId);
+        }
+
+        if (ticket.getStatus() != TicketStatus.ACTIVE) {
+            throw new IllegalStateException("Ticket already processed: " + ticketId);
+        }
+
+        // Mark exit time
+        ticket.markExit();
+
+        // Create and process payment
+        Payment payment = new Payment(ticket, paymentStrategy);
+        payment.process();
+
+        if (payment.isSuccessful()) {
+            // Remove vehicle from spot
+            ParkingSpot spot = ticket.getSpot();
+            spot.removeVehicle();
+
+            // Update floor availability
+            ParkingFloor floor = floors.get(spot.getFloorNumber());
+            floor.updateAvailability(spot.getSpotType(), true);
+
+            // Remove from active tickets
+            activeTickets.remove(ticketId);
+            vehicleTickets.remove(ticket.getVehicle().getLicensePlate());
+        }
+
+        return payment;
+    }
+
+    /**
+     * Handles lost ticket scenario.
+     */
+    public Payment handleLostTicket(String licensePlate, PaymentStrategy paymentStrategy) {
+        ParkingTicket ticket = vehicleTickets.get(licensePlate);
+
+        if (ticket == null) {
+            throw new IllegalArgumentException("No active parking for: " + licensePlate);
+        }
+
+        ticket.markLost();
+        return exitVehicle(ticket.getTicketId(), paymentStrategy);
+    }
+
+    public Map&lt;Integer, Map&lt;SpotType, Integer&gt;&gt; getAvailabilityDisplay() {
+        Map&lt;Integer, Map&lt;SpotType, Integer&gt;&gt; display = new LinkedHashMap&lt;&gt;();
+        for (ParkingFloor floor : floors) {
+            display.put(floor.getFloorNumber(), floor.getAvailabilityDisplay());
+        }
+        return display;
+    }
+
+    public ParkingTicket getTicket(String ticketId) {
+        return activeTickets.get(ticketId);
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <h2 class="mt-4">5. Usage Example</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Complete Demo</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class ParkingLotDemo {
+    public static void main(String[] args) {
+        // Initialize parking lot
+        ParkingLot lot = ParkingLot.getInstance("Downtown Parking");
+
+        // Create floors and add spots
+        ParkingFloor floor0 = new ParkingFloor(0);
+        ParkingFloor floor1 = new ParkingFloor(1);
+
+        // Floor 0: 5 compact, 10 regular, 5 large
+        for (int i = 0; i < 5; i++) {
+            floor0.addSpot(new ParkingSpot("0-C-" + i, SpotType.COMPACT, 0));
+        }
+        for (int i = 0; i < 10; i++) {
+            floor0.addSpot(new ParkingSpot("0-R-" + i, SpotType.REGULAR, 0));
+        }
+        for (int i = 0; i < 5; i++) {
+            floor0.addSpot(new ParkingSpot("0-L-" + i, SpotType.LARGE, 0));
+        }
+
+        // Floor 1: Same configuration
+        for (int i = 0; i < 5; i++) {
+            floor1.addSpot(new ParkingSpot("1-C-" + i, SpotType.COMPACT, 1));
+        }
+        for (int i = 0; i < 10; i++) {
+            floor1.addSpot(new ParkingSpot("1-R-" + i, SpotType.REGULAR, 1));
+        }
+        for (int i = 0; i < 5; i++) {
+            floor1.addSpot(new ParkingSpot("1-L-" + i, SpotType.LARGE, 1));
+        }
+
+        lot.addFloor(floor0);
+        lot.addFloor(floor1);
+
+        // Display initial availability
+        System.out.println("Initial Availability:");
+        lot.getAvailabilityDisplay().forEach((floor, spots) -> {
+            System.out.println("Floor " + floor + ": " + spots);
+        });
+
+        // Park some vehicles
+        Vehicle car1 = new Car("ABC-123");
+        Vehicle motorcycle1 = new Motorcycle("MOTO-456");
+        Vehicle truck1 = new Truck("TRUCK-789");
+
+        System.out.println("\n--- Parking Vehicles ---");
+
+        ParkingTicket ticket1 = lot.parkVehicle(car1)
+            .orElseThrow(() -> new RuntimeException("Failed to park car"));
+        System.out.println("Parked: " + ticket1);
+
+        ParkingTicket ticket2 = lot.parkVehicle(motorcycle1)
+            .orElseThrow(() -> new RuntimeException("Failed to park motorcycle"));
+        System.out.println("Parked: " + ticket2);
+
+        ParkingTicket ticket3 = lot.parkVehicle(truck1)
+            .orElseThrow(() -> new RuntimeException("Failed to park truck"));
+        System.out.println("Parked: " + ticket3);
+
+        // Display availability after parking
+        System.out.println("\nAvailability After Parking:");
+        lot.getAvailabilityDisplay().forEach((floor, spots) -> {
+            System.out.println("Floor " + floor + ": " + spots);
+        });
+
+        // Simulate time passing (in real scenario, this would be actual wait)
+        System.out.println("\n--- Processing Exit ---");
+
+        // Exit car with card payment
+        Payment payment = lot.exitVehicle(ticket1.getTicketId(), new CardPayment("4111111111111111"));
+        System.out.println("Car exit - Amount paid: $" + payment.getAmount());
+
+        // Exit motorcycle with cash
+        payment = lot.exitVehicle(ticket2.getTicketId(), new CashPayment());
+        System.out.println("Motorcycle exit - Amount paid: $" + payment.getAmount());
+
+        // Simulate lost ticket for truck
+        System.out.println("\n--- Lost Ticket Scenario ---");
+        payment = lot.handleLostTicket("TRUCK-789", new CashPayment());
+        System.out.println("Truck (lost ticket) - Amount paid: $" + payment.getAmount());
+
+        // Final availability
+        System.out.println("\nFinal Availability:");
+        lot.getAvailabilityDisplay().forEach((floor, spots) -> {
+            System.out.println("Floor " + floor + ": " + spots);
+        });
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <h2 class="mt-4">6. Design Patterns Used</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Singleton</h3>
+                    <p><strong>Where:</strong> ParkingLot class</p>
+                    <p><strong>Why:</strong> Only one parking lot instance should exist. Double-checked locking ensures thread safety.</p>
+                </div>
+                <div class="card">
+                    <h3>Factory</h3>
+                    <p><strong>Where:</strong> VehicleFactory</p>
+                    <p><strong>Why:</strong> Encapsulates vehicle creation, making it easy to add new vehicle types.</p>
+                </div>
+                <div class="card">
+                    <h3>Strategy</h3>
+                    <p><strong>Where:</strong> PaymentStrategy interface</p>
+                    <p><strong>Why:</strong> Allows different payment methods without changing payment processing logic.</p>
+                </div>
+            </div>
+
+            <h2 class="mt-4">7. Interview Tips</h2>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                <h3>Common Follow-up Questions</h3>
+                <ul>
+                    <li><strong>"How would you handle electric vehicle charging spots?"</strong> - Add EVSpot subclass with charging state, integrate with spot selection strategy</li>
+                    <li><strong>"How would you implement reservation system?"</strong> - Add Reservation entity with time window, modify spot availability check</li>
+                    <li><strong>"How would you scale this for multiple parking lots?"</strong> - Remove Singleton, add ParkingLotManager, use distributed coordination</li>
+                    <li><strong>"What if we need real-time availability updates?"</strong> - Observer pattern for display boards, WebSocket for external systems</li>
+                </ul>
+            </div>
+
+            <div class="card" style="background: var(--warning-bg);">
+                <h3>Red Flags to Avoid</h3>
+                <ul>
+                    <li>Not considering thread safety for concurrent entry/exit</li>
+                    <li>Using inheritance when composition is better (e.g., spot types)</li>
+                    <li>Hardcoding pricing instead of using configuration</li>
+                    <li>Not separating domain logic from persistence</li>
+                    <li>Forgetting edge cases: full lot, lost ticket, already parked vehicle</li>
+                </ul>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="../index.html" class="btn btn-secondary">&larr; Back to LLD Overview</a>
+                <a href="elevator-system.html" class="btn btn-primary">Next: Elevator System &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

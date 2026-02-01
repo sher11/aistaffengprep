@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 1: Design Principles - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">LLD</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="../generative-ai/index.html">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link active" data-module="1">
+                        <span class="sidebar-link-number">1</span>Design Principles
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">2</span>UML & Class Diagrams
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">3</span>Interview Framework
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Design Patterns</div>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">4</span>Creational Patterns
+                    </a>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">5</span>Structural Patterns
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">6</span>Behavioral Patterns
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Concurrency Patterns
+                    </a>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>Code Quality
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>Testing & TDD
+                    </a>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>Advanced OOP
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Practice Problems</div>
+                    <a href="problems/parking-lot.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P1</span>Parking Lot
+                    </a>
+                    <a href="problems/elevator-system.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P2</span>Elevator System
+                    </a>
+                    <a href="problems/vending-machine.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P3</span>Vending Machine
+                    </a>
+                    <a href="problems/library-system.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P4</span>Library System
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Interview Prep</div>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Real-World Architecture
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>Mock Interviews
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 1: Design Principles</h1>
+
+            <div class="card mt-3">
+                <h3>Learning Objectives</h3>
+                <ul>
+                    <li>Understand and apply SOLID principles with real-world examples</li>
+                    <li>Know when to break principles and the trade-offs involved</li>
+                    <li>Master DRY, KISS, YAGNI in practical contexts</li>
+                    <li>Recognize code smells that violate these principles</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Why Design Principles Matter</h2>
+
+            <p>Design principles aren't arbitrary rules - they're distilled wisdom from decades of software engineering failures and successes. At staff level, you're not just applying these principles; you're teaching others when and why to use them.</p>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15)); border-left: 4px solid #ef4444;">
+                <h3>The Cost of Bad Design</h3>
+                <p><strong>Real Example:</strong> A major e-commerce company's checkout system had 15 different payment providers hardcoded in a 3,000-line switch statement. Adding a new provider took 2 weeks and caused regressions 40% of the time. After refactoring to follow Open-Closed Principle, new providers took 2 days with zero regressions.</p>
+            </div>
+
+            <h2 class="mt-4">SOLID Principles</h2>
+
+            <!-- Single Responsibility Principle -->
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>S - Single Responsibility Principle (SRP)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Definition:</strong> A class should have only one reason to change.</p>
+
+                    <p><strong>The WHY:</strong> When a class has multiple responsibilities, changes to one responsibility risk breaking another. This creates hidden coupling and makes the codebase fragile.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+classDiagram
+    class UserBad {
+        -String name
+        -String email
+        +save()
+        +sendEmail()
+        +generateReport()
+    }
+
+    class User {
+        -String name
+        -String email
+        +getName()
+        +getEmail()
+    }
+
+    class UserRepository {
+        +save(User user)
+        +findById(long id)
+    }
+
+    class EmailService {
+        +sendEmail(User user, String message)
+    }
+
+    class ReportGenerator {
+        +generateUserReport(User user)
+    }
+
+    UserRepository --> User
+    EmailService --> User
+    ReportGenerator --> User
+                        </div>
+                    </div>
+
+                    <h4>Bad Example - Multiple Responsibilities</h4>
+                    <pre><code class="language-java">// BAD: This class has 3 reasons to change
+// 1. User data structure changes
+// 2. Database schema/connection changes
+// 3. Email provider changes
+public class User {
+    private String name;
+    private String email;
+    private Connection dbConnection;
+
+    public void save() {
+        // Database logic mixed with domain object
+        String sql = "INSERT INTO users (name, email) VALUES (?, ?)";
+        PreparedStatement stmt = dbConnection.prepareStatement(sql);
+        stmt.setString(1, name);
+        stmt.setString(2, email);
+        stmt.executeUpdate();
+    }
+
+    public void sendWelcomeEmail() {
+        // Email logic mixed with domain object
+        EmailClient client = new EmailClient("smtp.example.com");
+        client.send(email, "Welcome!", "Thanks for joining...");
+    }
+}</code></pre>
+
+                    <h4>Good Example - Separated Responsibilities</h4>
+                    <pre><code class="language-java">// GOOD: Each class has a single responsibility
+
+// Domain object - only represents user data
+public class User {
+    private final Long id;
+    private final String name;
+    private final String email;
+
+    public User(Long id, String name, String email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+
+    // Only getters - immutable domain object
+    public Long getId() { return id; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+}
+
+// Repository - handles persistence
+public class UserRepository {
+    private final DataSource dataSource;
+
+    public UserRepository(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    public void save(User user) {
+        try (Connection conn = dataSource.getConnection()) {
+            String sql = "INSERT INTO users (id, name, email) VALUES (?, ?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, user.getId());
+            stmt.setString(2, user.getName());
+            stmt.setString(3, user.getEmail());
+            stmt.executeUpdate();
+        }
+    }
+
+    public Optional&lt;User&gt; findById(Long id) {
+        // Query logic here
+    }
+}
+
+// Service - handles email
+public class EmailService {
+    private final EmailClient emailClient;
+
+    public EmailService(EmailClient emailClient) {
+        this.emailClient = emailClient;
+    }
+
+    public void sendWelcomeEmail(User user) {
+        String subject = "Welcome to our platform!";
+        String body = String.format("Hi %s, thanks for joining!", user.getName());
+        emailClient.send(user.getEmail(), subject, body);
+    }
+}</code></pre>
+
+                    <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                        <strong>Staff-Level Insight:</strong> SRP is often misunderstood as "a class should do only one thing." That's too simplistic. The key is "one reason to change" - which means one actor/stakeholder whose requirements would cause modifications. A <code>UserReportGenerator</code> might format, calculate, and output data - but it still has a single reason to change (reporting requirements).
+                    </div>
+                </div>
+            </div>
+
+            <!-- Open-Closed Principle -->
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>O - Open-Closed Principle (OCP)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Definition:</strong> Software entities should be open for extension but closed for modification.</p>
+
+                    <p><strong>The WHY:</strong> Every time you modify existing code, you risk introducing bugs into working functionality. OCP guides you to design systems where new behavior can be added without changing existing code.</p>
+
+                    <h4>Bad Example - Requires Modification for Each New Type</h4>
+                    <pre><code class="language-java">// BAD: Adding a new payment type requires modifying this class
+public class PaymentProcessor {
+
+    public void processPayment(String paymentType, double amount) {
+        if (paymentType.equals("CREDIT_CARD")) {
+            // Credit card processing logic
+            System.out.println("Processing credit card payment: $" + amount);
+            // Connect to Stripe API...
+        } else if (paymentType.equals("PAYPAL")) {
+            // PayPal processing logic
+            System.out.println("Processing PayPal payment: $" + amount);
+            // Connect to PayPal API...
+        } else if (paymentType.equals("CRYPTO")) {
+            // Every new payment type = modify this class
+            System.out.println("Processing crypto payment: $" + amount);
+        }
+        // What about Apple Pay? Google Pay? Bank Transfer?
+        // This class keeps growing...
+    }
+}</code></pre>
+
+                    <h4>Good Example - Open for Extension</h4>
+                    <pre><code class="language-java">// GOOD: New payment types don't require modifying existing code
+
+// Define the contract
+public interface PaymentStrategy {
+    void processPayment(double amount);
+    boolean supports(String paymentType);
+}
+
+// Implementations can be added without modifying existing code
+public class CreditCardPayment implements PaymentStrategy {
+    private final StripeClient stripeClient;
+
+    public CreditCardPayment(StripeClient stripeClient) {
+        this.stripeClient = stripeClient;
+    }
+
+    @Override
+    public void processPayment(double amount) {
+        stripeClient.charge(amount);
+    }
+
+    @Override
+    public boolean supports(String paymentType) {
+        return "CREDIT_CARD".equals(paymentType);
+    }
+}
+
+public class PayPalPayment implements PaymentStrategy {
+    private final PayPalClient payPalClient;
+
+    public PayPalPayment(PayPalClient payPalClient) {
+        this.payPalClient = payPalClient;
+    }
+
+    @Override
+    public void processPayment(double amount) {
+        payPalClient.executePayment(amount);
+    }
+
+    @Override
+    public boolean supports(String paymentType) {
+        return "PAYPAL".equals(paymentType);
+    }
+}
+
+// The processor is CLOSED for modification
+public class PaymentProcessor {
+    private final List&lt;PaymentStrategy&gt; strategies;
+
+    public PaymentProcessor(List&lt;PaymentStrategy&gt; strategies) {
+        this.strategies = strategies;
+    }
+
+    public void processPayment(String paymentType, double amount) {
+        PaymentStrategy strategy = strategies.stream()
+            .filter(s -> s.supports(paymentType))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Unsupported payment type: " + paymentType));
+
+        strategy.processPayment(amount);
+    }
+}
+
+// Adding Apple Pay: just create a new class, no modifications needed
+public class ApplePayPayment implements PaymentStrategy {
+    @Override
+    public void processPayment(double amount) {
+        // Apple Pay logic
+    }
+
+    @Override
+    public boolean supports(String paymentType) {
+        return "APPLE_PAY".equals(paymentType);
+    }
+}</code></pre>
+
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Real-World Impact at Stripe:</strong> Stripe's payment processing system handles 100+ payment methods. Each method is a separate module that plugs into the core system. Engineers can add new payment methods without touching the critical path code that handles billions of dollars in transactions.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liskov Substitution Principle -->
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>L - Liskov Substitution Principle (LSP)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Definition:</strong> Objects of a superclass should be replaceable with objects of its subclasses without breaking the application.</p>
+
+                    <p><strong>The WHY:</strong> Inheritance creates an "is-a" relationship. If this relationship isn't semantically correct, polymorphism breaks down and code becomes unpredictable.</p>
+
+                    <h4>The Classic Bad Example - Square/Rectangle Problem</h4>
+                    <pre><code class="language-java">// BAD: Square violates LSP when substituted for Rectangle
+
+public class Rectangle {
+    protected int width;
+    protected int height;
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public int getArea() {
+        return width * height;
+    }
+}
+
+// This seems logical: a Square IS-A Rectangle, right?
+public class Square extends Rectangle {
+
+    @Override
+    public void setWidth(int width) {
+        // Must maintain square invariant
+        this.width = width;
+        this.height = width;  // PROBLEM: Unexpected side effect!
+    }
+
+    @Override
+    public void setHeight(int height) {
+        this.width = height;
+        this.height = height;
+    }
+}
+
+// Client code that works with Rectangle breaks with Square
+public class AreaCalculator {
+    public void resize(Rectangle rect) {
+        rect.setWidth(5);
+        rect.setHeight(10);
+
+        // Expected: 50 (5 * 10)
+        // With Square: 100 (10 * 10) - LSP VIOLATED!
+        assert rect.getArea() == 50; // Fails with Square!
+    }
+}</code></pre>
+
+                    <h4>Good Example - Proper Abstraction</h4>
+                    <pre><code class="language-java">// GOOD: Use composition and proper interfaces
+
+public interface Shape {
+    int getArea();
+}
+
+public final class Rectangle implements Shape {
+    private final int width;
+    private final int height;
+
+    public Rectangle(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
+
+    public Rectangle withWidth(int newWidth) {
+        return new Rectangle(newWidth, this.height);
+    }
+
+    public Rectangle withHeight(int newHeight) {
+        return new Rectangle(this.width, newHeight);
+    }
+
+    @Override
+    public int getArea() {
+        return width * height;
+    }
+}
+
+public final class Square implements Shape {
+    private final int side;
+
+    public Square(int side) {
+        this.side = side;
+    }
+
+    public Square withSide(int newSide) {
+        return new Square(newSide);
+    }
+
+    @Override
+    public int getArea() {
+        return side * side;
+    }
+}
+
+// Now code that expects Shape works correctly with both
+public class AreaCalculator {
+    public int totalArea(List&lt;Shape&gt; shapes) {
+        return shapes.stream()
+            .mapToInt(Shape::getArea)
+            .sum();
+    }
+}</code></pre>
+
+                    <h4>Real-World LSP Violation: Java's Stack</h4>
+                    <pre><code class="language-java">// Java's Stack extends Vector - a classic LSP violation!
+// Stack should only allow push/pop, but inheriting from Vector
+// exposes methods like insertElementAt, removeElementAt, etc.
+
+Stack&lt;String&gt; stack = new Stack&lt;&gt;();
+stack.push("first");
+stack.push("second");
+
+// These shouldn't be possible for a Stack!
+stack.insertElementAt("middle", 1);  // Violates LIFO semantics
+stack.removeElementAt(0);            // Can remove from bottom
+
+// Better approach: Use Deque
+Deque&lt;String&gt; properStack = new ArrayDeque&lt;&gt;();
+properStack.push("first");
+properStack.push("second");
+// Only push/pop/peek available - correct LIFO behavior</code></pre>
+
+                    <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                        <strong>Interview Tip:</strong> When asked about LSP, don't just recite the definition. Explain the behavioral contract: preconditions cannot be strengthened, postconditions cannot be weakened, and invariants must be preserved. Show you understand WHY substitutability matters.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interface Segregation Principle -->
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>I - Interface Segregation Principle (ISP)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Definition:</strong> Clients should not be forced to depend on interfaces they don't use.</p>
+
+                    <p><strong>The WHY:</strong> Fat interfaces create unnecessary coupling. When an interface changes, all implementors must change - even if they don't use the changed methods.</p>
+
+                    <h4>Bad Example - Fat Interface</h4>
+                    <pre><code class="language-java">// BAD: One massive interface forces implementations to support everything
+
+public interface Worker {
+    void work();
+    void eat();
+    void sleep();
+    void attendMeeting();
+    void writeCode();
+    void reviewCode();
+    void managePeople();
+}
+
+// Robot workers don't eat or sleep!
+public class RobotWorker implements Worker {
+    @Override
+    public void work() { /* OK */ }
+
+    @Override
+    public void eat() {
+        throw new UnsupportedOperationException("Robots don't eat");
+    }
+
+    @Override
+    public void sleep() {
+        throw new UnsupportedOperationException("Robots don't sleep");
+    }
+
+    @Override
+    public void attendMeeting() { /* OK */ }
+
+    @Override
+    public void writeCode() { /* OK */ }
+
+    @Override
+    public void reviewCode() { /* OK */ }
+
+    @Override
+    public void managePeople() {
+        throw new UnsupportedOperationException("Robots can't manage");
+    }
+}</code></pre>
+
+                    <h4>Good Example - Segregated Interfaces</h4>
+                    <pre><code class="language-java">// GOOD: Small, focused interfaces
+
+public interface Workable {
+    void work();
+}
+
+public interface Feedable {
+    void eat();
+    void sleep();
+}
+
+public interface Programmer {
+    void writeCode();
+    void reviewCode();
+}
+
+public interface Manager {
+    void managePeople();
+    void attendMeeting();
+}
+
+// Human developer: implements what they actually do
+public class Developer implements Workable, Feedable, Programmer {
+    @Override
+    public void work() { writeCode(); }
+
+    @Override
+    public void eat() { /* lunch break */ }
+
+    @Override
+    public void sleep() { /* 8 hours hopefully */ }
+
+    @Override
+    public void writeCode() { /* coding */ }
+
+    @Override
+    public void reviewCode() { /* PRs */ }
+}
+
+// Robot: only implements relevant interfaces
+public class CodingRobot implements Workable, Programmer {
+    @Override
+    public void work() { writeCode(); }
+
+    @Override
+    public void writeCode() { /* AI coding */ }
+
+    @Override
+    public void reviewCode() { /* static analysis */ }
+}
+
+// Tech Lead: different combination
+public class TechLead implements Workable, Feedable, Programmer, Manager {
+    // Implements all relevant capabilities
+}</code></pre>
+
+                    <h4>Real-World Example: Repository Interfaces</h4>
+                    <pre><code class="language-java">// Instead of one massive CrudRepository with everything...
+
+// Segregate by capability
+public interface ReadRepository&lt;T, ID&gt; {
+    Optional&lt;T&gt; findById(ID id);
+    List&lt;T&gt; findAll();
+    boolean existsById(ID id);
+}
+
+public interface WriteRepository&lt;T, ID&gt; {
+    T save(T entity);
+    void deleteById(ID id);
+}
+
+public interface PagingRepository&lt;T, ID&gt; extends ReadRepository&lt;T, ID&gt; {
+    Page&lt;T&gt; findAll(Pageable pageable);
+}
+
+// Read-only service only needs ReadRepository
+public class ReportingService {
+    private final ReadRepository&lt;Order, Long&gt; orderRepo;
+
+    public ReportingService(ReadRepository&lt;Order, Long&gt; orderRepo) {
+        this.orderRepo = orderRepo;
+    }
+
+    // Cannot accidentally call save() or delete()
+}</code></pre>
+                </div>
+            </div>
+
+            <!-- Dependency Inversion Principle -->
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>D - Dependency Inversion Principle (DIP)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Definition:</strong> High-level modules should not depend on low-level modules. Both should depend on abstractions.</p>
+
+                    <p><strong>The WHY:</strong> Direct dependencies on concrete implementations create tight coupling. Changes in low-level modules cascade up to high-level business logic. Abstractions create a stable boundary.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Without DIP"
+        A1[OrderService] --> B1[MySQLDatabase]
+        A1 --> C1[StripePayment]
+        A1 --> D1[SendGridEmail]
+    end
+
+    subgraph "With DIP"
+        A2[OrderService] --> I1[OrderRepository]
+        A2 --> I2[PaymentGateway]
+        A2 --> I3[NotificationService]
+
+        I1 -.-> B2[MySQLOrderRepo]
+        I1 -.-> B3[PostgresOrderRepo]
+        I2 -.-> C2[StripeGateway]
+        I2 -.-> C3[PayPalGateway]
+        I3 -.-> D2[EmailNotifier]
+        I3 -.-> D3[SMSNotifier]
+    end
+                        </div>
+                    </div>
+
+                    <h4>Bad Example - High-Level Depends on Low-Level</h4>
+                    <pre><code class="language-java">// BAD: OrderService directly depends on concrete implementations
+
+public class OrderService {
+    // Tight coupling to specific implementations
+    private MySQLDatabase database = new MySQLDatabase();
+    private StripePaymentProcessor stripe = new StripePaymentProcessor();
+    private SendGridEmailClient email = new SendGridEmailClient();
+
+    public void placeOrder(Order order) {
+        // Business logic tightly coupled to infrastructure
+        database.save(order);
+        stripe.charge(order.getTotal(), order.getPaymentDetails());
+        email.send(order.getCustomerEmail(), "Order Confirmed", "...");
+    }
+}
+
+// Problems:
+// 1. Cannot test without real MySQL, Stripe, SendGrid
+// 2. Cannot switch to PostgreSQL without changing OrderService
+// 3. Cannot add PayPal without modifying OrderService</code></pre>
+
+                    <h4>Good Example - Depend on Abstractions</h4>
+                    <pre><code class="language-java">// GOOD: High-level module depends on abstractions
+
+// Define abstractions at the high-level module's boundary
+public interface OrderRepository {
+    void save(Order order);
+    Optional&lt;Order&gt; findById(String orderId);
+}
+
+public interface PaymentGateway {
+    PaymentResult charge(Money amount, PaymentDetails details);
+}
+
+public interface NotificationService {
+    void notifyOrderPlaced(Order order);
+}
+
+// High-level business logic depends only on abstractions
+public class OrderService {
+    private final OrderRepository orderRepository;
+    private final PaymentGateway paymentGateway;
+    private final NotificationService notificationService;
+
+    // Dependencies injected through constructor
+    public OrderService(
+            OrderRepository orderRepository,
+            PaymentGateway paymentGateway,
+            NotificationService notificationService) {
+        this.orderRepository = orderRepository;
+        this.paymentGateway = paymentGateway;
+        this.notificationService = notificationService;
+    }
+
+    public OrderResult placeOrder(Order order) {
+        // Pure business logic, no infrastructure concerns
+        PaymentResult payment = paymentGateway.charge(
+            order.getTotal(),
+            order.getPaymentDetails()
+        );
+
+        if (payment.isSuccessful()) {
+            order.markAsPaid(payment.getTransactionId());
+            orderRepository.save(order);
+            notificationService.notifyOrderPlaced(order);
+            return OrderResult.success(order);
+        }
+
+        return OrderResult.paymentFailed(payment.getErrorMessage());
+    }
+}
+
+// Low-level implementations
+public class MySQLOrderRepository implements OrderRepository {
+    private final DataSource dataSource;
+
+    @Override
+    public void save(Order order) {
+        // MySQL-specific implementation
+    }
+}
+
+public class StripePaymentGateway implements PaymentGateway {
+    private final StripeClient stripeClient;
+
+    @Override
+    public PaymentResult charge(Money amount, PaymentDetails details) {
+        // Stripe-specific implementation
+    }
+}
+
+// Easy to test with mocks
+public class OrderServiceTest {
+    @Test
+    void shouldSaveOrderAfterSuccessfulPayment() {
+        // Arrange
+        OrderRepository mockRepo = mock(OrderRepository.class);
+        PaymentGateway mockPayment = mock(PaymentGateway.class);
+        NotificationService mockNotification = mock(NotificationService.class);
+
+        when(mockPayment.charge(any(), any()))
+            .thenReturn(PaymentResult.success("txn-123"));
+
+        OrderService service = new OrderService(
+            mockRepo, mockPayment, mockNotification
+        );
+
+        // Act
+        Order order = new Order(/* ... */);
+        OrderResult result = service.placeOrder(order);
+
+        // Assert
+        assertTrue(result.isSuccessful());
+        verify(mockRepo).save(order);
+        verify(mockNotification).notifyOrderPlaced(order);
+    }
+}</code></pre>
+
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Netflix's Approach:</strong> Netflix's microservices architecture heavily uses DIP. Each service defines its own client interfaces. Other services implement these interfaces as "adapters." This allows them to swap implementations (e.g., switching from REST to gRPC) without changing business logic.
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Other Essential Principles</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>DRY - Don't Repeat Yourself</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Definition:</strong> Every piece of knowledge should have a single, unambiguous representation in the system.</p>
+
+                    <p><strong>Common Misconception:</strong> DRY is NOT about eliminating all code duplication. It's about eliminating duplication of <em>knowledge</em>.</p>
+
+                    <h4>When Duplication is OK</h4>
+                    <pre><code class="language-java">// These look similar but represent DIFFERENT knowledge
+// Combining them would be WRONG
+
+public class UserValidator {
+    public boolean isValidEmail(String email) {
+        return email != null && email.contains("@");
+    }
+}
+
+public class OrderValidator {
+    public boolean isValidEmail(String email) {
+        // Same code, but different business rule!
+        // User emails might need different validation later
+        return email != null && email.contains("@");
+    }
+}
+
+// If user email rules change (e.g., must be company domain)
+// order contact email rules might stay the same
+// Premature DRY would couple unrelated concepts</code></pre>
+
+                    <h4>When Duplication is a Problem</h4>
+                    <pre><code class="language-java">// BAD: Same business rule duplicated
+public class OrderService {
+    public double calculateDiscount(Order order) {
+        if (order.getTotal() > 100) {
+            return order.getTotal() * 0.1;  // 10% discount
+        }
+        return 0;
+    }
+}
+
+public class CartService {
+    public double previewDiscount(Cart cart) {
+        if (cart.getTotal() > 100) {
+            return cart.getTotal() * 0.1;  // Same rule duplicated!
+        }
+        return 0;
+    }
+}
+
+// GOOD: Single source of truth
+public class DiscountPolicy {
+    private static final double THRESHOLD = 100.0;
+    private static final double DISCOUNT_RATE = 0.10;
+
+    public double calculateDiscount(double total) {
+        return total > THRESHOLD ? total * DISCOUNT_RATE : 0;
+    }
+}
+
+// Both services use the same policy
+public class OrderService {
+    private final DiscountPolicy discountPolicy;
+
+    public double calculateDiscount(Order order) {
+        return discountPolicy.calculateDiscount(order.getTotal());
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>KISS - Keep It Simple, Stupid</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Definition:</strong> Prefer simple solutions over complex ones. Complexity should be justified.</p>
+
+                    <h4>Over-Engineered Example</h4>
+                    <pre><code class="language-java">// BAD: Enterprise FizzBuzz
+public interface NumberProcessor {
+    String process(int number);
+}
+
+public class FizzProcessor implements NumberProcessor {
+    @Override
+    public String process(int number) {
+        return number % 3 == 0 ? "Fizz" : "";
+    }
+}
+
+public class BuzzProcessor implements NumberProcessor {
+    @Override
+    public String process(int number) {
+        return number % 5 == 0 ? "Buzz" : "";
+    }
+}
+
+public class FizzBuzzProcessorChain {
+    private final List&lt;NumberProcessor&gt; processors;
+
+    public FizzBuzzProcessorChain(List&lt;NumberProcessor&gt; processors) {
+        this.processors = processors;
+    }
+
+    public String process(int number) {
+        String result = processors.stream()
+            .map(p -> p.process(number))
+            .collect(Collectors.joining());
+        return result.isEmpty() ? String.valueOf(number) : result;
+    }
+}
+
+// GOOD: Simple and clear
+public class FizzBuzz {
+    public String convert(int number) {
+        if (number % 15 == 0) return "FizzBuzz";
+        if (number % 3 == 0) return "Fizz";
+        if (number % 5 == 0) return "Buzz";
+        return String.valueOf(number);
+    }
+}</code></pre>
+
+                    <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                        <strong>Staff-Level Judgment:</strong> KISS doesn't mean avoiding all abstraction. It means choosing the <em>right level</em> of abstraction for your context. A startup's payment system doesn't need the same architecture as Stripe's.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>YAGNI - You Ain't Gonna Need It</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Definition:</strong> Don't implement functionality until you actually need it.</p>
+
+                    <h4>YAGNI Violation</h4>
+                    <pre><code class="language-java">// BAD: Building for hypothetical requirements
+public class UserService {
+
+    // "We might need to support multiple databases someday"
+    private final DatabaseFactory databaseFactory;
+
+    // "We might need plugin architecture"
+    private final List&lt;UserPlugin&gt; plugins;
+
+    // "We might need to support LDAP, OAuth, SAML, etc."
+    private final AuthenticationStrategyFactory authFactory;
+
+    // "We might need webhooks"
+    private final WebhookDispatcher webhookDispatcher;
+
+    // Current requirement: Simple user CRUD with password auth
+    // Built: Enterprise authentication platform
+}</code></pre>
+
+                    <h4>Balanced Approach</h4>
+                    <pre><code class="language-java">// GOOD: Build for current needs, design for extension
+
+public class UserService {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public User createUser(String email, String password) {
+        // Simple implementation for current needs
+        User user = new User(email, passwordEncoder.encode(password));
+        return userRepository.save(user);
+    }
+
+    public Optional&lt;User&gt; authenticate(String email, String password) {
+        return userRepository.findByEmail(email)
+            .filter(user -> passwordEncoder.matches(password, user.getPasswordHash()));
+    }
+}
+
+// When you ACTUALLY need OAuth, then add it:
+// 1. Extract an AuthenticationService interface
+// 2. Make PasswordAuthService implement it
+// 3. Add OAuthService as new implementation
+// The code is simple NOW, but extensible LATER</code></pre>
+
+                    <div class="card" style="background: var(--warning-bg);">
+                        <strong>Balance YAGNI with OCP:</strong> You shouldn't build features you don't need, but you should design so that adding features later is easy. Use interfaces at module boundaries, but don't create elaborate plugin systems until needed.
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Self-Check Quiz</h2>
+            <div class="quiz-container" id="module-quiz"></div>
+
+            <div class="flex flex-between mt-4">
+                <a href="index.html" class="btn btn-secondary">&larr; Back to Overview</a>
+                <a href="module-02.html" class="btn btn-primary">Next: Creational Patterns &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            const quizQuestions = [
+                {
+                    question: "Which SOLID principle is violated when a subclass throws UnsupportedOperationException for inherited methods?",
+                    options: ["Single Responsibility", "Open-Closed", "Liskov Substitution", "Interface Segregation"],
+                    correct: 2,
+                    explanation: "LSP requires that subtypes be substitutable for their base types. Throwing exceptions for inherited methods breaks this contract."
+                },
+                {
+                    question: "What is the main purpose of the Dependency Inversion Principle?",
+                    options: ["Reduce the number of classes", "Decouple high-level policy from low-level details", "Eliminate all interfaces", "Make all methods static"],
+                    correct: 1,
+                    explanation: "DIP ensures high-level modules don't depend on low-level modules - both depend on abstractions. This decouples business logic from infrastructure."
+                },
+                {
+                    question: "When is code duplication acceptable according to DRY?",
+                    options: ["Never - all duplication is bad", "When the duplicated code represents different knowledge domains", "When you're in a hurry", "Only in test code"],
+                    correct: 1,
+                    explanation: "DRY is about knowledge, not code. Two identical-looking functions might represent different business rules that should evolve independently."
+                },
+                {
+                    question: "What does YAGNI warn against?",
+                    options: ["Using interfaces", "Building features before they're needed", "Writing tests", "Refactoring code"],
+                    correct: 1,
+                    explanation: "YAGNI (You Ain't Gonna Need It) warns against implementing functionality based on speculation about future requirements."
+                }
+            ];
+
+            if (typeof StaffEngPrep !== 'undefined' && StaffEngPrep.Quiz) {
+                const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+                quiz.render();
+            }
+        });
+    </script>
+</body>
+</html>

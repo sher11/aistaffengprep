@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Low-Level Design - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">LLD</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="../generative-ai/index.html">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link active">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Design Principles
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">2</span>UML & Class Diagrams
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">3</span>Interview Framework
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Design Patterns</div>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">4</span>Creational Patterns
+                    </a>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">5</span>Structural Patterns
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">6</span>Behavioral Patterns
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Concurrency Patterns
+                    </a>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>Code Quality
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>Testing & TDD
+                    </a>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">10</span>Advanced OOP
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Practice Problems</div>
+                    <a href="problems/parking-lot.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P1</span>Parking Lot
+                    </a>
+                    <a href="problems/elevator-system.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P2</span>Elevator System
+                    </a>
+                    <a href="problems/vending-machine.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P3</span>Vending Machine
+                    </a>
+                    <a href="problems/library-system.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P4</span>Library System
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Interview Prep</div>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">11</span>Real-World Architecture
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">12</span>Mock Interviews
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Low-Level Design (Object-Oriented Design)</h1>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(139, 92, 246, 0.15)); border-left: 4px solid #ec4899;">
+                <h3>What is Low-Level Design?</h3>
+                <p>Low-Level Design (LLD), also called Object-Oriented Design (OOD), tests your ability to structure code for a self-contained problem. You'll be given a system - a parking lot, an elevator controller, a chess game - and asked to design the classes, relationships, and APIs.</p>
+                <p style="margin-top: 1rem;"><strong>Key Differences from System Design:</strong></p>
+                <ul>
+                    <li><strong>System Design:</strong> Focus on distributed systems, scalability, databases, networking</li>
+                    <li><strong>Low-Level Design:</strong> Focus on OOP principles, design patterns, class structure, API design</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Why Staff Engineers Need LLD Skills</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Code Quality at Scale</h3>
+                    <p>Staff engineers set standards for code organization. Understanding design patterns helps you guide teams toward maintainable architectures.</p>
+                </div>
+                <div class="card">
+                    <h3>Technical Decision Making</h3>
+                    <p>Choosing between inheritance vs composition, when to use which pattern - these decisions compound across large codebases.</p>
+                </div>
+                <div class="card">
+                    <h3>Interview Performance</h3>
+                    <p>Many companies (Google, Amazon, Microsoft) include LLD rounds. A strong showing demonstrates both coding and design skills.</p>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Course Structure</h2>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart LR
+    subgraph "Week 1-2: Foundations"
+        A[Design Principles] --> B[UML Diagrams]
+        B --> C[Interview Framework]
+    end
+
+    subgraph "Week 3-4: Patterns"
+        D[Creational] --> E[Structural]
+        E --> F[Behavioral]
+    end
+
+    subgraph "Week 5-6: Advanced"
+        G[Concurrency] --> H[Testing/TDD]
+        H --> I[Real-World Practice]
+    end
+
+    C --> D
+    F --> G
+                </div>
+            </div>
+
+            <h2 class="mt-4">Learning Modules</h2>
+
+            <div class="card-grid">
+                <div class="card" onclick="window.location.href='module-01.html'" style="cursor: pointer;">
+                    <h3>Module 1: Design Principles</h3>
+                    <p>SOLID principles, DRY, KISS, YAGNI, and the reasoning behind clean code architecture.</p>
+                    <div class="card-meta">
+                        <span>4-5 hours</span>
+                        <span>Foundation</span>
+                    </div>
+                </div>
+
+                <div class="card" onclick="window.location.href='module-02.html'" style="cursor: pointer;">
+                    <h3>Module 2: Creational Patterns</h3>
+                    <p>Factory, Abstract Factory, Builder, Singleton, Prototype - when and why to use each.</p>
+                    <div class="card-meta">
+                        <span>5-6 hours</span>
+                        <span>Patterns</span>
+                    </div>
+                </div>
+
+                <div class="card" onclick="window.location.href='module-03.html'" style="cursor: pointer;">
+                    <h3>Module 3: Structural Patterns</h3>
+                    <p>Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy with real-world examples.</p>
+                    <div class="card-meta">
+                        <span>5-6 hours</span>
+                        <span>Patterns</span>
+                    </div>
+                </div>
+
+                <div class="card" onclick="window.location.href='module-04.html'" style="cursor: pointer;">
+                    <h3>Module 4: Behavioral Patterns</h3>
+                    <p>Strategy, Observer, State, Command, Chain of Responsibility, and more.</p>
+                    <div class="card-meta">
+                        <span>6-7 hours</span>
+                        <span>Patterns</span>
+                    </div>
+                </div>
+
+                <div class="card" onclick="window.location.href='module-05.html'" style="cursor: pointer;">
+                    <h3>Module 5: UML & Diagrams</h3>
+                    <p>Class diagrams, sequence diagrams, and how to communicate designs visually.</p>
+                    <div class="card-meta">
+                        <span>3-4 hours</span>
+                        <span>Foundation</span>
+                    </div>
+                </div>
+
+                <div class="card" onclick="window.location.href='module-06.html'" style="cursor: pointer;">
+                    <h3>Module 6: Interview Framework</h3>
+                    <p>The 35-minute LLD interview structure: requirements, entities, APIs, implementation.</p>
+                    <div class="card-meta">
+                        <span>3-4 hours</span>
+                        <span>Interview</span>
+                    </div>
+                </div>
+
+                <div class="card" onclick="window.location.href='module-07.html'" style="cursor: pointer;">
+                    <h3>Module 7: Concurrency Patterns</h3>
+                    <p>Thread-safe design, producer-consumer, read-write locks, and concurrent collections.</p>
+                    <div class="card-meta">
+                        <span>5-6 hours</span>
+                        <span>Advanced</span>
+                    </div>
+                </div>
+
+                <div class="card" onclick="window.location.href='module-08.html'" style="cursor: pointer;">
+                    <h3>Module 8: Code Quality</h3>
+                    <p>Refactoring techniques, code smells, and maintaining clean architecture over time.</p>
+                    <div class="card-meta">
+                        <span>4-5 hours</span>
+                        <span>Advanced</span>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Practice Problems</h2>
+
+            <p>Classic LLD interview problems with complete Java implementations:</p>
+
+            <div class="card-grid">
+                <a href="problems/parking-lot.html" class="card" style="text-decoration: none; cursor: pointer;">
+                    <span style="background: #48bb78; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Classic</span>
+                    <h3 style="margin-top: 0.5rem;">Parking Lot System</h3>
+                    <p>The quintessential LLD problem. Design a parking lot with multiple floors, vehicle types, and pricing.</p>
+                </a>
+
+                <a href="problems/elevator-system.html" class="card" style="text-decoration: none; cursor: pointer;">
+                    <span style="background: #ed8936; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Medium</span>
+                    <h3 style="margin-top: 0.5rem;">Elevator System</h3>
+                    <p>Design an elevator controller with scheduling algorithms and state machine management.</p>
+                </a>
+
+                <a href="problems/vending-machine.html" class="card" style="text-decoration: none; cursor: pointer;">
+                    <span style="background: #ed8936; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Medium</span>
+                    <h3 style="margin-top: 0.5rem;">Vending Machine</h3>
+                    <p>State pattern showcase: coin insertion, product selection, and dispensing logic.</p>
+                </a>
+
+                <a href="problems/library-system.html" class="card" style="text-decoration: none; cursor: pointer;">
+                    <span style="background: #48bb78; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Classic</span>
+                    <h3 style="margin-top: 0.5rem;">Library Management</h3>
+                    <p>Books, members, reservations, fines - a comprehensive CRUD system design.</p>
+                </a>
+            </div>
+
+            <h2 class="mt-4">What Interviewers Look For</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Staff-Level Expectations</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color); text-align: left;">Aspect</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color); text-align: left;">Junior/Mid</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color); text-align: left;">Senior/Staff</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Requirements</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Accepts given requirements</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Clarifies, challenges, identifies edge cases</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Design Patterns</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Knows patterns exist</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Knows WHEN and WHY to use them</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Trade-offs</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Single solution mindset</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Discusses alternatives and trade-offs</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Extensibility</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Solves current problem</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Designs for future requirements</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Code Quality</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Working code</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Clean, testable, maintainable code</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Recommended Study Path</h2>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(72, 187, 120, 0.15), rgba(56, 161, 105, 0.15)); border-left: 4px solid #48bb78;">
+                <h3>6-Week LLD Mastery Plan</h3>
+                <p><strong>Week 1-2:</strong> Design Principles + UML + Interview Framework</p>
+                <p><strong>Week 3:</strong> Creational + Structural Patterns</p>
+                <p><strong>Week 4:</strong> Behavioral Patterns + Concurrency</p>
+                <p><strong>Week 5:</strong> Practice Problems (Parking Lot, Elevator, Vending Machine)</p>
+                <p><strong>Week 6:</strong> Mock Interviews + Review</p>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="../index.html" class="btn btn-secondary">&larr; Back to Home</a>
+                <a href="module-01.html" class="btn btn-primary">Start Learning &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

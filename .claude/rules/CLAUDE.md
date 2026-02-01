@@ -2,12 +2,13 @@
 
 ## Project Overview
 
-This is an interactive GitHub Pages site for staff engineer interview preparation, covering five domains:
+This is an interactive GitHub Pages site for staff engineer interview preparation, covering six domains:
 1. **Coding Rounds** - Algorithms, data structures, problem-solving patterns
 2. **System Design** - Scalability, distributed systems, architectural patterns
-3. **Company-Specific** - Interview processes for top tech companies
-4. **Behavioral** - STAR method, leadership stories, communication
-5. **Generative AI Engineering** - LLMs, RAG, Agents, and Production AI Systems
+3. **Low-Level Design** - OOP principles, design patterns, object-oriented design problems
+4. **Company-Specific** - Interview processes for top tech companies
+5. **Behavioral** - STAR method, leadership stories, communication
+6. **Generative AI Engineering** - LLMs, RAG, Agents, and Production AI Systems
 
 **Live Site**: Served from repository root via GitHub Pages
 
@@ -30,6 +31,27 @@ This is an interactive GitHub Pages site for staff engineer interview preparatio
 │       ├── news-feed.html
 │       ├── chat-system.html
 │       └── video-streaming.html
+├── low-level-design/
+│   ├── index.html            # Course overview (12 modules + problems)
+│   ├── module-01.html        # Design Principles (SOLID, DRY, KISS)
+│   ├── module-02.html        # Creational Patterns
+│   ├── module-03.html        # Structural Patterns
+│   ├── module-04.html        # Behavioral Patterns
+│   ├── module-05.html        # UML & Class Diagrams
+│   ├── module-06.html        # Interview Delivery Framework
+│   ├── module-07.html        # Concurrency Patterns
+│   ├── module-08.html        # Code Quality & Refactoring
+│   ├── module-09.html        # Testing & TDD
+│   ├── module-10.html        # Advanced OOP Concepts
+│   ├── module-11.html        # Real-World Architecture
+│   ├── module-12.html        # Mock Interviews
+│   └── problems/             # Classic LLD problems
+│       ├── parking-lot.html
+│       ├── elevator-system.html
+│       ├── vending-machine.html
+│       ├── library-system.html
+│       ├── chess-game.html
+│       └── amazon-locker.html
 ├── company-specific/
 │   ├── index.html            # Course overview (6 modules)
 │   └── module-01.html - module-06.html
