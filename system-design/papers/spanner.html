@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Spanner Deep Dive - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Animated Hero Section - Global Distribution Theme */
+        .spanner-hero {
+            position: relative;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+            padding: 4rem 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            min-height: 350px;
+        }
+
+        .spanner-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.3) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.3) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.2) 0%, transparent 50%);
+            animation: pulse-bg 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-bg {
+            0% { opacity: 0.5; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* Globe Animation */
+        .globe-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 280px;
+            opacity: 0.15;
+        }
+
+        .globe {
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            position: relative;
+            animation: rotate-globe 20s linear infinite;
+        }
+
+        .globe::before, .globe::after {
+            content: '';
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+        }
+
+        .globe::before {
+            top: 10%;
+            left: 10%;
+            right: 10%;
+            bottom: 10%;
+        }
+
+        .globe::after {
+            top: 25%;
+            left: 25%;
+            right: 25%;
+            bottom: 25%;
+        }
+
+        @keyframes rotate-globe {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        /* Data Center Nodes */
+        .datacenter-nodes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .dc-node {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: pulse-node 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+        }
+
+        .dc-node::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(59, 130, 246, 0.5);
+            border-radius: 50%;
+            animation: ripple 2s ease-out infinite;
+        }
+
+        @keyframes pulse-node {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        @keyframes ripple {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+        }
+
+        .dc-node:nth-child(1) { top: 25%; left: 15%; animation-delay: 0s; }
+        .dc-node:nth-child(2) { top: 35%; left: 45%; animation-delay: 0.3s; }
+        .dc-node:nth-child(3) { top: 20%; left: 75%; animation-delay: 0.6s; }
+        .dc-node:nth-child(4) { top: 60%; left: 25%; animation-delay: 0.9s; }
+        .dc-node:nth-child(5) { top: 70%; left: 60%; animation-delay: 1.2s; }
+        .dc-node:nth-child(6) { top: 45%; left: 85%; animation-delay: 1.5s; }
+
+        /* Connection Lines */
+        .connection-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), transparent);
+            transform-origin: left center;
+            animation: data-flow 3s ease-in-out infinite;
+        }
+
+        @keyframes data-flow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .connection-line:nth-child(1) { top: 28%; left: 18%; width: 120px; transform: rotate(15deg); animation-delay: 0s; }
+        .connection-line:nth-child(2) { top: 32%; left: 48%; width: 150px; transform: rotate(-20deg); animation-delay: 0.5s; }
+        .connection-line:nth-child(3) { top: 55%; left: 28%; width: 180px; transform: rotate(25deg); animation-delay: 1s; }
+        .connection-line:nth-child(4) { top: 65%; left: 63%; width: 100px; transform: rotate(-35deg); animation-delay: 1.5s; }
+
+        /* Hero Content */
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-content h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero-meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* TrueTime Animation */
+        .truetime-visualization {
+            background: var(--code-bg);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timeline-container {
+            position: relative;
+            height: 120px;
+            margin: 2rem 0;
+        }
+
+        .timeline-axis {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .time-interval {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 40px;
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.6), rgba(59, 130, 246, 0.3));
+            border: 2px solid #3b82f6;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            animation: interval-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes interval-pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.8); }
+        }
+
+        .interval-bound {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: #3b82f6;
+        }
+
+        .interval-bound.left { left: 0; }
+        .interval-bound.right { right: 0; }
+
+        .interval-label {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .interval-label.earliest {
+            bottom: -25px;
+            left: 0;
+            transform: translateX(-50%);
+        }
+
+        .interval-label.latest {
+            bottom: -25px;
+            right: 0;
+            transform: translateX(50%);
+        }
+
+        .true-time-now {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: now-pulse 1s ease-in-out infinite;
+            z-index: 10;
+        }
+
+        @keyframes now-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.3); }
+        }
+
+        /* Commit Wait Animation */
+        .commit-wait-demo {
+            background: var(--code-bg);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .commit-timeline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2rem 0;
+            position: relative;
+        }
+
+        .commit-timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-50%);
+        }
+
+        .commit-phase {
+            position: relative;
+            text-align: center;
+            z-index: 5;
+        }
+
+        .phase-marker {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 0 auto 0.75rem;
+            animation: phase-glow 2s ease-in-out infinite;
+        }
+
+        .phase-marker.acquire { background: #f59e0b; animation-delay: 0s; }
+        .phase-marker.commit { background: #8b5cf6; animation-delay: 0.5s; }
+        .phase-marker.wait { background: #ef4444; animation-delay: 1s; }
+        .phase-marker.release { background: #10b981; animation-delay: 1.5s; }
+
+        @keyframes phase-glow {
+            0%, 100% { box-shadow: 0 0 10px currentColor; }
+            50% { box-shadow: 0 0 30px currentColor; }
+        }
+
+        .phase-label {
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .phase-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Key Insight Cards */
+        .insight-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .insight-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .insight-card h4::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 20px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        /* Interview Question Cards */
+        .interview-question {
+            background: var(--card-bg);
+            border-left: 4px solid var(--primary-color);
+            padding: 1.25rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .interview-question h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .interview-question .answer {
+            background: rgba(16, 185, 129, 0.1);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 0.75rem;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Architecture layers */
+        .arch-layer {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .arch-layer-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .arch-layer-icon.client { background: rgba(59, 130, 246, 0.2); }
+        .arch-layer-icon.server { background: rgba(139, 92, 246, 0.2); }
+        .arch-layer-icon.storage { background: rgba(16, 185, 129, 0.2); }
+        .arch-layer-icon.time { background: rgba(245, 158, 11, 0.2); }
+
+        /* Trade-off visualization */
+        .tradeoff-scale {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: 0.5rem;
+        }
+
+        .tradeoff-label {
+            flex: 0 0 120px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .tradeoff-bar {
+            flex: 1;
+            height: 24px;
+            background: var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .tradeoff-fill {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 0.5s ease;
+        }
+
+        .tradeoff-fill.consistency { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+        .tradeoff-fill.availability { background: linear-gradient(90deg, #10b981, #06b6d4); }
+        .tradeoff-fill.latency { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .spanner-hero {
+                padding: 2rem 1rem;
+                min-height: 280px;
+            }
+
+            .hero-content h1 {
+                font-size: 1.75rem;
+            }
+
+            .hero-meta {
+                gap: 1rem;
+            }
+
+            .commit-timeline {
+                flex-wrap: wrap;
+                gap: 1.5rem;
+            }
+
+            .commit-timeline::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Paper Deep Dives</div>
+                    <a href="spanner.html" class="sidebar-link active">Google Spanner</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                    <a href="../module-05.html" class="sidebar-link">Seminal Papers</a>
+                    <a href="../module-03.html" class="sidebar-link">Distributed Systems</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <!-- Animated Hero Section -->
+            <div class="spanner-hero">
+                <div class="globe-container">
+                    <div class="globe"></div>
+                </div>
+                <div class="datacenter-nodes">
+                    <div class="dc-node"></div>
+                    <div class="dc-node"></div>
+                    <div class="dc-node"></div>
+                    <div class="dc-node"></div>
+                    <div class="dc-node"></div>
+                    <div class="dc-node"></div>
+                </div>
+                <div class="connection-lines">
+                    <div class="connection-line"></div>
+                    <div class="connection-line"></div>
+                    <div class="connection-line"></div>
+                    <div class="connection-line"></div>
+                </div>
+                <div class="hero-content">
+                    <h1>Google Spanner</h1>
+                    <p class="hero-subtitle">The First Globally Distributed Database with External Consistency</p>
+                    <div class="hero-meta">
+                        <span class="hero-badge">Published: 2012 (OSDI)</span>
+                        <span class="hero-badge">Authors: Corbett et al.</span>
+                        <span class="hero-badge">Category: Distributed Databases</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3" style="background: var(--success-bg);">
+                <strong>Why This Paper Matters:</strong> Spanner fundamentally changed how we think about distributed databases by proving that you CAN have global distribution with strong consistency. It directly influenced CockroachDB, YugabyteDB, TiDB, and Google Cloud Spanner.
+            </div>
+
+            <!-- Problem Context -->
+            <h2 class="mt-4">1. The Problem: Why Google Needed Spanner</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Limitations of Previous Systems</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Before Spanner, Google used <strong>Bigtable</strong> and <strong>Megastore</strong>, each with critical limitations:</p>
+
+                    <div class="card mt-2">
+                        <h4>Bigtable (2006)</h4>
+                        <ul>
+                            <li><strong>No cross-row transactions</strong> - Only single-row atomic operations</li>
+                            <li><strong>No SQL interface</strong> - Application developers had to manage consistency</li>
+                            <li><strong>Eventually consistent</strong> - Complex for applications requiring strong guarantees</li>
+                            <li><strong>Manual sharding</strong> - Engineers had to manage data distribution</li>
+                        </ul>
+                    </div>
+
+                    <div class="card mt-2">
+                        <h4>Megastore (2011)</h4>
+                        <ul>
+                            <li><strong>Entity groups</strong> - Strong consistency only within entity groups</li>
+                            <li><strong>High write latency</strong> - Paxos across datacenters for every write</li>
+                            <li><strong>Limited scalability</strong> - Entity groups became bottlenecks</li>
+                            <li><strong>Complex programming model</strong> - Developers managed consistency boundaries</li>
+                        </ul>
+                    </div>
+
+                    <div class="insight-card">
+                        <h4>The Core Challenge</h4>
+                        <p>Google needed a database that could:</p>
+                        <ol>
+                            <li>Scale to millions of machines across global datacenters</li>
+                            <li>Provide <strong>external consistency</strong> (linearizability + serializability)</li>
+                            <li>Support general-purpose transactions with SQL</li>
+                            <li>Handle Google-scale data (petabytes) with Google-scale traffic</li>
+                        </ol>
+                        <p><strong>The CAP theorem says pick 2 of 3.</strong> Spanner chose consistency + partition tolerance, then minimized availability impact through TrueTime.</p>
+                    </div>
+
+                    <h4 class="mt-3">Real-World Motivation: Google Ads</h4>
+                    <p>The advertising system needed:</p>
+                    <ul>
+                        <li>Global replication (serve ads with low latency worldwide)</li>
+                        <li>Strong consistency (can't double-charge advertisers)</li>
+                        <li>High availability (ads generate revenue 24/7)</li>
+                        <li>Complex queries (targeting, budgets, reporting)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Architecture Deep Dive -->
+            <h2 class="mt-4">2. Architecture Deep Dive</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Overall Architecture</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Universe"
+        subgraph "Zone 1 (US-East)"
+            ZM1[Zonemaster]
+            LS1[Location Proxy]
+            subgraph "Spanserver 1"
+                T1A[Tablet A]
+                T1B[Tablet B]
+            end
+            subgraph "Spanserver 2"
+                T2A[Tablet C]
+                T2B[Tablet D]
+            end
+        end
+
+        subgraph "Zone 2 (EU-West)"
+            ZM2[Zonemaster]
+            LS2[Location Proxy]
+            subgraph "Spanserver 3"
+                T3A[Tablet A replica]
+                T3B[Tablet B replica]
+            end
+        end
+
+        subgraph "Zone 3 (Asia)"
+            ZM3[Zonemaster]
+            LS3[Location Proxy]
+            subgraph "Spanserver 4"
+                T4A[Tablet A replica]
+                T4B[Tablet C replica]
+            end
+        end
+    end
+
+    UM[Universe Master] --> ZM1 & ZM2 & ZM3
+    PM[Placement Driver] --> ZM1 & ZM2 & ZM3
+
+    Client --> LS1
+    Client --> LS2
+    Client --> LS3
+
+    T1A -.->|Paxos| T3A
+    T1A -.->|Paxos| T4A
+    T1B -.->|Paxos| T3B
+                        </div>
+                    </div>
+
+                    <h4>Key Components</h4>
+
+                    <div class="arch-layer">
+                        <div class="arch-layer-icon client">C</div>
+                        <div>
+                            <strong>Universe</strong> - A Spanner deployment. Production has one, test may have another.
+                        </div>
+                    </div>
+
+                    <div class="arch-layer">
+                        <div class="arch-layer-icon server">Z</div>
+                        <div>
+                            <strong>Zone</strong> - Unit of physical isolation, similar to a datacenter. Typically 3-5 zones per universe.
+                        </div>
+                    </div>
+
+                    <div class="arch-layer">
+                        <div class="arch-layer-icon storage">S</div>
+                        <div>
+                            <strong>Spanserver</strong> - Manages 100-1000 tablets. Each tablet is a bag of mappings: (key:string, timestamp:int64) -> string
+                        </div>
+                    </div>
+
+                    <div class="arch-layer">
+                        <div class="arch-layer-icon time">T</div>
+                        <div>
+                            <strong>Tablet</strong> - Similar to Bigtable tablet but with multi-version timestamps. State stored in B-tree files + write-ahead log on Colossus (GFS successor).
+                        </div>
+                    </div>
+
+                    <div class="insight-card">
+                        <h4>Why This Hierarchy Matters</h4>
+                        <p>The zone abstraction allows Spanner to:</p>
+                        <ul>
+                            <li>Place replicas in different failure domains</li>
+                            <li>Control data placement for compliance (GDPR, data residency)</li>
+                            <li>Optimize read latency by placing replicas near users</li>
+                            <li>Balance load across physical datacenters</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Paxos-Based Replication</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Every tablet is replicated using <strong>Paxos</strong>. Each replica group is called a <strong>Paxos group</strong>.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant L as Leader (US)
+    participant R1 as Replica (EU)
+    participant R2 as Replica (Asia)
+
+    C->>L: Write Request
+    L->>L: Acquire Locks
+    L->>L: Choose Commit Timestamp
+    L->>R1: Prepare (Paxos)
+    L->>R2: Prepare (Paxos)
+    R1-->>L: Prepared
+    R2-->>L: Prepared
+    Note over L: Commit Wait
+    L->>R1: Commit
+    L->>R2: Commit
+    L-->>C: Success
+                        </div>
+                    </div>
+
+                    <h4>Paxos Group Details</h4>
+                    <ul>
+                        <li><strong>Long-lived leaders:</strong> 10-second lease by default, reduces election overhead</li>
+                        <li><strong>Pipelined Paxos:</strong> Multiple proposals in flight for throughput</li>
+                        <li><strong>Leader lease:</strong> Enables local reads without Paxos round-trip</li>
+                        <li><strong>Minimum 3 replicas:</strong> Typically 5 for production (survives 2 failures)</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+// Simplified Paxos state machine at each replica
+class PaxosReplica {
+    int64 highest_promised;    // Highest proposal number promised
+    int64 highest_accepted;    // Highest proposal number accepted
+    Value accepted_value;      // Value for highest accepted
+    Log committed_log;         // Committed Paxos log entries
+
+    // Phase 1: Prepare
+    Response prepare(int64 proposal_num) {
+        if (proposal_num > highest_promised) {
+            highest_promised = proposal_num;
+            return PrepareOK{highest_accepted, accepted_value};
+        }
+        return PrepareReject{highest_promised};
+    }
+
+    // Phase 2: Accept
+    Response accept(int64 proposal_num, Value value) {
+        if (proposal_num >= highest_promised) {
+            highest_promised = proposal_num;
+            highest_accepted = proposal_num;
+            accepted_value = value;
+            return AcceptOK{};
+        }
+        return AcceptReject{};
+    }
+
+    // Apply committed value to state machine
+    void commit(int64 log_index, Value value) {
+        committed_log.append(log_index, value);
+        apply_to_tablet(value);
+    }
+}
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Directory and Tablet Structure</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>A <strong>directory</strong> is the unit of data movement and replication configuration.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph "Database: Ads"
+        subgraph "Table: Campaigns"
+            D1[Directory: campaign_1xxx]
+            D2[Directory: campaign_2xxx]
+            D3[Directory: campaign_3xxx]
+        end
+    end
+
+    subgraph "Tablet Allocation"
+        T1[Tablet 1]
+        T2[Tablet 2]
+    end
+
+    D1 --> T1
+    D2 --> T1
+    D3 --> T2
+
+    style D1 fill:#e0f2fe
+    style D2 fill:#e0f2fe
+    style D3 fill:#fef3c7
+                        </div>
+                    </div>
+
+                    <h4>Key Concepts</h4>
+                    <ul>
+                        <li><strong>Directory:</strong> Set of contiguous keys sharing common prefix (e.g., all data for one customer)</li>
+                        <li><strong>Directories can move:</strong> Spanner moves directories between tablets for load balancing</li>
+                        <li><strong>Colocation:</strong> Frequently accessed together data should be in same directory</li>
+                        <li><strong>Movedir:</strong> Background operation to move directories between Paxos groups</li>
+                    </ul>
+
+                    <div class="insight-card">
+                        <h4>Why Directories Matter for Performance</h4>
+                        <p>A directory is the smallest unit that can have its own replication configuration. This means:</p>
+                        <ul>
+                            <li>Hot customers can be spread across more replicas</li>
+                            <li>Regional data can stay within geographic bounds</li>
+                            <li>Cold data can use fewer replicas to save cost</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Schema Design with Interleaved Tables</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Spanner introduces <strong>interleaved tables</strong> for hierarchical data locality.</p>
+
+                    <div class="code-block">
+                        <code>
+-- Traditional approach: Separate tables with foreign keys
+-- Problem: Related data scattered across different tablets
+
+-- Spanner approach: Interleaved tables
+CREATE TABLE Users (
+    user_id     INT64 NOT NULL,
+    email       STRING(MAX),
+    created_at  TIMESTAMP,
+) PRIMARY KEY (user_id);
+
+-- Albums are physically stored with their parent User
+CREATE TABLE Albums (
+    user_id     INT64 NOT NULL,
+    album_id    INT64 NOT NULL,
+    title       STRING(MAX),
+) PRIMARY KEY (user_id, album_id),
+  INTERLEAVE IN PARENT Users ON DELETE CASCADE;
+
+-- Photos are physically stored with their parent Album
+CREATE TABLE Photos (
+    user_id     INT64 NOT NULL,
+    album_id    INT64 NOT NULL,
+    photo_id    INT64 NOT NULL,
+    url         STRING(MAX),
+) PRIMARY KEY (user_id, album_id, photo_id),
+  INTERLEAVE IN PARENT Albums ON DELETE CASCADE;
+                        </code>
+                    </div>
+
+                    <h4>Physical Storage Layout</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Traditional Layout (Separate Tables)"
+        U1[Users Table]
+        A1[Albums Table]
+        P1[Photos Table]
+        U1 -.-> A1
+        A1 -.-> P1
+    end
+
+    subgraph "Interleaved Layout (Spanner)"
+        subgraph "User 1 Directory"
+            U1I[User 1 Row]
+            A1I[Album 1 Row]
+            P1I[Photo 1]
+            P2I[Photo 2]
+            A2I[Album 2 Row]
+            P3I[Photo 3]
+        end
+        subgraph "User 2 Directory"
+            U2I[User 2 Row]
+            A3I[Album 1 Row]
+        end
+    end
+
+    style U1I fill:#bfdbfe
+    style A1I fill:#bbf7d0
+    style A2I fill:#bbf7d0
+    style P1I fill:#fef08a
+    style P2I fill:#fef08a
+    style P3I fill:#fef08a
+                        </div>
+                    </div>
+
+                    <div class="insight-card">
+                        <h4>Interleaving Benefits</h4>
+                        <ul>
+                            <li><strong>Locality:</strong> All data for a user is stored contiguously on disk</li>
+                            <li><strong>Transactions:</strong> Parent-child operations complete in single Paxos group</li>
+                            <li><strong>Performance:</strong> Queries that join parent-child avoid network hops</li>
+                            <li><strong>Consistency:</strong> Hierarchical data moves together during rebalancing</li>
+                        </ul>
+                    </div>
+
+                    <div class="code-block">
+                        <code>
+-- Example query benefits from interleaving
+-- Without interleaving: Could hit multiple shards
+-- With interleaving: Single shard, single Paxos group
+
+SELECT u.email, a.title, COUNT(p.photo_id) as photo_count
+FROM Users u
+JOIN Albums a ON u.user_id = a.user_id
+JOIN Photos p ON a.user_id = p.user_id AND a.album_id = p.album_id
+WHERE u.user_id = 12345
+GROUP BY u.email, a.title;
+
+-- This entire query runs locally on one spanserver!
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TrueTime Deep Dive -->
+            <h2 class="mt-4">3. TrueTime: The Secret Sauce</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>How TrueTime Works</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>TrueTime is a globally synchronized clock API that exposes uncertainty. Instead of returning a single timestamp, it returns an <strong>interval</strong> [earliest, latest] where the true time is guaranteed to be within.</p>
+
+                    <div class="truetime-visualization">
+                        <h4 style="color: white; margin-bottom: 1rem;">TrueTime Interval Visualization</h4>
+                        <p style="color: rgba(255,255,255,0.7); margin-bottom: 1.5rem;">
+                            TT.now() returns TTinterval: [earliest, latest]. The actual time is guaranteed to be within this interval.
+                        </p>
+
+                        <div class="timeline-container">
+                            <div class="timeline-axis"></div>
+                            <div class="time-interval" style="left: 30%; width: 40%;">
+                                <div class="interval-bound left"></div>
+                                <div class="interval-bound right"></div>
+                                <span>Uncertainty: ~7ms typical</span>
+                                <div class="interval-label earliest">TT.earliest()</div>
+                                <div class="interval-label latest">TT.latest()</div>
+                            </div>
+                            <div class="true-time-now" style="left: 50%;"></div>
+                        </div>
+
+                        <div style="text-align: center; color: rgba(255,255,255,0.6); font-size: 0.875rem; margin-top: 2rem;">
+                            Green dot = true time (unknown to us) | Blue interval = what TrueTime guarantees
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">TrueTime API</h4>
+                    <div class="code-block">
+                        <code>
+// TrueTime API - remarkably simple
+struct TTinterval {
+    Timestamp earliest;  // Guaranteed lower bound
+    Timestamp latest;    // Guaranteed upper bound
+};
+
+class TrueTime {
+public:
+    // Returns interval [earliest, latest] containing true time
+    TTinterval now();
+
+    // Returns true when time is definitely after timestamp
+    bool after(Timestamp t) {
+        return now().earliest > t;
+    }
+
+    // Returns true when time is definitely before timestamp
+    bool before(Timestamp t) {
+        return now().latest < t;
+    }
+};
+
+// Usage example
+TTinterval interval = TrueTime::now();
+Timestamp epsilon = interval.latest - interval.earliest;
+// epsilon is typically 1-7ms in production
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">Hardware Infrastructure</h4>
+                    <p>Each datacenter has <strong>time masters</strong>, and each machine has a <strong>time slave daemon</strong>.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Datacenter Time Masters"
+        GPS1[GPS Master 1]
+        GPS2[GPS Master 2]
+        ATOM1[Atomic Clock Master 1]
+        ATOM2[Atomic Clock Master 2]
+    end
+
+    subgraph "Spanserver Machines"
+        TS1[Timeslave Daemon]
+        TS2[Timeslave Daemon]
+        TS3[Timeslave Daemon]
+    end
+
+    GPS1 --> TS1
+    GPS2 --> TS1
+    ATOM1 --> TS2
+    GPS1 --> TS2
+    ATOM2 --> TS3
+    GPS2 --> TS3
+
+    style GPS1 fill:#bfdbfe
+    style GPS2 fill:#bfdbfe
+    style ATOM1 fill:#fef08a
+    style ATOM2 fill:#fef08a
+                        </div>
+                    </div>
+
+                    <div class="card mt-2">
+                        <h4>Why Two Types of Time Masters?</h4>
+                        <ul>
+                            <li><strong>GPS receivers:</strong> Accurate to microseconds, but can be jammed/spoofed</li>
+                            <li><strong>Atomic clocks:</strong> Drift ~6us/day, independent of GPS, different failure modes</li>
+                            <li><strong>Redundancy:</strong> Masters cross-check each other, exclude outliers</li>
+                            <li><strong>Polling:</strong> Daemons poll multiple masters every 30 seconds</li>
+                        </ul>
+                    </div>
+
+                    <div class="insight-card">
+                        <h4>The Genius of TrueTime</h4>
+                        <p>Instead of trying to perfectly synchronize clocks (impossible), TrueTime:</p>
+                        <ol>
+                            <li><strong>Admits uncertainty exists</strong> - Exposes it to applications</li>
+                            <li><strong>Bounds the uncertainty</strong> - Guarantees true time is in interval</li>
+                            <li><strong>Minimizes uncertainty</strong> - Typically 1-7ms with GPS + atomic clocks</li>
+                            <li><strong>Enables consistency</strong> - Commit-wait uses uncertainty bound</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Commit Wait Protocol</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Commit-wait is how Spanner ensures <strong>external consistency</strong>: if transaction T1 commits before T2 starts, then T1's commit timestamp < T2's commit timestamp.</p>
+
+                    <div class="commit-wait-demo">
+                        <h4 style="color: white; margin-bottom: 1rem;">Commit Wait Timeline</h4>
+
+                        <div class="commit-timeline">
+                            <div class="commit-phase">
+                                <div class="phase-marker acquire">1</div>
+                                <div class="phase-label">Acquire Locks</div>
+                                <div class="phase-desc">Get write locks</div>
+                            </div>
+                            <div class="commit-phase">
+                                <div class="phase-marker commit">2</div>
+                                <div class="phase-label">Choose s</div>
+                                <div class="phase-desc">s = TT.now().latest</div>
+                            </div>
+                            <div class="commit-phase">
+                                <div class="phase-marker wait">3</div>
+                                <div class="phase-label">Commit Wait</div>
+                                <div class="phase-desc">Wait until TT.after(s)</div>
+                            </div>
+                            <div class="commit-phase">
+                                <div class="phase-marker release">4</div>
+                                <div class="phase-label">Release</div>
+                                <div class="phase-desc">Commit visible</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Why Commit Wait Works</h4>
+                    <div class="code-block">
+                        <code>
+// Commit wait ensures external consistency
+// If T1 commits before T2 starts, then s1 < s2
+
+Transaction commit(Transaction txn) {
+    // 1. Acquire all locks
+    acquire_locks(txn.write_set);
+
+    // 2. Choose commit timestamp s
+    // Using latest ensures s is after true time now
+    TTinterval now = TrueTime::now();
+    Timestamp s = now.latest;
+
+    // 3. CRITICAL: Commit wait
+    // Wait until we're CERTAIN s is in the past
+    while (!TrueTime::after(s)) {
+        sleep(1ms);  // Typically waits ~2 * epsilon
+    }
+    // Now: true_time > s (guaranteed)
+
+    // 4. Make commit visible, release locks
+    apply_and_release(txn, s);
+    return success;
+}
+
+// Why this ensures external consistency:
+// - T1 chooses s1 = TT.now().latest at time t1_commit
+// - T1 waits until TT.after(s1), meaning true_time > s1
+// - T2 starts at true_time t2_start > s1
+// - T2 chooses s2 = TT.now().latest > t2_start > s1
+// Therefore: s1 < s2 (T1's timestamp < T2's timestamp)
+                        </code>
+                    </div>
+
+                    <div class="insight-card">
+                        <h4>The Trade-off: Latency for Consistency</h4>
+                        <p>Commit wait adds latency equal to ~2 * epsilon (uncertainty interval):</p>
+                        <ul>
+                            <li><strong>With GPS + atomic clocks:</strong> ~7ms average wait</li>
+                            <li><strong>With only NTP:</strong> Would be 100ms+ (unusable)</li>
+                            <li><strong>Google's investment:</strong> Special hardware makes this practical</li>
+                        </ul>
+                        <p><strong>This is why CockroachDB without TrueTime hardware has higher write latency!</strong></p>
+                    </div>
+
+                    <div class="tradeoff-scale">
+                        <span class="tradeoff-label">Consistency</span>
+                        <div class="tradeoff-bar">
+                            <div class="tradeoff-fill consistency" style="width: 95%;"></div>
+                        </div>
+                    </div>
+                    <div class="tradeoff-scale">
+                        <span class="tradeoff-label">Availability</span>
+                        <div class="tradeoff-bar">
+                            <div class="tradeoff-fill availability" style="width: 85%;"></div>
+                        </div>
+                    </div>
+                    <div class="tradeoff-scale">
+                        <span class="tradeoff-label">Latency Cost</span>
+                        <div class="tradeoff-bar">
+                            <div class="tradeoff-fill latency" style="width: 30%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Working Code Examples -->
+            <h2 class="mt-4">4. Working Code Examples</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>TrueTime Interval Logic</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python simulation of TrueTime
+import time
+from dataclasses import dataclass
+from typing import List
+import random
+
+@dataclass
+class TTInterval:
+    """TrueTime interval representing bounded uncertainty."""
+    earliest: float  # Guaranteed lower bound (seconds since epoch)
+    latest: float    # Guaranteed upper bound
+
+    @property
+    def uncertainty(self) -> float:
+        """Epsilon: half the uncertainty interval."""
+        return (self.latest - self.earliest) / 2
+
+class TrueTime:
+    """
+    Simulated TrueTime implementation.
+
+    In real Spanner, this polls GPS + atomic clock time masters.
+    The uncertainty bounds are maintained based on:
+    - Network latency to time masters
+    - Local clock drift since last sync
+    - Time master accuracy
+    """
+
+    def __init__(self, base_uncertainty_ms: float = 4.0):
+        self.base_uncertainty = base_uncertainty_ms / 1000.0
+        self.last_sync = time.time()
+        self.drift_rate = 200e-6  # 200 ppm clock drift
+
+    def now(self) -> TTInterval:
+        """Return current time with uncertainty bounds."""
+        actual_time = time.time()
+
+        # Uncertainty grows with time since last sync
+        time_since_sync = actual_time - self.last_sync
+        drift_uncertainty = time_since_sync * self.drift_rate
+
+        # Total uncertainty
+        epsilon = self.base_uncertainty + drift_uncertainty
+
+        # Add some jitter to simulate real conditions
+        jitter = random.uniform(-0.001, 0.001)
+
+        return TTInterval(
+            earliest=actual_time - epsilon + jitter,
+            latest=actual_time + epsilon + jitter
+        )
+
+    def after(self, timestamp: float) -> bool:
+        """Return True only when definitely after timestamp."""
+        return self.now().earliest > timestamp
+
+    def before(self, timestamp: float) -> bool:
+        """Return True only when definitely before timestamp."""
+        return self.now().latest < timestamp
+
+    def sync(self):
+        """Simulate syncing with time masters."""
+        self.last_sync = time.time()
+
+# Example usage
+tt = TrueTime(base_uncertainty_ms=4.0)
+
+interval = tt.now()
+print(f"TrueTime interval: [{interval.earliest:.6f}, {interval.latest:.6f}]")
+print(f"Uncertainty (epsilon): {interval.uncertainty * 1000:.2f}ms")
+
+# Commit wait simulation
+commit_timestamp = tt.now().latest
+print(f"\nChosen commit timestamp: {commit_timestamp:.6f}")
+
+wait_count = 0
+while not tt.after(commit_timestamp):
+    time.sleep(0.001)  # 1ms
+    wait_count += 1
+
+print(f"Commit wait completed after {wait_count}ms")
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Transaction Commit Flow</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - Simplified Spanner transaction commit flow
+
+from dataclasses import dataclass, field
+from typing import Dict, Set, List, Optional
+from enum import Enum
+import threading
+import time
+
+class TransactionState(Enum):
+    ACTIVE = "active"
+    PREPARING = "preparing"
+    COMMITTED = "committed"
+    ABORTED = "aborted"
+
+@dataclass
+class WriteIntent:
+    key: str
+    value: str
+    timestamp: float
+
+@dataclass
+class Transaction:
+    id: str
+    state: TransactionState = TransactionState.ACTIVE
+    read_timestamp: float = 0.0
+    commit_timestamp: float = 0.0
+    write_set: Dict[str, str] = field(default_factory=dict)
+    read_set: Set[str] = field(default_factory=set)
+    locks_held: Set[str] = field(default_factory=set)
+
+class SpannerTransaction:
+    """
+    Simplified Spanner read-write transaction implementation.
+    Shows commit wait and 2PC for cross-shard transactions.
+    """
+
+    def __init__(self, true_time: TrueTime, paxos_groups: Dict[str, 'PaxosGroup']):
+        self.tt = true_time
+        self.paxos_groups = paxos_groups
+        self.lock_manager = LockManager()
+
+    def begin_transaction(self) -> Transaction:
+        """Start a new read-write transaction."""
+        txn = Transaction(
+            id=f"txn_{time.time_ns()}",
+            read_timestamp=self.tt.now().latest  # Snapshot for reads
+        )
+        return txn
+
+    def read(self, txn: Transaction, key: str) -> Optional[str]:
+        """Read at transaction's snapshot timestamp."""
+        txn.read_set.add(key)
+        group = self._get_paxos_group(key)
+        return group.read_at_timestamp(key, txn.read_timestamp)
+
+    def write(self, txn: Transaction, key: str, value: str):
+        """Buffer write for commit time."""
+        txn.write_set[key] = value
+
+    def commit(self, txn: Transaction) -> bool:
+        """
+        Two-phase commit with commit-wait for external consistency.
+        """
+        if not txn.write_set:
+            return True  # Read-only transaction, just return
+
+        # Group writes by Paxos group (participant)
+        participants = self._group_by_paxos(txn.write_set)
+
+        if len(participants) == 1:
+            # Single-shard: no 2PC needed
+            return self._single_shard_commit(txn, list(participants.values())[0])
+        else:
+            # Multi-shard: full 2PC
+            return self._two_phase_commit(txn, participants)
+
+    def _single_shard_commit(self, txn: Transaction, group: 'PaxosGroup') -> bool:
+        """Optimized path for single Paxos group transactions."""
+        # Acquire locks
+        for key in txn.write_set:
+            if not self.lock_manager.acquire(key, txn.id):
+                self._abort(txn)
+                return False
+            txn.locks_held.add(key)
+
+        # Choose commit timestamp (must be > any read timestamp)
+        s = self.tt.now().latest
+
+        # COMMIT WAIT: The key to external consistency
+        self._commit_wait(s)
+
+        # Apply writes via Paxos
+        txn.commit_timestamp = s
+        for key, value in txn.write_set.items():
+            group.write(key, value, s)
+
+        # Release locks
+        self._release_locks(txn)
+        txn.state = TransactionState.COMMITTED
+        return True
+
+    def _two_phase_commit(self, txn: Transaction,
+                          participants: Dict[str, List[str]]) -> bool:
+        """
+        Full 2PC for cross-shard transactions.
+
+        Phase 1: Prepare
+        - Each participant acquires locks
+        - Each participant chooses prepare timestamp
+        - Coordinator computes max(prepare timestamps)
+
+        Phase 2: Commit
+        - Coordinator does commit-wait on final timestamp
+        - All participants commit at same timestamp
+        """
+        txn.state = TransactionState.PREPARING
+
+        # PHASE 1: PREPARE
+        prepare_timestamps = []
+        prepared_groups = []
+
+        for group_id, keys in participants.items():
+            group = self.paxos_groups[group_id]
+
+            # Acquire locks at participant
+            for key in keys:
+                if not self.lock_manager.acquire(key, txn.id):
+                    self._abort_2pc(txn, prepared_groups)
+                    return False
+                txn.locks_held.add(key)
+
+            # Get prepare timestamp from participant
+            prepare_ts = group.prepare(txn.id, keys)
+            prepare_timestamps.append(prepare_ts)
+            prepared_groups.append(group)
+
+        # Coordinator: choose commit timestamp as max of all prepare timestamps
+        s = max(prepare_timestamps)
+        # Ensure commit timestamp is after our current time
+        s = max(s, self.tt.now().latest)
+
+        # COMMIT WAIT at coordinator
+        self._commit_wait(s)
+
+        # PHASE 2: COMMIT
+        txn.commit_timestamp = s
+        for group_id, keys in participants.items():
+            group = self.paxos_groups[group_id]
+            writes = {k: txn.write_set[k] for k in keys}
+            group.commit(txn.id, writes, s)
+
+        # Release all locks
+        self._release_locks(txn)
+        txn.state = TransactionState.COMMITTED
+        return True
+
+    def _commit_wait(self, commit_timestamp: float):
+        """
+        Wait until we're certain commit_timestamp is in the past.
+        This is THE critical step for external consistency.
+        """
+        while not self.tt.after(commit_timestamp):
+            time.sleep(0.001)  # Poll every 1ms
+
+    def _release_locks(self, txn: Transaction):
+        for key in txn.locks_held:
+            self.lock_manager.release(key, txn.id)
+        txn.locks_held.clear()
+
+    def _abort(self, txn: Transaction):
+        self._release_locks(txn)
+        txn.state = TransactionState.ABORTED
+
+    def _abort_2pc(self, txn: Transaction, prepared_groups: List['PaxosGroup']):
+        for group in prepared_groups:
+            group.abort(txn.id)
+        self._release_locks(txn)
+        txn.state = TransactionState.ABORTED
+
+    def _get_paxos_group(self, key: str) -> 'PaxosGroup':
+        # Simplified: hash key to group
+        group_id = f"group_{hash(key) % len(self.paxos_groups)}"
+        return self.paxos_groups[group_id]
+
+    def _group_by_paxos(self, write_set: Dict[str, str]) -> Dict[str, List[str]]:
+        groups = {}
+        for key in write_set:
+            group = self._get_paxos_group(key)
+            if group.id not in groups:
+                groups[group.id] = []
+            groups[group.id].append(key)
+        return groups
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Schema Design Patterns</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+-- Spanner Schema Design Patterns
+-- These patterns are directly applicable to Cloud Spanner, CockroachDB, YugabyteDB
+
+-- ==================================================
+-- Pattern 1: Hierarchical Data with Interleaving
+-- ==================================================
+
+-- Use case: E-commerce with customers, orders, order items
+-- Goal: Keep related data together for transactional consistency
+
+CREATE TABLE Customers (
+    customer_id   INT64 NOT NULL,
+    email         STRING(255),
+    name          STRING(255),
+    created_at    TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
+) PRIMARY KEY (customer_id);
+
+CREATE TABLE Orders (
+    customer_id   INT64 NOT NULL,
+    order_id      INT64 NOT NULL,
+    status        STRING(50),
+    total_cents   INT64,
+    created_at    TIMESTAMP NOT NULL OPTIONS (allow_commit_timestamp=true),
+) PRIMARY KEY (customer_id, order_id),
+  INTERLEAVE IN PARENT Customers ON DELETE CASCADE;
+
+CREATE TABLE OrderItems (
+    customer_id   INT64 NOT NULL,
+    order_id      INT64 NOT NULL,
+    item_id       INT64 NOT NULL,
+    product_id    INT64 NOT NULL,
+    quantity      INT64,
+    price_cents   INT64,
+) PRIMARY KEY (customer_id, order_id, item_id),
+  INTERLEAVE IN PARENT Orders ON DELETE CASCADE;
+
+-- This query runs entirely within one Paxos group!
+-- SELECT * FROM Customers c
+-- JOIN Orders o ON c.customer_id = o.customer_id
+-- JOIN OrderItems oi ON o.customer_id = oi.customer_id
+--                   AND o.order_id = oi.order_id
+-- WHERE c.customer_id = 12345;
+
+
+-- ==================================================
+-- Pattern 2: UUID Primary Keys (No Hotspots)
+-- ==================================================
+
+-- Bad: Sequential IDs cause write hotspots on the last shard
+CREATE TABLE BadExample (
+    id INT64 NOT NULL,  -- Auto-increment creates hotspot!
+) PRIMARY KEY (id);
+
+-- Good: UUIDs distribute writes evenly
+CREATE TABLE GoodExample (
+    id STRING(36) NOT NULL,  -- UUID as string
+) PRIMARY KEY (id);
+
+-- Even Better: Bit-reversed timestamp prefix
+-- Provides time-ordering within each shard while avoiding hotspots
+CREATE TABLE BetterExample (
+    id STRING(36) NOT NULL,
+    -- Format: {bit_reversed_timestamp}_{uuid}
+    -- e.g., "3f7a2b1c_550e8400-e29b-41d4-a716-446655440000"
+) PRIMARY KEY (id);
+
+
+-- ==================================================
+-- Pattern 3: Secondary Indexes with Interleaving
+-- ==================================================
+
+-- Global secondary index (spans all data)
+CREATE INDEX OrdersByStatus ON Orders(status);
+
+-- Interleaved secondary index (scoped to parent)
+-- Much more efficient for queries within a customer
+CREATE INDEX CustomerOrdersByDate
+ON Orders(customer_id, created_at DESC)
+INTERLEAVE IN Customers;
+
+
+-- ==================================================
+-- Pattern 4: Time-Series Data
+-- ==================================================
+
+-- Good pattern for metrics/events
+CREATE TABLE Metrics (
+    metric_name   STRING(255) NOT NULL,
+    -- Shard by metric to avoid hotspots
+    shard_id      INT64 NOT NULL,  -- hash(metric_name) % num_shards
+    timestamp     TIMESTAMP NOT NULL,
+    value         FLOAT64,
+) PRIMARY KEY (metric_name, shard_id, timestamp DESC);
+-- DESC ordering for efficient "latest N" queries
+
+-- Automatic TTL (Cloud Spanner specific)
+ALTER TABLE Metrics
+SET ROW DELETION POLICY (OLDER_THAN(timestamp, INTERVAL 90 DAY));
+
+
+-- ==================================================
+-- Pattern 5: Multi-Region Configuration
+-- ==================================================
+
+-- In Spanner, you configure this at the instance level, not SQL
+-- But the concept is crucial for interviews:
+
+-- Regional configuration (low latency, limited availability)
+-- instance config: regional-us-central1
+
+-- Multi-region configuration (high availability, higher latency)
+-- instance config: nam3 (Iowa, Oregon, Utah)
+-- - 2 read-write replicas in leader region
+-- - 2 read-write replicas in other regions
+-- - 1 witness replica
+
+-- Global configuration
+-- instance config: nam-eur-asia1
+-- - Replicas on 3 continents
+-- - Highest availability, highest latency
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-World Impact -->
+            <h2 class="mt-4">5. Real-World Impact</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Spanner-Inspired Databases</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Database</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">TrueTime Equivalent</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Trade-offs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Google Cloud Spanner</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Actual TrueTime (GPS + atomic)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Managed service, Google-only</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>CockroachDB</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hybrid Logical Clocks (HLC)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Higher latency, runs anywhere</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>YugabyteDB</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hybrid Logical Clocks (HLC)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">PostgreSQL compatible</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>TiDB</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Timestamp Oracle (TSO)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">MySQL compatible, centralized TSO</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="insight-card">
+                        <h4>CockroachDB's Approach Without TrueTime</h4>
+                        <p>CockroachDB uses <strong>Hybrid Logical Clocks (HLC)</strong> which combine:</p>
+                        <ul>
+                            <li>Physical timestamp (wall clock)</li>
+                            <li>Logical counter (for ordering within same physical time)</li>
+                        </ul>
+                        <p><strong>Trade-off:</strong> Without hardware time bounds, CockroachDB must either:</p>
+                        <ol>
+                            <li>Use higher clock uncertainty (~500ms default, configurable)</li>
+                            <li>Retry transactions that might have ordering issues</li>
+                            <li>Accept occasional linearizability violations for better latency</li>
+                        </ol>
+                    </div>
+
+                    <h4 class="mt-3">Google's Use of Spanner</h4>
+                    <ul>
+                        <li><strong>Google Ads:</strong> ~10 trillion operations/day, global consistency</li>
+                        <li><strong>Google Play:</strong> App purchases, subscriptions</li>
+                        <li><strong>Google Photos:</strong> Metadata storage</li>
+                        <li><strong>Gmail:</strong> User data (migrated from Bigtable)</li>
+                        <li><strong>YouTube:</strong> Creator analytics, revenue tracking</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Interview Questions -->
+            <h2 class="mt-4">6. Interview Questions</h2>
+
+            <div class="interview-question">
+                <h4>Q1: Why can't you just use NTP for clock synchronization in a globally distributed database?</h4>
+                <div class="answer">
+                    <p><strong>Answer:</strong> NTP has uncertainty of 100ms-250ms over WAN, which would make commit-wait unacceptably slow. Spanner needs ~7ms uncertainty, achieved through GPS receivers and atomic clocks with independent failure modes. More importantly, NTP doesn't provide <strong>bounded uncertainty</strong> - you don't know how wrong your clock might be. TrueTime's key insight is exposing uncertainty as an interval, enabling the commit-wait protocol to guarantee consistency.</p>
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <h4>Q2: Explain why Spanner chooses CP (Consistency + Partition tolerance) over AP in CAP theorem.</h4>
+                <div class="answer">
+                    <p><strong>Answer:</strong> Spanner prioritizes strong consistency because Google's use cases (ads, payments) cannot tolerate inconsistency - double-charging customers or showing stale ad budgets has direct financial impact. However, Spanner minimizes availability impact through:</p>
+                    <ul>
+                        <li>5-way Paxos replication (survives 2 failures)</li>
+                        <li>Multi-region placement in different failure domains</li>
+                        <li>Fast failure detection and leader election (~10s leases)</li>
+                    </ul>
+                    <p>In practice, Spanner achieves 99.999% availability (5 nines) while maintaining strong consistency.</p>
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <h4>Q3: What happens during a network partition between datacenters in Spanner?</h4>
+                <div class="answer">
+                    <p><strong>Answer:</strong> The Paxos groups that have a majority (quorum) of replicas in connected regions continue operating normally. Groups without quorum become unavailable for writes (but may serve stale reads if configured). Specifically:</p>
+                    <ul>
+                        <li>With 5 replicas across 3 regions, losing 1 region still has quorum (3 of 5)</li>
+                        <li>The partition is typically detected within seconds</li>
+                        <li>Leader election happens if the leader is in the partitioned region</li>
+                        <li>Commit-wait still works because TrueTime is local to each datacenter</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <h4>Q4: How does Spanner handle read-only transactions efficiently?</h4>
+                <div class="answer">
+                    <p><strong>Answer:</strong> Read-only transactions are special because they don't need locks or commit-wait:</p>
+                    <ol>
+                        <li>Choose a read timestamp in the safe past (where all writes are known)</li>
+                        <li>Read from any replica (not just leader) at that timestamp</li>
+                        <li>No locks needed - MVCC ensures snapshot isolation</li>
+                        <li>No Paxos needed - reads go directly to replica's local storage</li>
+                    </ol>
+                    <p>This is why read-heavy workloads scale linearly with replicas in Spanner.</p>
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <h4>Q5: Design a Spanner-like system for a company that can't afford GPS/atomic clocks. What trade-offs would you make?</h4>
+                <div class="answer">
+                    <p><strong>Answer:</strong> This is exactly what CockroachDB does. Key approaches:</p>
+                    <ul>
+                        <li><strong>Hybrid Logical Clocks:</strong> Combine physical time with logical counters</li>
+                        <li><strong>Higher uncertainty bounds:</strong> Assume ~500ms clock skew (configurable)</li>
+                        <li><strong>Transaction retry:</strong> If uncertainty might cause ordering issues, retry the transaction</li>
+                        <li><strong>Read refreshes:</strong> Refresh read timestamp if writes are detected during transaction</li>
+                    </ul>
+                    <p><strong>Trade-offs:</strong> Higher write latency (longer commit-wait equivalent), occasional transaction retries, or configurable relaxation of linearizability for latency-sensitive workloads.</p>
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <h4>Q6: Why does Spanner use interleaved tables instead of just foreign keys?</h4>
+                <div class="answer">
+                    <p><strong>Answer:</strong> Interleaving provides <strong>physical colocation</strong>, not just logical relationships:</p>
+                    <ul>
+                        <li><strong>Same tablet:</strong> Parent and child rows stored on same machine</li>
+                        <li><strong>Same Paxos group:</strong> Transactions on hierarchy don't need 2PC</li>
+                        <li><strong>Same directory:</strong> Data moves together during rebalancing</li>
+                    </ul>
+                    <p>With just foreign keys, a join between customer and orders could hit different shards, requiring distributed transactions. With interleaving, it's a local operation.</p>
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <h4>Q7: What's the difference between Spanner's external consistency and serializability?</h4>
+                <div class="answer">
+                    <p><strong>Answer:</strong> External consistency = Serializability + Real-time ordering:</p>
+                    <ul>
+                        <li><strong>Serializability:</strong> Transactions appear to execute in some serial order</li>
+                        <li><strong>External consistency (linearizability):</strong> That serial order respects real-time - if T1 commits before T2 starts (wall clock time), T1 appears before T2</li>
+                    </ul>
+                    <p>Example: If I transfer money at 3:00 PM and check balance at 3:01 PM, external consistency guarantees I see the transfer. Serializability alone doesn't guarantee this - the "serial order" could put my read before the write.</p>
+                </div>
+            </div>
+
+            <!-- Key Takeaways -->
+            <h2 class="mt-4">7. Key Takeaways for Interviews</h2>
+
+            <div class="card">
+                <h3>What to Mention About Spanner</h3>
+
+                <h4 class="mt-3">Core Innovations</h4>
+                <ol>
+                    <li><strong>TrueTime:</strong> Bounded clock uncertainty using GPS + atomic clocks</li>
+                    <li><strong>Commit-wait:</strong> Wait out uncertainty to guarantee ordering</li>
+                    <li><strong>External consistency:</strong> Strongest isolation without sacrificing scalability</li>
+                    <li><strong>Interleaved tables:</strong> Physical colocation for hierarchical data</li>
+                </ol>
+
+                <h4 class="mt-3">When to Reference Spanner</h4>
+                <ul>
+                    <li>Designing globally distributed systems with strong consistency</li>
+                    <li>Discussing CAP theorem trade-offs</li>
+                    <li>Explaining why distributed transactions are hard</li>
+                    <li>Comparing database isolation levels</li>
+                    <li>Justifying infrastructure investment for correctness</li>
+                </ul>
+
+                <h4 class="mt-3">Common Misconceptions to Avoid</h4>
+                <ul>
+                    <li>Spanner doesn't violate CAP - it chooses CP with minimized availability impact</li>
+                    <li>TrueTime isn't magic - it's expensive hardware + clever engineering</li>
+                    <li>External consistency isn't free - commit-wait adds ~7ms to writes</li>
+                    <li>Not every application needs Spanner - eventually consistent is often fine</li>
+                </ul>
+
+                <h4 class="mt-3">One-Liner Summary</h4>
+                <p style="font-style: italic; color: var(--primary-color);">"Spanner achieves global strong consistency by bounding clock uncertainty with specialized hardware (TrueTime), then waiting out that uncertainty on commit to guarantee real-time ordering."</p>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="../module-05.html" class="btn btn-secondary">&larr; Back to Seminal Papers</a>
+                <a href="../module-03.html" class="btn btn-primary">Distributed Systems &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Mermaid
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: 'base',
+                themeVariables: {
+                    primaryColor: '#3b82f6',
+                    primaryTextColor: '#1f2937',
+                    primaryBorderColor: '#2563eb',
+                    lineColor: '#6b7280',
+                    secondaryColor: '#10b981',
+                    tertiaryColor: '#f3f4f6'
+                }
+            });
+
+            // Sidebar toggle
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            // Animate trade-off bars on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const fills = entry.target.querySelectorAll('.tradeoff-fill');
+                        fills.forEach(fill => {
+                            fill.style.transition = 'width 1s ease-out';
+                        });
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            document.querySelectorAll('.tradeoff-scale').forEach(scale => {
+                observer.observe(scale);
+            });
+        });
+    </script>
+</body>
+</html>

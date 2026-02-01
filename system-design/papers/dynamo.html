@@ -1,0 +1,2107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Dynamo Paper Deep Dive - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Animated Header Styles */
+        .paper-hero {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            padding: 4rem 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .paper-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 80%, rgba(255, 153, 0, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+            animation: pulse-bg 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse-bg {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .paper-hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .paper-badge {
+            display: inline-block;
+            background: rgba(255, 153, 0, 0.2);
+            border: 1px solid rgba(255, 153, 0, 0.5);
+            color: #ff9900;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .paper-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .paper-hero .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .paper-meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .paper-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Ring Animation for Consistent Hashing */
+        .ring-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 2rem auto;
+        }
+
+        .hash-ring {
+            width: 100%;
+            height: 100%;
+            border: 4px solid var(--primary-color);
+            border-radius: 50%;
+            position: relative;
+            animation: ring-pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes ring-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+            50% { box-shadow: 0 0 20px 10px rgba(37, 99, 235, 0.1); }
+        }
+
+        .ring-node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            transform: translate(-50%, -50%);
+            animation: node-appear 0.5s ease-out both;
+        }
+
+        .ring-node.physical {
+            background: var(--primary-color);
+        }
+
+        .ring-node.virtual {
+            background: var(--secondary-color);
+            width: 30px;
+            height: 30px;
+            font-size: 0.65rem;
+        }
+
+        @keyframes node-appear {
+            from {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Key Technique Cards */
+        .technique-card {
+            background: linear-gradient(135deg, var(--card-bg) 0%, #f8fafc 100%);
+            border: 2px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .technique-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-color);
+        }
+
+        .technique-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .technique-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .technique-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        /* Impact Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+            animation: slideIn 0.5s ease-out both;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px var(--primary-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Interview Question Cards */
+        .interview-question {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .interview-question:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+        }
+
+        .interview-question .question {
+            font-weight: 600;
+            color: var(--text-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .interview-question .answer {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-light);
+            line-height: 1.7;
+        }
+
+        .interview-question.open .answer {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .interview-question .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .interview-question.open .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Key Takeaway Box */
+        .takeaway-box {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 2px solid var(--secondary-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #065f46;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Code tabs */
+        .code-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 0;
+        }
+
+        .code-tab {
+            padding: 0.75rem 1.5rem;
+            background: var(--border-color);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .code-tab:first-child {
+            border-radius: 0.5rem 0 0 0;
+        }
+
+        .code-tab:last-child {
+            border-radius: 0 0.5rem 0 0;
+        }
+
+        .code-tab.active {
+            background: var(--code-bg);
+            color: white;
+        }
+
+        .code-panel {
+            display: none;
+        }
+
+        .code-panel.active {
+            display: block;
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        /* Warning/Info boxes */
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning-color);
+            padding: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            margin: 1rem 0;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Seminal Papers</div>
+                    <a href="dynamo.html" class="sidebar-link active">Amazon Dynamo</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                    <a href="../module-05.html" class="sidebar-link">Seminal Papers Overview</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">On This Page</div>
+                    <a href="#problem-context" class="sidebar-link">Problem Context</a>
+                    <a href="#consistent-hashing" class="sidebar-link">Consistent Hashing</a>
+                    <a href="#quorum" class="sidebar-link">Quorum (N, R, W)</a>
+                    <a href="#vector-clocks" class="sidebar-link">Vector Clocks</a>
+                    <a href="#merkle-trees" class="sidebar-link">Merkle Trees</a>
+                    <a href="#gossip" class="sidebar-link">Gossip Protocol</a>
+                    <a href="#code-examples" class="sidebar-link">Code Examples</a>
+                    <a href="#impact" class="sidebar-link">Real-World Impact</a>
+                    <a href="#interview-questions" class="sidebar-link">Interview Questions</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <!-- Animated Hero Section -->
+            <div class="paper-hero">
+                <div class="paper-hero-content">
+                    <div class="paper-badge">SOSP 2007 - Foundational Paper</div>
+                    <h1>Dynamo: Amazon's Highly Available Key-Value Store</h1>
+                    <p class="subtitle">
+                        The paper that pioneered eventual consistency at scale and influenced
+                        an entire generation of distributed databases
+                    </p>
+                    <div class="paper-meta">
+                        <div class="paper-meta-item">
+                            <span>Authors:</span>
+                            <span>DeCandia, Hastorun, Jampani, et al.</span>
+                        </div>
+                        <div class="paper-meta-item">
+                            <span>Published:</span>
+                            <span>October 2007</span>
+                        </div>
+                        <div class="paper-meta-item">
+                            <span>Citations:</span>
+                            <span>5000+</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Problem Context Section -->
+            <section id="problem-context">
+                <h2>Problem Context: Why Amazon Built Dynamo</h2>
+
+                <div class="collapsible open">
+                    <div class="collapsible-header">
+                        <span>The Business Problem</span>
+                        <span class="collapsible-icon">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>In the mid-2000s, Amazon faced a critical challenge: their e-commerce platform needed to remain available during the busiest shopping periods (Black Friday, Prime Day). Even a few seconds of downtime could mean millions in lost revenue.</p>
+
+                        <div class="warning-box">
+                            <strong>The Cost of Unavailability:</strong> Amazon estimated that every 100ms of latency cost them 1% in sales. Complete unavailability during peak hours was unacceptable.
+                        </div>
+
+                        <h4>Key Constraints Amazon Faced:</h4>
+                        <ul>
+                            <li><strong>99.9% availability at the 99.9th percentile</strong> - Not just average case, but worst case</li>
+                            <li><strong>Always writable</strong> - Shopping cart must never reject an "add to cart" request</li>
+                            <li><strong>Massive scale</strong> - Millions of requests per second across multiple data centers</li>
+                            <li><strong>No single point of failure</strong> - Any component can fail at any time</li>
+                        </ul>
+
+                        <h4>Why Existing Solutions Failed:</h4>
+                        <table class="comparison-table">
+                            <tr>
+                                <th>Solution</th>
+                                <th>Problem</th>
+                            </tr>
+                            <tr>
+                                <td>Traditional RDBMS</td>
+                                <td>Single-master architecture creates availability bottleneck during failures</td>
+                            </tr>
+                            <tr>
+                                <td>Master-Slave Replication</td>
+                                <td>Master failure requires manual failover; writes blocked during transition</td>
+                            </tr>
+                            <tr>
+                                <td>Distributed Transactions (2PC)</td>
+                                <td>Coordinator failure blocks all participants; too slow for Amazon's SLA</td>
+                            </tr>
+                            <tr>
+                                <td>Paxos/Raft Consensus</td>
+                                <td>Requires majority quorum; during network partitions, minority is unavailable</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="collapsible open">
+                    <div class="collapsible-header">
+                        <span>Dynamo's Design Philosophy</span>
+                        <span class="collapsible-icon">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>Dynamo made a radical choice: <strong>sacrifice strong consistency for availability</strong>. This was controversial but justified for Amazon's use cases.</p>
+
+                        <div class="card-grid">
+                            <div class="technique-card">
+                                <h3><span class="technique-number">1</span> Always Writable</h3>
+                                <p>The system should never reject a write, even during failures. Conflicts are resolved later, not during the write.</p>
+                            </div>
+                            <div class="technique-card">
+                                <h3><span class="technique-number">2</span> Incremental Scalability</h3>
+                                <p>Add or remove nodes one at a time without any downtime or impact on existing nodes.</p>
+                            </div>
+                            <div class="technique-card">
+                                <h3><span class="technique-number">3</span> Symmetry</h3>
+                                <p>Every node has the same responsibilities. No special nodes, no single points of failure.</p>
+                            </div>
+                            <div class="technique-card">
+                                <h3><span class="technique-number">4</span> Decentralization</h3>
+                                <p>Peer-to-peer architecture with no master node. All nodes can accept reads and writes.</p>
+                            </div>
+                        </div>
+
+                        <div class="info-box">
+                            <strong>CAP Theorem Choice:</strong> Dynamo chose AP (Availability + Partition Tolerance) over CP. During network partitions, the system remains available but may return stale data.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Consistent Hashing Section -->
+            <section id="consistent-hashing" class="mt-4">
+                <h2>Architecture Deep Dive: Consistent Hashing</h2>
+
+                <div class="collapsible open">
+                    <div class="collapsible-header">
+                        <span>The Partitioning Problem</span>
+                        <span class="collapsible-icon">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>With billions of keys distributed across hundreds of nodes, Dynamo needed a way to:</p>
+                        <ul>
+                            <li>Determine which node stores a given key</li>
+                            <li>Minimize data movement when nodes join/leave</li>
+                            <li>Ensure even distribution of data</li>
+                        </ul>
+
+                        <h4>Why Simple Hash Partitioning Fails</h4>
+                        <div class="code-block">
+                            <code>
+# Naive approach: hash(key) % num_nodes
+node = hash(key) % 100  # With 100 nodes
+
+# Problem: Adding a node changes EVERYTHING
+# Before: hash("user:123") % 100 = 42 -> Node 42
+# After:  hash("user:123") % 101 = 87 -> Node 87
+#
+# ~99% of keys need to move! This is catastrophic.
+                            </code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible open">
+                    <div class="collapsible-header">
+                        <span>Consistent Hashing Solution</span>
+                        <span class="collapsible-icon">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>Consistent hashing maps both keys and nodes onto a circular hash space (the "ring"). Each key is assigned to the first node encountered when walking clockwise from the key's position.</p>
+
+                        <div class="diagram-container">
+                            <div class="mermaid">
+graph TD
+    subgraph "Hash Ring (0 to 2^128)"
+        direction TB
+        A["Node A<br/>Position: 0"]
+        B["Node B<br/>Position: 2^42"]
+        C["Node C<br/>Position: 2^85"]
+        D["Node D<br/>Position: 2^127"]
+    end
+
+    K1["Key 'user:1'<br/>hash = 2^30"]
+    K2["Key 'user:2'<br/>hash = 2^50"]
+    K3["Key 'user:3'<br/>hash = 2^100"]
+
+    K1 -.->|"stored on"| B
+    K2 -.->|"stored on"| C
+    K3 -.->|"stored on"| D
+
+    style A fill:#2563eb,color:#fff
+    style B fill:#2563eb,color:#fff
+    style C fill:#2563eb,color:#fff
+    style D fill:#2563eb,color:#fff
+    style K1 fill:#10b981,color:#fff
+    style K2 fill:#10b981,color:#fff
+    style K3 fill:#10b981,color:#fff
+                            </div>
+                        </div>
+
+                        <div class="takeaway-box">
+                            <h4>Key Insight</h4>
+                            <p>When a node joins or leaves, only the keys in the affected range need to move - approximately <code>K/N</code> keys where K is total keys and N is number of nodes. This is optimal!</p>
+                        </div>
+
+                        <h4>Virtual Nodes (VNodes)</h4>
+                        <p>A problem with basic consistent hashing: uneven load distribution. A physical node might get a small or large portion of the ring by chance.</p>
+
+                        <p><strong>Solution:</strong> Each physical node gets multiple positions on the ring (virtual nodes). Dynamo used 100-200 virtual nodes per physical node.</p>
+
+                        <div class="diagram-container">
+                            <div class="mermaid">
+graph LR
+    subgraph "Physical Node A"
+        VA1["VNode A-1"]
+        VA2["VNode A-2"]
+        VA3["VNode A-3"]
+    end
+
+    subgraph "Physical Node B"
+        VB1["VNode B-1"]
+        VB2["VNode B-2"]
+        VB3["VNode B-3"]
+    end
+
+    subgraph "Ring Positions"
+        R1["Position 1: A-1"]
+        R2["Position 2: B-2"]
+        R3["Position 3: A-3"]
+        R4["Position 4: B-1"]
+        R5["Position 5: A-2"]
+        R6["Position 6: B-3"]
+    end
+
+    style VA1 fill:#2563eb,color:#fff
+    style VA2 fill:#2563eb,color:#fff
+    style VA3 fill:#2563eb,color:#fff
+    style VB1 fill:#10b981,color:#fff
+    style VB2 fill:#10b981,color:#fff
+    style VB3 fill:#10b981,color:#fff
+                            </div>
+                        </div>
+
+                        <h4>Benefits of Virtual Nodes:</h4>
+                        <ul>
+                            <li><strong>Even distribution:</strong> With many VNodes, load variance decreases dramatically</li>
+                            <li><strong>Heterogeneous hardware:</strong> More powerful nodes can have more VNodes</li>
+                            <li><strong>Faster recovery:</strong> When a node fails, its load spreads across many nodes</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quorum Section -->
+            <section id="quorum" class="mt-4">
+                <h2>Quorum Reads and Writes (N, R, W)</h2>
+
+                <div class="collapsible open">
+                    <div class="collapsible-header">
+                        <span>Replication and Quorum Mechanics</span>
+                        <span class="collapsible-icon">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>Dynamo replicates each key-value pair to <strong>N</strong> nodes for durability. The key parameters are:</p>
+
+                        <table class="comparison-table">
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Meaning</th>
+                                <th>Typical Value</th>
+                            </tr>
+                            <tr>
+                                <td><strong>N</strong></td>
+                                <td>Number of replicas for each key</td>
+                                <td>3</td>
+                            </tr>
+                            <tr>
+                                <td><strong>R</strong></td>
+                                <td>Minimum nodes that must respond to a read</td>
+                                <td>2</td>
+                            </tr>
+                            <tr>
+                                <td><strong>W</strong></td>
+                                <td>Minimum nodes that must acknowledge a write</td>
+                                <td>2</td>
+                            </tr>
+                        </table>
+
+                        <div class="diagram-container">
+                            <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant Coord as Coordinator
+    participant N1 as Node 1
+    participant N2 as Node 2
+    participant N3 as Node 3
+
+    Note over C,N3: Write with W=2, N=3
+
+    C->>Coord: PUT(key, value)
+    Coord->>N1: Write replica
+    Coord->>N2: Write replica
+    Coord->>N3: Write replica
+
+    N1-->>Coord: ACK
+    N2-->>Coord: ACK
+    Note over Coord: W=2 achieved!
+    Coord-->>C: Success
+    N3-->>Coord: ACK (late, but still written)
+                            </div>
+                        </div>
+
+                        <h4>Tuning R and W for Different Guarantees</h4>
+
+                        <table class="comparison-table">
+                            <tr>
+                                <th>Configuration</th>
+                                <th>Property</th>
+                                <th>Use Case</th>
+                            </tr>
+                            <tr>
+                                <td><code>R + W > N</code></td>
+                                <td>Strong consistency (read sees latest write)</td>
+                                <td>Financial transactions, inventory</td>
+                            </tr>
+                            <tr>
+                                <td><code>W = N, R = 1</code></td>
+                                <td>Optimized for read-heavy, strong on reads</td>
+                                <td>User profiles, rarely updated data</td>
+                            </tr>
+                            <tr>
+                                <td><code>W = 1, R = N</code></td>
+                                <td>Optimized for writes, eventual reads</td>
+                                <td>Logging, metrics collection</td>
+                            </tr>
+                            <tr>
+                                <td><code>R = 1, W = 1</code> (N=3)</td>
+                                <td>Maximum availability, eventual consistency</td>
+                                <td>Shopping cart (Dynamo's original use)</td>
+                            </tr>
+                        </table>
+
+                        <div class="warning-box">
+                            <strong>Sloppy Quorum:</strong> During network partitions, Dynamo uses "sloppy quorum" - it writes to the first N <em>healthy</em> nodes on the ring, even if they're not the designated replicas. This maintains availability at the cost of consistency.
+                        </div>
+
+                        <h4>Hinted Handoff</h4>
+                        <p>When a node is temporarily unavailable, another node accepts writes on its behalf and stores them with a "hint" about the intended destination. When the original node recovers, hints are replayed.</p>
+
+                        <div class="diagram-container">
+                            <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant A as Node A
+    participant B as Node B (down)
+    participant D as Node D (standby)
+
+    Note over B: Node B is down!
+
+    C->>A: PUT(key)
+    A->>B: Write replica
+    Note over A,B: Timeout - B unreachable
+    A->>D: Write with hint for B
+    D-->>A: ACK (holding for B)
+    A-->>C: Success (W satisfied)
+
+    Note over B: Node B recovers
+
+    D->>B: Handoff hinted data
+    B-->>D: ACK
+    D->>D: Delete hint
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Vector Clocks Section -->
+            <section id="vector-clocks" class="mt-4">
+                <h2>Vector Clocks for Conflict Detection</h2>
+
+                <div class="collapsible open">
+                    <div class="collapsible-header">
+                        <span>Why We Need Vector Clocks</span>
+                        <span class="collapsible-icon">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>In a system where writes can happen to any node, conflicts are inevitable. Consider this scenario:</p>
+
+                        <div class="diagram-container">
+                            <div class="mermaid">
+sequenceDiagram
+    participant Client1 as Client 1
+    participant NodeA as Node A
+    participant NodeB as Node B
+    participant Client2 as Client 2
+
+    Note over NodeA,NodeB: Initial: cart = {book}
+
+    Client1->>NodeA: Add "laptop" to cart
+    NodeA->>NodeA: cart = {book, laptop}
+
+    Note over NodeA,NodeB: Network partition!
+
+    Client2->>NodeB: Add "phone" to cart
+    NodeB->>NodeB: cart = {book, phone}
+
+    Note over NodeA,NodeB: Partition heals
+
+    NodeA->>NodeB: Sync
+    Note over NodeA,NodeB: CONFLICT!<br/>{book, laptop} vs {book, phone}<br/>Which is correct?
+                            </div>
+                        </div>
+
+                        <p>Physical timestamps don't help - clock skew between nodes means we can't trust them to determine ordering.</p>
+
+                        <h4>Vector Clocks to the Rescue</h4>
+                        <p>A vector clock is a list of (node, counter) pairs. Each time a node modifies an object, it increments its own counter in the vector.</p>
+
+                        <div class="diagram-container">
+                            <div class="mermaid">
+graph TD
+    subgraph "Vector Clock Evolution"
+        D0["D0: {book}<br/>VC: []"]
+        D1["D1: {book}<br/>VC: [Sx:1]"]
+        D2["D2: {book, laptop}<br/>VC: [Sx:1, Sy:1]"]
+        D3["D3: {book, phone}<br/>VC: [Sx:1, Sz:1]"]
+        D4["D4: {book, laptop, phone}<br/>VC: [Sx:1, Sy:1, Sz:1]<br/>(client merged)"]
+    end
+
+    D0 -->|"Sx writes"| D1
+    D1 -->|"Sy writes"| D2
+    D1 -->|"Sz writes"| D3
+    D2 -->|"client merges"| D4
+    D3 -->|"client merges"| D4
+
+    style D0 fill:#e5e7eb
+    style D1 fill:#dbeafe
+    style D2 fill:#dcfce7
+    style D3 fill:#fef3c7
+    style D4 fill:#10b981,color:#fff
+                            </div>
+                        </div>
+
+                        <h4>Comparing Vector Clocks</h4>
+                        <p>Given two vector clocks VC1 and VC2:</p>
+                        <ul>
+                            <li><strong>VC1 > VC2:</strong> If all counters in VC1 >= VC2 and at least one is greater. VC1 happened after VC2.</li>
+                            <li><strong>VC1 < VC2:</strong> The reverse - VC2 happened after VC1.</li>
+                            <li><strong>VC1 || VC2:</strong> Neither dominates - they are concurrent (conflict!)</li>
+                        </ul>
+
+                        <div class="code-block">
+                            <code>
+# Example comparisons:
+# [Sx:1, Sy:2] > [Sx:1, Sy:1]  -> D2 descended from D1
+# [Sx:1, Sy:1] || [Sx:1, Sz:1] -> Concurrent! Neither dominates
+
+def compare_vc(vc1, vc2):
+    """Returns 'gt', 'lt', 'eq', or 'concurrent'"""
+    gt = lt = False
+    all_keys = set(vc1.keys()) | set(vc2.keys())
+
+    for key in all_keys:
+        v1 = vc1.get(key, 0)
+        v2 = vc2.get(key, 0)
+        if v1 > v2:
+            gt = True
+        elif v1 < v2:
+            lt = True
+
+    if gt and lt:
+        return 'concurrent'
+    elif gt:
+        return 'gt'
+    elif lt:
+        return 'lt'
+    return 'eq'
+                            </code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        <span>Client-Side Conflict Resolution</span>
+                        <span class="collapsible-icon">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>When a read returns multiple conflicting versions, the client must resolve them. For Amazon's shopping cart, the resolution was simple: <strong>union all items</strong>.</p>
+
+                        <div class="info-box">
+                            <strong>Why Client-Side?</strong> Only the application knows the semantic meaning of the data. For a shopping cart, union makes sense. For a bank balance, you might need last-write-wins or even manual intervention.
+                        </div>
+
+                        <h4>Common Resolution Strategies:</h4>
+                        <ul>
+                            <li><strong>Last-Write-Wins (LWW):</strong> Use physical timestamps to pick the "latest" write. Simple but can lose data.</li>
+                            <li><strong>Union/Merge:</strong> Combine all versions (good for add-only sets)</li>
+                            <li><strong>Application-Specific:</strong> Domain logic decides (e.g., pick highest balance)</li>
+                            <li><strong>CRDTs:</strong> Data structures designed to auto-merge without conflicts</li>
+                        </ul>
+
+                        <div class="warning-box">
+                            <strong>Vector Clock Truncation:</strong> Dynamo truncates vector clocks when they grow too large (>10 entries) to save space. This can rarely cause incorrect conflict detection but was acceptable for Amazon's use case.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Merkle Trees Section -->
+            <section id="merkle-trees" class="mt-4">
+                <h2>Merkle Trees for Anti-Entropy</h2>
+
+                <div class="collapsible open">
+                    <div class="collapsible-header">
+                        <span>The Synchronization Problem</span>
+                        <span class="collapsible-icon">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>Replicas can diverge due to network issues, node failures, or timing. Dynamo needs to detect and fix these differences efficiently.</p>
+
+                        <p><strong>Naive approach:</strong> Compare all keys between replicas. With millions of keys, this requires transferring gigabytes of data just to find a few differences.</p>
+
+                        <h4>Merkle Trees: Efficient Difference Detection</h4>
+                        <p>A Merkle tree is a binary tree where:</p>
+                        <ul>
+                            <li>Leaf nodes contain hashes of individual key-value pairs</li>
+                            <li>Internal nodes contain hashes of their children</li>
+                            <li>The root hash summarizes the entire dataset</li>
+                        </ul>
+
+                        <div class="diagram-container">
+                            <div class="mermaid">
+graph TD
+    Root["Root Hash<br/>H(H12 + H34)"]
+    H12["H12<br/>H(H1 + H2)"]
+    H34["H34<br/>H(H3 + H4)"]
+    H1["H1<br/>hash(K1,V1)"]
+    H2["H2<br/>hash(K2,V2)"]
+    H3["H3<br/>hash(K3,V3)"]
+    H4["H4<br/>hash(K4,V4)"]
+
+    Root --> H12
+    Root --> H34
+    H12 --> H1
+    H12 --> H2
+    H34 --> H3
+    H34 --> H4
+
+    style Root fill:#2563eb,color:#fff
+    style H12 fill:#10b981,color:#fff
+    style H34 fill:#ef4444,color:#fff
+    style H3 fill:#ef4444,color:#fff
+
+    Note1["If H34 differs,<br/>only check H3 & H4"]
+
+    H34 -.-> Note1
+                            </div>
+                        </div>
+
+                        <h4>Synchronization Process</h4>
+                        <ol>
+                            <li>Compare root hashes. If equal, replicas are in sync - done!</li>
+                            <li>If different, compare child hashes</li>
+                            <li>Recursively narrow down to the differing subtrees</li>
+                            <li>Only transfer the specific keys that differ</li>
+                        </ol>
+
+                        <div class="takeaway-box">
+                            <h4>Efficiency</h4>
+                            <p>With 1 million keys in a balanced tree (depth ~20), you can find any difference by comparing at most 40 hashes (O(log n)), not 1 million keys!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gossip Protocol Section -->
+            <section id="gossip" class="mt-4">
+                <h2>Gossip Protocol for Membership</h2>
+
+                <div class="collapsible open">
+                    <div class="collapsible-header">
+                        <span>Decentralized Failure Detection</span>
+                        <span class="collapsible-icon">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>Without a central coordinator, how do nodes learn about cluster membership and detect failures?</p>
+
+                        <h4>Gossip Protocol Mechanics</h4>
+                        <p>Each node periodically (every second) picks a random peer and exchanges state:</p>
+
+                        <div class="diagram-container">
+                            <div class="mermaid">
+sequenceDiagram
+    participant A as Node A
+    participant B as Node B
+    participant C as Node C
+    participant D as Node D
+
+    Note over A,D: Gossip Round 1
+
+    A->>B: My view: {A:alive, B:alive, C:alive, D:suspect}
+    B->>A: My view: {A:alive, B:alive, C:alive, D:alive}
+    Note over A: A learns D might be alive
+
+    Note over A,D: Gossip Round 2
+
+    C->>D: My view: {A:alive, B:alive, C:alive, D:alive}
+    D->>C: My view: {A:alive, B:alive, C:alive, D:alive}
+
+    Note over A,D: After O(log N) rounds,<br/>all nodes converge
+                            </div>
+                        </div>
+
+                        <h4>State Propagation Time</h4>
+                        <p>Gossip spreads information exponentially. If each node tells 1 peer per round:</p>
+                        <ul>
+                            <li>Round 1: 1 node knows</li>
+                            <li>Round 2: 2 nodes know</li>
+                            <li>Round 3: 4 nodes know</li>
+                            <li>Round k: 2^k nodes know</li>
+                        </ul>
+                        <p>For 1000 nodes, information reaches everyone in ~10 rounds (seconds).</p>
+
+                        <h4>Failure Detection with Phi Accrual</h4>
+                        <p>Rather than binary "alive/dead", Dynamo uses a suspicion level (phi) that increases when heartbeats are missed. This adapts to network conditions.</p>
+
+                        <div class="code-block">
+                            <code>
+# Phi Accrual Failure Detector
+class FailureDetector:
+    def __init__(self, threshold=8.0):
+        self.threshold = threshold  # Higher = more tolerant
+        self.heartbeat_history = []  # Recent inter-arrival times
+
+    def report_heartbeat(self):
+        now = time.time()
+        if self.last_heartbeat:
+            interval = now - self.last_heartbeat
+            self.heartbeat_history.append(interval)
+        self.last_heartbeat = now
+
+    def phi(self):
+        """Returns suspicion level. phi > threshold = probably dead"""
+        if not self.heartbeat_history:
+            return 0
+
+        time_since_last = time.time() - self.last_heartbeat
+        mean = statistics.mean(self.heartbeat_history)
+        std = statistics.stdev(self.heartbeat_history) or 0.1
+
+        # Higher phi = more suspicious
+        # Based on probability of seeing this long a gap
+        return -math.log10(1 - norm.cdf(time_since_last, mean, std))
+
+    def is_alive(self):
+        return self.phi() < self.threshold
+                            </code>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Code Examples Section -->
+            <section id="code-examples" class="mt-4">
+                <h2>Working Code Examples</h2>
+
+                <div class="code-tabs">
+                    <button class="code-tab active" onclick="showCodeTab('consistent-hash')">Consistent Hashing</button>
+                    <button class="code-tab" onclick="showCodeTab('vector-clock')">Vector Clocks</button>
+                    <button class="code-tab" onclick="showCodeTab('quorum')">Quorum Logic</button>
+                </div>
+
+                <div id="consistent-hash" class="code-panel active">
+                    <div class="code-block">
+                        <code>
+"""
+Consistent Hashing with Virtual Nodes
+
+This implementation demonstrates how Dynamo distributes keys across nodes
+using consistent hashing with virtual nodes for even distribution.
+"""
+
+import hashlib
+import bisect
+from typing import Dict, List, Optional, Tuple
+
+
+class ConsistentHash:
+    """
+    Consistent hashing ring with virtual nodes.
+
+    Each physical node gets multiple positions on the ring (virtual nodes)
+    to ensure even distribution and smooth rebalancing when nodes join/leave.
+    """
+
+    def __init__(self, num_virtual_nodes: int = 150):
+        self.num_virtual_nodes = num_virtual_nodes
+        self.ring: Dict[int, str] = {}  # hash -> physical node
+        self.sorted_keys: List[int] = []  # sorted ring positions
+        self.nodes: set = set()
+
+    def _hash(self, key: str) -> int:
+        """Generate consistent hash using MD5 (matches Dynamo's approach)."""
+        return int(hashlib.md5(key.encode()).hexdigest(), 16)
+
+    def add_node(self, node: str) -> List[Tuple[str, str]]:
+        """
+        Add a physical node with multiple virtual nodes.
+        Returns list of (key_range_start, key_range_end) that moved to this node.
+        """
+        if node in self.nodes:
+            return []
+
+        self.nodes.add(node)
+        affected_ranges = []
+
+        for i in range(self.num_virtual_nodes):
+            # Create unique hash for each virtual node
+            virtual_key = f"{node}:vnode:{i}"
+            hash_val = self._hash(virtual_key)
+
+            # Find the successor (next node clockwise) before insertion
+            idx = bisect.bisect_right(self.sorted_keys, hash_val)
+            if idx < len(self.sorted_keys):
+                successor_hash = self.sorted_keys[idx]
+                successor_node = self.ring[successor_hash]
+                # Keys between new node and its predecessor now belong to new node
+                affected_ranges.append((hash_val, successor_hash, successor_node))
+
+            self.ring[hash_val] = node
+            bisect.insort(self.sorted_keys, hash_val)
+
+        return affected_ranges
+
+    def remove_node(self, node: str) -> List[Tuple[int, str]]:
+        """
+        Remove a node and its virtual nodes.
+        Returns list of (hash, new_owner) for keys that need to move.
+        """
+        if node not in self.nodes:
+            return []
+
+        self.nodes.remove(node)
+        keys_to_move = []
+
+        for i in range(self.num_virtual_nodes):
+            virtual_key = f"{node}:vnode:{i}"
+            hash_val = self._hash(virtual_key)
+
+            if hash_val in self.ring:
+                # Find new owner (next node clockwise)
+                idx = self.sorted_keys.index(hash_val)
+                self.sorted_keys.remove(hash_val)
+                del self.ring[hash_val]
+
+                if self.sorted_keys:
+                    new_idx = idx % len(self.sorted_keys)
+                    new_owner = self.ring[self.sorted_keys[new_idx]]
+                    keys_to_move.append((hash_val, new_owner))
+
+        return keys_to_move
+
+    def get_node(self, key: str) -> Optional[str]:
+        """Get the node responsible for a key."""
+        if not self.sorted_keys:
+            return None
+
+        hash_val = self._hash(key)
+        idx = bisect.bisect_right(self.sorted_keys, hash_val)
+
+        # Wrap around to first node if past the end
+        if idx >= len(self.sorted_keys):
+            idx = 0
+
+        return self.ring[self.sorted_keys[idx]]
+
+    def get_replicas(self, key: str, n: int = 3) -> List[str]:
+        """
+        Get N distinct physical nodes for replication (preference list).
+        Walks clockwise from key's position, skipping virtual nodes
+        that map to already-selected physical nodes.
+        """
+        if not self.sorted_keys or n > len(self.nodes):
+            return list(self.nodes)[:n]
+
+        hash_val = self._hash(key)
+        idx = bisect.bisect_right(self.sorted_keys, hash_val)
+
+        replicas = []
+        seen_nodes = set()
+
+        for i in range(len(self.sorted_keys)):
+            ring_idx = (idx + i) % len(self.sorted_keys)
+            node = self.ring[self.sorted_keys[ring_idx]]
+
+            if node not in seen_nodes:
+                replicas.append(node)
+                seen_nodes.add(node)
+
+                if len(replicas) >= n:
+                    break
+
+        return replicas
+
+
+# Example usage
+if __name__ == "__main__":
+    ring = ConsistentHash(num_virtual_nodes=100)
+
+    # Add nodes
+    for node in ["node-1", "node-2", "node-3", "node-4"]:
+        ring.add_node(node)
+
+    # Distribute some keys
+    keys = [f"user:{i}" for i in range(20)]
+    distribution = {}
+
+    for key in keys:
+        node = ring.get_node(key)
+        distribution.setdefault(node, []).append(key)
+        replicas = ring.get_replicas(key, n=3)
+        print(f"{key} -> Primary: {node}, Replicas: {replicas}")
+
+    print("\nDistribution:")
+    for node, node_keys in distribution.items():
+        print(f"  {node}: {len(node_keys)} keys")
+
+    # Add a new node - minimal redistribution
+    print("\nAdding node-5...")
+    ring.add_node("node-5")
+
+    moved = 0
+    for key in keys:
+        new_node = ring.get_node(key)
+        old_node = [n for n, ks in distribution.items() if key in ks][0]
+        if new_node != old_node:
+            moved += 1
+            print(f"  {key} moved: {old_node} -> {new_node}")
+
+    print(f"Total keys moved: {moved}/{len(keys)} ({100*moved/len(keys):.1f}%)")
+                        </code>
+                    </div>
+                </div>
+
+                <div id="vector-clock" class="code-panel">
+                    <div class="code-block">
+                        <code>
+"""
+Vector Clock Implementation
+
+Vector clocks track causality in distributed systems, allowing us to
+determine if one event happened before another or if events are concurrent.
+"""
+
+from typing import Dict, List, Tuple, Optional
+from dataclasses import dataclass, field
+from enum import Enum
+import copy
+
+
+class Ordering(Enum):
+    BEFORE = "before"       # vc1 happened before vc2
+    AFTER = "after"         # vc1 happened after vc2
+    EQUAL = "equal"         # vc1 equals vc2
+    CONCURRENT = "concurrent"  # Neither happened before the other
+
+
+@dataclass
+class VectorClock:
+    """
+    A vector clock for tracking causality.
+
+    Each entry maps a node ID to its logical timestamp (monotonically increasing counter).
+    """
+    clock: Dict[str, int] = field(default_factory=dict)
+
+    def increment(self, node_id: str) -> 'VectorClock':
+        """Increment this node's counter. Called when the node modifies data."""
+        new_clock = copy.deepcopy(self)
+        new_clock.clock[node_id] = new_clock.clock.get(node_id, 0) + 1
+        return new_clock
+
+    def merge(self, other: 'VectorClock') -> 'VectorClock':
+        """
+        Merge two vector clocks (take max of each component).
+        Used when receiving an update from another node.
+        """
+        merged = VectorClock()
+        all_nodes = set(self.clock.keys()) | set(other.clock.keys())
+
+        for node in all_nodes:
+            merged.clock[node] = max(
+                self.clock.get(node, 0),
+                other.clock.get(node, 0)
+            )
+
+        return merged
+
+    def compare(self, other: 'VectorClock') -> Ordering:
+        """
+        Compare two vector clocks to determine causal ordering.
+
+        Returns:
+            BEFORE: self happened before other
+            AFTER: self happened after other
+            EQUAL: self equals other
+            CONCURRENT: Neither happened before the other (conflict!)
+        """
+        all_nodes = set(self.clock.keys()) | set(other.clock.keys())
+
+        self_greater = False
+        other_greater = False
+
+        for node in all_nodes:
+            self_val = self.clock.get(node, 0)
+            other_val = other.clock.get(node, 0)
+
+            if self_val > other_val:
+                self_greater = True
+            elif self_val < other_val:
+                other_greater = True
+
+        if self_greater and other_greater:
+            return Ordering.CONCURRENT
+        elif self_greater:
+            return Ordering.AFTER
+        elif other_greater:
+            return Ordering.BEFORE
+        else:
+            return Ordering.EQUAL
+
+    def __str__(self) -> str:
+        items = [f"{k}:{v}" for k, v in sorted(self.clock.items())]
+        return f"[{', '.join(items)}]"
+
+
+@dataclass
+class VersionedValue:
+    """A value with its vector clock for conflict detection."""
+    value: any
+    clock: VectorClock
+
+
+class DynamoKVStore:
+    """
+    Simplified Dynamo-style key-value store with vector clocks.
+
+    Demonstrates:
+    - Vector clock updates on writes
+    - Conflict detection on reads
+    - Client-side conflict resolution
+    """
+
+    def __init__(self, node_id: str):
+        self.node_id = node_id
+        # Maps key -> list of versioned values (multiple = conflict)
+        self.store: Dict[str, List[VersionedValue]] = {}
+
+    def put(self, key: str, value: any,
+            context: Optional[VectorClock] = None) -> VectorClock:
+        """
+        Write a value. If context provided, it's an update; otherwise new write.
+
+        Args:
+            key: The key to write
+            value: The value to store
+            context: Vector clock from a previous read (for updates)
+
+        Returns:
+            The new vector clock for this write
+        """
+        # Start with context or empty clock
+        base_clock = context if context else VectorClock()
+
+        # Increment our node's counter
+        new_clock = base_clock.increment(self.node_id)
+        new_version = VersionedValue(value=value, clock=new_clock)
+
+        if key not in self.store:
+            self.store[key] = [new_version]
+        else:
+            # Remove any versions that this write supersedes
+            surviving = []
+            for existing in self.store[key]:
+                ordering = new_clock.compare(existing.clock)
+                if ordering == Ordering.BEFORE:
+                    # New write is older - keep existing, don't add new
+                    return existing.clock
+                elif ordering == Ordering.CONCURRENT:
+                    # Conflict - keep both
+                    surviving.append(existing)
+                # If AFTER or EQUAL, discard existing
+
+            surviving.append(new_version)
+            self.store[key] = surviving
+
+        return new_clock
+
+    def get(self, key: str) -> Tuple[List[any], VectorClock]:
+        """
+        Read a value. May return multiple values if there are conflicts.
+
+        Returns:
+            (list of values, merged vector clock for context)
+
+        If multiple values returned, client must resolve and write back.
+        """
+        if key not in self.store:
+            return [], VectorClock()
+
+        versions = self.store[key]
+
+        if len(versions) == 1:
+            return [versions[0].value], versions[0].clock
+
+        # Multiple versions = conflict
+        # Merge all clocks to create context for resolution
+        values = [v.value for v in versions]
+        merged_clock = versions[0].clock
+        for v in versions[1:]:
+            merged_clock = merged_clock.merge(v.clock)
+
+        return values, merged_clock
+
+
+# Example: Shopping Cart Conflict Resolution
+if __name__ == "__main__":
+    # Simulate two nodes accepting concurrent writes
+
+    node_a = DynamoKVStore("node-a")
+    node_b = DynamoKVStore("node-b")
+
+    print("=== Scenario: Concurrent Shopping Cart Updates ===\n")
+
+    # Initial cart state (written to node A)
+    print("1. User adds 'book' to cart via Node A")
+    ctx1 = node_a.put("cart:user123", {"items": ["book"]})
+    print(f"   Cart: ['book'], Clock: {ctx1}\n")
+
+    # Simulate replication to node B
+    node_b.store = copy.deepcopy(node_a.store)
+
+    # Now imagine a network partition...
+    print("2. NETWORK PARTITION - nodes can't communicate\n")
+
+    # User adds laptop via node A
+    print("3. User adds 'laptop' via Node A")
+    ctx_a = node_a.put("cart:user123", {"items": ["book", "laptop"]}, ctx1)
+    print(f"   Node A cart: ['book', 'laptop'], Clock: {ctx_a}\n")
+
+    # Concurrently, user adds phone via node B (different device maybe)
+    print("4. User adds 'phone' via Node B (concurrent!)")
+    ctx_b = node_b.put("cart:user123", {"items": ["book", "phone"]}, ctx1)
+    print(f"   Node B cart: ['book', 'phone'], Clock: {ctx_b}\n")
+
+    # Partition heals - merge the stores
+    print("5. PARTITION HEALS - nodes sync\n")
+
+    # Node A receives Node B's version
+    for version in node_b.store["cart:user123"]:
+        node_a.store["cart:user123"].append(version)
+
+    # Now read and detect conflict
+    print("6. User reads cart from Node A")
+    values, merged_ctx = node_a.get("cart:user123")
+    print(f"   Values: {values}")
+    print(f"   Merged context: {merged_ctx}")
+
+    if len(values) > 1:
+        print("\n   CONFLICT DETECTED! Client must resolve.\n")
+
+        # Application-specific resolution: union all items (Dynamo's cart strategy)
+        all_items = set()
+        for v in values:
+            all_items.update(v["items"])
+
+        resolved = {"items": sorted(list(all_items))}
+        print(f"7. Client resolves via union: {resolved['items']}")
+
+        # Write resolved value with merged context
+        final_ctx = node_a.put("cart:user123", resolved, merged_ctx)
+        print(f"   Final clock: {final_ctx}\n")
+
+        # Verify resolution
+        final_values, _ = node_a.get("cart:user123")
+        print(f"8. Final cart: {final_values[0]['items']}")
+        print("   No more conflicts!")
+                        </code>
+                    </div>
+                </div>
+
+                <div id="quorum" class="code-panel">
+                    <div class="code-block">
+                        <code>
+"""
+Quorum-based Reads and Writes
+
+Demonstrates N, R, W parameters and sloppy quorum with hinted handoff.
+"""
+
+import asyncio
+import random
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple, Set
+from enum import Enum
+
+
+@dataclass
+class WriteResult:
+    success: bool
+    acks: int
+    failed_nodes: List[str]
+    hinted_nodes: List[Tuple[str, str]]  # (standby, original)
+
+
+@dataclass
+class ReadResult:
+    success: bool
+    values: List[any]
+    responding_nodes: List[str]
+    needs_read_repair: bool
+
+
+class NodeStatus(Enum):
+    ALIVE = "alive"
+    DOWN = "down"
+    SLOW = "slow"
+
+
+class DynamoQuorum:
+    """
+    Simulates Dynamo's quorum-based replication with sloppy quorum.
+
+    Parameters:
+        N: Number of replicas
+        R: Minimum reads for success
+        W: Minimum writes for success
+    """
+
+    def __init__(self, n: int = 3, r: int = 2, w: int = 2):
+        self.N = n
+        self.R = r
+        self.W = w
+
+        # Simulated node states
+        self.nodes: Dict[str, NodeStatus] = {}
+        self.node_data: Dict[str, Dict[str, any]] = {}  # node -> {key: value}
+        self.hints: Dict[str, List[Tuple[str, str, any]]] = {}  # node -> [(target, key, value)]
+
+        # Preference list (ordered list of nodes for each key range)
+        self.preference_list: List[str] = []
+
+    def add_node(self, node_id: str):
+        """Add a node to the cluster."""
+        self.nodes[node_id] = NodeStatus.ALIVE
+        self.node_data[node_id] = {}
+        self.hints[node_id] = []
+        self.preference_list.append(node_id)
+
+    def set_node_status(self, node_id: str, status: NodeStatus):
+        """Simulate node failure or recovery."""
+        self.nodes[node_id] = status
+
+    def get_preference_list(self, key: str) -> List[str]:
+        """
+        Get the preference list for a key.
+        In real Dynamo, this comes from consistent hashing.
+        """
+        # Simplified: rotate list based on key hash
+        start = hash(key) % len(self.preference_list)
+        return self.preference_list[start:] + self.preference_list[:start]
+
+    async def _write_to_node(self, node_id: str, key: str, value: any) -> bool:
+        """Simulate writing to a single node."""
+        status = self.nodes.get(node_id, NodeStatus.DOWN)
+
+        if status == NodeStatus.DOWN:
+            return False
+
+        if status == NodeStatus.SLOW:
+            await asyncio.sleep(0.5)  # Simulate slow node
+
+        self.node_data[node_id][key] = value
+        return True
+
+    async def _read_from_node(self, node_id: str, key: str) -> Optional[any]:
+        """Simulate reading from a single node."""
+        status = self.nodes.get(node_id, NodeStatus.DOWN)
+
+        if status == NodeStatus.DOWN:
+            return None
+
+        if status == NodeStatus.SLOW:
+            await asyncio.sleep(0.5)
+
+        return self.node_data[node_id].get(key)
+
+    async def write(self, key: str, value: any, timeout: float = 1.0) -> WriteResult:
+        """
+        Write with quorum W.
+
+        Uses sloppy quorum: if primary replicas are down, writes to
+        next available nodes with a hint for later handoff.
+        """
+        pref_list = self.get_preference_list(key)
+        primary_nodes = pref_list[:self.N]
+        standby_nodes = pref_list[self.N:]
+
+        acks = 0
+        failed_nodes = []
+        hinted_nodes = []
+
+        # Try primary nodes first
+        for node in primary_nodes:
+            success = await self._write_to_node(node, key, value)
+            if success:
+                acks += 1
+            else:
+                failed_nodes.append(node)
+
+        # Sloppy quorum: use standby nodes for failed primaries
+        standby_idx = 0
+        for failed in failed_nodes:
+            while standby_idx < len(standby_nodes):
+                standby = standby_nodes[standby_idx]
+                standby_idx += 1
+
+                if self.nodes.get(standby) == NodeStatus.ALIVE:
+                    # Write to standby with hint
+                    success = await self._write_to_node(standby, key, value)
+                    if success:
+                        self.hints[standby].append((failed, key, value))
+                        hinted_nodes.append((standby, failed))
+                        acks += 1
+                        break
+
+        return WriteResult(
+            success=acks >= self.W,
+            acks=acks,
+            failed_nodes=failed_nodes,
+            hinted_nodes=hinted_nodes
+        )
+
+    async def read(self, key: str, timeout: float = 1.0) -> ReadResult:
+        """
+        Read with quorum R.
+
+        Sends requests to N nodes, waits for R responses.
+        If values differ, read repair may be needed.
+        """
+        pref_list = self.get_preference_list(key)
+        nodes_to_query = pref_list[:self.N]
+
+        values = []
+        responding_nodes = []
+
+        # Query all N nodes in parallel
+        tasks = [
+            self._read_from_node(node, key)
+            for node in nodes_to_query
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for node, result in zip(nodes_to_query, results):
+            if result is not None and not isinstance(result, Exception):
+                values.append(result)
+                responding_nodes.append(node)
+
+        # Check if we have enough responses
+        success = len(values) >= self.R
+
+        # Detect if read repair is needed (values differ)
+        needs_repair = len(set(str(v) for v in values)) > 1 if values else False
+
+        return ReadResult(
+            success=success,
+            values=values,
+            responding_nodes=responding_nodes,
+            needs_read_repair=needs_repair
+        )
+
+    async def handoff_hints(self, node_id: str):
+        """
+        Replay hints when a node recovers.
+        Called when a node that was down comes back up.
+        """
+        for source_node, hints in self.hints.items():
+            if source_node == node_id:
+                continue
+
+            delivered = []
+            for target, key, value in hints:
+                if target == node_id:
+                    success = await self._write_to_node(node_id, key, value)
+                    if success:
+                        delivered.append((target, key, value))
+
+            # Remove delivered hints
+            for hint in delivered:
+                self.hints[source_node].remove(hint)
+
+
+# Example usage
+async def main():
+    print("=== Dynamo Quorum Example ===\n")
+
+    # Create cluster with N=3, R=2, W=2
+    dynamo = DynamoQuorum(n=3, r=2, w=2)
+
+    # Add 5 nodes
+    for i in range(5):
+        dynamo.add_node(f"node-{i}")
+
+    print("Cluster: 5 nodes, N=3, R=2, W=2")
+    print("Consistency: R + W (4) > N (3) = Strong consistency\n")
+
+    # Normal write
+    print("1. Normal write (all nodes up)")
+    result = await dynamo.write("user:1", {"name": "Alice"})
+    print(f"   Success: {result.success}, Acks: {result.acks}/{dynamo.W} required\n")
+
+    # Normal read
+    print("2. Normal read")
+    result = await dynamo.read("user:1")
+    print(f"   Success: {result.success}, Values: {result.values}\n")
+
+    # Simulate node failure
+    print("3. Simulating node failure (node-0 down)")
+    dynamo.set_node_status("node-0", NodeStatus.DOWN)
+
+    # Write with sloppy quorum
+    print("4. Write with failed node (sloppy quorum)")
+    result = await dynamo.write("user:2", {"name": "Bob"})
+    print(f"   Success: {result.success}, Acks: {result.acks}")
+    print(f"   Failed nodes: {result.failed_nodes}")
+    print(f"   Hinted to: {result.hinted_nodes}\n")
+
+    # Recovery and handoff
+    print("5. Node-0 recovers")
+    dynamo.set_node_status("node-0", NodeStatus.ALIVE)
+    await dynamo.handoff_hints("node-0")
+    print("   Hints replayed to recovered node\n")
+
+    # Verify data is on recovered node
+    value = dynamo.node_data["node-0"].get("user:2")
+    print(f"6. Data on recovered node: {value}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+                        </code>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Real-World Impact Section -->
+            <section id="impact" class="mt-4">
+                <h2>Real-World Impact</h2>
+
+                <div class="collapsible open">
+                    <div class="collapsible-header">
+                        <span>Systems Influenced by Dynamo</span>
+                        <span class="collapsible-icon">&#9660;</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>The Dynamo paper spawned an entire generation of distributed databases, collectively known as "Dynamo-style" or "AP" systems:</p>
+
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <h4>Apache Cassandra (2008)</h4>
+                                <p>Originally developed by Facebook, combines Dynamo's partitioning and replication with BigTable's data model. Powers Apple, Netflix, and Instagram at massive scale.</p>
+                                <p><strong>Dynamo concepts used:</strong> Consistent hashing, quorum, gossip, eventual consistency</p>
+                            </div>
+
+                            <div class="timeline-item">
+                                <h4>Riak (2009)</h4>
+                                <p>Most faithful implementation of Dynamo's design. Pioneered CRDT support for automatic conflict resolution.</p>
+                                <p><strong>Dynamo concepts used:</strong> All core concepts plus vector clocks with CRDT resolution</p>
+                            </div>
+
+                            <div class="timeline-item">
+                                <h4>Voldemort (2009)</h4>
+                                <p>LinkedIn's key-value store, used for serving member profiles and connection data.</p>
+                                <p><strong>Dynamo concepts used:</strong> Consistent hashing, vector clocks, read repair</p>
+                            </div>
+
+                            <div class="timeline-item">
+                                <h4>Amazon DynamoDB (2012)</h4>
+                                <p>AWS's managed NoSQL service. Evolved from Dynamo but simplified (e.g., removed vector clocks in favor of last-write-wins).</p>
+                                <p><strong>Dynamo concepts used:</strong> Consistent hashing, eventual/strong consistency options, high availability</p>
+                            </div>
+                        </div>
+
+                        <h4 class="mt-3">Comparison of Dynamo-Inspired Systems</h4>
+                        <table class="comparison-table">
+                            <tr>
+                                <th>System</th>
+                                <th>Vector Clocks</th>
+                                <th>Consistency</th>
+                                <th>Data Model</th>
+                                <th>Use Case</th>
+                            </tr>
+                            <tr>
+                                <td>Cassandra</td>
+                                <td>No (LWW)</td>
+                                <td>Tunable (R/W)</td>
+                                <td>Wide-column</td>
+                                <td>Time-series, IoT</td>
+                            </tr>
+                            <tr>
+                                <td>Riak</td>
+                                <td>Yes + CRDTs</td>
+                                <td>Eventual</td>
+                                <td>Key-value</td>
+                                <td>Session, user data</td>
+                            </tr>
+                            <tr>
+                                <td>DynamoDB</td>
+                                <td>No</td>
+                                <td>Eventual/Strong</td>
+                                <td>Key-value + Document</td>
+                                <td>Serverless apps</td>
+                            </tr>
+                            <tr>
+                                <td>ScyllaDB</td>
+                                <td>No (LWW)</td>
+                                <td>Tunable</td>
+                                <td>Wide-column</td>
+                                <td>High-perf Cassandra alt</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interview Questions Section -->
+            <section id="interview-questions" class="mt-4">
+                <h2>Interview Questions</h2>
+
+                <p class="text-muted mb-3">Click each question to reveal the answer. These are frequently asked in system design interviews.</p>
+
+                <div class="interview-question" onclick="toggleQuestion(this)">
+                    <div class="question">
+                        <span>1. Why did Amazon choose eventual consistency over strong consistency for Dynamo?</span>
+                        <span class="toggle-icon">&#9660;</span>
+                    </div>
+                    <div class="answer">
+                        <p><strong>Key points to cover:</strong></p>
+                        <ul>
+                            <li><strong>Business requirement:</strong> Amazon's shopping cart must always be writable. An "add to cart" should never fail, even during partial failures.</li>
+                            <li><strong>CAP theorem:</strong> During network partitions, you must choose between consistency (CP) or availability (AP). Amazon chose AP.</li>
+                            <li><strong>User experience:</strong> For a shopping cart, seeing a slightly stale cart is acceptable. Losing items is not.</li>
+                            <li><strong>Conflict resolution:</strong> Shopping cart conflicts can be resolved by union (add all items), which is safe and idempotent.</li>
+                        </ul>
+                        <p><strong>When to prefer strong consistency:</strong> Financial transactions, inventory management (overselling prevention), leader election.</p>
+                    </div>
+                </div>
+
+                <div class="interview-question" onclick="toggleQuestion(this)">
+                    <div class="question">
+                        <span>2. Explain how consistent hashing enables horizontal scaling.</span>
+                        <span class="toggle-icon">&#9660;</span>
+                    </div>
+                    <div class="answer">
+                        <p><strong>The scaling problem:</strong> With naive hashing (key % N), adding a node changes N, requiring ~100% of data to move.</p>
+                        <p><strong>Consistent hashing solution:</strong></p>
+                        <ul>
+                            <li>Keys and nodes are mapped to a circular hash space (ring)</li>
+                            <li>Each key is assigned to the next node clockwise from its position</li>
+                            <li>Adding a node only affects keys between it and its predecessor</li>
+                            <li>On average, only K/N keys move when adding a node (optimal!)</li>
+                        </ul>
+                        <p><strong>Virtual nodes improvement:</strong> Each physical node gets multiple positions on the ring, which provides even load distribution and faster rebalancing when heterogeneous hardware is used.</p>
+                    </div>
+                </div>
+
+                <div class="interview-question" onclick="toggleQuestion(this)">
+                    <div class="question">
+                        <span>3. How do you choose values for N, R, and W? What are the trade-offs?</span>
+                        <span class="toggle-icon">&#9660;</span>
+                    </div>
+                    <div class="answer">
+                        <p><strong>The fundamental rule:</strong> R + W > N ensures reads see the latest write (strong consistency).</p>
+                        <p><strong>Common configurations:</strong></p>
+                        <ul>
+                            <li><strong>N=3, R=2, W=2:</strong> Balanced consistency and availability. Tolerates 1 node failure for both reads and writes.</li>
+                            <li><strong>N=3, R=1, W=3:</strong> Fast reads (only 1 response needed), but writes need all nodes (less available for writes).</li>
+                            <li><strong>N=3, R=3, W=1:</strong> Fast writes (fire and forget), but reads need all nodes.</li>
+                            <li><strong>N=3, R=1, W=1:</strong> Maximum availability, eventual consistency. Used for Dynamo's shopping cart.</li>
+                        </ul>
+                        <p><strong>Trade-off summary:</strong> Higher R/W = more consistent but less available and higher latency. Lower R/W = faster and more available but potentially stale reads.</p>
+                    </div>
+                </div>
+
+                <div class="interview-question" onclick="toggleQuestion(this)">
+                    <div class="question">
+                        <span>4. What are the limitations of vector clocks? When would you not use them?</span>
+                        <span class="toggle-icon">&#9660;</span>
+                    </div>
+                    <div class="answer">
+                        <p><strong>Limitations:</strong></p>
+                        <ul>
+                            <li><strong>Space overhead:</strong> Vector grows with number of writers. Dynamo truncates after 10 entries, which can cause false conflicts.</li>
+                            <li><strong>Client complexity:</strong> Clients must store and send context, and handle conflict resolution.</li>
+                            <li><strong>No automatic resolution:</strong> Concurrent writes always create conflicts requiring application logic.</li>
+                        </ul>
+                        <p><strong>Alternatives:</strong></p>
+                        <ul>
+                            <li><strong>Last-Write-Wins (LWW):</strong> Use timestamps. Simple but can lose data. Good when data loss is acceptable (metrics, logs).</li>
+                            <li><strong>CRDTs:</strong> Data structures that mathematically guarantee conflict-free merging. Better than vector clocks for specific data types (counters, sets).</li>
+                            <li><strong>Single-leader:</strong> When you can afford coordination overhead, just use a leader.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="interview-question" onclick="toggleQuestion(this)">
+                    <div class="question">
+                        <span>5. How does Dynamo detect and repair divergent replicas?</span>
+                        <span class="toggle-icon">&#9660;</span>
+                    </div>
+                    <div class="answer">
+                        <p><strong>Two mechanisms:</strong></p>
+                        <p><strong>1. Read Repair (synchronous):</strong></p>
+                        <ul>
+                            <li>When a read returns from R replicas, compare the values</li>
+                            <li>If they differ, the coordinator sends the latest version to stale replicas</li>
+                            <li>Happens on every read - keeps frequently-accessed data in sync</li>
+                        </ul>
+                        <p><strong>2. Anti-Entropy with Merkle Trees (background):</strong></p>
+                        <ul>
+                            <li>Each node maintains a Merkle tree of its key ranges</li>
+                            <li>Periodically compare tree roots with replica nodes</li>
+                            <li>If roots differ, traverse the tree to find divergent keys</li>
+                            <li>Only transfer the specific keys that differ (O(log n) comparisons)</li>
+                        </ul>
+                        <p>Read repair handles hot data; anti-entropy handles cold data that's rarely read.</p>
+                    </div>
+                </div>
+
+                <div class="interview-question" onclick="toggleQuestion(this)">
+                    <div class="question">
+                        <span>6. What is sloppy quorum and hinted handoff? When are they used?</span>
+                        <span class="toggle-icon">&#9660;</span>
+                    </div>
+                    <div class="answer">
+                        <p><strong>Sloppy Quorum:</strong></p>
+                        <ul>
+                            <li>In strict quorum, writes go to the first N nodes in the preference list</li>
+                            <li>If some are unavailable, the write fails (reduced availability)</li>
+                            <li>Sloppy quorum allows writing to any N healthy nodes, even if they're not the designated replicas</li>
+                        </ul>
+                        <p><strong>Hinted Handoff:</strong></p>
+                        <ul>
+                            <li>When a write goes to a standby node instead of the primary, it includes a "hint"</li>
+                            <li>The hint says "this data belongs to Node X"</li>
+                            <li>When Node X recovers, the standby replays all hints to it</li>
+                            <li>After successful handoff, the hint is deleted</li>
+                        </ul>
+                        <p><strong>Trade-off:</strong> Sloppy quorum increases availability but can reduce durability (data on fewer "correct" nodes) and consistency (more divergence during partitions).</p>
+                    </div>
+                </div>
+
+                <div class="interview-question" onclick="toggleQuestion(this)">
+                    <div class="question">
+                        <span>7. How would you design a system that needs both high availability AND strong consistency?</span>
+                        <span class="toggle-icon">&#9660;</span>
+                    </div>
+                    <div class="answer">
+                        <p><strong>This is a trick question!</strong> CAP theorem says you can't have both during network partitions. But you can get close:</p>
+                        <p><strong>Approaches:</strong></p>
+                        <ul>
+                            <li><strong>Minimize partition probability:</strong> Multiple network paths, redundant switches, same-datacenter replicas</li>
+                            <li><strong>Hybrid consistency:</strong> Strong consistency for critical ops (payments), eventual for others (product views)</li>
+                            <li><strong>CRDTs for specific data:</strong> Counters, sets that merge automatically without conflicts</li>
+                            <li><strong>Google Spanner approach:</strong> TrueTime + Paxos gives external consistency with high availability (but requires specialized hardware)</li>
+                        </ul>
+                        <p><strong>Key insight for interviews:</strong> Ask what "strong consistency" means for their use case. Often "read-your-writes" or "causal consistency" is sufficient and much easier to achieve than linearizability.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Takeaways Section -->
+            <section id="takeaways" class="mt-4">
+                <h2>Key Takeaways for Interviews</h2>
+
+                <div class="card-grid">
+                    <div class="takeaway-box">
+                        <h4>1. Availability vs Consistency Trade-off</h4>
+                        <p>Dynamo chose availability. In interviews, always clarify the business requirements. E-commerce carts can be eventually consistent; financial transactions cannot.</p>
+                    </div>
+
+                    <div class="takeaway-box">
+                        <h4>2. Consistent Hashing is Foundational</h4>
+                        <p>Used everywhere: distributed caches, databases, load balancers. Know how to explain virtual nodes and why they matter for even distribution.</p>
+                    </div>
+
+                    <div class="takeaway-box">
+                        <h4>3. Quorum Math</h4>
+                        <p>R + W > N = strong consistency. Be able to discuss how to tune R/W for different workloads (read-heavy vs write-heavy).</p>
+                    </div>
+
+                    <div class="takeaway-box">
+                        <h4>4. Conflict Resolution Strategy</h4>
+                        <p>Vector clocks detect conflicts; applications resolve them. Know LWW, union merge, and when CRDTs are appropriate.</p>
+                    </div>
+
+                    <div class="takeaway-box">
+                        <h4>5. No Single Point of Failure</h4>
+                        <p>Dynamo's peer-to-peer design with gossip and sloppy quorum ensures no component is critical. This is the gold standard for high availability.</p>
+                    </div>
+
+                    <div class="takeaway-box">
+                        <h4>6. Know the Descendants</h4>
+                        <p>Cassandra, Riak, DynamoDB all use Dynamo's ideas. Be ready to compare them and explain when to use each.</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="flex flex-between mt-4">
+                <a href="../module-05.html" class="btn btn-secondary">&larr; Back to Seminal Papers</a>
+                <a href="../index.html" class="btn btn-primary">System Design Home &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'neutral',
+            securityLevel: 'loose'
+        });
+
+        // Sidebar toggle for mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+
+        // Code tabs functionality
+        function showCodeTab(tabId) {
+            // Hide all panels
+            document.querySelectorAll('.code-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+
+            // Deactivate all tabs
+            document.querySelectorAll('.code-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected panel
+            document.getElementById(tabId).classList.add('active');
+
+            // Activate clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Interview question toggle
+        function toggleQuestion(element) {
+            element.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

@@ -6,6 +6,345 @@
     <title>Module 5: Seminal Papers - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Paper Cards - Animated and Visually Stunning */
+        .papers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .paper-card {
+            position: relative;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px;
+            padding: 1.75rem;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .paper-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--paper-color-start), var(--paper-color-end));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .paper-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--paper-color-start) 0%, var(--paper-color-end) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 0;
+            border-radius: 16px;
+        }
+
+        .paper-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(37, 99, 235, 0.1);
+        }
+
+        .paper-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .paper-card:hover::after {
+            opacity: 0.08;
+        }
+
+        .paper-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Paper-specific color themes */
+        .paper-card.dynamo {
+            --paper-color-start: #f59e0b;
+            --paper-color-end: #d97706;
+        }
+
+        .paper-card.spanner {
+            --paper-color-start: #3b82f6;
+            --paper-color-end: #1d4ed8;
+        }
+
+        .paper-card.kafka {
+            --paper-color-start: #10b981;
+            --paper-color-end: #059669;
+        }
+
+        .paper-card.gfs {
+            --paper-color-start: #8b5cf6;
+            --paper-color-end: #7c3aed;
+        }
+
+        .paper-card.bigtable {
+            --paper-color-start: #ef4444;
+            --paper-color-end: #dc2626;
+        }
+
+        .paper-card.memcache {
+            --paper-color-start: #06b6d4;
+            --paper-color-end: #0891b2;
+        }
+
+        .paper-card.mapreduce {
+            --paper-color-start: #ec4899;
+            --paper-color-end: #db2777;
+        }
+
+        .paper-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .paper-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, var(--paper-color-start) 0%, var(--paper-color-end) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+        }
+
+        .paper-card:hover .paper-icon {
+            transform: rotate(-5deg) scale(1.1);
+        }
+
+        .paper-meta {
+            flex: 1;
+        }
+
+        .paper-company {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .paper-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-color);
+            line-height: 1.3;
+        }
+
+        .paper-year {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .paper-description {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+        }
+
+        .paper-influence {
+            background: rgba(37, 99, 235, 0.08);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-top: auto;
+        }
+
+        .paper-influence-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .paper-influence-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .influence-tag {
+            background: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .paper-card:hover .influence-tag {
+            background: linear-gradient(135deg, var(--paper-color-start) 0%, var(--paper-color-end) 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .paper-arrow {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        .paper-card:hover .paper-arrow {
+            opacity: 1;
+            transform: translateX(0);
+            background: linear-gradient(135deg, var(--paper-color-start) 0%, var(--paper-color-end) 100%);
+            color: white;
+        }
+
+        /* Section header styling */
+        .section-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Influence Map Styling */
+        .influence-map-container {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .influence-map-container h3 {
+            color: white;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .influence-map-container .mermaid {
+            background: transparent;
+        }
+
+        /* Key Insights Cards */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .insight-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .insight-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .insight-card h4 {
+            color: var(--primary-color);
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-card p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Animated gradient background for hero section */
+        .papers-hero {
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f59e0b, #10b981);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .papers-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .papers-hero p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Pulse animation for icons */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+            50% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25); }
+        }
+
+        .paper-card:hover .paper-icon {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -26,6 +365,15 @@
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">Getting Started</div>
                     <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Paper Deep Dives</div>
+                    <a href="papers/gfs.html" class="sidebar-link">Google File System</a>
+                    <a href="papers/bigtable.html" class="sidebar-link">Google BigTable</a>
+                    <a href="papers/dynamo.html" class="sidebar-link">Amazon Dynamo</a>
+                    <a href="papers/memcache.html" class="sidebar-link">Facebook Memcache</a>
+                    <a href="papers/mapreduce.html" class="sidebar-link">Google MapReduce</a>
                 </div>
 
                 <div class="sidebar-section">
@@ -90,191 +438,308 @@
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <main class="main-content">
-            <h1>Module 5: Seminal Papers Study</h1>
+            <!-- Hero Section -->
+            <div class="papers-hero">
+                <h1>Seminal Papers Study</h1>
+                <p>Master the foundational research papers that shaped modern distributed systems. These papers are frequently referenced in system design interviews and represent core concepts every staff engineer should understand deeply.</p>
+            </div>
 
-        <div class="card mt-3">
-            <h3>Learning Objectives</h3>
-            <ul>
-                <li>Understand key concepts from foundational distributed systems papers</li>
-                <li>Learn how academic papers influenced real-world systems</li>
-                <li>Apply lessons from GFS, Dynamo, Kafka, Spanner</li>
-                <li>Connect paper concepts to interview discussions</li>
-            </ul>
-        </div>
+            <!-- Learning Objectives -->
+            <div class="card mt-3">
+                <h3>Learning Objectives</h3>
+                <ul>
+                    <li>Understand key concepts from foundational distributed systems papers</li>
+                    <li>Learn how academic papers influenced real-world systems at scale</li>
+                    <li>Apply lessons from GFS, Dynamo, Kafka, Spanner in interview discussions</li>
+                    <li>Connect paper concepts to modern system design patterns</li>
+                </ul>
+            </div>
 
-        <h2 class="mt-4">Paper Influence Map</h2>
+            <!-- Paper Cards Section -->
+            <div class="section-header mt-4">
+                <h2>Essential Papers</h2>
+                <p>Click any paper to dive deep into its concepts, implementation details, and interview applications</p>
+            </div>
 
-        <div class="diagram-container">
-            <div class="mermaid">
+            <div class="papers-grid">
+                <!-- Amazon Dynamo -->
+                <a href="papers/dynamo.html" class="paper-card dynamo">
+                    <div class="paper-header">
+                        <div class="paper-icon">D</div>
+                        <div class="paper-meta">
+                            <div class="paper-company">Amazon</div>
+                            <div class="paper-title">Dynamo</div>
+                            <div class="paper-year">2007</div>
+                        </div>
+                    </div>
+                    <p class="paper-description">
+                        The paper that pioneered "always writable" key-value stores. Introduced consistent hashing, vector clocks, and quorum-based replication for achieving high availability at the expense of strong consistency.
+                    </p>
+                    <div class="paper-influence">
+                        <div class="paper-influence-label">Systems Influenced</div>
+                        <div class="paper-influence-items">
+                            <span class="influence-tag">Cassandra</span>
+                            <span class="influence-tag">Riak</span>
+                            <span class="influence-tag">DynamoDB</span>
+                            <span class="influence-tag">Voldemort</span>
+                        </div>
+                    </div>
+                    <div class="paper-arrow">&#8594;</div>
+                </a>
+
+                <!-- Google Spanner -->
+                <a href="papers/spanner.html" class="paper-card spanner">
+                    <div class="paper-header">
+                        <div class="paper-icon">S</div>
+                        <div class="paper-meta">
+                            <div class="paper-company">Google</div>
+                            <div class="paper-title">Spanner</div>
+                            <div class="paper-year">2012</div>
+                        </div>
+                    </div>
+                    <p class="paper-description">
+                        Google's globally-distributed database that achieves external consistency using TrueTime API with GPS and atomic clocks. Proves that you can have both strong consistency and horizontal scalability.
+                    </p>
+                    <div class="paper-influence">
+                        <div class="paper-influence-label">Systems Influenced</div>
+                        <div class="paper-influence-items">
+                            <span class="influence-tag">CockroachDB</span>
+                            <span class="influence-tag">YugabyteDB</span>
+                            <span class="influence-tag">TiDB</span>
+                        </div>
+                    </div>
+                    <div class="paper-arrow">&#8594;</div>
+                </a>
+
+                <!-- Apache Kafka -->
+                <a href="papers/kafka.html" class="paper-card kafka">
+                    <div class="paper-header">
+                        <div class="paper-icon">K</div>
+                        <div class="paper-meta">
+                            <div class="paper-company">LinkedIn</div>
+                            <div class="paper-title">Kafka</div>
+                            <div class="paper-year">2011</div>
+                        </div>
+                    </div>
+                    <p class="paper-description">
+                        Revolutionized event streaming with its distributed commit log architecture. Sequential disk writes, consumer-managed offsets, and partition-based parallelism enable massive throughput for real-time data pipelines.
+                    </p>
+                    <div class="paper-influence">
+                        <div class="paper-influence-label">Systems Influenced</div>
+                        <div class="paper-influence-items">
+                            <span class="influence-tag">Pulsar</span>
+                            <span class="influence-tag">Redpanda</span>
+                            <span class="influence-tag">AWS Kinesis</span>
+                        </div>
+                    </div>
+                    <div class="paper-arrow">&#8594;</div>
+                </a>
+
+                <!-- Google File System -->
+                <a href="papers/gfs.html" class="paper-card gfs">
+                    <div class="paper-header">
+                        <div class="paper-icon">G</div>
+                        <div class="paper-meta">
+                            <div class="paper-company">Google</div>
+                            <div class="paper-title">Google File System</div>
+                            <div class="paper-year">2003</div>
+                        </div>
+                    </div>
+                    <p class="paper-description">
+                        The foundational paper for distributed file systems. Introduced chunk-based storage, single master with multiple chunkservers, and optimizations for large sequential reads and appends that defined the big data era.
+                    </p>
+                    <div class="paper-influence">
+                        <div class="paper-influence-label">Systems Influenced</div>
+                        <div class="paper-influence-items">
+                            <span class="influence-tag">Hadoop HDFS</span>
+                            <span class="influence-tag">Colossus</span>
+                            <span class="influence-tag">Azure Blob</span>
+                        </div>
+                    </div>
+                    <div class="paper-arrow">&#8594;</div>
+                </a>
+
+                <!-- Google BigTable -->
+                <a href="papers/bigtable.html" class="paper-card bigtable">
+                    <div class="paper-header">
+                        <div class="paper-icon">B</div>
+                        <div class="paper-meta">
+                            <div class="paper-company">Google</div>
+                            <div class="paper-title">BigTable</div>
+                            <div class="paper-year">2006</div>
+                        </div>
+                    </div>
+                    <p class="paper-description">
+                        Defined the wide-column store model with row keys, column families, and timestamps. LSM-trees, SSTables, and bloom filters enable efficient writes and sparse data storage at petabyte scale.
+                    </p>
+                    <div class="paper-influence">
+                        <div class="paper-influence-label">Systems Influenced</div>
+                        <div class="paper-influence-items">
+                            <span class="influence-tag">HBase</span>
+                            <span class="influence-tag">Cassandra</span>
+                            <span class="influence-tag">LevelDB</span>
+                        </div>
+                    </div>
+                    <div class="paper-arrow">&#8594;</div>
+                </a>
+
+                <!-- Facebook Memcache -->
+                <a href="papers/memcache.html" class="paper-card memcache">
+                    <div class="paper-header">
+                        <div class="paper-icon">M</div>
+                        <div class="paper-meta">
+                            <div class="paper-company">Facebook</div>
+                            <div class="paper-title">Scaling Memcache</div>
+                            <div class="paper-year">2013</div>
+                        </div>
+                    </div>
+                    <p class="paper-description">
+                        How Facebook scaled memcached to billions of requests per second. Introduced leases for thundering herd mitigation, regional pools, and cold cluster warmup strategies that define modern caching at scale.
+                    </p>
+                    <div class="paper-influence">
+                        <div class="paper-influence-label">Systems Influenced</div>
+                        <div class="paper-influence-items">
+                            <span class="influence-tag">Redis Cluster</span>
+                            <span class="influence-tag">Mcrouter</span>
+                            <span class="influence-tag">TAO</span>
+                        </div>
+                    </div>
+                    <div class="paper-arrow">&#8594;</div>
+                </a>
+
+                <!-- MapReduce -->
+                <a href="papers/mapreduce.html" class="paper-card mapreduce">
+                    <div class="paper-header">
+                        <div class="paper-icon">R</div>
+                        <div class="paper-meta">
+                            <div class="paper-company">Google</div>
+                            <div class="paper-title">MapReduce</div>
+                            <div class="paper-year">2004</div>
+                        </div>
+                    </div>
+                    <p class="paper-description">
+                        The programming model that democratized distributed computing. Simple map and reduce functions hide complexity of parallelization, fault tolerance, and data distribution across thousands of machines.
+                    </p>
+                    <div class="paper-influence">
+                        <div class="paper-influence-label">Systems Influenced</div>
+                        <div class="paper-influence-items">
+                            <span class="influence-tag">Hadoop</span>
+                            <span class="influence-tag">Spark</span>
+                            <span class="influence-tag">Flink</span>
+                        </div>
+                    </div>
+                    <div class="paper-arrow">&#8594;</div>
+                </a>
+            </div>
+
+            <!-- Paper Influence Map -->
+            <h2 class="mt-4">Paper Influence Map</h2>
+            <p class="text-muted">How seminal papers shaped the systems we use today</p>
+
+            <div class="influence-map-container">
+                <div class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#3b82f6', 'primaryTextColor': '#fff', 'primaryBorderColor': '#60a5fa', 'lineColor': '#94a3b8', 'secondaryColor': '#1e293b', 'tertiaryColor': '#334155' }}}%%
 flowchart TD
-    GFS[Google File System] --> HDFS[Hadoop HDFS]
-    GFS --> Colossus[Google Colossus]
+    subgraph Google ["Google Research"]
+        GFS["GFS (2003)"]
+        MR["MapReduce (2004)"]
+        BT["BigTable (2006)"]
+        SP["Spanner (2012)"]
+    end
 
-    Dynamo[Amazon Dynamo] --> Cassandra
-    Dynamo --> Riak
-    Dynamo --> DynamoDB[AWS DynamoDB]
+    subgraph Amazon ["Amazon/LinkedIn"]
+        DY["Dynamo (2007)"]
+        KF["Kafka (2011)"]
+    end
 
-    BigTable[Google BigTable] --> HBase
-    BigTable --> Cassandra
+    subgraph Facebook ["Facebook"]
+        MC["Memcache (2013)"]
+    end
 
-    Chubby[Google Chubby] --> ZK[Apache ZooKeeper]
-    ZK --> etcd
+    subgraph OpenSource ["Open Source Systems"]
+        HDFS["Hadoop HDFS"]
+        HB["HBase"]
+        CASS["Cassandra"]
+        CRDB["CockroachDB"]
+        SPARK["Apache Spark"]
+    end
 
-    Spanner --> CockroachDB
-    Spanner --> YugabyteDB
+    subgraph Cloud ["Cloud Services"]
+        S3["AWS S3"]
+        DDB["DynamoDB"]
+        SPNR["Cloud Spanner"]
+    end
+
+    GFS --> HDFS
+    GFS --> S3
+    MR --> HDFS
+    MR --> SPARK
+    BT --> HB
+    BT --> CASS
+    DY --> CASS
+    DY --> DDB
+    SP --> CRDB
+    SP --> SPNR
+    KF --> SPARK
+                </div>
             </div>
-        </div>
 
-        <h2 class="mt-4">Amazon Dynamo</h2>
+            <!-- Key Insights Section -->
+            <h2 class="mt-4">Key Insights from Papers</h2>
+            <p class="text-muted">Universal lessons that apply across all distributed systems</p>
 
-        <div class="collapsible open">
-            <div class="collapsible-header">
-                <span>Highly Available Key-Value Store</span>
-                <span class="collapsible-icon">&#9660;</span>
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <h4>Trade-offs are Fundamental</h4>
+                    <p>Every design decision involves trade-offs. CAP theorem, latency vs consistency, complexity vs performance. Be explicit about what you're giving up.</p>
+                </div>
+                <div class="insight-card">
+                    <h4>Simple Often Wins</h4>
+                    <p>Start simple, add complexity only when needed. GFS used a single master for years. Complexity is the enemy of reliability.</p>
+                </div>
+                <div class="insight-card">
+                    <h4>Embrace Eventual Consistency</h4>
+                    <p>For many use cases, eventual consistency is acceptable and enables much better availability and performance.</p>
+                </div>
+                <div class="insight-card">
+                    <h4>Idempotency is Key</h4>
+                    <p>In distributed systems, operations should be safe to retry. Network failures are inevitable; idempotent operations make recovery simple.</p>
+                </div>
             </div>
-            <div class="collapsible-content">
-                <h4>Problem Statement</h4>
-                <p>Build a highly available key-value store where availability trumps consistency.</p>
 
-                <h4>Design Principles</h4>
-                <ul>
-                    <li><strong>Always writable:</strong> Never reject writes</li>
-                    <li><strong>Incremental scalability:</strong> Add nodes without downtime</li>
-                    <li><strong>Symmetry:</strong> All nodes have equal responsibilities</li>
-                    <li><strong>Decentralization:</strong> No master/leader</li>
-                </ul>
+            <!-- Interview Tips -->
+            <h2 class="mt-4">Interview Application</h2>
 
-                <h4>Key Techniques</h4>
-                <div class="card-grid">
-                    <div class="card">
-                        <h3>Consistent Hashing</h3>
-                        <p>Virtual nodes for even distribution and faster rebalancing</p>
+            <div class="card">
+                <h4>How to Reference Papers in Interviews</h4>
+                <p>Mentioning seminal papers demonstrates deep knowledge. Here's how to do it effectively:</p>
+
+                <div class="collapsible open">
+                    <div class="collapsible-header">
+                        <span>Example: Designing a Distributed Key-Value Store</span>
+                        <span class="collapsible-icon">&#9660;</span>
                     </div>
-                    <div class="card">
-                        <h3>Quorum (N, W, R)</h3>
-                        <p>W + R > N for strong consistency; tune for availability</p>
-                    </div>
-                    <div class="card">
-                        <h3>Vector Clocks</h3>
-                        <p>Track causality, detect conflicts, client reconciliation</p>
-                    </div>
-                    <div class="card">
-                        <h3>Merkle Trees</h3>
-                        <p>Anti-entropy protocol for replica synchronization</p>
+                    <div class="collapsible-content">
+                        <p><strong>Good approach:</strong></p>
+                        <blockquote style="border-left: 3px solid var(--primary-color); padding-left: 1rem; margin: 1rem 0; color: var(--text-light);">
+                            "For this key-value store, I'm thinking about the Dynamo paper's approach. We could use consistent hashing for partitioning, which gives us incremental scalability. For replication, we'd use quorum-based reads and writes - with N=3 replicas, we might use W=2, R=2 for balanced consistency and availability. We should also consider vector clocks for conflict resolution, though in practice many systems simplify to last-writer-wins if the use case allows..."
+                        </blockquote>
+
+                        <p><strong>What this shows:</strong></p>
+                        <ul>
+                            <li>You understand foundational concepts</li>
+                            <li>You can apply academic ideas to practical problems</li>
+                            <li>You know the trade-offs and real-world simplifications</li>
+                        </ul>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <h2 class="mt-4">Google Spanner</h2>
+            <!-- Self-Check Quiz -->
+            <h2 class="mt-4">Self-Check Quiz</h2>
+            <div class="quiz-container" id="module-quiz"></div>
 
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Globally Distributed Database</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <h4>Innovation: TrueTime API</h4>
-                <p>GPS receivers + atomic clocks provide bounded time uncertainty (1-7ms).</p>
-
-                <div class="code-block">
-                    <code>
-now() -> TTInterval(earliest, latest)
-// Actual time is guaranteed within [earliest, latest]
-
-// Commit Wait:
-// 1. Assign commit timestamp
-// 2. Wait out uncertainty
-// 3. Commit is visible
-                    </code>
-                </div>
-
-                <h4>Key Features</h4>
-                <ul>
-                    <li><strong>External consistency:</strong> Transactions appear in timestamp order globally</li>
-                    <li><strong>Paxos-based replication:</strong> Strong consistency across datacenters</li>
-                    <li><strong>SQL support:</strong> Full relational features at scale</li>
-                </ul>
-            </div>
-        </div>
-
-        <h2 class="mt-4">Apache Kafka</h2>
-
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Distributed Log-Based Messaging</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <h4>Why Log-Based?</h4>
-                <ul>
-                    <li>Sequential writes (extremely fast on disk)</li>
-                    <li>Consumers track their own offset</li>
-                    <li>Replay capability for reprocessing</li>
-                    <li>Multiple consumer groups independently</li>
-                </ul>
-
-                <h4>Partition Design</h4>
-                <ul>
-                    <li>Ordering guaranteed within partition</li>
-                    <li>Parallel consumption across partitions</li>
-                    <li>Key-based partitioning for related messages</li>
-                </ul>
-
-                <h4>Exactly-Once Semantics</h4>
-                <ul>
-                    <li><strong>Idempotent producers:</strong> Sequence numbers detect duplicates</li>
-                    <li><strong>Transactional writes:</strong> Atomic writes across partitions</li>
-                </ul>
-            </div>
-        </div>
-
-        <h2 class="mt-4">Facebook Memcache</h2>
-
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Scaling Memcached</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <h4>Challenge: Thundering Herd</h4>
-                <p>Cache miss causes many concurrent DB queries.</p>
-                <p><strong>Solution: Leases</strong> - Only one client fetches from DB, others wait.</p>
-
-                <h4>Challenge: Stale Sets</h4>
-                <p>Race between set and delete operations.</p>
-                <p><strong>Solution: Lease tokens</strong> - Delete invalidates outstanding leases.</p>
-
-                <h4>Challenge: Cold Cluster</h4>
-                <p>New cluster has empty cache.</p>
-                <p><strong>Solution:</strong> Cold cluster fetches from warm cluster first.</p>
-            </div>
-        </div>
-
-        <h2 class="mt-4">Key Insights from Papers</h2>
-
-        <div class="card-grid">
-            <div class="card">
-                <h3>Trade-offs are Fundamental</h3>
-                <p>Every design decision involves trade-offs. Be explicit about what you're giving up.</p>
-            </div>
-            <div class="card">
-                <h3>Simple Often Wins</h3>
-                <p>Start simple, add complexity only when needed. GFS used a single master for years.</p>
-            </div>
-            <div class="card">
-                <h3>Embrace Eventual Consistency</h3>
-                <p>For many use cases, it's acceptable and enables much better availability.</p>
-            </div>
-            <div class="card">
-                <h3>Idempotency is Key</h3>
-                <p>In distributed systems, operations should be safe to retry.</p>
-            </div>
-        </div>
-
-        <h2 class="mt-4">Self-Check Quiz</h2>
-        <div class="quiz-container" id="module-quiz"></div>
-
+            <!-- Navigation -->
             <div class="flex flex-between mt-4">
                 <a href="module-04.html" class="btn btn-secondary">&larr; Previous Module</a>
                 <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
@@ -320,11 +785,24 @@ now() -> TTInterval(earliest, latest)
                     options: ["A caching layer", "An API providing bounded time uncertainty", "A consensus algorithm", "A query optimizer"],
                     correct: 1,
                     explanation: "TrueTime uses GPS and atomic clocks to provide bounded time uncertainty, enabling external consistency."
+                },
+                {
+                    question: "Why does Kafka use sequential disk writes?",
+                    options: ["Easier to implement", "Sequential I/O is much faster than random I/O", "Required by the JVM", "To support transactions"],
+                    correct: 1,
+                    explanation: "Sequential disk writes can achieve throughput close to memory speeds, while random writes are 100x slower."
+                },
+                {
+                    question: "What technique does Facebook's Memcache paper introduce to handle thundering herd?",
+                    options: ["Sharding", "Leases", "Bloom filters", "LSM trees"],
+                    correct: 1,
+                    explanation: "Leases allow only one client to fetch from the database during a cache miss, while others wait."
                 }
             ];
             const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
             quiz.render();
         });
+
         function completeModule() {
             StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 5);
             alert('Module 5 marked as complete!');

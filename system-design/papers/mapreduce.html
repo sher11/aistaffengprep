@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google MapReduce - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Animated Header Styles */
+        .paper-hero {
+            background: linear-gradient(135deg, #4a1d96 0%, #6b21a8 50%, #9333ea 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .paper-hero h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .paper-hero .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+
+        .paper-hero .meta {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Parallel Processing Animation */
+        .parallel-animation {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 350px;
+            height: 100%;
+            opacity: 0.4;
+            overflow: hidden;
+        }
+
+        /* Input data blocks */
+        .data-block {
+            position: absolute;
+            width: 25px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 2px;
+            animation: dataFlow 6s ease-in-out infinite;
+        }
+
+        /* Map phase - blocks split into multiple */
+        .data-block:nth-child(1) { left: 5%; top: 20%; animation-delay: 0s; }
+        .data-block:nth-child(2) { left: 5%; top: 40%; animation-delay: 0.3s; }
+        .data-block:nth-child(3) { left: 5%; top: 60%; animation-delay: 0.6s; }
+        .data-block:nth-child(4) { left: 5%; top: 80%; animation-delay: 0.9s; }
+
+        @keyframes dataFlow {
+            0% { transform: translateX(0) scale(1); opacity: 0.5; }
+            25% { transform: translateX(50px) scale(0.8); opacity: 0.8; background: rgba(16, 185, 129, 0.7); }
+            50% { transform: translateX(100px) scale(0.6); opacity: 0.6; }
+            75% { transform: translateX(150px) scale(0.8); opacity: 0.8; background: rgba(37, 99, 235, 0.7); }
+            100% { transform: translateX(200px) scale(1); opacity: 0.5; }
+        }
+
+        /* Processing indicators */
+        .process-indicator {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            animation: processSpine 2s linear infinite;
+        }
+
+        .process-indicator:nth-child(5) { left: 30%; top: 30%; animation-delay: 0s; }
+        .process-indicator:nth-child(6) { left: 30%; top: 60%; animation-delay: 0.5s; }
+        .process-indicator:nth-child(7) { left: 55%; top: 30%; animation-delay: 1s; }
+        .process-indicator:nth-child(8) { left: 55%; top: 60%; animation-delay: 1.5s; }
+
+        @keyframes processSpine {
+            0% { transform: rotate(0deg); border-color: rgba(255,255,255,0.3); }
+            50% { border-color: rgba(16, 185, 129, 0.8); }
+            100% { transform: rotate(360deg); border-color: rgba(255,255,255,0.3); }
+        }
+
+        /* Shuffle arrows */
+        .shuffle-arrow {
+            position: absolute;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.8), transparent);
+            animation: shuffleMove 3s ease-in-out infinite;
+        }
+
+        .shuffle-arrow:nth-child(9) { left: 40%; top: 35%; transform: rotate(15deg); animation-delay: 0s; }
+        .shuffle-arrow:nth-child(10) { left: 42%; top: 50%; transform: rotate(-10deg); animation-delay: 0.5s; }
+        .shuffle-arrow:nth-child(11) { left: 38%; top: 65%; transform: rotate(5deg); animation-delay: 1s; }
+
+        @keyframes shuffleMove {
+            0%, 100% { opacity: 0.3; transform: translateX(-10px) rotate(var(--rotate, 0deg)); }
+            50% { opacity: 1; transform: translateX(10px) rotate(var(--rotate, 0deg)); }
+        }
+
+        /* Result block */
+        .result-block {
+            position: absolute;
+            right: 10%;
+            top: 45%;
+            width: 35px;
+            height: 35px;
+            background: rgba(16, 185, 129, 0.6);
+            border-radius: 4px;
+            animation: resultPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes resultPulse {
+            0%, 100% { transform: scale(0.9); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+        }
+
+        /* Phase labels */
+        .phase-label {
+            position: absolute;
+            font-size: 0.6rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .phase-label.map { left: 25%; bottom: 10%; }
+        .phase-label.shuffle { left: 48%; bottom: 10%; }
+        .phase-label.reduce { left: 75%; bottom: 10%; }
+
+        /* Challenge and solution cards */
+        .challenge-card {
+            border-left: 4px solid var(--warning-color);
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), transparent);
+        }
+
+        .solution-card {
+            border-left: 4px solid var(--secondary-color);
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), transparent);
+        }
+
+        /* Interview question styling */
+        .interview-questions {
+            background: var(--card-bg);
+            border: 2px solid var(--primary-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .interview-questions h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .interview-questions ol {
+            padding-left: 1.5rem;
+        }
+
+        .interview-questions li {
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        /* Key takeaway box */
+        .key-takeaway {
+            background: linear-gradient(135deg, #6b21a8, #4a1d96);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .key-takeaway h3 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .key-takeaway ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .key-takeaway li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .key-takeaway li::before {
+            content: ">";
+            position: absolute;
+            left: 0;
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+
+        /* Timeline for evolution */
+        .evolution-timeline {
+            position: relative;
+            padding-left: 30px;
+            margin: 1.5rem 0;
+        }
+
+        .evolution-timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 1rem 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 1.5rem;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary-color);
+        }
+
+        .timeline-item h4 {
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Seminal Papers</div>
+                    <a href="memcache.html" class="sidebar-link">Facebook Memcache</a>
+                    <a href="mapreduce.html" class="sidebar-link active">Google MapReduce</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                    <a href="../module-05.html" class="sidebar-link">Seminal Papers Overview</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <!-- Animated Header -->
+            <div class="paper-hero">
+                <div class="parallel-animation">
+                    <div class="data-block"></div>
+                    <div class="data-block"></div>
+                    <div class="data-block"></div>
+                    <div class="data-block"></div>
+                    <div class="process-indicator"></div>
+                    <div class="process-indicator"></div>
+                    <div class="process-indicator"></div>
+                    <div class="process-indicator"></div>
+                    <div class="shuffle-arrow"></div>
+                    <div class="shuffle-arrow"></div>
+                    <div class="shuffle-arrow"></div>
+                    <div class="result-block"></div>
+                    <span class="phase-label map">Map</span>
+                    <span class="phase-label shuffle">Shuffle</span>
+                    <span class="phase-label reduce">Reduce</span>
+                </div>
+                <h1>Google MapReduce</h1>
+                <div class="subtitle">Simplified Data Processing on Large Clusters</div>
+                <div class="meta">
+                    Paper: "MapReduce: Simplified Data Processing on Large Clusters" (OSDI 2004) |
+                    Authors: Jeffrey Dean, Sanjay Ghemawat
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>The MapReduce programming model and why it was revolutionary</li>
+                    <li>How Google processed petabytes of data across thousands of machines</li>
+                    <li>Fault tolerance through task re-execution</li>
+                    <li>The shuffle phase and data locality optimization</li>
+                    <li>Combiners and other performance optimizations</li>
+                    <li>Evolution from MapReduce to modern systems (Spark, Flink)</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Problem Context</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Processing Petabytes at Google (2004)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>By 2004, Google faced an unprecedented data processing challenge:</p>
+
+                    <div class="card" style="background: var(--code-bg); color: #e2e8f0; margin: 1rem 0;">
+                        <strong>Scale Numbers:</strong><br>
+                        - 20+ petabytes of data to process<br>
+                        - Thousands of machines in clusters<br>
+                        - Hundreds of different batch jobs daily<br>
+                        - Jobs like: index building, log analysis, graph computations<br>
+                        - Machine failures are the norm, not the exception
+                    </div>
+
+                    <h4>The Engineering Challenge</h4>
+                    <p>Every engineer writing distributed programs had to solve the same problems:</p>
+                    <ul>
+                        <li><strong>Parallelization:</strong> How to split work across 1000+ machines?</li>
+                        <li><strong>Data distribution:</strong> How to move data to where it's processed?</li>
+                        <li><strong>Fault tolerance:</strong> What happens when machines fail mid-job?</li>
+                        <li><strong>Load balancing:</strong> How to handle slow machines (stragglers)?</li>
+                    </ul>
+
+                    <div class="card challenge-card mt-3">
+                        <h4>The Problem with Ad-Hoc Solutions</h4>
+                        <p>Before MapReduce, engineers wrote custom distributed code for each job. This led to:</p>
+                        <ul>
+                            <li>Duplicated effort solving the same distribution problems</li>
+                            <li>Inconsistent fault tolerance (bugs in failure handling)</li>
+                            <li>Difficulty reasoning about correctness</li>
+                            <li>Hard to maintain and modify</li>
+                        </ul>
+                    </div>
+
+                    <div class="card solution-card mt-3">
+                        <h4>The MapReduce Insight</h4>
+                        <p>Many batch computations can be expressed as two simple operations: <strong>Map</strong> (transform each record) and <strong>Reduce</strong> (aggregate by key). The framework handles all the distributed systems complexity.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">The MapReduce Programming Model</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Map and Reduce Functions</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph Input["Input Data"]
+        I1[Split 1]
+        I2[Split 2]
+        I3[Split 3]
+    end
+
+    subgraph Map["Map Phase"]
+        M1[Map Task 1]
+        M2[Map Task 2]
+        M3[Map Task 3]
+    end
+
+    subgraph Shuffle["Shuffle & Sort"]
+        S[Group by Key]
+    end
+
+    subgraph Reduce["Reduce Phase"]
+        R1[Reduce Task 1]
+        R2[Reduce Task 2]
+    end
+
+    subgraph Output["Output"]
+        O1[Result 1]
+        O2[Result 2]
+    end
+
+    I1 --> M1
+    I2 --> M2
+    I3 --> M3
+
+    M1 --> S
+    M2 --> S
+    M3 --> S
+
+    S --> R1
+    S --> R2
+
+    R1 --> O1
+    R2 --> O2
+                        </div>
+                    </div>
+
+                    <h4>The Two User-Defined Functions</h4>
+
+                    <div class="code-block">
+                        <code>
+# Map Function: (key, value) -> list of (intermediate_key, intermediate_value)
+def map(key, value):
+    # Process one input record
+    # Emit zero or more key-value pairs
+    for word in value.split():
+        emit(word, 1)
+
+# Reduce Function: (key, list of values) -> list of output values
+def reduce(key, values):
+    # Aggregate all values for a given key
+    emit(key, sum(values))
+                        </code>
+                    </div>
+
+                    <h4>The Framework Handles Everything Else</h4>
+                    <ul>
+                        <li><strong>Input splitting:</strong> Divides input into chunks for parallel processing</li>
+                        <li><strong>Task scheduling:</strong> Assigns map/reduce tasks to workers</li>
+                        <li><strong>Data shuffling:</strong> Routes intermediate data by key to reducers</li>
+                        <li><strong>Sorting:</strong> Groups all values with the same key together</li>
+                        <li><strong>Fault tolerance:</strong> Re-runs failed tasks automatically</li>
+                        <li><strong>Output management:</strong> Writes results atomically</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Architecture Deep Dive</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Master Coordination</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph Client
+        U[User Program]
+    end
+
+    subgraph Master["Master Node"]
+        MS[Master Process]
+        MT[Task Tracker]
+        MF[Failure Detector]
+    end
+
+    subgraph Workers["Worker Pool"]
+        W1[Worker 1]
+        W2[Worker 2]
+        W3[Worker 3]
+        W4[Worker 4]
+    end
+
+    subgraph GFS["Google File System"]
+        GFS1[(Input Files)]
+        GFS2[(Output Files)]
+        GFS3[(Intermediate)]
+    end
+
+    U -->|Submit Job| MS
+    MS -->|Assign Tasks| W1
+    MS -->|Assign Tasks| W2
+    MS -->|Assign Tasks| W3
+    MS -->|Assign Tasks| W4
+
+    W1 -->|Read| GFS1
+    W2 -->|Read| GFS1
+    W3 -->|Write| GFS2
+    W4 -->|Write| GFS2
+
+    W1 <-->|Heartbeat| MT
+    W2 <-->|Heartbeat| MT
+    W3 <-->|Heartbeat| MT
+    W4 <-->|Heartbeat| MT
+
+    style MS fill:#2563eb,color:#fff
+                        </div>
+                    </div>
+
+                    <h4>Master Responsibilities</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Responsibility</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Task Assignment</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Assigns idle map/reduce tasks to available workers</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Progress Tracking</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Monitors task completion, detects stragglers</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Location Management</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Tracks where intermediate files are stored</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Failure Handling</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Re-schedules tasks from failed workers</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Task States</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> InProgress: Assigned to worker
+    InProgress --> Completed: Success
+    InProgress --> Idle: Worker failed
+    Completed --> [*]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>The Shuffle Phase</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>The shuffle is the most complex and often most expensive part of MapReduce. It moves intermediate data from map outputs to reduce inputs.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph MapOutputs["Map Outputs (Partitioned)"]
+        M1P["Map 1 Output<br/>P0: (a,1)(c,1)<br/>P1: (b,1)(d,1)"]
+        M2P["Map 2 Output<br/>P0: (a,1)(c,1)<br/>P1: (b,1)"]
+        M3P["Map 3 Output<br/>P0: (c,1)<br/>P1: (b,1)(d,1)"]
+    end
+
+    subgraph Shuffle["Network Shuffle"]
+        direction LR
+        S0[Partition 0 Data]
+        S1[Partition 1 Data]
+    end
+
+    subgraph ReduceInputs["Reduce Inputs (Sorted)"]
+        R0["Reducer 0<br/>(a,[1,1])(c,[1,1,1])"]
+        R1["Reducer 1<br/>(b,[1,1,1])(d,[1,1])"]
+    end
+
+    M1P -->|P0| S0
+    M2P -->|P0| S0
+    M3P -->|P0| S0
+
+    M1P -->|P1| S1
+    M2P -->|P1| S1
+    M3P -->|P1| S1
+
+    S0 --> R0
+    S1 --> R1
+                        </div>
+                    </div>
+
+                    <h4>Shuffle Mechanics</h4>
+                    <ol>
+                        <li><strong>Partition:</strong> Map output is partitioned by key (usually hash(key) % R)</li>
+                        <li><strong>Buffer & Spill:</strong> Map output buffered in memory, spilled to disk when full</li>
+                        <li><strong>Sort:</strong> Each partition is sorted by key</li>
+                        <li><strong>Transfer:</strong> Reducers pull their partitions from all mappers</li>
+                        <li><strong>Merge:</strong> Reducer merges sorted data from all mappers</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <code>
+# Partitioner determines which reducer gets each key
+def partition(key, num_reducers):
+    """Default partitioner uses hash."""
+    return hash(key) % num_reducers
+
+# Custom partitioner example: range partitioning
+def range_partitioner(key, num_reducers, boundaries):
+    """Route keys to reducers based on value ranges."""
+    for i, boundary in enumerate(boundaries):
+        if key < boundary:
+            return i
+    return num_reducers - 1
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Fault Tolerance</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Task Re-execution for Reliability</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>At Google's scale, machine failures are constant. MapReduce achieves fault tolerance through <strong>deterministic task re-execution</strong>.</p>
+
+                    <h4>Worker Failure Handling</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant M as Master
+    participant W1 as Worker 1
+    participant W2 as Worker 2
+    participant W3 as Worker 3
+
+    M->>W1: Assign Map Task A
+    W1->>W1: Processing...
+    Note over W1: Worker 1 crashes!
+    M->>M: Heartbeat timeout detected
+    M->>W2: Re-assign Map Task A
+    W2->>W2: Re-execute from scratch
+    W2->>M: Task A complete
+    Note over M: Job continues
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Failure Type</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Detection</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Recovery</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Map worker fails</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Heartbeat timeout</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Re-run ALL map tasks from that worker (output on local disk)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Reduce worker fails</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Heartbeat timeout</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Re-run only incomplete reduce tasks (output on GFS)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Master fails</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">N/A</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Abort job (single point of failure in original design)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Why Re-execution Works</h4>
+                    <ul>
+                        <li><strong>Deterministic functions:</strong> Map and reduce must be deterministic (same input = same output)</li>
+                        <li><strong>Atomic output:</strong> Tasks write to temp files, renamed atomically on completion</li>
+                        <li><strong>Idempotent:</strong> Re-running a task produces identical output</li>
+                    </ul>
+
+                    <div class="card" style="background: var(--success-bg); margin: 1rem 0;">
+                        <strong>Key Insight:</strong> MapReduce trades compute for simplicity. Re-executing tasks is wasteful but dramatically simplifies fault tolerance - no checkpointing, no complex recovery protocols.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Handling Stragglers (Speculative Execution)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card challenge-card">
+                        <h4>The Straggler Problem</h4>
+                        <p>A single slow machine can delay the entire job. Causes include: bad disk, resource contention, network issues, or "lame duck" machines about to fail.</p>
+                    </div>
+
+                    <div class="card solution-card mt-3">
+                        <h4>Solution: Backup Tasks</h4>
+                        <p>When a job is nearly complete, the master schedules <strong>backup executions</strong> of remaining in-progress tasks. First copy to finish wins.</p>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant M as Master
+    participant W1 as Slow Worker
+    participant W2 as Fast Worker
+
+    Note over M: Job 95% complete, Task X still running
+    M->>W1: Task X in progress (slow)
+    M->>W2: Launch backup of Task X
+    W2->>W2: Execute Task X
+    W2->>M: Task X complete!
+    M->>W1: Cancel Task X
+    Note over M: Job complete!
+                        </div>
+                    </div>
+
+                    <h4>Effectiveness</h4>
+                    <p>Google found that backup tasks reduced job completion time by 44% for a large sort job, with only 3% increase in total machine time.</p>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Performance Optimizations</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Combiner Function</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>The <strong>Combiner</strong> performs partial aggregation on the map side, reducing data transferred during shuffle.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph WithoutCombiner["Without Combiner"]
+        M1a["Map Output:<br/>(the,1)(the,1)(the,1)<br/>(cat,1)(cat,1)"]
+        N1["Network:<br/>5 records"]
+        R1a["Reduce Input"]
+    end
+
+    subgraph WithCombiner["With Combiner"]
+        M2a["Map Output:<br/>(the,1)(the,1)(the,1)<br/>(cat,1)(cat,1)"]
+        C2["Combiner:<br/>(the,3)(cat,2)"]
+        N2["Network:<br/>2 records"]
+        R2a["Reduce Input"]
+    end
+
+    M1a --> N1 --> R1a
+    M2a --> C2 --> N2 --> R2a
+
+    style C2 fill:#10b981,color:#fff
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <code>
+# Word count with combiner
+
+def map(key, value):
+    """Emit (word, 1) for each word."""
+    for word in value.split():
+        emit(word, 1)
+
+def combiner(key, values):
+    """Pre-aggregate on map side - same logic as reducer."""
+    emit(key, sum(values))
+
+def reduce(key, values):
+    """Final aggregation."""
+    emit(key, sum(values))
+
+# Combiner requirements:
+# 1. Must be associative and commutative
+# 2. Input/output types must match
+# 3. Examples: sum, max, min (NOT average directly!)
+                        </code>
+                    </div>
+
+                    <h4>When Combiners Help</h4>
+                    <ul>
+                        <li>High key repetition in map output</li>
+                        <li>Reduce function is associative and commutative</li>
+                        <li>Network bandwidth is the bottleneck</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Data Locality</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>MapReduce schedules map tasks on machines that already have the input data, minimizing network transfer.</p>
+
+                    <h4>Locality Hierarchy</h4>
+                    <ol>
+                        <li><strong>Same machine:</strong> Data on local disk (best)</li>
+                        <li><strong>Same rack:</strong> Data on another machine in same rack</li>
+                        <li><strong>Different rack:</strong> Data must cross rack switch (worst)</li>
+                    </ol>
+
+                    <p>The master tracks which machines have which GFS chunks and prioritizes local scheduling.</p>
+
+                    <div class="card" style="background: var(--code-bg); color: #e2e8f0; margin: 1rem 0;">
+                        <strong>Google's Numbers:</strong><br>
+                        - 80% of map tasks read data locally<br>
+                        - 15% read from same rack<br>
+                        - 5% require cross-rack transfer
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Code Examples</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Word Count - The "Hello World" of MapReduce</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - MapReduce-style Word Count
+
+from collections import defaultdict
+from functools import reduce as functools_reduce
+import re
+
+# ============================================
+# MapReduce Framework (simplified)
+# ============================================
+
+def map_reduce(input_data, mapper, reducer, combiner=None):
+    """
+    Simple single-machine MapReduce implementation.
+    Demonstrates the programming model.
+    """
+    # MAP PHASE
+    intermediate = []
+    for key, value in input_data:
+        mapped = list(mapper(key, value))
+        intermediate.extend(mapped)
+
+    # COMBINER (optional - pre-aggregation)
+    if combiner:
+        # Group by key for combining
+        grouped = defaultdict(list)
+        for key, value in intermediate:
+            grouped[key].append(value)
+
+        intermediate = []
+        for key, values in grouped.items():
+            combined = list(combiner(key, values))
+            intermediate.extend(combined)
+
+    # SHUFFLE & SORT PHASE
+    grouped = defaultdict(list)
+    for key, value in intermediate:
+        grouped[key].append(value)
+
+    # Sort by key
+    sorted_keys = sorted(grouped.keys())
+
+    # REDUCE PHASE
+    output = []
+    for key in sorted_keys:
+        values = grouped[key]
+        reduced = list(reducer(key, values))
+        output.extend(reduced)
+
+    return output
+
+# ============================================
+# Word Count Implementation
+# ============================================
+
+def word_count_mapper(doc_id, text):
+    """Map: (doc_id, text) -> [(word, 1), ...]"""
+    words = re.findall(r'\w+', text.lower())
+    for word in words:
+        yield (word, 1)
+
+def word_count_combiner(word, counts):
+    """Combiner: (word, [1,1,1]) -> (word, 3)"""
+    yield (word, sum(counts))
+
+def word_count_reducer(word, counts):
+    """Reduce: (word, [3, 2, 5]) -> (word, 10)"""
+    yield (word, sum(counts))
+
+# Example usage
+documents = [
+    ("doc1", "The quick brown fox jumps over the lazy dog"),
+    ("doc2", "The fox is quick and the dog is lazy"),
+    ("doc3", "Quick quick quick"),
+]
+
+result = map_reduce(
+    documents,
+    word_count_mapper,
+    word_count_reducer,
+    combiner=word_count_combiner
+)
+
+print("Word counts:")
+for word, count in result:
+    print(f"  {word}: {count}")
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Inverted Index - Real-World Example</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - Building an Inverted Index with MapReduce
+# This is how search engines index documents!
+
+def inverted_index_mapper(doc_id, content):
+    """
+    Map: (doc_id, content) -> [(word, doc_id), ...]
+
+    For each word in the document, emit (word, doc_id).
+    """
+    words = set(re.findall(r'\w+', content.lower()))  # unique words
+    for word in words:
+        yield (word, doc_id)
+
+def inverted_index_reducer(word, doc_ids):
+    """
+    Reduce: (word, [doc1, doc2, doc3]) -> (word, "doc1,doc2,doc3")
+
+    Combine all document IDs containing this word.
+    """
+    unique_docs = sorted(set(doc_ids))
+    yield (word, unique_docs)
+
+# Example
+documents = [
+    ("doc1", "MapReduce is a programming model for processing large datasets"),
+    ("doc2", "Google invented MapReduce for large scale data processing"),
+    ("doc3", "Hadoop is an open source implementation of MapReduce"),
+    ("doc4", "Spark has replaced MapReduce for many use cases"),
+]
+
+index = map_reduce(documents, inverted_index_mapper, inverted_index_reducer)
+
+print("Inverted Index:")
+for word, docs in index[:10]:  # First 10 entries
+    print(f"  '{word}' -> {docs}")
+
+# Output:
+# 'mapreduce' -> ['doc1', 'doc2', 'doc3', 'doc4']
+# 'google' -> ['doc2']
+# 'hadoop' -> ['doc3']
+# 'spark' -> ['doc4']
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Custom Partitioner Example</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - Custom partitioner for sorted output
+
+class RangePartitioner:
+    """
+    Partitions keys so that output files are globally sorted.
+    Useful for generating sorted reports.
+    """
+    def __init__(self, num_reducers, sample_keys):
+        """
+        Args:
+            num_reducers: Number of reduce tasks
+            sample_keys: Sample of keys to determine boundaries
+        """
+        self.num_reducers = num_reducers
+        # Sort sample and pick evenly-spaced boundaries
+        sorted_sample = sorted(sample_keys)
+        step = len(sorted_sample) // num_reducers
+        self.boundaries = [sorted_sample[i * step]
+                          for i in range(1, num_reducers)]
+
+    def partition(self, key):
+        """Determine which reducer should handle this key."""
+        for i, boundary in enumerate(self.boundaries):
+            if key < boundary:
+                return i
+        return self.num_reducers - 1
+
+# Example: Sorting user IDs
+sample = ["user_001", "user_050", "user_100", "user_150", "user_200"]
+partitioner = RangePartitioner(num_reducers=3, sample_keys=sample)
+
+# Keys will be routed to different reducers
+print(partitioner.partition("user_030"))  # -> 0
+print(partitioner.partition("user_080"))  # -> 1
+print(partitioner.partition("user_180"))  # -> 2
+
+# Result: reducer 0 output < reducer 1 output < reducer 2 output
+# Concatenating outputs gives globally sorted result
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Why MapReduce Was Revolutionary</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>The Impact on Computing</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Before MapReduce</h4>
+                    <ul>
+                        <li>Only specialists could write distributed programs</li>
+                        <li>Each job required custom fault tolerance code</li>
+                        <li>Debugging distributed failures was extremely difficult</li>
+                        <li>Scaling meant rewriting applications</li>
+                    </ul>
+
+                    <h4>After MapReduce</h4>
+                    <ul>
+                        <li>Any programmer could write scalable data processing</li>
+                        <li>Framework handles all distributed complexity</li>
+                        <li>Same code runs on 10 machines or 10,000</li>
+                        <li>Spawned the entire "Big Data" ecosystem</li>
+                    </ul>
+
+                    <h4>Key Innovations</h4>
+                    <div class="card-grid">
+                        <div class="card">
+                            <h3>Simple Abstraction</h3>
+                            <p>Two functions (map, reduce) can express many computations. Engineers focus on logic, not infrastructure.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Automatic Parallelization</h3>
+                            <p>Framework decides how to distribute work. No explicit thread management or synchronization.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Transparent Fault Tolerance</h3>
+                            <p>Re-execution handles failures automatically. Users don't write recovery code.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Data Locality</h3>
+                            <p>Move computation to data, not data to computation. Critical for large-scale efficiency.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Evolution and Limitations</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>From MapReduce to Modern Systems</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="evolution-timeline">
+                        <div class="timeline-item">
+                            <h4>2004: MapReduce (Google)</h4>
+                            <p>Original paper published. Revolutionizes large-scale batch processing.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <h4>2006: Hadoop (Yahoo/Apache)</h4>
+                            <p>Open-source implementation. Makes MapReduce accessible to everyone.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <h4>2009: Spark (Berkeley)</h4>
+                            <p>In-memory processing, 10-100x faster. Iterative algorithms finally practical.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <h4>2011: Flink (Berlin)</h4>
+                            <p>True streaming with event-time processing. Real-time analytics.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <h4>Today: Cloud-Native</h4>
+                            <p>Serverless data processing (BigQuery, Snowflake). Focus on SQL, not MapReduce.</p>
+                        </div>
+                    </div>
+
+                    <h4>MapReduce Limitations</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Limitation</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Impact</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Modern Solution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Disk-based</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Slow for iterative algorithms (ML)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Spark RDDs (in-memory)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Batch only</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">High latency, no real-time</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Flink, Kafka Streams</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Two-stage model</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complex pipelines = many jobs</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">DAG execution (Spark, Flink)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Low-level API</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Verbose, error-prone</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">SQL engines, DataFrames</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="card" style="background: var(--success-bg); margin: 1rem 0;">
+                        <strong>Google's Own Evolution:</strong> Google internally moved away from MapReduce to systems like Flume (higher-level), Dremel (interactive SQL), and MillWheel (streaming). The MapReduce paper was about the idea, not a final solution.
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Interview Questions</h2>
+
+            <div class="interview-questions">
+                <h3>Common Interview Questions About MapReduce</h3>
+                <ol>
+                    <li><strong>Explain the MapReduce programming model. What are the key phases?</strong>
+                        <br><em>Key points: Map (transform), Shuffle (group by key), Reduce (aggregate). User writes two functions, framework handles distribution.</em></li>
+
+                    <li><strong>How does MapReduce achieve fault tolerance?</strong>
+                        <br><em>Key points: Deterministic re-execution, atomic output files, heartbeat-based failure detection, backup tasks for stragglers.</em></li>
+
+                    <li><strong>What is the purpose of a Combiner? When can you use one?</strong>
+                        <br><em>Key points: Pre-aggregation on map side, reduces network transfer. Only for associative/commutative operations.</em></li>
+
+                    <li><strong>How does MapReduce achieve data locality?</strong>
+                        <br><em>Key points: Master tracks chunk locations (GFS), schedules map tasks on machines with data, falls back to same-rack then remote.</em></li>
+
+                    <li><strong>What are the limitations of MapReduce? How do modern systems address them?</strong>
+                        <br><em>Key points: Disk-based (Spark in-memory), batch-only (Flink streaming), two-stage (DAG execution), low-level (SQL interfaces).</em></li>
+
+                    <li><strong>Design a MapReduce job to find the top 10 most frequent words across terabytes of text.</strong>
+                        <br><em>Key points: Map emits (word, 1), combiner sums locally, reduce sums globally. Challenge: getting global top 10 requires either single reducer or two-phase approach.</em></li>
+
+                    <li><strong>How would you implement a join between two tables in MapReduce?</strong>
+                        <br><em>Key points: Map-side join (broadcast small table), Reduce-side join (emit tagged records, join in reducer), Sort-merge join.</em></li>
+                </ol>
+            </div>
+
+            <h2 class="mt-4">Key Takeaways</h2>
+
+            <div class="key-takeaway">
+                <h3>Remember These Concepts</h3>
+                <ul>
+                    <li><strong>Simple abstraction</strong> - Two functions (map, reduce) can express most batch computations</li>
+                    <li><strong>Automatic parallelization</strong> - Framework handles distribution, users write single-machine logic</li>
+                    <li><strong>Fault tolerance via re-execution</strong> - Determinism enables simple recovery</li>
+                    <li><strong>Data locality matters</strong> - Move computation to data at petabyte scale</li>
+                    <li><strong>Combiners reduce shuffle</strong> - Pre-aggregate when possible</li>
+                    <li><strong>Backup tasks handle stragglers</strong> - Speculative execution prevents slow machines from blocking jobs</li>
+                    <li><strong>Know the limitations</strong> - MapReduce isn't ideal for iterative algorithms or real-time processing</li>
+                </ul>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="memcache.html" class="btn btn-secondary">&larr; Facebook Memcache</a>
+                <a href="../module-05.html" class="btn btn-primary">Back to Seminal Papers &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

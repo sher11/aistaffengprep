@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apache Kafka Deep Dive - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Animated Header Styles */
+        .kafka-hero {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kafka-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(255,255,255,0.03) 50px,
+                    rgba(255,255,255,0.03) 51px
+                );
+            animation: flow 20s linear infinite;
+        }
+
+        @keyframes flow {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(51px); }
+        }
+
+        .kafka-hero h1 {
+            position: relative;
+            z-index: 1;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .kafka-hero .subtitle {
+            position: relative;
+            z-index: 1;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        /* Data Stream Animation */
+        .stream-container {
+            position: relative;
+            height: 60px;
+            margin-top: 1.5rem;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .stream-track {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-50%);
+        }
+
+        .data-packet {
+            position: absolute;
+            top: 50%;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border-radius: 4px;
+            transform: translateY(-50%);
+            animation: packet-flow 3s linear infinite;
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+        }
+
+        .data-packet:nth-child(2) { animation-delay: -0.5s; }
+        .data-packet:nth-child(3) { animation-delay: -1s; }
+        .data-packet:nth-child(4) { animation-delay: -1.5s; }
+        .data-packet:nth-child(5) { animation-delay: -2s; }
+        .data-packet:nth-child(6) { animation-delay: -2.5s; }
+
+        @keyframes packet-flow {
+            0% { left: -30px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+
+        .stream-label {
+            position: absolute;
+            top: 8px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+        }
+
+        .stream-label.producer { left: 10px; }
+        .stream-label.broker { left: 50%; transform: translateX(-50%); }
+        .stream-label.consumer { right: 10px; }
+
+        /* Log Visualization */
+        .log-visual {
+            display: flex;
+            gap: 4px;
+            margin: 1rem 0;
+            overflow-x: auto;
+            padding: 1rem;
+            background: var(--code-bg);
+            border-radius: 0.5rem;
+        }
+
+        .log-segment {
+            min-width: 60px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .log-segment::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-left-color: #1d4ed8;
+        }
+
+        .log-segment:last-child::after {
+            display: none;
+        }
+
+        .log-segment.new {
+            background: linear-gradient(135deg, #10b981, #059669);
+            animation: pulse-green 1.5s infinite;
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        }
+
+        /* Partition Grid */
+        .partition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .partition-box {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .partition-box h4 {
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .partition-messages {
+            display: flex;
+            gap: 3px;
+        }
+
+        .partition-msg {
+            width: 24px;
+            height: 24px;
+            background: var(--primary-color);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 600;
+        }
+
+        /* Delivery Semantics Cards */
+        .semantics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .semantic-card {
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            border: 2px solid;
+        }
+
+        .semantic-card.at-most-once {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .semantic-card.at-least-once {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .semantic-card.exactly-once {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .semantic-card h4 {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .semantic-card ul {
+            font-size: 0.9rem;
+            padding-left: 1.25rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 1.25rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+        }
+
+        .stat-box .number {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-box .label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        /* Interview Questions */
+        .interview-q {
+            background: var(--card-bg);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem 1.25rem;
+            margin: 0.75rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .interview-q strong {
+            color: var(--primary-color);
+        }
+
+        /* Key Takeaways */
+        .takeaway-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--success-bg);
+            border-radius: 0.5rem;
+            margin: 0.75rem 0;
+        }
+
+        .takeaway-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Deep Dive Papers</div>
+                    <a href="kafka.html" class="sidebar-link active">Apache Kafka</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Related Modules</div>
+                    <a href="../module-04.html" class="sidebar-link">Storage & Data Processing</a>
+                    <a href="../module-05.html" class="sidebar-link">Seminal Papers</a>
+                    <a href="../module-03.html" class="sidebar-link">Distributed Systems</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <!-- Animated Hero Header -->
+            <div class="kafka-hero">
+                <h1>Apache Kafka</h1>
+                <p class="subtitle">A Deep Dive into Distributed Event Streaming at Scale</p>
+
+                <div class="stream-container">
+                    <span class="stream-label producer">Producers</span>
+                    <span class="stream-label broker">Kafka Cluster</span>
+                    <span class="stream-label consumer">Consumers</span>
+                    <div class="stream-track"></div>
+                    <div class="data-packet"></div>
+                    <div class="data-packet"></div>
+                    <div class="data-packet"></div>
+                    <div class="data-packet"></div>
+                    <div class="data-packet"></div>
+                    <div class="data-packet"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Why LinkedIn built Kafka and the problems it solves</li>
+                    <li>Log-based architecture and why it enables high throughput</li>
+                    <li>Partitioning, consumer groups, and exactly-once semantics</li>
+                    <li>Production patterns with working Python code</li>
+                    <li>How Netflix, Uber, and LinkedIn use Kafka at massive scale</li>
+                </ul>
+            </div>
+
+            <!-- Problem Context -->
+            <h2 class="mt-4">1. The Problem: LinkedIn's Data Challenge</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Why Kafka Was Created</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>In 2010, LinkedIn faced a critical infrastructure problem. They had multiple data systems that needed to communicate:</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Before Kafka - Point-to-Point Chaos"
+        W1[Web Server] --> DB1[(MySQL)]
+        W1 --> S1[Search Index]
+        W1 --> H1[Hadoop]
+        W1 --> M1[Monitoring]
+
+        W2[Activity Tracker] --> DB1
+        W2 --> S1
+        W2 --> H1
+        W2 --> M1
+
+        R1[Recommendation] --> DB1
+        R1 --> S1
+        R1 --> H1
+    end
+                        </div>
+                    </div>
+
+                    <p><strong>The Problems:</strong></p>
+                    <ul>
+                        <li><strong>N x M connections:</strong> Every producer needed a direct connection to every consumer</li>
+                        <li><strong>Tight coupling:</strong> Adding a new data system required changes to all producers</li>
+                        <li><strong>No replay:</strong> If a consumer went down, data was lost</li>
+                        <li><strong>Inconsistent protocols:</strong> Each system had different APIs and data formats</li>
+                        <li><strong>Back-pressure issues:</strong> Slow consumers could overwhelm producers</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "After Kafka - Unified Data Pipeline"
+        W1[Web Server] --> K[Kafka Cluster]
+        W2[Activity Tracker] --> K
+        R1[Recommendation] --> K
+
+        K --> DB1[(MySQL)]
+        K --> S1[Search Index]
+        K --> H1[Hadoop]
+        K --> M1[Monitoring]
+        K --> NEW[New Service]
+    end
+                        </div>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Key Insight:</strong> Kafka introduced a <em>durable, distributed commit log</em> as the central nervous system for data. Producers write once; any number of consumers can read independently at their own pace.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Architecture Deep Dive -->
+            <h2 class="mt-4">2. Architecture Deep Dive</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Log-Based Architecture: The Foundation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>At its core, Kafka is an <strong>append-only, immutable log</strong>. This simple abstraction enables remarkable performance and reliability.</p>
+
+                    <h4>Append-Only Log Visualization</h4>
+                    <div class="log-visual">
+                        <div class="log-segment">0</div>
+                        <div class="log-segment">1</div>
+                        <div class="log-segment">2</div>
+                        <div class="log-segment">3</div>
+                        <div class="log-segment">4</div>
+                        <div class="log-segment">5</div>
+                        <div class="log-segment">6</div>
+                        <div class="log-segment new">7</div>
+                    </div>
+                    <p class="text-muted" style="font-size: 0.85rem;">Messages are appended to the end. Old segments (0-6) are immutable. New messages (7) only append to the tail.</p>
+
+                    <h4 class="mt-3">Why Append-Only is Fast</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Operation</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Traditional DB</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Kafka Log</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Write Pattern</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Random I/O (seek + write)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Sequential I/O (append only)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Disk Seek</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~10ms per operation</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~0 (sequential)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Throughput (HDD)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~100 ops/sec</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~600 MB/sec</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Data Locality</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Scattered across disk</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Contiguous, cache-friendly</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-block">
+                        <code>
+# Conceptual: How Kafka stores a message
+# Each message in the log has:
+
+Message {
+    offset: 12345,           # Unique, monotonically increasing ID
+    timestamp: 1706812800,   # When message was produced
+    key: "user-123",         # Optional - used for partitioning
+    value: "{json payload}", # The actual message content
+    headers: {...},          # Optional metadata
+    crc: 0x1234ABCD         # Checksum for integrity
+}
+
+# Physical storage on disk (simplified):
+# /kafka-logs/orders-0/
+#   ├── 00000000000000000000.log    # Segment file (messages 0-999999)
+#   ├── 00000000000000000000.index  # Offset index (sparse)
+#   ├── 00000000000000000000.timeindex  # Timestamp index
+#   ├── 00000000000001000000.log    # Next segment (messages 1000000+)
+#   └── ...
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Partition Design and Ordering Guarantees</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>A <strong>topic</strong> is split into multiple <strong>partitions</strong>. Each partition is an independent, ordered log.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Topic: orders"
+        subgraph "Partition 0"
+            P0[0 → 1 → 2 → 3 → 4]
+        end
+        subgraph "Partition 1"
+            P1[0 → 1 → 2 → 3]
+        end
+        subgraph "Partition 2"
+            P2[0 → 1 → 2 → 3 → 4 → 5]
+        end
+    end
+
+    Producer1[Producer] -->|key: user-A| P0
+    Producer1 -->|key: user-B| P1
+    Producer1 -->|key: user-C| P2
+                        </div>
+                    </div>
+
+                    <div class="partition-grid">
+                        <div class="partition-box">
+                            <h4>Partition 0 (Leader: Broker 1)</h4>
+                            <div class="partition-messages">
+                                <div class="partition-msg">0</div>
+                                <div class="partition-msg">1</div>
+                                <div class="partition-msg">2</div>
+                                <div class="partition-msg">3</div>
+                                <div class="partition-msg">4</div>
+                            </div>
+                            <p style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-light);">Keys: user-A, user-D, user-G...</p>
+                        </div>
+                        <div class="partition-box">
+                            <h4>Partition 1 (Leader: Broker 2)</h4>
+                            <div class="partition-messages">
+                                <div class="partition-msg">0</div>
+                                <div class="partition-msg">1</div>
+                                <div class="partition-msg">2</div>
+                                <div class="partition-msg">3</div>
+                            </div>
+                            <p style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-light);">Keys: user-B, user-E, user-H...</p>
+                        </div>
+                        <div class="partition-box">
+                            <h4>Partition 2 (Leader: Broker 3)</h4>
+                            <div class="partition-messages">
+                                <div class="partition-msg">0</div>
+                                <div class="partition-msg">1</div>
+                                <div class="partition-msg">2</div>
+                                <div class="partition-msg">3</div>
+                                <div class="partition-msg">4</div>
+                                <div class="partition-msg">5</div>
+                            </div>
+                            <p style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-light);">Keys: user-C, user-F, user-I...</p>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Ordering Guarantees</h4>
+                    <ul>
+                        <li><strong>Within a partition:</strong> Messages are strictly ordered by offset</li>
+                        <li><strong>Across partitions:</strong> No ordering guarantee</li>
+                        <li><strong>Same key = same partition:</strong> All messages with key "user-123" go to the same partition, maintaining order for that user</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+# Partition assignment algorithm (default: murmur2 hash)
+def get_partition(key, num_partitions):
+    if key is None:
+        # Round-robin for null keys (Kafka 2.4+: sticky partitioner)
+        return random.randint(0, num_partitions - 1)
+
+    # Consistent hashing - same key always maps to same partition
+    hash_value = murmur2(key.encode('utf-8'))
+    return abs(hash_value) % num_partitions
+
+# Example: 3 partitions
+get_partition("user-123", 3)  # Always returns 1
+get_partition("user-456", 3)  # Always returns 0
+get_partition("user-789", 3)  # Always returns 2
+                        </code>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Interview Tip:</strong> When asked "how do you ensure order in Kafka?", explain that ordering is per-partition, and you use message keys to route related events to the same partition. Common patterns: user_id for user events, order_id for order updates.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Consumer Groups and Offset Management</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Consumer groups enable <strong>parallel consumption</strong> while ensuring each message is processed by exactly one consumer in the group.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph "Topic: orders (3 partitions)"
+        P0[Partition 0]
+        P1[Partition 1]
+        P2[Partition 2]
+    end
+
+    subgraph "Consumer Group A"
+        C1[Consumer 1]
+        C2[Consumer 2]
+    end
+
+    subgraph "Consumer Group B"
+        C3[Consumer 3]
+    end
+
+    P0 --> C1
+    P1 --> C1
+    P2 --> C2
+
+    P0 --> C3
+    P1 --> C3
+    P2 --> C3
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Partition Assignment Rules</h4>
+                    <ul>
+                        <li>Each partition is assigned to exactly <strong>one consumer</strong> per group</li>
+                        <li>One consumer can handle <strong>multiple partitions</strong></li>
+                        <li>If consumers > partitions, some consumers sit idle</li>
+                        <li>Different consumer groups receive <strong>all messages</strong> independently</li>
+                    </ul>
+
+                    <h4 class="mt-3">Offset Management</h4>
+                    <p>Each consumer tracks its position (offset) in each partition. Offsets are stored in a special internal topic: <code>__consumer_offsets</code>.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant C as Consumer
+    participant K as Kafka Broker
+    participant O as __consumer_offsets
+
+    C->>K: poll() - fetch messages
+    K-->>C: messages [offset 100-109]
+    C->>C: process messages
+    C->>K: commit(offset=110)
+    K->>O: store offset for group/partition
+    Note over C,O: If consumer crashes here,<br/>it resumes from offset 110
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <code>
+# Offset commit strategies
+
+# 1. Auto-commit (default, risky for exactly-once)
+consumer = KafkaConsumer(
+    'orders',
+    group_id='order-processor',
+    enable_auto_commit=True,      # Commits every 5 seconds
+    auto_commit_interval_ms=5000
+)
+
+# 2. Manual commit (recommended for reliability)
+consumer = KafkaConsumer(
+    'orders',
+    group_id='order-processor',
+    enable_auto_commit=False
+)
+
+for message in consumer:
+    process(message)
+    consumer.commit()  # Synchronous - blocks until confirmed
+
+# 3. Async commit with callback
+def on_commit(offsets, exception):
+    if exception:
+        logger.error(f"Commit failed: {exception}")
+
+consumer.commit_async(callback=on_commit)
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">Rebalancing</h4>
+                    <p>When consumers join or leave a group, Kafka <strong>rebalances</strong> partition assignments. During rebalance:</p>
+                    <ul>
+                        <li>All consumers in the group pause consumption</li>
+                        <li>Partitions are reassigned by the group coordinator</li>
+                        <li>Consumers resume from their last committed offset</li>
+                    </ul>
+
+                    <div class="card mt-2" style="background: rgba(245, 158, 11, 0.1); border: 1px solid #f59e0b;">
+                        <strong>Warning:</strong> Rebalancing can cause processing delays (seconds to minutes). Use <code>CooperativeStickyAssignor</code> (Kafka 2.4+) to minimize disruption - it only moves partitions that need to move.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Replication and ISR (In-Sync Replicas)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Kafka achieves durability through <strong>replication</strong>. Each partition has one <strong>leader</strong> and multiple <strong>follower</strong> replicas.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Partition 0 (replication-factor=3)"
+        subgraph "Broker 1"
+            L[Leader<br/>offset: 100]
+        end
+        subgraph "Broker 2"
+            F1[Follower<br/>offset: 100<br/>ISR]
+        end
+        subgraph "Broker 3"
+            F2[Follower<br/>offset: 98<br/>NOT in ISR]
+        end
+    end
+
+    Producer -->|write| L
+    L -->|replicate| F1
+    L -->|replicate| F2
+    Consumer -->|read| L
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">In-Sync Replicas (ISR)</h4>
+                    <ul>
+                        <li><strong>ISR:</strong> Replicas that are fully caught up with the leader</li>
+                        <li>A replica falls out of ISR if it lags behind by more than <code>replica.lag.time.max.ms</code> (default: 30s)</li>
+                        <li><strong>acks=all</strong> waits for all ISR replicas to acknowledge</li>
+                        <li>If leader fails, a new leader is elected from ISR</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+# Producer acks configuration
+
+# acks=0: Fire and forget (fastest, no durability)
+# - Producer doesn't wait for any acknowledgment
+# - Message may be lost if leader crashes
+
+# acks=1: Leader acknowledgment (balanced)
+# - Wait for leader to write to its local log
+# - Message may be lost if leader crashes before replication
+
+# acks=all (-1): Full ISR acknowledgment (strongest)
+# - Wait for leader + all ISR replicas to acknowledge
+# - Combined with min.insync.replicas for durability guarantee
+
+producer = KafkaProducer(
+    bootstrap_servers=['broker1:9092', 'broker2:9092'],
+    acks='all',  # Wait for all ISR replicas
+    retries=3,
+    retry_backoff_ms=100
+)
+
+# Broker config for durability
+# min.insync.replicas=2
+# With acks=all and min.insync.replicas=2:
+# - At least 2 replicas must acknowledge
+# - Can tolerate 1 broker failure without data loss
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">High Watermark</h4>
+                    <p>Consumers only see messages up to the <strong>high watermark</strong> - the offset that all ISR replicas have confirmed.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph "Leader Log"
+        M1[0] --> M2[1] --> M3[2] --> M4[3] --> M5[4] --> M6[5]
+    end
+
+    HW[High Watermark = 3]
+    LEO[Log End Offset = 5]
+
+    M3 -.-> HW
+    M5 -.-> LEO
+                        </div>
+                    </div>
+
+                    <p class="text-muted">Consumers can read offsets 0-3. Offsets 4-5 are written but not yet replicated to all ISR replicas.</p>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Zero-Copy Optimization</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Kafka achieves high throughput partly through <strong>zero-copy</strong> data transfer, which eliminates unnecessary memory copies.</p>
+
+                    <h4>Traditional Data Transfer (4 copies)</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant Disk
+    participant Kernel as Kernel Buffer
+    participant User as User Space
+    participant Socket as Socket Buffer
+    participant NIC
+
+    Disk->>Kernel: 1. DMA copy to kernel
+    Kernel->>User: 2. Copy to application
+    User->>Socket: 3. Copy to socket buffer
+    Socket->>NIC: 4. DMA copy to NIC
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Zero-Copy Transfer (2 copies)</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant Disk
+    participant Kernel as Kernel Buffer
+    participant NIC
+
+    Disk->>Kernel: 1. DMA copy to kernel
+    Note over Kernel: sendfile() syscall
+    Kernel->>NIC: 2. DMA copy directly to NIC
+    Note over Kernel,NIC: Data never enters user space!
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <code>
+// Java - Zero-copy using FileChannel.transferTo()
+// This is what Kafka uses internally
+
+public long transferTo(long position, long count, WritableByteChannel target) {
+    // Uses sendfile() on Linux, TransmitFile() on Windows
+    // Data goes directly from disk to network socket
+    // No copying through JVM heap
+}
+
+// Performance impact:
+// - Traditional: ~100 MB/s
+// - Zero-copy: ~600 MB/s (6x improvement!)
+// - CPU usage reduced by 50-60%
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">Additional Optimizations</h4>
+                    <ul>
+                        <li><strong>Page cache:</strong> Kafka relies heavily on OS page cache instead of maintaining its own cache</li>
+                        <li><strong>Batching:</strong> Messages are batched both on producer and broker side</li>
+                        <li><strong>Compression:</strong> Batches are compressed (gzip, snappy, lz4, zstd)</li>
+                        <li><strong>Sequential I/O:</strong> Append-only design maximizes sequential disk access</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Working Code Examples -->
+            <h2 class="mt-4">3. Working Code Examples (Python)</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Producer with Different Ack Settings</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - Kafka Producer with different reliability levels
+# pip install kafka-python
+
+from kafka import KafkaProducer
+from kafka.errors import KafkaError
+import json
+import time
+
+# Configuration for different use cases
+CONFIGS = {
+    # High throughput, low latency (metrics, logs)
+    'fire_and_forget': {
+        'bootstrap_servers': ['localhost:9092'],
+        'acks': 0,
+        'linger_ms': 5,           # Batch for 5ms
+        'batch_size': 16384,      # 16KB batches
+        'compression_type': 'lz4',
+        'value_serializer': lambda v: json.dumps(v).encode('utf-8')
+    },
+
+    # Balanced (general purpose)
+    'balanced': {
+        'bootstrap_servers': ['localhost:9092'],
+        'acks': 1,
+        'retries': 3,
+        'retry_backoff_ms': 100,
+        'linger_ms': 10,
+        'compression_type': 'snappy',
+        'value_serializer': lambda v: json.dumps(v).encode('utf-8')
+    },
+
+    # Maximum durability (financial transactions, orders)
+    'durable': {
+        'bootstrap_servers': ['localhost:9092'],
+        'acks': 'all',
+        'retries': 5,
+        'retry_backoff_ms': 200,
+        'enable_idempotence': True,  # Prevents duplicates
+        'max_in_flight_requests_per_connection': 5,  # Safe with idempotence
+        'compression_type': 'gzip',
+        'value_serializer': lambda v: json.dumps(v).encode('utf-8')
+    }
+}
+
+class OrderProducer:
+    def __init__(self, config_name='durable'):
+        self.producer = KafkaProducer(**CONFIGS[config_name])
+        self.topic = 'orders'
+
+    def send_order(self, order_id: str, order_data: dict):
+        """
+        Send order with the order_id as partition key.
+        All events for the same order go to the same partition.
+        """
+        # Use order_id as key for ordering guarantee
+        key = order_id.encode('utf-8')
+
+        # Add metadata
+        order_data['timestamp'] = int(time.time() * 1000)
+        order_data['order_id'] = order_id
+
+        # Send with callback
+        future = self.producer.send(
+            self.topic,
+            key=key,
+            value=order_data,
+            headers=[
+                ('source', b'order-service'),
+                ('version', b'1.0')
+            ]
+        )
+
+        # Block for synchronous send (optional)
+        try:
+            record_metadata = future.get(timeout=10)
+            print(f"Sent to {record_metadata.topic}:{record_metadata.partition} "
+                  f"at offset {record_metadata.offset}")
+            return record_metadata
+        except KafkaError as e:
+            print(f"Failed to send: {e}")
+            raise
+
+    def send_batch(self, orders: list):
+        """Send multiple orders efficiently with async callbacks."""
+        futures = []
+
+        for order in orders:
+            future = self.producer.send(
+                self.topic,
+                key=order['order_id'].encode('utf-8'),
+                value=order
+            )
+            futures.append((order['order_id'], future))
+
+        # Flush to ensure all messages are sent
+        self.producer.flush()
+
+        # Check results
+        results = []
+        for order_id, future in futures:
+            try:
+                metadata = future.get(timeout=10)
+                results.append({'order_id': order_id, 'success': True,
+                               'partition': metadata.partition})
+            except Exception as e:
+                results.append({'order_id': order_id, 'success': False,
+                               'error': str(e)})
+
+        return results
+
+    def close(self):
+        self.producer.flush()
+        self.producer.close()
+
+
+# Usage example
+if __name__ == '__main__':
+    producer = OrderProducer(config_name='durable')
+
+    # Single order
+    producer.send_order('ORD-12345', {
+        'customer_id': 'CUST-789',
+        'items': [{'sku': 'PROD-1', 'qty': 2}],
+        'total': 99.99,
+        'status': 'CREATED'
+    })
+
+    # Batch of orders
+    orders = [
+        {'order_id': f'ORD-{i}', 'total': i * 10.0, 'status': 'CREATED'}
+        for i in range(100)
+    ]
+    results = producer.send_batch(orders)
+
+    producer.close()
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Consumer with Manual Offset Commit</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - Kafka Consumer with manual offset management
+# pip install kafka-python
+
+from kafka import KafkaConsumer, TopicPartition, OffsetAndMetadata
+from kafka.errors import KafkaError
+import json
+import signal
+import sys
+
+class OrderConsumer:
+    def __init__(self, group_id: str, topics: list):
+        self.consumer = KafkaConsumer(
+            *topics,
+            bootstrap_servers=['localhost:9092'],
+            group_id=group_id,
+
+            # Manual offset management
+            enable_auto_commit=False,
+            auto_offset_reset='earliest',  # Start from beginning if no offset
+
+            # Consumer config
+            max_poll_records=100,          # Max messages per poll
+            max_poll_interval_ms=300000,   # 5 min max processing time
+            session_timeout_ms=30000,      # 30s heartbeat timeout
+
+            # Deserialization
+            key_deserializer=lambda k: k.decode('utf-8') if k else None,
+            value_deserializer=lambda v: json.loads(v.decode('utf-8')),
+
+            # Use cooperative rebalancing (Kafka 2.4+)
+            partition_assignment_strategy=['cooperative-sticky']
+        )
+
+        self.running = True
+        self._setup_signal_handlers()
+
+    def _setup_signal_handlers(self):
+        """Graceful shutdown on SIGTERM/SIGINT."""
+        def shutdown(signum, frame):
+            print("Shutdown signal received...")
+            self.running = False
+
+        signal.signal(signal.SIGTERM, shutdown)
+        signal.signal(signal.SIGINT, shutdown)
+
+    def process_message(self, message):
+        """
+        Process a single message. Override in subclass.
+        Returns True if processing succeeded, False otherwise.
+        """
+        print(f"Processing: {message.key} -> {message.value}")
+        # Your business logic here
+        return True
+
+    def run(self):
+        """Main consumer loop with at-least-once semantics."""
+        print(f"Starting consumer for topics: {self.consumer.subscription()}")
+
+        try:
+            while self.running:
+                # Poll for messages
+                records = self.consumer.poll(timeout_ms=1000)
+
+                if not records:
+                    continue
+
+                # Process each partition's messages
+                for topic_partition, messages in records.items():
+                    for message in messages:
+                        try:
+                            success = self.process_message(message)
+
+                            if success:
+                                # Commit offset after successful processing
+                                # Commit the NEXT offset to read
+                                self.consumer.commit({
+                                    topic_partition: OffsetAndMetadata(
+                                        message.offset + 1,
+                                        None
+                                    )
+                                })
+                            else:
+                                # Processing failed - don't commit
+                                # Message will be reprocessed
+                                print(f"Failed to process {message.offset}, "
+                                      "will retry")
+                                break  # Stop processing this partition
+
+                        except Exception as e:
+                            print(f"Error processing message: {e}")
+                            # Don't commit - message will be redelivered
+                            break
+
+        finally:
+            print("Closing consumer...")
+            self.consumer.close()
+
+    def run_batch(self, batch_size=100):
+        """
+        Process messages in batches for efficiency.
+        Commits after each batch is fully processed.
+        """
+        print(f"Starting batch consumer (batch_size={batch_size})")
+
+        try:
+            while self.running:
+                records = self.consumer.poll(
+                    timeout_ms=1000,
+                    max_records=batch_size
+                )
+
+                if not records:
+                    continue
+
+                # Collect all messages into a batch
+                batch = []
+                offsets_to_commit = {}
+
+                for topic_partition, messages in records.items():
+                    for message in messages:
+                        batch.append(message)
+                        # Track highest offset per partition
+                        offsets_to_commit[topic_partition] = OffsetAndMetadata(
+                            message.offset + 1,
+                            None
+                        )
+
+                # Process entire batch
+                try:
+                    self.process_batch(batch)
+
+                    # Commit all offsets at once
+                    self.consumer.commit(offsets_to_commit)
+                    print(f"Committed batch of {len(batch)} messages")
+
+                except Exception as e:
+                    print(f"Batch processing failed: {e}")
+                    # Entire batch will be reprocessed
+
+        finally:
+            self.consumer.close()
+
+    def process_batch(self, messages):
+        """Override to implement batch processing."""
+        for msg in messages:
+            self.process_message(msg)
+
+
+# Example: Order processor that writes to database
+class OrderProcessor(OrderConsumer):
+    def __init__(self):
+        super().__init__(
+            group_id='order-processor-v1',
+            topics=['orders']
+        )
+        # self.db = Database()  # Your database connection
+
+    def process_message(self, message):
+        order = message.value
+
+        # Idempotent processing using order_id
+        # if self.db.order_exists(order['order_id']):
+        #     print(f"Order {order['order_id']} already processed, skipping")
+        #     return True
+
+        print(f"Processing order: {order['order_id']} "
+              f"from partition {message.partition} offset {message.offset}")
+
+        # Process the order
+        # self.db.save_order(order)
+
+        return True
+
+
+if __name__ == '__main__':
+    processor = OrderProcessor()
+    processor.run()
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Partition Key Strategies</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - Different partition key strategies
+
+from kafka import KafkaProducer
+import json
+import hashlib
+
+class SmartProducer:
+    def __init__(self):
+        self.producer = KafkaProducer(
+            bootstrap_servers=['localhost:9092'],
+            value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+            key_serializer=lambda k: k.encode('utf-8') if k else None
+        )
+
+    # Strategy 1: Entity-based key (most common)
+    # All events for an entity go to same partition
+    def send_user_event(self, user_id: str, event: dict):
+        """All events for a user are ordered."""
+        self.producer.send('user-events', key=user_id, value=event)
+
+    def send_order_event(self, order_id: str, event: dict):
+        """All updates to an order are ordered."""
+        self.producer.send('order-events', key=order_id, value=event)
+
+    # Strategy 2: Compound key for related entities
+    def send_cart_event(self, user_id: str, session_id: str, event: dict):
+        """Events for a user's session are ordered together."""
+        compound_key = f"{user_id}:{session_id}"
+        self.producer.send('cart-events', key=compound_key, value=event)
+
+    # Strategy 3: Time-based key for time-series data
+    def send_metric(self, metric_name: str, timestamp: int, value: float):
+        """
+        Partition by metric name + hour for time-ordered metrics.
+        Allows efficient range queries within partitions.
+        """
+        hour = timestamp // 3600
+        key = f"{metric_name}:{hour}"
+        self.producer.send('metrics', key=key, value={
+            'name': metric_name,
+            'timestamp': timestamp,
+            'value': value
+        })
+
+    # Strategy 4: Geo-based key for location data
+    def send_location_event(self, event: dict):
+        """Route by geographic region for locality."""
+        lat, lon = event['latitude'], event['longitude']
+        # Simple geo-hash (use actual geohash library in production)
+        region = f"{int(lat/10)}:{int(lon/10)}"
+        self.producer.send('location-events', key=region, value=event)
+
+    # Strategy 5: Custom partitioner for hot key handling
+    def send_with_hot_key_handling(self, topic: str, key: str, value: dict):
+        """
+        Handle hot keys by adding random suffix.
+        Trade-off: Loses strict ordering for hot keys.
+        """
+        import random
+
+        HOT_KEYS = {'viral-post', 'breaking-news', 'popular-product'}
+
+        if key in HOT_KEYS:
+            # Distribute hot keys across partitions
+            distributed_key = f"{key}:{random.randint(0, 9)}"
+        else:
+            distributed_key = key
+
+        self.producer.send(topic, key=distributed_key, value=value)
+
+    # Strategy 6: No key for maximum throughput
+    def send_log(self, log_entry: dict):
+        """
+        Logs don't need ordering - maximize throughput.
+        Kafka 2.4+ uses sticky partitioner for better batching.
+        """
+        self.producer.send('logs', value=log_entry)  # No key
+
+
+# Custom Partitioner Example
+class TenantAwarePartitioner:
+    """
+    Custom partitioner that ensures tenant isolation.
+    Each tenant's data goes to a dedicated subset of partitions.
+    """
+
+    def __init__(self, tenant_partition_map: dict):
+        # e.g., {'tenant-a': [0, 1, 2], 'tenant-b': [3, 4, 5]}
+        self.tenant_map = tenant_partition_map
+
+    def __call__(self, key, all_partitions, available_partitions):
+        if not key:
+            return hash(str(time.time())) % len(available_partitions)
+
+        # Extract tenant from key (format: "tenant:entity_id")
+        tenant = key.split(':')[0] if ':' in key else 'default'
+
+        tenant_partitions = self.tenant_map.get(
+            tenant,
+            list(range(len(all_partitions)))
+        )
+
+        # Hash within tenant's partition subset
+        return tenant_partitions[hash(key) % len(tenant_partitions)]
+
+
+# Usage with custom partitioner
+producer_with_custom_partitioner = KafkaProducer(
+    bootstrap_servers=['localhost:9092'],
+    partitioner=TenantAwarePartitioner({
+        'tenant-a': [0, 1, 2],
+        'tenant-b': [3, 4, 5],
+        'tenant-c': [6, 7, 8]
+    })
+)
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Semantics -->
+            <h2 class="mt-4">4. Delivery Semantics</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>At-Most-Once, At-Least-Once, Exactly-Once</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="semantics-grid">
+                        <div class="semantic-card at-most-once">
+                            <h4>At-Most-Once</h4>
+                            <p><strong>Message may be lost, never duplicated</strong></p>
+                            <ul>
+                                <li>Commit offset before processing</li>
+                                <li>If processing fails, message is skipped</li>
+                                <li>Use case: Metrics, logs (acceptable loss)</li>
+                            </ul>
+                            <div class="code-block" style="font-size: 0.8rem;">
+                                <code>
+# At-most-once pattern
+for msg in consumer:
+    consumer.commit()  # Commit first
+    process(msg)       # May fail
+                                </code>
+                            </div>
+                        </div>
+
+                        <div class="semantic-card at-least-once">
+                            <h4>At-Least-Once</h4>
+                            <p><strong>Message never lost, may be duplicated</strong></p>
+                            <ul>
+                                <li>Commit offset after processing</li>
+                                <li>If crash after process but before commit, message redelivered</li>
+                                <li>Use case: Most applications (with idempotent handlers)</li>
+                            </ul>
+                            <div class="code-block" style="font-size: 0.8rem;">
+                                <code>
+# At-least-once pattern
+for msg in consumer:
+    process(msg)       # Process first
+    consumer.commit()  # Then commit
+                                </code>
+                            </div>
+                        </div>
+
+                        <div class="semantic-card exactly-once">
+                            <h4>Exactly-Once</h4>
+                            <p><strong>Message processed exactly once</strong></p>
+                            <ul>
+                                <li>Requires idempotent producer + transactional API</li>
+                                <li>Atomically commit offsets and output</li>
+                                <li>Use case: Financial transactions, critical data</li>
+                            </ul>
+                            <div class="code-block" style="font-size: 0.8rem;">
+                                <code>
+# Exactly-once pattern
+producer.begin_transaction()
+process(msg)
+producer.send_offsets_to_transaction()
+producer.commit_transaction()
+                                </code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Idempotent Producers</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Idempotent producers prevent duplicate messages from network retries. Kafka assigns a <strong>Producer ID (PID)</strong> and <strong>sequence number</strong> to each message.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant P as Producer
+    participant B as Broker
+
+    Note over P: PID=1, Seq=0
+    P->>B: send(msg, seq=0)
+    B-->>P: ack
+
+    Note over P: PID=1, Seq=1
+    P->>B: send(msg, seq=1)
+    Note over B: Network timeout
+
+    P->>B: retry send(msg, seq=1)
+    Note over B: Seq=1 already seen<br/>Dedup and ack
+    B-->>P: ack (deduplicated)
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <code>
+# Enable idempotent producer (Kafka 0.11+)
+producer = KafkaProducer(
+    bootstrap_servers=['localhost:9092'],
+    enable_idempotence=True,  # This is the key setting
+
+    # These are automatically set with idempotence:
+    # acks='all'
+    # retries=MAX_INT
+    # max_in_flight_requests_per_connection <= 5
+)
+
+# With idempotence enabled:
+# - Each producer gets a unique PID on initialization
+# - Each message to a partition gets a monotonic sequence number
+# - Broker tracks (PID, partition, seq) and deduplicates retries
+# - Sequence gaps are rejected (prevents message loss)
+                        </code>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Best Practice:</strong> Always enable <code>enable_idempotence=True</code> for producers unless you have a specific reason not to. The overhead is minimal and it prevents duplicates from network issues.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Transactional Messaging (Exactly-Once)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Kafka transactions enable <strong>atomic writes</strong> across multiple partitions and topics, plus atomic offset commits.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant App as Application
+    participant P as Producer
+    participant K as Kafka
+    participant C as Consumer
+
+    App->>P: begin_transaction()
+    P->>K: Begin transaction (TID)
+
+    App->>P: send(topic-a, msg1)
+    App->>P: send(topic-b, msg2)
+    App->>P: send_offsets_to_transaction(consumer_offsets)
+
+    App->>P: commit_transaction()
+    P->>K: Commit (atomically writes all messages + offsets)
+
+    Note over K: All messages visible atomically<br/>Or none visible (on abort)
+
+    C->>K: poll() with isolation.level=read_committed
+    K-->>C: Only committed messages
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <code>
+# Python - Exactly-once consume-transform-produce pattern
+from kafka import KafkaProducer, KafkaConsumer
+
+class ExactlyOnceProcessor:
+    def __init__(self):
+        # Consumer with read_committed isolation
+        self.consumer = KafkaConsumer(
+            'input-topic',
+            bootstrap_servers=['localhost:9092'],
+            group_id='exactly-once-processor',
+            enable_auto_commit=False,
+            isolation_level='read_committed',  # Only see committed messages
+            value_deserializer=lambda v: json.loads(v.decode('utf-8'))
+        )
+
+        # Transactional producer
+        self.producer = KafkaProducer(
+            bootstrap_servers=['localhost:9092'],
+            transactional_id='processor-txn-1',  # Required for transactions
+            enable_idempotence=True,             # Automatic with transactions
+            value_serializer=lambda v: json.dumps(v).encode('utf-8')
+        )
+
+        # Initialize transactions (call once on startup)
+        self.producer.init_transactions()
+
+    def process(self):
+        while True:
+            records = self.consumer.poll(timeout_ms=1000)
+
+            if not records:
+                continue
+
+            try:
+                # Start transaction
+                self.producer.begin_transaction()
+
+                for topic_partition, messages in records.items():
+                    for message in messages:
+                        # Transform the message
+                        result = self.transform(message.value)
+
+                        # Send to output topic (within transaction)
+                        self.producer.send('output-topic', value=result)
+
+                # Commit consumer offsets within the transaction
+                # This makes offset commit atomic with the produce
+                self.producer.send_offsets_to_transaction(
+                    self.consumer.position(topic_partition),
+                    self.consumer.group_id
+                )
+
+                # Commit transaction atomically
+                self.producer.commit_transaction()
+
+            except Exception as e:
+                print(f"Transaction failed: {e}")
+                self.producer.abort_transaction()
+                # Consumer will re-poll the same messages
+
+    def transform(self, data):
+        # Your transformation logic
+        data['processed'] = True
+        data['processed_at'] = time.time()
+        return data
+
+
+# Transaction guarantees:
+# 1. All produces within transaction are atomic (all or nothing)
+# 2. Consumer offset commit is atomic with produces
+# 3. Consumers with isolation.level=read_committed only see committed data
+# 4. If processor crashes mid-transaction, transaction is aborted
+# 5. On restart, consumer resumes from last committed offset
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">Transaction Performance Considerations</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Aspect</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Without Transactions</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">With Transactions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Latency</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~5ms</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~10-20ms (2-phase commit)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Throughput</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~100K msg/sec</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~50K msg/sec</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Broker CPU</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Baseline</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">+20-30%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Real-World Impact -->
+            <h2 class="mt-4">5. Real-World Impact: Kafka at Scale</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Production Numbers from Tech Giants</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>LinkedIn (Kafka's Birthplace)</h4>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="number">7T+</div>
+                            <div class="label">Messages/Day</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">100+</div>
+                            <div class="label">Kafka Clusters</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">4000+</div>
+                            <div class="label">Brokers</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">100K+</div>
+                            <div class="label">Topics</div>
+                        </div>
+                    </div>
+                    <p>LinkedIn uses Kafka for activity streams, operational metrics, data pipeline, and LinkedIn Learning recommendations.</p>
+
+                    <h4 class="mt-3">Netflix</h4>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="number">1T+</div>
+                            <div class="label">Messages/Day</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">8M+</div>
+                            <div class="label">Messages/Sec Peak</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">6PB</div>
+                            <div class="label">Data/Day Ingested</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">36</div>
+                            <div class="label">Kafka Clusters</div>
+                        </div>
+                    </div>
+                    <p>Netflix uses Kafka for real-time monitoring, A/B testing events, playback events, and the Keystone data pipeline.</p>
+
+                    <h4 class="mt-3">Uber</h4>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="number">4T+</div>
+                            <div class="label">Messages/Day</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">20+</div>
+                            <div class="label">Kafka Clusters</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">2500+</div>
+                            <div class="label">Microservices</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">100GB/s</div>
+                            <div class="label">Peak Throughput</div>
+                        </div>
+                    </div>
+                    <p>Uber uses Kafka for ride events, driver locations, pricing signals, and their uReplicator for cross-DC replication.</p>
+
+                    <h4 class="mt-3">Common Kafka Use Cases</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Use Case</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Why Kafka?</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Examples</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Event Sourcing</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Immutable log of state changes</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Order history, audit logs</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Stream Processing</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Real-time transformations</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fraud detection, recommendations</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Data Integration</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Decouple producers/consumers</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">DB replication, ETL pipelines</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Metrics & Logging</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">High throughput, durability</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Application logs, system metrics</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>CQRS</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Separate read/write models</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Search indexing, reporting DBs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Interview Questions -->
+            <h2 class="mt-4">6. Interview Questions</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Common Kafka Interview Questions</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="interview-q">
+                        <strong>Q1: How does Kafka achieve high throughput?</strong>
+                        <p>Key points: Sequential I/O (append-only log), zero-copy transfers, batching, compression, page cache utilization, partitioning for parallelism. Mention that modern SSDs can sustain 500MB/s+ sequential writes.</p>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Q2: How would you ensure message ordering in Kafka?</strong>
+                        <p>Ordering is guaranteed within a partition. Use message keys to route related events to the same partition. Example: use user_id as key to ensure all events for a user are ordered. Note: can't guarantee ordering across partitions.</p>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Q3: Explain the difference between acks=1 and acks=all</strong>
+                        <p><code>acks=1</code>: Leader acknowledges after writing to its local log. Fast but data loss possible if leader fails before replication. <code>acks=all</code>: Wait for all ISR replicas to acknowledge. Slower but guarantees durability (combined with min.insync.replicas).</p>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Q4: How would you handle a hot partition (one partition receiving most traffic)?</strong>
+                        <p>Options: 1) Add random suffix to hot keys to distribute load (loses ordering). 2) Increase partition count (requires rebalancing). 3) Use composite keys. 4) Separate hot keys to dedicated topics. Always analyze key distribution before choosing partitioning strategy.</p>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Q5: What happens when a consumer crashes mid-processing?</strong>
+                        <p>Depends on commit strategy. With auto-commit: message may be lost (committed before processing) or duplicated (committed after processing). With manual commit after processing: message is redelivered (at-least-once). Solution: Make consumers idempotent using unique message IDs.</p>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Q6: When would you choose Kafka over a traditional message queue (RabbitMQ, SQS)?</strong>
+                        <p>Choose Kafka when: 1) Need message replay (log retention). 2) Multiple consumers reading same data. 3) Need ordering guarantees. 4) High throughput (100K+ msg/s). 5) Stream processing. Choose traditional MQ for: point-to-point, complex routing, lower latency requirements.</p>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Q7: How does Kafka handle exactly-once semantics?</strong>
+                        <p>Three components: 1) Idempotent producer (PID + sequence number for dedup). 2) Transactional API (atomic writes across partitions). 3) read_committed isolation for consumers. Trade-off: ~2x latency and reduced throughput vs at-least-once.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Takeaways -->
+            <h2 class="mt-4">7. Key Takeaways</h2>
+
+            <div class="takeaway-box">
+                <span class="takeaway-icon">1.</span>
+                <div>
+                    <strong>Log-based architecture is the foundation</strong>
+                    <p>The append-only, immutable log enables sequential I/O, simple replication, and consumer replay. This design choice is why Kafka can achieve 100x the throughput of traditional message queues.</p>
+                </div>
+            </div>
+
+            <div class="takeaway-box">
+                <span class="takeaway-icon">2.</span>
+                <div>
+                    <strong>Partitions are the unit of parallelism</strong>
+                    <p>More partitions = more parallelism, but also more overhead. Start with partitions = max expected consumers, then scale. Ordering is only guaranteed within a partition.</p>
+                </div>
+            </div>
+
+            <div class="takeaway-box">
+                <span class="takeaway-icon">3.</span>
+                <div>
+                    <strong>Choose your delivery semantics deliberately</strong>
+                    <p>At-least-once with idempotent consumers is the sweet spot for most applications. Only use exactly-once (transactions) when the complexity and performance cost is justified.</p>
+                </div>
+            </div>
+
+            <div class="takeaway-box">
+                <span class="takeaway-icon">4.</span>
+                <div>
+                    <strong>ISR and acks control the durability-latency trade-off</strong>
+                    <p><code>acks=all</code> + <code>min.insync.replicas=2</code> + <code>replication.factor=3</code> gives you strong durability (survive 1 broker failure) with reasonable latency.</p>
+                </div>
+            </div>
+
+            <div class="takeaway-box">
+                <span class="takeaway-icon">5.</span>
+                <div>
+                    <strong>Kafka is not just a message queue - it's a commit log</strong>
+                    <p>Think of Kafka as a distributed, replicated log that happens to support pub/sub. This mental model helps in understanding retention policies, compaction, and why replay is possible.</p>
+                </div>
+            </div>
+
+            <div class="takeaway-box">
+                <span class="takeaway-icon">6.</span>
+                <div>
+                    <strong>Consumer group design determines your processing model</strong>
+                    <p>One consumer group = load balancing (each message processed once). Multiple consumer groups = broadcast (each group gets all messages). Design your groups based on your data flow needs.</p>
+                </div>
+            </div>
+
+            <!-- Further Reading -->
+            <div class="card mt-4">
+                <h3>Further Reading</h3>
+                <ul>
+                    <li><a href="https://kafka.apache.org/documentation/" target="_blank">Apache Kafka Documentation</a></li>
+                    <li><a href="https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/" target="_blank">Exactly-Once Semantics in Kafka</a></li>
+                    <li><a href="https://engineering.linkedin.com/kafka/benchmarking-apache-kafka-2-million-writes-second-three-cheap-machines" target="_blank">LinkedIn: 2 Million Writes/Second on 3 Cheap Machines</a></li>
+                    <li><em>Designing Data-Intensive Applications</em> by Martin Kleppmann - Chapter 11</li>
+                    <li><a href="https://www.oreilly.com/library/view/kafka-the-definitive/9781491936153/" target="_blank">Kafka: The Definitive Guide (O'Reilly)</a></li>
+                </ul>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="../module-05.html" class="btn btn-secondary">&larr; Seminal Papers</a>
+                <a href="../index.html" class="btn btn-primary">System Design Home &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            // Initialize Mermaid
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: 'neutral',
+                flowchart: {
+                    useMaxWidth: true,
+                    htmlLabels: true
+                },
+                sequence: {
+                    useMaxWidth: true
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google BigTable - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Animated Header for BigTable */
+        .paper-hero {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+            padding: 3rem 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .paper-hero h1 {
+            color: #fff;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .paper-hero .subtitle {
+            color: #a5b4fc;
+            font-size: 1.1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .paper-hero .paper-meta {
+            color: #818cf8;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Animated table structure visualization */
+        .table-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            opacity: 0.25;
+        }
+
+        .cell {
+            position: absolute;
+            width: 40px;
+            height: 20px;
+            border: 1px solid rgba(165, 180, 252, 0.5);
+            border-radius: 2px;
+            background: rgba(99, 102, 241, 0.3);
+            animation: pulse-cell 4s infinite ease-in-out;
+        }
+
+        /* Create grid of cells */
+        .cell:nth-child(1) { left: 10%; top: 15%; animation-delay: 0s; }
+        .cell:nth-child(2) { left: 18%; top: 15%; animation-delay: 0.2s; }
+        .cell:nth-child(3) { left: 26%; top: 15%; animation-delay: 0.4s; }
+        .cell:nth-child(4) { left: 10%; top: 30%; animation-delay: 0.6s; }
+        .cell:nth-child(5) { left: 18%; top: 30%; animation-delay: 0.8s; }
+        .cell:nth-child(6) { left: 26%; top: 30%; animation-delay: 1s; }
+        .cell:nth-child(7) { left: 10%; top: 45%; animation-delay: 1.2s; }
+        .cell:nth-child(8) { left: 18%; top: 45%; animation-delay: 1.4s; }
+        .cell:nth-child(9) { left: 26%; top: 45%; animation-delay: 1.6s; }
+
+        .cell:nth-child(10) { left: 55%; top: 20%; animation-delay: 0.1s; }
+        .cell:nth-child(11) { left: 63%; top: 20%; animation-delay: 0.3s; }
+        .cell:nth-child(12) { left: 71%; top: 20%; animation-delay: 0.5s; }
+        .cell:nth-child(13) { left: 79%; top: 20%; animation-delay: 0.7s; }
+        .cell:nth-child(14) { left: 55%; top: 35%; animation-delay: 0.9s; }
+        .cell:nth-child(15) { left: 63%; top: 35%; animation-delay: 1.1s; }
+        .cell:nth-child(16) { left: 71%; top: 35%; animation-delay: 1.3s; }
+        .cell:nth-child(17) { left: 79%; top: 35%; animation-delay: 1.5s; }
+
+        .row-key {
+            position: absolute;
+            width: 60px;
+            height: 20px;
+            background: linear-gradient(90deg, #f97316, #fb923c);
+            border-radius: 2px;
+            animation: slide-row 6s infinite ease-in-out;
+        }
+
+        .row-key:nth-child(18) { left: 3%; top: 55%; animation-delay: 0s; }
+        .row-key:nth-child(19) { left: 3%; top: 70%; animation-delay: 2s; }
+        .row-key:nth-child(20) { left: 48%; top: 60%; animation-delay: 1s; }
+        .row-key:nth-child(21) { left: 48%; top: 75%; animation-delay: 3s; }
+
+        .timestamp {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: blink-timestamp 2s infinite;
+        }
+
+        .timestamp:nth-child(22) { left: 34%; top: 18%; }
+        .timestamp:nth-child(23) { left: 34%; top: 33%; }
+        .timestamp:nth-child(24) { left: 87%; top: 23%; }
+        .timestamp:nth-child(25) { left: 87%; top: 38%; }
+
+        @keyframes pulse-cell {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        @keyframes slide-row {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(10px); }
+        }
+
+        @keyframes blink-timestamp {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        /* Key insight cards */
+        .insight-card {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-left: 4px solid #22c55e;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .insight-card.warning {
+            background: linear-gradient(135deg, #fefce8, #fef9c3);
+            border-left-color: #eab308;
+        }
+
+        .insight-card.info {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-left-color: #3b82f6;
+        }
+
+        /* Interview question styling */
+        .interview-question {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            margin: 1rem 0;
+        }
+
+        .interview-question .question {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .interview-question .answer {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        /* Data model visualization */
+        .data-model-table {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+        }
+
+        .data-model-table th {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .data-model-table td, .data-model-table th {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .data-model-table .row-key-cell {
+            background: #fef3c7;
+            font-weight: 600;
+        }
+
+        .data-model-table .cf-header {
+            background: #dbeafe;
+        }
+
+        .data-model-table .timestamp {
+            color: var(--text-light);
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Seminal Papers</div>
+                    <a href="gfs.html" class="sidebar-link">Google File System</a>
+                    <a href="bigtable.html" class="sidebar-link active">BigTable</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                    <a href="../module-05.html" class="sidebar-link">Seminal Papers Overview</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <!-- Animated Hero -->
+            <div class="paper-hero">
+                <div class="table-animation">
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="cell"></div>
+                    <div class="row-key"></div>
+                    <div class="row-key"></div>
+                    <div class="row-key"></div>
+                    <div class="row-key"></div>
+                    <div class="timestamp"></div>
+                    <div class="timestamp"></div>
+                    <div class="timestamp"></div>
+                    <div class="timestamp"></div>
+                </div>
+                <h1>Bigtable: A Distributed Storage System</h1>
+                <p class="subtitle">Structured data at planet scale</p>
+                <p class="paper-meta">Chang, Dean, Ghemawat, et al. | OSDI 2006 | ~12,000 citations</p>
+            </div>
+
+            <div class="card">
+                <h3>Why This Paper Matters</h3>
+                <p>Bigtable introduced the wide-column data model that powers some of the world's largest databases. Understanding Bigtable is essential because:</p>
+                <ul>
+                    <li>It directly inspired <strong>Apache HBase</strong> (Hadoop ecosystem's database)</li>
+                    <li>Cassandra borrowed Bigtable's <strong>column family</strong> concept and SSTable format</li>
+                    <li>It introduced the <strong>LSM-tree</strong> architecture now used in RocksDB, LevelDB, and most modern key-value stores</li>
+                    <li>The <strong>row key design</strong> principles apply to any wide-column database</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Problem Context: Structured Storage at Google Scale</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>The Challenge Google Faced (2006)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>By 2006, Google needed to store structured data at massive scale for services like web indexing, Google Earth, and Google Finance. GFS handled raw files, but they needed something more:</p>
+
+                    <div class="card-grid">
+                        <div class="card">
+                            <h3>Structured Access</h3>
+                            <p>Need to query by key, scan ranges, and access specific columns - not just read whole files.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Semi-Structured Data</h3>
+                            <p>Schemas vary by application. Web pages have different attributes than maps tiles.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Versioning</h3>
+                            <p>Keep historical versions of data (web crawl history, map updates over time).</p>
+                        </div>
+                        <div class="card">
+                            <h3>Petabyte Scale</h3>
+                            <p>Billions of rows, millions of columns, across thousands of machines.</p>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Google Services Using Bigtable</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Service</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Data Type</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Scale</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Web Search</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Crawled web pages, links</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~200TB across 388 tablets</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Google Earth</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Imagery, geographic data</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~70TB per table</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Google Analytics</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Click streams, user behavior</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~14TB, 80B URLs</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Personalized Search</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">User data, preferences</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~6TB per table</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="insight-card">
+                        <strong>Key Design Philosophy:</strong> Bigtable provides a simple, flexible data model that applications can layer additional semantics on top of. It's not trying to be a full relational database - it's a building block for application-specific storage.
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Data Model: The Wide-Column Store</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Row Key, Column Family, Timestamp</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Bigtable's data model is a <strong>sparse, distributed, persistent multi-dimensional sorted map</strong>.</p>
+
+                    <div class="code-block">
+                        <code>
+(row:string, column:string, time:int64) -> string
+
+# Example: Web table storing crawled pages
+# Row key: reversed URL (com.google.www)
+# Column families: "contents:", "anchor:", "language:"
+# Each cell can have multiple timestamped versions
+                        </code>
+                    </div>
+
+                    <h4>Conceptual View: Web Table</h4>
+                    <div style="overflow-x: auto;">
+                        <table class="data-model-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th>Row Key</th>
+                                    <th colspan="2" class="cf-header">contents:</th>
+                                    <th colspan="2" class="cf-header">anchor:</th>
+                                </tr>
+                                <tr>
+                                    <th></th>
+                                    <th>html</th>
+                                    <th>robots</th>
+                                    <th>cnn.com</th>
+                                    <th>nytimes.com</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="row-key-cell">com.cnn.www</td>
+                                    <td>&lt;html&gt;...&lt;/html&gt;<br><span class="timestamp">t=1234567</span></td>
+                                    <td>User-agent: *<br><span class="timestamp">t=1234560</span></td>
+                                    <td></td>
+                                    <td>"CNN News"<br><span class="timestamp">t=1234500</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="row-key-cell">com.google.maps</td>
+                                    <td>&lt;html&gt;...&lt;/html&gt;<br><span class="timestamp">t=1234580</span><br>&lt;html&gt;...&lt;/html&gt;<br><span class="timestamp">t=1234400</span></td>
+                                    <td></td>
+                                    <td>"Google Maps"<br><span class="timestamp">t=1234550</span></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h4 class="mt-3">Key Concepts</h4>
+
+                    <div class="card-grid">
+                        <div class="card">
+                            <h3>Row Key</h3>
+                            <p>Arbitrary string up to 64KB. Rows are sorted lexicographically. This is crucial for locality - related data should have similar row keys.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Column Family</h3>
+                            <p>Groups of columns (e.g., "anchor:"). Must be declared upfront. Forms the unit of access control and storage configuration.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Column Qualifier</h3>
+                            <p>The part after ":" (e.g., "cnn.com" in "anchor:cnn.com"). Can be created dynamically - often millions per family.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Timestamp</h3>
+                            <p>64-bit integer for versioning. Can be auto-assigned by Bigtable or set by client. Cells can keep N versions or versions within T time.</p>
+                        </div>
+                    </div>
+
+                    <div class="insight-card info">
+                        <strong>Why Reversed URLs?</strong> Storing "com.cnn.www" instead of "www.cnn.com" groups all pages from the same domain together (sorted by row key). This enables efficient scans like "give me all CNN pages" with a single range query.
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Architecture Overview</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Tablet Servers and the Master</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Bigtable Architecture"
+        Client[Bigtable Client]
+
+        subgraph "Coordination"
+            CK[Chubby<br>Lock Service]
+            Master[Bigtable Master]
+        end
+
+        subgraph "Tablet Servers"
+            TS1[Tablet Server 1]
+            TS2[Tablet Server 2]
+            TS3[Tablet Server N...]
+        end
+
+        subgraph "Storage (GFS)"
+            GFS1[(SSTable Files)]
+            GFS2[(SSTable Files)]
+            GFS3[(SSTable Files)]
+        end
+
+        Client -->|"1. Locate tablet"| CK
+        Client -->|"2. Read/Write"| TS1
+        Client -->|"2. Read/Write"| TS2
+
+        Master -->|"Tablet assignment"| TS1 & TS2 & TS3
+        Master --> CK
+
+        TS1 --> GFS1
+        TS2 --> GFS2
+        TS3 --> GFS3
+    end
+                        </div>
+                    </div>
+
+                    <h4>Component Responsibilities</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Component</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Role</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Client Library</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Caches tablet locations, communicates directly with tablet servers for data</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Master</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Assigns tablets to servers, detects server additions/failures, balances load, garbage collects GFS files</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Tablet Server</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Manages 10-1000 tablets, handles read/write requests, splits tablets that grow too large</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Chubby</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Distributed lock service - ensures one active master, stores bootstrap location, manages ACLs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="insight-card warning">
+                        <strong>Master is NOT on the Data Path:</strong> Like GFS, the master handles metadata and coordination only. Clients locate tablets through a 3-level hierarchy cached locally, then communicate directly with tablet servers. The master can be down briefly without affecting client operations.
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Tablet Structure: SSTable and Memtable</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Log-Structured Merge Tree (LSM)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Each tablet uses an LSM-tree architecture: writes go to a memtable (in-memory), which is periodically flushed to immutable SSTables on GFS.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Tablet Structure"
+        subgraph "Memory"
+            MT[Memtable<br>Sorted by key]
+        end
+
+        subgraph "GFS (Immutable)"
+            SS1[SSTable 1<br>oldest]
+            SS2[SSTable 2]
+            SS3[SSTable 3<br>newest]
+        end
+
+        CL[Commit Log<br>Write-Ahead Log]
+    end
+
+    Write[Write Request] -->|1. Log| CL
+    Write -->|2. Insert| MT
+
+    MT -->|Flush when full| SS3
+
+    Read[Read Request] --> MT
+    Read --> SS3
+    Read --> SS2
+    Read --> SS1
+
+    style MT fill:#22c55e,color:#fff
+    style CL fill:#f97316,color:#fff
+                        </div>
+                    </div>
+
+                    <h4>Write Path</h4>
+                    <ol>
+                        <li><strong>Write to commit log</strong> (WAL for durability)</li>
+                        <li><strong>Insert into memtable</strong> (sorted in-memory structure, typically a red-black tree or skip list)</li>
+                        <li>When memtable reaches size threshold (~64MB), <strong>freeze and flush to SSTable</strong></li>
+                        <li>Old memtable becomes immutable, new memtable accepts writes</li>
+                    </ol>
+
+                    <h4>Read Path</h4>
+                    <ol>
+                        <li>Check <strong>memtable</strong> (most recent data)</li>
+                        <li>Check <strong>SSTables from newest to oldest</strong></li>
+                        <li>Merge results, return most recent version for each column</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <code>
+# SSTable Format (Simplified)
+
+class SSTable:
+    """
+    Immutable, sorted file stored on GFS.
+    Contains sequence of (key, value) pairs plus index.
+    """
+
+    def __init__(self):
+        self.data_blocks = []      # 64KB blocks of sorted key-value pairs
+        self.index_block = None    # Maps key ranges to block offsets
+        self.bloom_filter = None   # Quick negative lookups
+        self.metadata = None       # Compression, checksums, etc.
+
+    def get(self, key):
+        # 1. Check bloom filter - if negative, key definitely not here
+        if not self.bloom_filter.may_contain(key):
+            return None
+
+        # 2. Binary search index block to find data block
+        block_offset = self.index_block.find_block(key)
+
+        # 3. Read data block from GFS (may be cached)
+        block = self.read_block(block_offset)
+
+        # 4. Binary search within block
+        return block.get(key)
+
+# SSTable file layout on GFS:
+# +----------------+
+# | Data Block 0   |  <- 64KB of sorted key-value pairs
+# +----------------+
+# | Data Block 1   |
+# +----------------+
+# | ...            |
+# +----------------+
+# | Data Block N   |
+# +----------------+
+# | Meta Block 1   |  <- Bloom filter
+# +----------------+
+# | Meta Block 2   |  <- Compression info
+# +----------------+
+# | Index Block    |  <- Key -> block offset mapping
+# +----------------+
+# | Footer         |  <- Offsets to meta/index blocks
+# +----------------+
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Compaction Strategies</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Minor and Major Compaction</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Without compaction, reads would need to check an ever-growing number of SSTables. Compaction merges SSTables to maintain read performance.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph "Minor Compaction"
+        MT1[Memtable] -->|Flush| SS1[New SSTable]
+    end
+
+    subgraph "Merging Compaction"
+        SS2[SSTable A] --> Merge[Merge Process]
+        SS3[SSTable B] --> Merge
+        Merge --> SS4[Merged SSTable]
+    end
+
+    subgraph "Major Compaction"
+        SS5[All SSTables] --> Major[Full Merge]
+        Major --> SS6[Single SSTable<br>No deletions]
+    end
+                        </div>
+                    </div>
+
+                    <h4>Compaction Types</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Type</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Trigger</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Effect</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Minor</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Memtable full (~64MB)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Creates new SSTable, frees memory</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Merging</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Too many SSTables</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Merges several SSTables into one, may keep tombstones</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Major</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Scheduled/manual</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Merges ALL SSTables, removes deleted data permanently</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="insight-card warning">
+                        <strong>Tombstones:</strong> Deletes don't immediately remove data. Instead, a "tombstone" marker is written. The actual data is only removed during major compaction when we know no older SSTable might still have the value. This is why deletes can temporarily increase disk usage!
+                    </div>
+
+                    <div class="code-block">
+                        <code>
+# Leveled Compaction (used in LevelDB/RocksDB, inspired by Bigtable)
+
+# Level 0: Direct flushes from memtable (may overlap)
+# Level 1+: Non-overlapping key ranges, 10x size increase per level
+
+# Example size limits:
+# L0: 4 files max (trigger compaction)
+# L1: 10MB total
+# L2: 100MB total
+# L3: 1GB total
+# L4: 10GB total
+# L5: 100GB total
+# L6: 1TB total
+
+def leveled_compaction():
+    """
+    When L(n) exceeds size limit:
+    1. Pick file(s) from L(n)
+    2. Find overlapping files in L(n+1)
+    3. Merge-sort all files
+    4. Write new files to L(n+1)
+    5. Delete old files
+    """
+
+    if level0_file_count > 4:
+        # L0 -> L1: may involve many files due to overlap
+        compact_level0_to_level1()
+
+    for level in range(1, max_level):
+        if level_size(level) > size_limit(level):
+            # Pick one file from this level
+            file = pick_file_for_compaction(level)
+
+            # Find overlapping files in next level
+            overlapping = find_overlapping_files(level + 1, file.key_range)
+
+            # Merge-sort and write to next level
+            merge_and_write(file, overlapping, level + 1)
+
+# Write amplification analysis:
+# - Each key is written to L0, then moved through levels
+# - Worst case: written once per level = O(log N) writes per key
+# - This is the trade-off for read performance
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Bloom Filters for Read Optimization</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Avoiding Unnecessary Disk Reads</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>A Bloom filter is a probabilistic data structure that can tell you "definitely not present" or "possibly present" - never giving false negatives.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph "Read with Bloom Filter"
+        Q[Query: key=X] --> BF1{Bloom Filter<br>SSTable 1}
+        BF1 -->|No| Skip1[Skip SSTable 1]
+        BF1 -->|Maybe| Read1[Read SSTable 1]
+
+        Q --> BF2{Bloom Filter<br>SSTable 2}
+        BF2 -->|No| Skip2[Skip SSTable 2]
+        BF2 -->|Maybe| Read2[Read SSTable 2]
+
+        Q --> BF3{Bloom Filter<br>SSTable 3}
+        BF3 -->|Maybe| Read3[Read SSTable 3]
+    end
+                        </div>
+                    </div>
+
+                    <h4>How It Works</h4>
+                    <div class="code-block">
+                        <code>
+class BloomFilter:
+    """
+    Probabilistic membership test.
+    False positive rate ~= (1 - e^(-kn/m))^k
+
+    Where:
+    - m = number of bits
+    - n = number of elements
+    - k = number of hash functions
+    """
+
+    def __init__(self, size_bits, num_hash_functions):
+        self.bits = [0] * size_bits
+        self.k = num_hash_functions
+
+    def add(self, key):
+        """Add key to the filter."""
+        for i in range(self.k):
+            index = hash_i(key, i) % len(self.bits)
+            self.bits[index] = 1
+
+    def may_contain(self, key):
+        """
+        Returns:
+        - False: key is DEFINITELY NOT in the set
+        - True: key MIGHT be in the set (check SSTable)
+        """
+        for i in range(self.k):
+            index = hash_i(key, i) % len(self.bits)
+            if self.bits[index] == 0:
+                return False  # Definitely not present
+        return True  # Possibly present
+
+# Bigtable configuration:
+# - ~10 bits per key
+# - ~1% false positive rate
+# - Bloom filter for each SSTable stored in memory
+# - Eliminates most disk reads for non-existent keys
+
+# Example: 1M keys per SSTable
+# Bloom filter size: 10M bits = 1.25 MB per SSTable
+# 1000 SSTables = 1.25 GB memory for all bloom filters
+                        </code>
+                    </div>
+
+                    <div class="insight-card">
+                        <strong>Impact:</strong> The paper reports that Bloom filters reduce the number of disk accesses for read operations by a factor of 100x for many workloads. This is especially important for non-existent key lookups, which would otherwise need to check every SSTable.
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Tablet Serving Architecture</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Tablet Server Internals</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Tablet Server"
+        subgraph "Per-Tablet State"
+            MT[Memtable]
+            BC[Block Cache<br>SSTable blocks]
+            BF[Bloom Filters<br>in memory]
+        end
+
+        subgraph "Shared"
+            CLog[Commit Log<br>All tablets]
+            Threads[Thread Pool]
+        end
+    end
+
+    subgraph "GFS"
+        SS1[(SSTable)]
+        SS2[(SSTable)]
+        Log[(Log)]
+    end
+
+    Client[Client] --> Threads
+    Threads --> MT
+    Threads --> BC
+    BC --> SS1 & SS2
+    MT --> CLog --> Log
+                        </div>
+                    </div>
+
+                    <h4>Tablet Assignment Flow</h4>
+                    <ol>
+                        <li>Master detects unassigned tablet (or server failure)</li>
+                        <li>Master picks tablet server based on load</li>
+                        <li>Tablet server acquires exclusive lock in Chubby</li>
+                        <li>Tablet server reads metadata, loads SSTable indexes and bloom filters</li>
+                        <li>Tablet server reconstructs memtable by replaying commit log</li>
+                        <li>Tablet is ready to serve requests</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <code>
+# Tablet location lookup (3-level hierarchy)
+
+# Level 1: Chubby file
+# Contains location of ROOT tablet
+
+# Level 2: ROOT tablet
+# Special tablet containing locations of all METADATA tablets
+# Never split - always exactly one tablet
+
+# Level 3: METADATA tablets
+# Each row stores location of one user tablet
+# Row key: [table_id, end_row_key]
+# Can be split like regular tablets
+
+def locate_tablet(table, row_key):
+    """Find which tablet server handles this row."""
+
+    # Check cache first
+    if (table, row_key) in tablet_cache:
+        return tablet_cache[(table, row_key)]
+
+    # 1. Read Chubby file to find ROOT tablet location
+    root_location = chubby.read("/bigtable/root_tablet_location")
+
+    # 2. Query ROOT tablet for METADATA tablet
+    metadata_location = root_location.lookup(
+        key=f"METADATA:{table}:{row_key}"
+    )
+
+    # 3. Query METADATA tablet for user tablet
+    tablet_location = metadata_location.lookup(
+        key=f"{table}:{row_key}"
+    )
+
+    # Cache for future lookups (with short TTL)
+    tablet_cache[(table, row_key)] = tablet_location
+    return tablet_location
+
+# The client library caches all levels
+# Typical lookup: 0 RPCs (fully cached) to 3 RPCs (cold cache)
+# 3-level hierarchy supports 2^61 tablets
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Code Examples: Data Model Usage</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Working with Bigtable's Data Model</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - Bigtable-style operations (using google-cloud-bigtable)
+
+from google.cloud import bigtable
+from google.cloud.bigtable import column_family
+from google.cloud.bigtable import row_filters
+import datetime
+
+# Connect to Bigtable
+client = bigtable.Client(project="my-project", admin=True)
+instance = client.instance("my-instance")
+
+# Create table with column families
+table = instance.table("webtable")
+if not table.exists():
+    table.create()
+
+    # Column families must be declared upfront
+    cf1 = table.column_family("contents", max_versions=3)
+    cf1.create()
+
+    cf2 = table.column_family("anchor", max_versions=1)
+    cf2.create()
+
+# ----- WRITE OPERATIONS -----
+
+def store_webpage(url, html, robots_txt=None):
+    """Store a crawled webpage with versioning."""
+    # Reverse URL for row key (locality optimization)
+    row_key = reverse_url(url)
+
+    row = table.direct_row(row_key)
+
+    # Set column values
+    # Timestamp auto-assigned by Bigtable
+    row.set_cell("contents", "html", html)
+
+    if robots_txt:
+        row.set_cell("contents", "robots", robots_txt)
+
+    row.commit()
+
+def add_anchor_text(target_url, source_url, anchor_text):
+    """
+    Add incoming link anchor text.
+    Column qualifier = source URL (dynamic columns!)
+    """
+    row_key = reverse_url(target_url)
+    row = table.direct_row(row_key)
+
+    # Dynamic column: anchor:{source_url}
+    row.set_cell("anchor", source_url, anchor_text)
+    row.commit()
+
+# ----- READ OPERATIONS -----
+
+def get_webpage(url):
+    """Read latest version of webpage."""
+    row_key = reverse_url(url)
+    row = table.read_row(row_key)
+
+    if row is None:
+        return None
+
+    result = {}
+
+    # Get latest version of each cell
+    for cf, columns in row.cells.items():
+        for col, cells in columns.items():
+            # cells[0] is the most recent version
+            result[f"{cf}:{col}"] = cells[0].value.decode()
+
+    return result
+
+def get_webpage_history(url, num_versions=10):
+    """Read historical versions of webpage."""
+    row_key = reverse_url(url)
+
+    # Filter to get multiple versions
+    filter = row_filters.CellsColumnLimitFilter(num_versions)
+
+    row = table.read_row(row_key, filter_=filter)
+
+    history = []
+    if row and "contents" in row.cells:
+        html_cells = row.cells["contents"].get(b"html", [])
+        for cell in html_cells:
+            history.append({
+                "timestamp": cell.timestamp,
+                "value": cell.value.decode()
+            })
+
+    return history
+
+def scan_domain(domain):
+    """
+    Scan all pages from a domain.
+    Thanks to reversed URLs, this is a simple range scan!
+    """
+    # com.example.www -> all example.com pages are contiguous
+    reversed_domain = reverse_domain(domain)
+    start_key = reversed_domain
+    end_key = reversed_domain + "~"  # ~ is after all printable chars
+
+    rows = table.read_rows(
+        start_key=start_key,
+        end_key=end_key,
+        filter_=row_filters.CellsColumnLimitFilter(1)
+    )
+
+    pages = []
+    for row in rows:
+        pages.append({
+            "url": unreverse_url(row.row_key.decode()),
+            "html": row.cells["contents"][b"html"][0].value.decode()
+        })
+
+    return pages
+
+# ----- ATOMIC OPERATIONS -----
+
+def increment_visit_count(url):
+    """Atomically increment a counter."""
+    row_key = reverse_url(url)
+    row = table.direct_row(row_key)
+
+    # ReadModifyWriteRule for atomic increment
+    row.increment_cell_value("stats", "visits", 1)
+    row.commit()
+
+def conditional_update(url, old_html, new_html):
+    """
+    Update only if current value matches expected.
+    Useful for optimistic concurrency control.
+    """
+    row_key = reverse_url(url)
+
+    # ConditionalRowMutation: if-then-else
+    from google.cloud.bigtable.data import row as bt_row
+
+    condition = row_filters.ValueRangeFilter(
+        start_value=old_html.encode(),
+        end_value=old_html.encode(),
+        inclusive_start=True,
+        inclusive_end=True
+    )
+
+    # This is a simplified example - actual API differs
+    # True mutation: update to new value
+    # False mutation: do nothing (or raise error)
+                        </code>
+                    </div>
+
+                    <h4>Row Key Design Patterns</h4>
+                    <div class="code-block">
+                        <code>
+# Row key design is CRITICAL for Bigtable performance
+
+# PATTERN 1: Reversed Domain (Web crawl)
+# Original: www.example.com/page
+# Row key: com.example.www/page
+# Why: Groups all pages from same domain for efficient scanning
+
+# PATTERN 2: Salted Timestamp (Time series, avoid hotspots)
+# Bad:  2024-01-15:sensor1
+# Good: 3:2024-01-15:sensor1 (salt = hash(sensor1) % 10)
+# Why: Pure timestamps create write hotspot on latest tablet
+
+# PATTERN 3: Composite Key (User activity)
+# Row key: user123#2024-01-15#activity456
+# Why: Enables prefix scans for "all activity for user123"
+# and range scans for "user123's activity in January"
+
+# PATTERN 4: Padded Numbers (Sortable numeric IDs)
+# Bad:  1, 2, 10, 100
+# Good: 0001, 0002, 0010, 0100
+# Why: Lexicographic sort: "10" < "2" but "0010" > "0002"
+
+def design_row_key(use_case):
+    """
+    Questions to ask:
+    1. What are the primary access patterns?
+    2. Do I need range scans? On what?
+    3. Are there write hotspots (monotonic keys)?
+    4. How large will the table grow?
+    """
+
+    if use_case == "user_messages":
+        # Access: Get all messages for a user
+        # Access: Get recent messages for a user
+        return "user_id#reverse_timestamp#message_id"
+        # Reverse timestamp = MAX_LONG - timestamp
+        # Recent messages come first in scan
+
+    if use_case == "sensor_data":
+        # Access: All readings for a sensor
+        # Access: Readings in time range
+        # Problem: Latest data = hotspot
+        return "salt#sensor_id#timestamp"
+        # Salt distributes writes across tablets
+
+    if use_case == "search_index":
+        # Access: All URLs containing a term
+        return "term#url"
+        # Simple prefix scan for all URLs with term
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Real-World Impact</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>From Bigtable to Modern Systems</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TD
+    BT[Google Bigtable<br>2006]
+
+    BT --> HBase[Apache HBase<br>2008]
+    BT --> Cassandra[Apache Cassandra<br>2008]
+    BT --> LevelDB[LevelDB<br>2011]
+
+    HBase --> Phoenix[Apache Phoenix<br>SQL on HBase]
+    HBase --> OpenTSDB[OpenTSDB<br>Time Series]
+
+    Cassandra --> ScyllaDB[ScyllaDB<br>C++ rewrite]
+    Cassandra --> DSE[DataStax Enterprise]
+
+    LevelDB --> RocksDB[RocksDB<br>2012]
+    RocksDB --> TiKV[TiKV]
+    RocksDB --> CockroachDB[CockroachDB]
+    RocksDB --> YugabyteDB[YugabyteDB]
+
+    style BT fill:#4338ca,color:#fff
+    style HBase fill:#3b82f6,color:#fff
+    style Cassandra fill:#22c55e,color:#fff
+    style RocksDB fill:#f97316,color:#fff
+                        </div>
+                    </div>
+
+                    <h4>Apache HBase (Open-Source Bigtable)</h4>
+                    <ul>
+                        <li>Nearly identical data model: row key, column family, timestamp</li>
+                        <li>Runs on HDFS instead of GFS</li>
+                        <li>Uses ZooKeeper instead of Chubby</li>
+                        <li>Powers Facebook Messages, Pinterest, Spotify</li>
+                    </ul>
+
+                    <h4>Apache Cassandra (Bigtable + Dynamo)</h4>
+                    <ul>
+                        <li>Column families from Bigtable + consistent hashing from Dynamo</li>
+                        <li>No single master - fully decentralized</li>
+                        <li>Tunable consistency (quorum reads/writes)</li>
+                        <li>Powers Netflix, Apple, Instagram</li>
+                    </ul>
+
+                    <h4>RocksDB (SSTable Evolution)</h4>
+                    <ul>
+                        <li>Facebook's fork of Google's LevelDB</li>
+                        <li>Same LSM-tree architecture as Bigtable</li>
+                        <li>Optimized for SSD and high write throughput</li>
+                        <li>Storage engine for MySQL, CockroachDB, TiKV</li>
+                    </ul>
+
+                    <div class="insight-card">
+                        <strong>The LSM-Tree Legacy:</strong> Bigtable's SSTable + memtable architecture (Log-Structured Merge Tree) is now the dominant design for write-heavy workloads. RocksDB alone is used as the storage engine in dozens of databases.
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Interview Questions</h2>
+
+            <div class="interview-question">
+                <div class="question">Q1: Why does Bigtable use column families instead of individual columns?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> Column families are the unit of access control, storage configuration (compression, bloom filters), and physical storage locality. Columns within a family are stored together in SSTable files, making it efficient to read multiple columns from the same family. This is a performance optimization - you declare families upfront to tell Bigtable what data should be co-located.
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q2: How do reads work when data might be in multiple SSTables and the memtable?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> Reads check the memtable first (most recent), then SSTables from newest to oldest. Bloom filters eliminate most SSTables quickly. For each matching location, we get the value with the highest timestamp. The merge happens in memory, returning the latest version of each requested column. This is why limiting the number of SSTables through compaction is important for read performance.
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q3: What's the trade-off of the LSM-tree architecture used by Bigtable?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> The trade-off is write amplification for write performance. Writes are fast (just append to log + memtable), but data gets rewritten multiple times during compaction. A key might be written 10-30 times total as it moves through SSTable levels. This is acceptable when writes are append-heavy and reads of non-existent keys are common (bloom filters help). B-trees have the opposite trade-off: slower writes but no write amplification.
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q4: How does Bigtable handle the "hot tablet" problem?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> When a tablet becomes too hot, it can be split into smaller tablets that are then assigned to different servers. The split point is chosen based on the row key distribution. However, if the hot spot is a single row (e.g., a celebrity's profile), splitting doesn't help. In that case, application-level solutions are needed: row key redesign (add salt prefix), caching layer in front, or read replicas. Bigtable itself doesn't automatically replicate individual rows.
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q5: Why does Bigtable store timestamps in decreasing order (newest first)?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> Most queries want the latest version of data. By storing timestamps in decreasing order within each cell, the most recent version is encountered first during a scan. This allows queries to stop early once they've found enough versions, without scanning through all historical data. It's an optimization for the common case.
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q6: How would you design a row key for a social media feed (posts from users you follow)?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> For reading a user's feed efficiently: <code>user_id#reverse_timestamp#post_id</code>. This groups all posts for a user together (prefix scan) and orders them by time (newest first due to reverse timestamp). For writing posts: <code>shard#reverse_timestamp#post_id</code> where shard = hash(author_id) % N to distribute writes. You'd need two tables: one optimized for reading feeds, one for writing posts, with async sync between them (fan-out pattern).
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q7: Compare Bigtable's consistency model to Cassandra's.</div>
+                <div class="answer">
+                    <strong>Answer:</strong> Bigtable provides strong consistency - reads always see the latest committed write for a row. This is achieved through single-tablet-server ownership per row and synchronous replication within that tablet. Cassandra offers tunable consistency through quorum reads/writes, allowing you to trade consistency for availability (AP in CAP). Bigtable is CP - it prioritizes consistency, becoming unavailable if the tablet server or majority of replicas are down.
+                </div>
+            </div>
+
+            <h2 class="mt-4">Key Takeaways</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Simple Data Model, Flexible Usage</h3>
+                    <p>Bigtable's (row, column, timestamp) model is simple but enables diverse applications. Let applications layer their own semantics on top.</p>
+                </div>
+                <div class="card">
+                    <h3>Row Key Design is Everything</h3>
+                    <p>Your row key determines data locality, scan efficiency, and hotspot risk. Spend time designing it based on access patterns.</p>
+                </div>
+                <div class="card">
+                    <h3>LSM Trees Trade Writes for Reads</h3>
+                    <p>Fast writes via append-only, but multiple rewrites during compaction. Great for write-heavy workloads with predictable read patterns.</p>
+                </div>
+                <div class="card">
+                    <h3>Bloom Filters are Essential</h3>
+                    <p>Without bloom filters, every read of a non-existent key would scan all SSTables. They provide a huge performance win for sparse data.</p>
+                </div>
+                <div class="card">
+                    <h3>Column Families for Locality</h3>
+                    <p>Group columns that are read together. This principle applies to any column-family database (HBase, Cassandra).</p>
+                </div>
+                <div class="card">
+                    <h3>Build on Strong Foundations</h3>
+                    <p>Bigtable is built on GFS (storage) and Chubby (coordination). Using proven components lets you focus on your unique value-add.</p>
+                </div>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="gfs.html" class="btn btn-secondary">&larr; Google File System</a>
+                <a href="../module-05.html" class="btn btn-primary">Back to Seminal Papers &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

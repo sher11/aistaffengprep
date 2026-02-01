@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Memcache - Scaling Memcached at Facebook - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Animated Header Styles */
+        .paper-hero {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #3d7ab3 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .paper-hero h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .paper-hero .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+
+        .paper-hero .meta {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Cache Animation Container */
+        .cache-animation {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100%;
+            opacity: 0.3;
+            overflow: hidden;
+        }
+
+        .cache-block {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            animation: cacheFlow 4s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .cache-block:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+        .cache-block:nth-child(2) { top: 40%; left: 30%; animation-delay: 0.5s; }
+        .cache-block:nth-child(3) { top: 60%; left: 50%; animation-delay: 1s; }
+        .cache-block:nth-child(4) { top: 30%; left: 70%; animation-delay: 1.5s; }
+        .cache-block:nth-child(5) { top: 70%; left: 20%; animation-delay: 2s; }
+        .cache-block:nth-child(6) { top: 50%; left: 80%; animation-delay: 2.5s; }
+
+        @keyframes cacheFlow {
+            0%, 100% { opacity: 0.2; transform: scale(0.9); }
+            50% { opacity: 0.6; transform: scale(1.1); background: rgba(16, 185, 129, 0.5); }
+        }
+
+        .cache-hit {
+            animation: cacheHit 2s ease-in-out infinite;
+        }
+
+        @keyframes cacheHit {
+            0%, 100% { background: rgba(255, 255, 255, 0.3); }
+            50% { background: rgba(16, 185, 129, 0.7); box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+        }
+
+        /* Arrow animation */
+        .data-arrow {
+            position: absolute;
+            width: 40px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+            animation: arrowMove 2s linear infinite;
+        }
+
+        .data-arrow:nth-child(7) { top: 35%; animation-delay: 0s; }
+        .data-arrow:nth-child(8) { top: 55%; animation-delay: 0.7s; }
+        .data-arrow:nth-child(9) { top: 75%; animation-delay: 1.4s; }
+
+        @keyframes arrowMove {
+            0% { left: 0%; opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+
+        /* Challenge cards with visual indicators */
+        .challenge-card {
+            border-left: 4px solid var(--warning-color);
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), transparent);
+        }
+
+        .solution-card {
+            border-left: 4px solid var(--secondary-color);
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), transparent);
+        }
+
+        /* Interview question styling */
+        .interview-questions {
+            background: var(--card-bg);
+            border: 2px solid var(--primary-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .interview-questions h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .interview-questions ol {
+            padding-left: 1.5rem;
+        }
+
+        .interview-questions li {
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        /* Key takeaway box */
+        .key-takeaway {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .key-takeaway h3 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .key-takeaway ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .key-takeaway li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .key-takeaway li::before {
+            content: ">";
+            position: absolute;
+            left: 0;
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Seminal Papers</div>
+                    <a href="memcache.html" class="sidebar-link active">Facebook Memcache</a>
+                    <a href="mapreduce.html" class="sidebar-link">Google MapReduce</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                    <a href="../module-05.html" class="sidebar-link">Seminal Papers Overview</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <!-- Animated Header -->
+            <div class="paper-hero">
+                <div class="cache-animation">
+                    <div class="cache-block cache-hit">HIT</div>
+                    <div class="cache-block">GET</div>
+                    <div class="cache-block cache-hit">HIT</div>
+                    <div class="cache-block">SET</div>
+                    <div class="cache-block cache-hit">HIT</div>
+                    <div class="cache-block">DEL</div>
+                    <div class="data-arrow"></div>
+                    <div class="data-arrow"></div>
+                    <div class="data-arrow"></div>
+                </div>
+                <h1>Facebook Memcache</h1>
+                <div class="subtitle">Scaling Memcached at Facebook</div>
+                <div class="meta">
+                    Paper: "Scaling Memcache at Facebook" (NSDI 2013) |
+                    Authors: Nishtala et al.
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>How Facebook scaled memcached to handle billions of requests per second</li>
+                    <li>The lease mechanism for preventing thundering herd</li>
+                    <li>Regional pool architecture and gutter pools for fault tolerance</li>
+                    <li>Cold cluster warmup strategies</li>
+                    <li>McRouter and intelligent request routing</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Problem Context</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Facebook's Caching Challenges at Scale</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>By 2013, Facebook faced unprecedented caching challenges:</p>
+
+                    <div class="card" style="background: var(--code-bg); color: #e2e8f0; margin: 1rem 0;">
+                        <strong>Scale Numbers:</strong><br>
+                        - Billions of requests per second<br>
+                        - Trillions of items cached<br>
+                        - Thousands of memcached servers<br>
+                        - Multiple geographic regions<br>
+                        - 99.9%+ cache hit rate required
+                    </div>
+
+                    <h4>Why Simple Memcached Wasn't Enough</h4>
+                    <ul>
+                        <li><strong>Single server limits:</strong> Individual memcached servers hit network bandwidth limits (~125K requests/second)</li>
+                        <li><strong>Coordination overhead:</strong> Maintaining consistency across thousands of servers</li>
+                        <li><strong>Failure scenarios:</strong> Server failures could cascade into database overload</li>
+                        <li><strong>Geographic distribution:</strong> Multiple data centers with data consistency needs</li>
+                    </ul>
+
+                    <h4>The Read-Heavy Workload</h4>
+                    <p>Facebook's workload is extremely read-heavy. A single user action (viewing News Feed) can trigger hundreds of cache lookups. The system needed to optimize for:</p>
+                    <ul>
+                        <li>Low latency (users expect instant responses)</li>
+                        <li>High throughput (billions of concurrent users)</li>
+                        <li>Fault tolerance (failures shouldn't impact user experience)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Architecture Overview</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Regional Pools and Clusters</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph Region1["Region 1 (Primary)"]
+        subgraph Cluster1A["Frontend Cluster A"]
+            WS1A[Web Servers]
+            MC1A[(Memcache Pool)]
+        end
+        subgraph Cluster1B["Frontend Cluster B"]
+            WS1B[Web Servers]
+            MC1B[(Memcache Pool)]
+        end
+        subgraph Regional1["Regional Pool"]
+            RP1[(Shared Data)]
+        end
+        DB1[(MySQL Primary)]
+    end
+
+    subgraph Region2["Region 2 (Replica)"]
+        subgraph Cluster2A["Frontend Cluster"]
+            WS2A[Web Servers]
+            MC2A[(Memcache Pool)]
+        end
+        DB2[(MySQL Replica)]
+    end
+
+    WS1A --> MC1A
+    WS1A --> RP1
+    WS1B --> MC1B
+    WS1B --> RP1
+    MC1A -.-> DB1
+    MC1B -.-> DB1
+
+    WS2A --> MC2A
+    MC2A -.-> DB2
+
+    DB1 -->|Replication| DB2
+    DB1 -->|Invalidations| MC2A
+                        </div>
+                    </div>
+
+                    <h4>Architecture Layers</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Layer</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Purpose</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Characteristics</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Frontend Cluster</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Per-cluster caching</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low latency, high hit rate, duplicated data</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Regional Pool</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Shared expensive data</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Infrequently accessed, expensive to compute</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Region</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Geographic locality</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Contains clusters + regional pool + storage</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Why Replicate Across Clusters?</h4>
+                    <p>Instead of one giant memcache cluster, Facebook uses multiple smaller clusters with replicated data. This approach provides:</p>
+                    <ul>
+                        <li><strong>Better hit rates:</strong> Hot data is local to each cluster</li>
+                        <li><strong>Lower latency:</strong> No cross-cluster network hops for common data</li>
+                        <li><strong>Fault isolation:</strong> Cluster failures don't affect other clusters</li>
+                        <li><strong>Independent scaling:</strong> Add clusters to handle more load</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>McRouter - Intelligent Request Routing</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph WebServer["Web Server"]
+        App[Application]
+        MCR[McRouter]
+    end
+
+    subgraph Pool1["Memcache Pool 1"]
+        MC1[Server 1]
+        MC2[Server 2]
+        MC3[Server 3]
+    end
+
+    subgraph Pool2["Regional Pool"]
+        RC1[Regional Server 1]
+        RC2[Regional Server 2]
+    end
+
+    App -->|memcache protocol| MCR
+    MCR -->|hash: user_123| MC2
+    MCR -->|hash: profile_456| MC1
+    MCR -->|expensive_query| RC1
+
+    style MCR fill:#2563eb,color:#fff
+                        </div>
+                    </div>
+
+                    <p><strong>McRouter</strong> is a memcache protocol router that sits between applications and memcache servers. It provides:</p>
+
+                    <ul>
+                        <li><strong>Connection pooling:</strong> Reduces the number of TCP connections to memcache servers</li>
+                        <li><strong>Consistent hashing:</strong> Routes requests to the correct server based on key</li>
+                        <li><strong>Automatic failover:</strong> Routes around failed servers</li>
+                        <li><strong>Request batching:</strong> Combines multiple gets into one request</li>
+                        <li><strong>Prefix-based routing:</strong> Different key prefixes can go to different pools</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+// McRouter configuration example (JSON)
+{
+  "pools": {
+    "frontend": {
+      "servers": ["mc1:11211", "mc2:11211", "mc3:11211"],
+      "protocol": "caret"
+    },
+    "regional": {
+      "servers": ["rc1:11211", "rc2:11211"],
+      "protocol": "caret"
+    }
+  },
+  "route": {
+    "type": "PrefixSelectorRoute",
+    "policies": {
+      "expensive:": "PoolRoute|regional",
+      "default": "PoolRoute|frontend"
+    }
+  }
+}
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Challenge 1: Thundering Herd</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>The Problem and Lease-Based Solution</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card challenge-card">
+                        <h4>The Thundering Herd Problem</h4>
+                        <p>When a popular cache key expires or is evicted, many concurrent requests all see the cache miss and simultaneously query the database, potentially overwhelming it.</p>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant C1 as Client 1
+    participant C2 as Client 2
+    participant C3 as Client 3
+    participant MC as Memcache
+    participant DB as Database
+
+    Note over C1,DB: Without Leases - Thundering Herd
+    C1->>MC: GET user:123
+    MC-->>C1: MISS
+    C2->>MC: GET user:123
+    MC-->>C2: MISS
+    C3->>MC: GET user:123
+    MC-->>C3: MISS
+    C1->>DB: SELECT * FROM users WHERE id=123
+    C2->>DB: SELECT * FROM users WHERE id=123
+    C3->>DB: SELECT * FROM users WHERE id=123
+    Note over DB: Database overwhelmed!
+                        </div>
+                    </div>
+
+                    <div class="card solution-card mt-3">
+                        <h4>The Lease Solution</h4>
+                        <p>Memcache returns a <strong>lease token</strong> on cache miss. Only the client with a valid lease can populate the cache. Other clients either wait or get a slightly stale value.</p>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant C1 as Client 1
+    participant C2 as Client 2
+    participant C3 as Client 3
+    participant MC as Memcache
+    participant DB as Database
+
+    Note over C1,DB: With Leases - Controlled Fill
+    C1->>MC: GET user:123
+    MC-->>C1: MISS + lease_token_abc
+    C2->>MC: GET user:123
+    MC-->>C2: MISS (no lease, wait/retry)
+    C3->>MC: GET user:123
+    MC-->>C3: MISS (no lease, wait/retry)
+    C1->>DB: SELECT * FROM users WHERE id=123
+    DB-->>C1: {user data}
+    C1->>MC: SET user:123 + lease_token_abc
+    MC-->>C1: OK
+    C2->>MC: GET user:123 (retry)
+    MC-->>C2: HIT {user data}
+    C3->>MC: GET user:123 (retry)
+    MC-->>C3: HIT {user data}
+    Note over DB: Only 1 DB query!
+                        </div>
+                    </div>
+
+                    <h4>Lease Implementation Details</h4>
+                    <ul>
+                        <li><strong>Lease duration:</strong> Typically 10 seconds (configurable)</li>
+                        <li><strong>Client behavior on no-lease:</strong> Wait briefly (e.g., 10ms) and retry</li>
+                        <li><strong>Lease validation:</strong> SET only succeeds if lease token matches</li>
+                        <li><strong>Stale value option:</strong> Return last known value while waiting for refresh</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+# Python - Lease-based cache fill pattern
+
+class LeaseCache:
+    def __init__(self, memcache_client, db):
+        self.mc = memcache_client
+        self.db = db
+        self.LEASE_WAIT_MS = 10
+        self.MAX_RETRIES = 5
+
+    def get_with_lease(self, key):
+        """Get value with lease-based thundering herd protection."""
+        for attempt in range(self.MAX_RETRIES):
+            # Try to get from cache
+            result = self.mc.gets(key)  # gets returns (value, cas_token)
+
+            if result is not None:
+                value, _ = result
+                if value is not None:
+                    return value  # Cache hit!
+
+            # Cache miss - try to acquire lease
+            lease_token = self.mc.add(f"{key}:lease", "1", expire=10)
+
+            if lease_token:
+                # We got the lease - fetch from DB and populate cache
+                try:
+                    value = self.db.fetch(key)
+                    self.mc.set(key, value, expire=3600)
+                    return value
+                finally:
+                    # Release lease
+                    self.mc.delete(f"{key}:lease")
+            else:
+                # Someone else has the lease - wait and retry
+                time.sleep(self.LEASE_WAIT_MS / 1000.0)
+
+        # Fallback: fetch from DB directly (shouldn't happen often)
+        return self.db.fetch(key)
+
+    def get_with_stale_value(self, key):
+        """Return stale value while refresh happens in background."""
+        result = self.mc.gets(key)
+
+        if result is not None:
+            value, cas_token = result
+            if value is not None:
+                # Check if value is fresh
+                if not self._is_stale(key):
+                    return value
+
+                # Value is stale - trigger background refresh
+                self._trigger_refresh(key)
+                return value  # Return stale value immediately
+
+        # No value at all - must wait for fresh fetch
+        return self.get_with_lease(key)
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Challenge 2: Stale Sets</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Race Conditions and Lease Invalidation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card challenge-card">
+                        <h4>The Stale Set Problem</h4>
+                        <p>A race condition where an outdated value gets written to cache after a newer invalidation has occurred.</p>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant C1 as Reader
+    participant C2 as Writer
+    participant MC as Memcache
+    participant DB as Database
+
+    Note over C1,DB: Stale Set Race Condition
+    C1->>MC: GET user:123
+    MC-->>C1: MISS (gets lease)
+    C1->>DB: SELECT (gets old_value)
+    Note over C2: Writer updates DB
+    C2->>DB: UPDATE user SET name='new'
+    C2->>MC: DELETE user:123
+    Note over C1: Reader still has old_value
+    C1->>MC: SET user:123 = old_value
+    Note over MC: Cache now has stale data!
+                        </div>
+                    </div>
+
+                    <div class="card solution-card mt-3">
+                        <h4>Solution: Lease Token Invalidation</h4>
+                        <p>When a DELETE occurs, it invalidates any outstanding lease tokens. The subsequent SET with an old lease token will be rejected.</p>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant C1 as Reader
+    participant C2 as Writer
+    participant MC as Memcache
+    participant DB as Database
+
+    Note over C1,DB: With Lease Invalidation
+    C1->>MC: GET user:123
+    MC-->>C1: MISS + lease_v1
+    C1->>DB: SELECT (gets old_value)
+    Note over C2: Writer updates DB
+    C2->>DB: UPDATE user SET name='new'
+    C2->>MC: DELETE user:123 (invalidates lease_v1)
+    C1->>MC: SET user:123 = old_value + lease_v1
+    MC-->>C1: REJECTED (lease invalid)
+    Note over MC: Cache remains empty - correct!
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <code>
+# Lease invalidation implementation concept
+
+class MemcacheWithLeases:
+    def __init__(self):
+        self.data = {}           # key -> value
+        self.leases = {}         # key -> (token, timestamp)
+        self.lease_counter = 0
+
+    def get(self, key):
+        """Return value and optionally a lease token."""
+        if key in self.data:
+            return self.data[key], None  # Hit, no lease needed
+
+        # Miss - issue a lease if none exists
+        if key not in self.leases or self._lease_expired(key):
+            self.lease_counter += 1
+            token = f"lease_{self.lease_counter}"
+            self.leases[key] = (token, time.time())
+            return None, token
+
+        # Lease already issued to someone else
+        return None, None
+
+    def set(self, key, value, lease_token=None):
+        """Set value, validating lease token if provided."""
+        if lease_token:
+            if key not in self.leases:
+                return False  # Lease was invalidated
+            current_token, _ = self.leases[key]
+            if current_token != lease_token:
+                return False  # Wrong token
+
+        self.data[key] = value
+        # Clear the lease after successful set
+        if key in self.leases:
+            del self.leases[key]
+        return True
+
+    def delete(self, key):
+        """Delete value AND invalidate any outstanding lease."""
+        if key in self.data:
+            del self.data[key]
+        if key in self.leases:
+            del self.leases[key]  # Critical: invalidate lease
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Challenge 3: Gutter Pools for Failure Handling</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Handling Server Failures Gracefully</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card challenge-card">
+                        <h4>The Problem</h4>
+                        <p>When a memcache server fails, all requests for keys that were on that server become cache misses, potentially overwhelming the database.</p>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph Normal["Normal Operation"]
+        C1[Client] -->|hash: user_123| MC2
+        MC1[(MC Server 1)]
+        MC2[(MC Server 2)]
+        MC3[(MC Server 3)]
+    end
+
+    subgraph Failure["Server 2 Failed"]
+        C2[Client] -->|hash: user_123| X
+        X[Server 2 Dead]
+        G[(Gutter Pool)]
+        C2 -.->|redirect| G
+    end
+
+    style X fill:#ef4444,color:#fff
+    style G fill:#10b981,color:#fff
+                        </div>
+                    </div>
+
+                    <div class="card solution-card mt-3">
+                        <h4>Solution: Gutter Pools</h4>
+                        <p>A small, dedicated pool of servers (typically 1% of total capacity) that handles requests when primary servers fail. Keys are stored with short TTLs to prevent inconsistency.</p>
+                    </div>
+
+                    <h4>Gutter Pool Behavior</h4>
+                    <ol>
+                        <li>Client tries to reach primary memcache server</li>
+                        <li>If server is unavailable, McRouter routes to gutter pool</li>
+                        <li>Gutter stores with short TTL (e.g., 10 seconds)</li>
+                        <li>Prevents thundering herd during failures</li>
+                        <li>When primary recovers, traffic shifts back automatically</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <code>
+# McRouter gutter configuration
+{
+  "pools": {
+    "main": {
+      "servers": ["mc1:11211", "mc2:11211", "mc3:11211"]
+    },
+    "gutter": {
+      "servers": ["gutter1:11211", "gutter2:11211"]
+    }
+  },
+  "route": {
+    "type": "FailoverWithExpiryRoute",
+    "normal": "PoolRoute|main",
+    "failover": "PoolRoute|gutter",
+    "failover_exptime": 10  // Short TTL in gutter
+  }
+}
+                        </code>
+                    </div>
+
+                    <h4>Why Short TTLs in Gutter?</h4>
+                    <ul>
+                        <li><strong>Consistency:</strong> Gutter data may become stale quickly during failures</li>
+                        <li><strong>Capacity:</strong> Gutter pool is much smaller than main pool</li>
+                        <li><strong>Recovery:</strong> Short TTLs ensure quick transition back to primary</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Challenge 4: Cold Cluster Warmup</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Bringing Up New Clusters Without Overloading Database</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card challenge-card">
+                        <h4>The Cold Start Problem</h4>
+                        <p>When a new cluster comes online (or after a full cache flush), 100% of requests are cache misses. This would overwhelm the database.</p>
+                    </div>
+
+                    <div class="card solution-card mt-3">
+                        <h4>Solution: Cold Cluster Warmup</h4>
+                        <p>The cold cluster fetches data from a "warm" cluster instead of hitting the database. Gradually shift traffic to allow organic cache population.</p>
+                    </div>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph ColdCluster["Cold Cluster (New)"]
+        CC[Cold Cache]
+    end
+
+    subgraph WarmCluster["Warm Cluster (Existing)"]
+        WC[Warm Cache]
+    end
+
+    subgraph Storage["Storage"]
+        DB[(Database)]
+    end
+
+    CC -->|1. Miss| WC
+    WC -->|2. Hit| CC
+    CC -.->|3. Miss in warm too| DB
+
+    style CC fill:#93c5fd
+    style WC fill:#10b981,color:#fff
+                        </div>
+                    </div>
+
+                    <h4>Warmup Process</h4>
+                    <ol>
+                        <li><strong>Phase 1:</strong> Cold cluster gets 0% traffic, fetches from warm cluster</li>
+                        <li><strong>Phase 2:</strong> Gradually increase traffic (1%, 5%, 10%, 25%, 50%, 100%)</li>
+                        <li><strong>Phase 3:</strong> Monitor cache hit rates and database load</li>
+                        <li><strong>Rollback:</strong> If problems occur, instantly shift traffic back</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <code>
+# Python - Cold cluster warmup logic
+
+class ColdClusterClient:
+    def __init__(self, cold_cluster, warm_cluster, db):
+        self.cold = cold_cluster
+        self.warm = warm_cluster
+        self.db = db
+        self.warmup_enabled = True
+
+    def get(self, key):
+        # Try cold cluster first
+        value = self.cold.get(key)
+        if value is not None:
+            return value
+
+        # Cold miss - try warm cluster during warmup
+        if self.warmup_enabled:
+            value = self.warm.get(key)
+            if value is not None:
+                # Populate cold cluster and return
+                self.cold.set(key, value)
+                return value
+
+        # Both miss (or warmup disabled) - fetch from DB
+        value = self.db.fetch(key)
+        if value is not None:
+            self.cold.set(key, value)
+            # Also populate warm cluster for consistency
+            if self.warmup_enabled:
+                self.warm.set(key, value)
+
+        return value
+
+    def set(self, key, value):
+        """Writes go to both clusters during warmup."""
+        self.cold.set(key, value)
+        if self.warmup_enabled:
+            self.warm.set(key, value)
+
+    def delete(self, key):
+        """Invalidations go to both clusters."""
+        self.cold.delete(key)
+        if self.warmup_enabled:
+            self.warm.delete(key)
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Challenge 5: Incast Congestion</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Network Bottlenecks from Parallel Fetches</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card challenge-card">
+                        <h4>The Problem</h4>
+                        <p>A single web server might issue hundreds of parallel memcache requests. When all responses arrive simultaneously, it causes network congestion at the web server's network interface.</p>
+                    </div>
+
+                    <h4>Solutions</h4>
+                    <ul>
+                        <li><strong>Sliding window:</strong> Limit outstanding requests (e.g., max 100 concurrent)</li>
+                        <li><strong>Request batching:</strong> Combine multiple GETs into one multi-get</li>
+                        <li><strong>UDP for gets:</strong> Reduces connection overhead for small responses</li>
+                        <li><strong>Congestion control:</strong> Back off when packet loss detected</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+# Sliding window for parallel requests
+import asyncio
+from collections import deque
+
+class WindowedMemcacheClient:
+    def __init__(self, mc_client, max_concurrent=100):
+        self.mc = mc_client
+        self.semaphore = asyncio.Semaphore(max_concurrent)
+        self.pending = deque()
+
+    async def get_many(self, keys):
+        """Fetch many keys with windowed concurrency."""
+        async def fetch_one(key):
+            async with self.semaphore:
+                return await self.mc.get(key)
+
+        tasks = [fetch_one(key) for key in keys]
+        results = await asyncio.gather(*tasks)
+        return dict(zip(keys, results))
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Cache Invalidation Patterns</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Keeping Cache Consistent with Database</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Facebook uses a <strong>delete-on-write</strong> strategy: when data changes, delete from cache rather than update.</p>
+
+                    <h4>Why Delete Instead of Update?</h4>
+                    <ul>
+                        <li><strong>Simpler:</strong> No need to serialize the new value in the write path</li>
+                        <li><strong>Idempotent:</strong> Multiple deletes are safe; multiple updates might race</li>
+                        <li><strong>Demand-driven:</strong> Only re-cache if data is actually needed</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph Write["Write Path"]
+        W1[1. Update DB] --> W2[2. Delete from Cache]
+    end
+
+    subgraph Read["Read Path"]
+        R1[1. Check Cache] --> R2{Hit?}
+        R2 -->|Yes| R3[Return]
+        R2 -->|No| R4[Fetch DB]
+        R4 --> R5[Set Cache]
+        R5 --> R3
+    end
+                        </div>
+                    </div>
+
+                    <h4>Cross-Region Invalidation</h4>
+                    <p>When the primary region updates data, it must invalidate caches in replica regions:</p>
+
+                    <div class="code-block">
+                        <code>
+# Invalidation via MySQL replication stream
+
+class ReplicationInvalidator:
+    """
+    Reads MySQL bin log and broadcasts invalidations.
+    Runs in each region to process local replica updates.
+    """
+    def __init__(self, binlog_reader, memcache_clusters):
+        self.binlog = binlog_reader
+        self.clusters = memcache_clusters
+
+    def process_events(self):
+        for event in self.binlog.read():
+            if event.type in ('UPDATE', 'DELETE', 'INSERT'):
+                keys = self.extract_cache_keys(event)
+                for key in keys:
+                    for cluster in self.clusters:
+                        cluster.delete(key)
+
+    def extract_cache_keys(self, event):
+        """Map database changes to cache keys."""
+        table = event.table
+        pk = event.primary_key
+
+        # Example: users table -> user:{id} cache key
+        if table == 'users':
+            return [f"user:{pk}"]
+        elif table == 'posts':
+            return [f"post:{pk}", f"user_posts:{event.data['user_id']}"]
+        # ... more mappings
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Real-World Impact</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Scale and Industry Influence</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card">
+                        <h4>Facebook's Scale (as of paper publication)</h4>
+                        <ul>
+                            <li>Billions of memcache requests per second</li>
+                            <li>Trillions of items stored</li>
+                            <li>Peak traffic: >100 million requests/second</li>
+                            <li>>99.9% cache hit rate</li>
+                            <li>p99 latency under 1ms within cluster</li>
+                        </ul>
+                    </div>
+
+                    <h4>Industry Adoption</h4>
+                    <ul>
+                        <li><strong>McRouter:</strong> Open-sourced, used by many companies for memcache routing</li>
+                        <li><strong>Lease pattern:</strong> Adopted widely for thundering herd prevention</li>
+                        <li><strong>Regional architecture:</strong> Influenced multi-datacenter cache designs</li>
+                        <li><strong>Gutter pools:</strong> Inspired similar failure handling in Redis Cluster</li>
+                    </ul>
+
+                    <h4>Lessons for System Design Interviews</h4>
+                    <ul>
+                        <li>Always consider the <strong>failure modes</strong> of your caching strategy</li>
+                        <li>Think about <strong>cold start</strong> scenarios for any stateful component</li>
+                        <li>Understand the tradeoffs between <strong>consistency and availability</strong></li>
+                        <li>Consider <strong>network topology</strong> at scale (incast, cross-region latency)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Interview Questions</h2>
+
+            <div class="interview-questions">
+                <h3>Common Interview Questions About Memcache</h3>
+                <ol>
+                    <li><strong>Explain the thundering herd problem and how you would solve it.</strong>
+                        <br><em>Key points: Multiple cache misses for same key, lease mechanism, only one client fetches from DB</em></li>
+
+                    <li><strong>How would you handle a memcache server failure without overwhelming your database?</strong>
+                        <br><em>Key points: Gutter pools, short TTLs, gradual traffic shifting, circuit breakers</em></li>
+
+                    <li><strong>You need to bring up a new cache cluster. How do you avoid a cold start problem?</strong>
+                        <br><em>Key points: Warm cluster fallback, gradual traffic increase, monitoring hit rates</em></li>
+
+                    <li><strong>How do you keep cache consistent with the database in a distributed system?</strong>
+                        <br><em>Key points: Delete-on-write, lease invalidation, replication-based invalidation</em></li>
+
+                    <li><strong>What's the difference between write-through and write-around caching? When would you use each?</strong>
+                        <br><em>Key points: Write-through updates cache immediately, write-around deletes and lets reads repopulate</em></li>
+
+                    <li><strong>How would you handle caching for a multi-region architecture?</strong>
+                        <br><em>Key points: Regional pools, cross-region invalidation, replica lag handling</em></li>
+
+                    <li><strong>What problems might occur when many parallel requests return simultaneously?</strong>
+                        <br><em>Key points: Incast congestion, sliding window, request batching, UDP optimization</em></li>
+                </ol>
+            </div>
+
+            <h2 class="mt-4">Key Takeaways</h2>
+
+            <div class="key-takeaway">
+                <h3>Remember These Concepts</h3>
+                <ul>
+                    <li><strong>Leases prevent thundering herd</strong> - Only one client populates cache on miss</li>
+                    <li><strong>Delete on write, not update</strong> - Simpler, idempotent, demand-driven</li>
+                    <li><strong>Gutter pools handle failures</strong> - Small dedicated pool with short TTLs</li>
+                    <li><strong>Cold cluster warmup</strong> - Fetch from warm cluster before hitting DB</li>
+                    <li><strong>Lease invalidation prevents stale sets</strong> - DELETE invalidates outstanding leases</li>
+                    <li><strong>Regional architecture</strong> - Trade memory for latency with per-cluster caches</li>
+                    <li><strong>McRouter for routing</strong> - Connection pooling, consistent hashing, failover</li>
+                </ul>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="../module-05.html" class="btn btn-secondary">&larr; Back to Seminal Papers</a>
+                <a href="mapreduce.html" class="btn btn-primary">Next: MapReduce &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

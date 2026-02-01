@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google File System (GFS) - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Animated Header for GFS */
+        .paper-hero {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 3rem 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .paper-hero h1 {
+            color: #fff;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .paper-hero .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .paper-hero .paper-meta {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Animated distributed storage visualization */
+        .storage-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            opacity: 0.3;
+        }
+
+        .chunk {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            border-radius: 4px;
+            animation: float-chunk 8s infinite ease-in-out;
+        }
+
+        .chunk:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; }
+        .chunk:nth-child(2) { left: 25%; top: 60%; animation-delay: 1s; }
+        .chunk:nth-child(3) { left: 40%; top: 30%; animation-delay: 2s; }
+        .chunk:nth-child(4) { left: 55%; top: 70%; animation-delay: 0.5s; }
+        .chunk:nth-child(5) { left: 70%; top: 40%; animation-delay: 1.5s; }
+        .chunk:nth-child(6) { left: 85%; top: 25%; animation-delay: 2.5s; }
+        .chunk:nth-child(7) { left: 15%; top: 80%; animation-delay: 3s; }
+        .chunk:nth-child(8) { left: 60%; top: 15%; animation-delay: 3.5s; }
+        .chunk:nth-child(9) { left: 80%; top: 65%; animation-delay: 4s; }
+
+        .chunk.replica {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        .data-flow {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #4ade80, transparent);
+            animation: data-pulse 3s infinite ease-in-out;
+        }
+
+        .data-flow:nth-child(10) { top: 35%; animation-delay: 0s; }
+        .data-flow:nth-child(11) { top: 55%; animation-delay: 1s; }
+        .data-flow:nth-child(12) { top: 75%; animation-delay: 2s; }
+
+        @keyframes float-chunk {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+            50% { transform: translateY(-15px) scale(1.1); opacity: 1; }
+        }
+
+        @keyframes data-pulse {
+            0%, 100% { opacity: 0; transform: scaleX(0); }
+            50% { opacity: 0.8; transform: scaleX(1); }
+        }
+
+        /* Key insight cards */
+        .insight-card {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-left: 4px solid #22c55e;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .insight-card.warning {
+            background: linear-gradient(135deg, #fefce8, #fef9c3);
+            border-left-color: #eab308;
+        }
+
+        .insight-card.info {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-left-color: #3b82f6;
+        }
+
+        /* Interview question styling */
+        .interview-question {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            margin: 1rem 0;
+        }
+
+        .interview-question .question {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .interview-question .answer {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        /* Timeline for paper context */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            margin: 1.5rem 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary-color);
+        }
+
+        .timeline-item .year {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Seminal Papers</div>
+                    <a href="gfs.html" class="sidebar-link active">Google File System</a>
+                    <a href="bigtable.html" class="sidebar-link">BigTable</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                    <a href="../module-05.html" class="sidebar-link">Seminal Papers Overview</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <!-- Animated Hero -->
+            <div class="paper-hero">
+                <div class="storage-animation">
+                    <div class="chunk"></div>
+                    <div class="chunk replica"></div>
+                    <div class="chunk"></div>
+                    <div class="chunk replica"></div>
+                    <div class="chunk"></div>
+                    <div class="chunk replica"></div>
+                    <div class="chunk"></div>
+                    <div class="chunk replica"></div>
+                    <div class="chunk"></div>
+                    <div class="data-flow"></div>
+                    <div class="data-flow"></div>
+                    <div class="data-flow"></div>
+                </div>
+                <h1>The Google File System</h1>
+                <p class="subtitle">The paper that launched the big data revolution</p>
+                <p class="paper-meta">Ghemawat, Gobioff, Leung | SOSP 2003 | ~15,000 citations</p>
+            </div>
+
+            <div class="card">
+                <h3>Why This Paper Matters</h3>
+                <p>GFS introduced design principles that became the foundation of modern distributed storage systems. Understanding GFS is essential because:</p>
+                <ul>
+                    <li>It directly inspired <strong>Hadoop HDFS</strong>, used by thousands of companies</li>
+                    <li>Its architecture influenced <strong>Azure Blob Storage</strong>, <strong>Amazon S3</strong> internals</li>
+                    <li>The paper's design decisions appear in almost every system design interview</li>
+                    <li>Google's internal successor <strong>Colossus</strong> still uses many GFS principles</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Problem Context: Why Google Needed GFS</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>The Challenge Google Faced (2003)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>By 2003, Google was crawling the entire web and running MapReduce jobs over petabytes of data. Existing file systems couldn't handle their needs:</p>
+
+                    <div class="card-grid">
+                        <div class="card">
+                            <h3>Scale Problem</h3>
+                            <p>Petabytes of data across thousands of commodity machines. Traditional NFS/AFS couldn't scale.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Failure is Normal</h3>
+                            <p>With 1000s of disks, failures happen daily. The system must auto-recover without human intervention.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Workload Pattern</h3>
+                            <p>Large sequential reads/writes (crawl data, logs). Small random reads are rare.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Append-Heavy</h3>
+                            <p>Files are rarely modified after creation. Data is appended (logs, crawl data).</p>
+                        </div>
+                    </div>
+
+                    <div class="insight-card">
+                        <strong>Key Design Philosophy:</strong> Instead of designing for general-purpose use, GFS was optimized for Google's specific workload. This is a critical lesson - understanding your workload allows you to make better trade-offs.
+                    </div>
+
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <span class="year">1998</span>
+                            <p>Google founded, initial storage on individual machines</p>
+                        </div>
+                        <div class="timeline-item">
+                            <span class="year">2002</span>
+                            <p>GFS development begins to handle growing data</p>
+                        </div>
+                        <div class="timeline-item">
+                            <span class="year">2003</span>
+                            <p>GFS paper published at SOSP</p>
+                        </div>
+                        <div class="timeline-item">
+                            <span class="year">2006</span>
+                            <p>Hadoop (open-source GFS) released</p>
+                        </div>
+                        <div class="timeline-item">
+                            <span class="year">2010+</span>
+                            <p>Google moves to Colossus (GFS successor)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Architecture Overview</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Single Master, Multiple Chunkservers</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>GFS uses a simple but effective architecture: one master for metadata, many chunkservers for data.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "GFS Architecture"
+        Client[GFS Client]
+
+        subgraph "Master"
+            M[Master Server]
+            ML[Operation Log]
+            MCP[Checkpoints]
+        end
+
+        subgraph "Chunkservers"
+            CS1[Chunkserver 1]
+            CS2[Chunkserver 2]
+            CS3[Chunkserver 3]
+            CS4[Chunkserver N...]
+        end
+
+        Client -->|"1. Filename, chunk index"| M
+        M -->|"2. Chunk handle, locations"| Client
+        Client -->|"3. Read/Write data"| CS1
+        Client -->|"3. Read/Write data"| CS2
+
+        M -.->|Heartbeat| CS1
+        M -.->|Heartbeat| CS2
+        M -.->|Heartbeat| CS3
+
+        M --> ML
+        ML --> MCP
+    end
+                        </div>
+                    </div>
+
+                    <h4>Component Responsibilities</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Component</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Role</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Data Stored</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Master</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Namespace management, chunk placement</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">File->chunk mapping, chunk locations, access control</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Chunkserver</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Store and serve chunk data</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">64MB chunks as Linux files, checksums</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Client</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Application interface, caching</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cached metadata (limited TTL)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="insight-card warning">
+                        <strong>Why Single Master?</strong> Google chose simplicity over distributed metadata. A single master greatly simplifies chunk placement and garbage collection. The trade-off is that the master is a potential bottleneck and SPOF - but this is mitigated by keeping data operations off the master.
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Chunk Design</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>64MB Chunks with 3x Replication</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Files are divided into fixed-size chunks, each stored on multiple chunkservers.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph "File: /logs/webserver.log"
+        F[2.5 GB File]
+    end
+
+    subgraph "Chunks (64MB each)"
+        C1[Chunk 1]
+        C2[Chunk 2]
+        C3[Chunk 3]
+        C4[...]
+        C40[Chunk 40]
+    end
+
+    subgraph "Replicas of Chunk 1"
+        R1A[Replica A<br>Rack 1]
+        R1B[Replica B<br>Rack 2]
+        R1C[Replica C<br>Rack 3]
+    end
+
+    F --> C1 & C2 & C3 & C4 & C40
+    C1 --> R1A & R1B & R1C
+                        </div>
+                    </div>
+
+                    <h4>Why 64MB Chunks?</h4>
+                    <div class="card-grid">
+                        <div class="card">
+                            <h3>Reduced Metadata</h3>
+                            <p>Larger chunks = fewer chunks = less metadata on master. A 1PB cluster has ~16M chunks instead of 16B with 64KB chunks.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Network Efficiency</h3>
+                            <p>Clients work with large contiguous data. One TCP connection can transfer the entire chunk, amortizing overhead.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Matches Workload</h3>
+                            <p>Google's workloads (MapReduce, crawl processing) read large sequential blocks. Small chunks would add unnecessary overhead.</p>
+                        </div>
+                    </div>
+
+                    <div class="insight-card warning">
+                        <strong>Downside:</strong> Small files become "hot spots" - a single chunk is accessed by many clients. GFS mitigates this by increasing replication factor for hot files.
+                    </div>
+
+                    <h4>Chunk Placement Strategy</h4>
+                    <div class="code-block">
+                        <code>
+# Pseudocode: GFS Chunk Placement Algorithm
+
+def place_chunk_replicas(chunk, replication_factor=3):
+    """
+    Place chunk replicas to maximize:
+    1. Availability (spread across failure domains)
+    2. Network bandwidth (spread across racks)
+    3. Disk utilization (balance across servers)
+    """
+    selected_servers = []
+    available_racks = get_all_racks()
+
+    for i in range(replication_factor):
+        # Rule 1: Choose different rack than existing replicas
+        candidate_racks = [r for r in available_racks
+                         if r not in get_racks(selected_servers)]
+        if not candidate_racks:
+            candidate_racks = available_racks
+
+        # Rule 2: Within rack, choose server with:
+        #   - Below-average disk usage
+        #   - Recent creation rate below threshold (spread load)
+        target_rack = random.choice(candidate_racks)
+        server = select_server_in_rack(
+            target_rack,
+            min_free_space=chunk.size * 2,
+            max_recent_creations=100  # avoid overloading
+        )
+
+        selected_servers.append(server)
+
+    return selected_servers
+
+# Real numbers from the paper:
+# - Typical cluster: 1000+ chunkservers
+# - Each chunkserver: multiple 300GB-600GB disks
+# - Default replication: 3
+# - Hot files: up to 10+ replicas
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Mutation Operations</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Leases and Mutation Order</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>GFS uses <strong>leases</strong> to maintain consistent mutation order across replicas. The master grants a lease to one replica (the "primary"), which then orders all mutations.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant M as Master
+    participant P as Primary Chunkserver
+    participant S1 as Secondary 1
+    participant S2 as Secondary 2
+
+    C->>M: 1. Request lease holder for chunk
+    M->>C: 2. Primary identity + secondary locations
+
+    Note over C,S2: Data flow (pipelined)
+    C->>P: 3a. Push data to primary
+    P->>S1: 3b. Forward to secondary 1
+    S1->>S2: 3c. Forward to secondary 2
+
+    C->>P: 4. Write request
+    P->>P: 5. Assign serial number, apply locally
+    P->>S1: 6. Forward write order
+    P->>S2: 6. Forward write order
+    S1->>P: 7. Ack
+    S2->>P: 7. Ack
+    P->>C: 8. Success (or error)
+                        </div>
+                    </div>
+
+                    <h4>Why Leases?</h4>
+                    <ul>
+                        <li><strong>Minimize master involvement:</strong> Master only grants leases, doesn't coordinate writes</li>
+                        <li><strong>Automatic expiration:</strong> 60-second leases auto-expire if chunkserver fails</li>
+                        <li><strong>Consistent ordering:</strong> Primary serializes all mutations to the chunk</li>
+                    </ul>
+
+                    <h4>Data Flow vs Control Flow</h4>
+                    <div class="insight-card info">
+                        <strong>Key Insight:</strong> GFS separates data flow from control flow. Data is pushed linearly through a chain of chunkservers (pipelined), while control messages go directly to all replicas. This maximizes network throughput by using the full bandwidth of each machine.
+                    </div>
+
+                    <div class="code-block">
+                        <code>
+# Data pipelining explained
+
+# Without pipelining (parallel push):
+# Client sends 64MB to each of 3 replicas = 192MB upload
+# Time = 64MB / client_upload_bandwidth
+
+# With pipelining (chain):
+# Client -> Primary -> Secondary1 -> Secondary2
+# Each machine forwards while receiving
+# Time = 64MB / min(upload, download) + small latency overhead
+
+# Example with 100 Mbps links:
+# Parallel: 64MB / 12.5 MB/s = 5.12 seconds
+# Pipelined: 64MB / 12.5 MB/s + ~0.5s overhead = ~5.6 seconds
+# BUT: pipelining uses full duplex, parallel requires 3x client bandwidth
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Record Append Operation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Atomic Append - GFS's Killer Feature</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>GFS introduced <strong>record append</strong> - an atomic operation that appends data to a file without the client specifying the offset. The system chooses the offset and guarantees atomicity.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Multiple Writers (MapReduce tasks)"
+        W1[Writer 1]
+        W2[Writer 2]
+        W3[Writer 3]
+    end
+
+    subgraph "GFS"
+        P[Primary<br>Assigns Offsets]
+
+        subgraph "Log File"
+            R1[Record from W2]
+            R2[Record from W1]
+            R3[Record from W3]
+            R4[Record from W1]
+            R5[...]
+        end
+    end
+
+    W1 -->|record append| P
+    W2 -->|record append| P
+    W3 -->|record append| P
+    P --> R1 & R2 & R3 & R4
+                        </div>
+                    </div>
+
+                    <h4>Why Record Append?</h4>
+                    <p>Consider writing logs from 1000 MapReduce workers to a single file:</p>
+                    <ul>
+                        <li><strong>Traditional write:</strong> Requires distributed locking, complex coordination</li>
+                        <li><strong>Record append:</strong> Workers just send data, GFS handles ordering</li>
+                    </ul>
+
+                    <h4>Semantics: At-Least-Once with Duplicates</h4>
+                    <div class="insight-card warning">
+                        <strong>Important Trade-off:</strong> Record append provides "at-least-once" semantics. If secondaries fail, the primary may retry, causing duplicates. Applications must handle duplicates (usually via unique record IDs and deduplication during reading).
+                    </div>
+
+                    <div class="code-block">
+                        <code>
+# Record Append Implementation Sketch
+
+class RecordAppend:
+    MAX_APPEND_SIZE = 16 * 1024 * 1024  # 16MB max per append
+
+    def append(self, chunk, data):
+        """
+        Atomically append data to chunk.
+        Returns: offset where data was written
+        """
+        if len(data) > self.MAX_APPEND_SIZE:
+            raise Error("Record too large")
+
+        # Check if data fits in current chunk
+        if chunk.current_offset + len(data) > CHUNK_SIZE:
+            # Pad chunk, tell client to retry on next chunk
+            chunk.pad_to_end()
+            return RETRY_ON_NEXT_CHUNK
+
+        # Assign offset
+        offset = chunk.current_offset
+
+        # Write to all replicas
+        success = self.replicate_to_all(chunk, offset, data)
+
+        if not success:
+            # Some replica failed - data may be partially written
+            # Return error, client will retry
+            # This may cause duplicates!
+            return ERROR_RETRY
+
+        chunk.current_offset += len(data)
+        return offset
+
+# Client-side duplicate handling
+def read_log_file(gfs_file):
+    """Read log file, handling GFS duplicates."""
+    seen_ids = set()
+    for record in gfs_file.read_records():
+        if record.id in seen_ids:
+            continue  # Skip duplicate
+        seen_ids.add(record.id)
+        yield record
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Snapshot Mechanism</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Copy-on-Write Snapshots</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>GFS supports instant snapshots using copy-on-write. This is crucial for checkpointing long-running computations.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Before Snapshot"
+        F1[/input/data]
+        C1[Chunk A]
+        C2[Chunk B]
+        F1 --> C1 & C2
+    end
+
+    subgraph "After Snapshot (instant)"
+        F2[/input/data]
+        F3[/snapshots/data_v1]
+        C3[Chunk A<br>ref=2]
+        C4[Chunk B<br>ref=2]
+        F2 --> C3 & C4
+        F3 --> C3 & C4
+    end
+
+    subgraph "After Write to Original"
+        F4[/input/data]
+        F5[/snapshots/data_v1]
+        C5[Chunk A'<br>new copy]
+        C6[Chunk B<br>ref=1]
+        C7[Chunk A<br>ref=1]
+        F4 --> C5 & C6
+        F5 --> C7 & C6
+    end
+                        </div>
+                    </div>
+
+                    <h4>Snapshot Steps</h4>
+                    <ol>
+                        <li>Master revokes all leases on chunks being snapshotted</li>
+                        <li>Master duplicates metadata, incrementing reference counts</li>
+                        <li>On first write to a snapshotted chunk, chunkserver copies locally first (COW)</li>
+                    </ol>
+
+                    <div class="code-block">
+                        <code>
+# Snapshot Implementation
+
+def snapshot(source_path, dest_path):
+    """Create instant snapshot using copy-on-write."""
+
+    # Step 1: Revoke leases (ensures no writes in progress)
+    for chunk in get_chunks(source_path):
+        revoke_lease(chunk)
+
+    # Step 2: Duplicate metadata only (instant!)
+    source_metadata = get_metadata(source_path)
+    create_metadata(dest_path, copy_of=source_metadata)
+
+    # Step 3: Increment reference count on chunks
+    for chunk in get_chunks(source_path):
+        chunk.ref_count += 1
+
+    # Done! No data was copied yet
+
+def handle_write(chunk, data):
+    """Handle write to potentially snapshotted chunk."""
+    if chunk.ref_count > 1:
+        # Copy-on-write: create local copy first
+        new_chunk = local_copy(chunk)
+        chunk.ref_count -= 1
+        chunk = new_chunk
+
+    # Now safe to write
+    write_data(chunk, data)
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Master Operations</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Namespace Management and Locking</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>The master manages the namespace (file/directory structure) and uses per-file read-write locks for concurrent operations.</p>
+
+                    <div class="code-block">
+                        <code>
+# Namespace Locking Example
+
+# Operation: Create file /home/user/foo/bar
+
+# Required locks (in order):
+# 1. Read lock on /home
+# 2. Read lock on /home/user
+# 3. Read lock on /home/user/foo
+# 4. Write lock on /home/user/foo/bar
+
+# This allows:
+# - Concurrent creates in same directory (/home/user/foo/bar1, /home/user/foo/bar2)
+# - Concurrent reads of ancestor directories
+
+# But prevents:
+# - Deleting /home/user while creating /home/user/foo/bar
+# - Snapshotting /home/user/foo while creating children
+                        </code>
+                    </div>
+
+                    <h4>Garbage Collection</h4>
+                    <p>GFS uses lazy garbage collection instead of immediate deletion:</p>
+                    <ol>
+                        <li>Delete operation renames file to hidden name with deletion timestamp</li>
+                        <li>Master's background scan removes hidden files older than 3 days</li>
+                        <li>Heartbeat messages tell chunkservers to delete orphan chunks</li>
+                    </ol>
+
+                    <div class="insight-card">
+                        <strong>Why Lazy GC?</strong>
+                        <ul>
+                            <li>Simple and reliable (distributed deletion is complex)</li>
+                            <li>Undelete capability within the grace period</li>
+                            <li>Batches deletions during low-activity periods</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Fault Tolerance</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Handling Failures at Scale</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Failure Type</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Detection</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Recovery</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Chunkserver crash</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Missing heartbeat (seconds)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Re-replicate under-replicated chunks</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Disk corruption</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Checksum verification on read</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Read from another replica, re-replicate</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Master crash</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Monitoring system</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Restart from operation log + checkpoints</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Network partition</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Lease expiration</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Stale primary loses lease, client retries</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Checksum Verification</h4>
+                    <div class="code-block">
+                        <code>
+# Each 64KB block has a 32-bit checksum
+# 64MB chunk = 1024 checksums per chunk
+
+BLOCK_SIZE = 64 * 1024  # 64KB
+
+def read_chunk(chunk_handle, offset, length):
+    """Read with checksum verification."""
+    data = []
+
+    for block_num in range(offset // BLOCK_SIZE,
+                          (offset + length) // BLOCK_SIZE + 1):
+        block_data = read_block(chunk_handle, block_num)
+        expected_checksum = read_checksum(chunk_handle, block_num)
+
+        if crc32(block_data) != expected_checksum:
+            # Corruption detected!
+            report_corruption(chunk_handle, block_num)
+            # Client will read from another replica
+            raise CorruptionError()
+
+        data.append(block_data)
+
+    return join(data)[offset % BLOCK_SIZE:offset % BLOCK_SIZE + length]
+                        </code>
+                    </div>
+
+                    <div class="insight-card">
+                        <strong>Real Numbers from the Paper:</strong>
+                        <ul>
+                            <li>Cluster A: 342 chunkservers, 72TB used, ~735 concurrent clients</li>
+                            <li>Cluster B: 227 chunkservers, 737TB used, ~�concurrent clients</li>
+                            <li>Typical master: 50-100MB memory for metadata</li>
+                            <li>Chunk creation rate: ~500 chunks/second peak</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Real-World Impact</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>From GFS to Modern Systems</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TD
+    GFS[Google File System<br>2003]
+
+    GFS --> HDFS[Hadoop HDFS<br>2006]
+    GFS --> Colossus[Google Colossus<br>2010]
+
+    HDFS --> S3[AWS S3 internals]
+    HDFS --> Azure[Azure Data Lake]
+    HDFS --> Spark[Apache Spark]
+
+    Colossus --> Spanner[Google Spanner]
+    Colossus --> BigQuery[BigQuery]
+
+    style GFS fill:#22c55e,color:#fff
+    style HDFS fill:#3b82f6,color:#fff
+    style Colossus fill:#8b5cf6,color:#fff
+                        </div>
+                    </div>
+
+                    <h4>Hadoop HDFS (Open-Source GFS)</h4>
+                    <ul>
+                        <li>Nearly identical architecture: NameNode = Master, DataNode = Chunkserver</li>
+                        <li>128MB default block size (vs 64MB in GFS)</li>
+                        <li>Powers thousands of big data clusters worldwide</li>
+                        <li>Foundation for Spark, Hive, HBase ecosystems</li>
+                    </ul>
+
+                    <h4>Google Colossus (GFS Successor)</h4>
+                    <ul>
+                        <li>Removes single-master bottleneck with distributed metadata</li>
+                        <li>Smaller chunks (1MB) for better latency</li>
+                        <li>Reed-Solomon encoding option (1.5x storage vs 3x)</li>
+                        <li>Underlies BigQuery, Cloud Storage, Spanner</li>
+                    </ul>
+
+                    <div class="insight-card warning">
+                        <strong>GFS Limitations that Colossus Fixed:</strong>
+                        <ul>
+                            <li>Master memory limits metadata size (~100M files)</li>
+                            <li>Single master is SPOF requiring manual failover</li>
+                            <li>Large chunks cause latency for small reads</li>
+                            <li>3x replication wastes storage at exabyte scale</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Interview Questions</h2>
+
+            <div class="interview-question">
+                <div class="question">Q1: Why did GFS choose a single master design instead of distributed metadata?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> Simplicity and the fact that the master is not on the data path. The master only handles metadata operations (~100 bytes per file), while actual data flows directly between clients and chunkservers. This makes the master's job tractable even for petabyte clusters. The trade-offs (SPOF, memory limits) were acceptable for Google's 2003 needs and were later addressed in Colossus.
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q2: How does GFS handle concurrent appends from multiple clients to the same file?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> GFS uses the record append operation. The primary chunkserver assigns serial numbers to incoming appends, ensuring a total ordering. Multiple clients can append concurrently without coordination - the system guarantees each record appears atomically at least once. Applications must handle potential duplicates using unique record IDs.
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q3: What happens when a chunkserver fails during a write operation?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> The write operation returns an error to the client, leaving the chunk in an inconsistent state (some replicas have the data, others don't). The client retries the entire operation. Eventually, chunk version numbers and checksums will identify stale replicas, which are then garbage collected. This approach is simpler than distributed transactions and acceptable for Google's workloads.
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q4: How does the lease mechanism prevent split-brain scenarios?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> Leases have a 60-second timeout. If a primary becomes partitioned from the master, its lease will expire and it will stop accepting mutations. The master won't grant a new lease until the old one expires. This provides a bounded window for potential inconsistency without requiring complex distributed consensus for every write.
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q5: Why does GFS use lazy garbage collection instead of immediate deletion?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> Three reasons: (1) Reliability - distributed deletion is complex and error-prone; (2) Undelete - files can be recovered within the grace period; (3) Efficiency - deletions are batched and performed during low-activity periods. The trade-off is temporary storage overhead, which is acceptable given the large storage capacity.
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q6: How would you modify GFS for a read-heavy, latency-sensitive workload?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> Several modifications: (1) Smaller chunks to reduce read amplification; (2) Caching layer (memcached) in front of chunkservers; (3) Locality-aware scheduling to read from nearest replica; (4) Read-ahead prefetching for sequential access patterns; (5) Consider SSD storage for hot data. These are essentially what Colossus implemented.
+                </div>
+            </div>
+
+            <div class="interview-question">
+                <div class="question">Q7: What's the consistency model of GFS? How does it compare to POSIX?</div>
+                <div class="answer">
+                    <strong>Answer:</strong> GFS provides relaxed consistency. After a mutation, the file region is "defined" (all replicas identical) if successful, or "undefined but consistent" if concurrent writes occur. Record append guarantees data appears at least once atomically. This is weaker than POSIX (which guarantees immediate visibility of writes) but enables better performance and availability for Google's append-heavy workloads.
+                </div>
+            </div>
+
+            <h2 class="mt-4">Key Takeaways</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Design for Your Workload</h3>
+                    <p>GFS was optimized for large sequential reads/writes and appends. Understanding your workload enables powerful optimizations that general-purpose systems can't provide.</p>
+                </div>
+                <div class="card">
+                    <h3>Embrace Failure</h3>
+                    <p>At scale, failure is the norm. Design for automatic recovery rather than prevention. GFS treats disk failures as routine events.</p>
+                </div>
+                <div class="card">
+                    <h3>Simple Can Scale</h3>
+                    <p>The single-master design is "simple" but worked for years at Google. Don't over-engineer; you can add complexity when you actually need it.</p>
+                </div>
+                <div class="card">
+                    <h3>Separate Data and Control</h3>
+                    <p>Keeping data operations off the master enables scaling. This pattern appears everywhere: Kafka, HDFS, most distributed databases.</p>
+                </div>
+                <div class="card">
+                    <h3>Relax Consistency Carefully</h3>
+                    <p>GFS trades strong consistency for availability and performance. The key is understanding exactly what guarantees you provide and ensuring applications can handle it.</p>
+                </div>
+                <div class="card">
+                    <h3>Leases for Coordination</h3>
+                    <p>Time-bounded leases are simpler than distributed consensus for many coordination tasks. They appear in GFS, Chubby, HDFS, and many other systems.</p>
+                </div>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="../module-05.html" class="btn btn-secondary">&larr; Seminal Papers</a>
+                <a href="bigtable.html" class="btn btn-primary">Next: BigTable &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>
