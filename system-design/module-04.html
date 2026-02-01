@@ -193,6 +193,443 @@ flowchart TB
                     <li><strong>At-most-once:</strong> May lose messages</li>
                     <li><strong>Exactly-once:</strong> With idempotent producers + transactions</li>
                 </ul>
+
+                <h4 class="mt-3">Kafka Producer - Production Configuration</h4>
+                <div class="code-block">
+                    <code>
+# Python - Kafka Producer with reliability settings
+from confluent_kafka import Producer
+import json
+import logging
+
+class ReliableKafkaProducer:
+    def __init__(self, bootstrap_servers: str):
+        self.producer = Producer({
+            'bootstrap.servers': bootstrap_servers,
+
+            # Reliability settings
+            'acks': 'all',  # Wait for all replicas to acknowledge
+            'enable.idempotence': True,  # Prevent duplicates on retry
+            'max.in.flight.requests.per.connection': 5,  # With idempotence
+
+            # Retry settings
+            'retries': 2147483647,  # Retry indefinitely
+            'retry.backoff.ms': 100,
+            'delivery.timeout.ms': 120000,  # 2 minute timeout
+
+            # Batching for throughput
+            'batch.size': 16384,  # 16KB batches
+            'linger.ms': 5,  # Wait up to 5ms to fill batch
+
+            # Compression
+            'compression.type': 'snappy',
+
+            # Monitoring
+            'statistics.interval.ms': 60000,
+        })
+
+    def send(self, topic: str, key: str, value: dict) -> None:
+        """Send message with delivery confirmation."""
+        try:
+            self.producer.produce(
+                topic=topic,
+                key=key.encode('utf-8'),
+                value=json.dumps(value).encode('utf-8'),
+                callback=self._delivery_callback
+            )
+            # Flush ensures message is sent (blocking)
+            # In production, call poll() periodically instead
+            self.producer.poll(0)
+        except BufferError:
+            logging.error("Producer queue full, waiting...")
+            self.producer.poll(1)  # Wait for space
+            self.send(topic, key, value)  # Retry
+
+    def _delivery_callback(self, err, msg):
+        if err:
+            logging.error(f"Delivery failed: {err}")
+            # In production: implement dead letter queue
+        else:
+            logging.debug(f"Delivered to {msg.topic()}[{msg.partition()}]")
+
+    def flush(self):
+        """Wait for all messages to be delivered."""
+        self.producer.flush()
+
+
+# Usage
+producer = ReliableKafkaProducer('kafka1:9092,kafka2:9092,kafka3:9092')
+producer.send(
+    topic='orders',
+    key='order-12345',
+    value={'order_id': '12345', 'amount': 99.99, 'status': 'created'}
+)
+                    </code>
+                </div>
+
+                <h4 class="mt-3">Kafka Consumer - At-Least-Once Processing</h4>
+                <div class="code-block">
+                    <code>
+# Python - Kafka Consumer with manual commit
+from confluent_kafka import Consumer, KafkaError
+import json
+import logging
+
+class ReliableKafkaConsumer:
+    def __init__(self, bootstrap_servers: str, group_id: str, topics: list):
+        self.consumer = Consumer({
+            'bootstrap.servers': bootstrap_servers,
+            'group.id': group_id,
+
+            # Manual offset management for at-least-once
+            'enable.auto.commit': False,
+            'auto.offset.reset': 'earliest',
+
+            # Consumer settings
+            'max.poll.interval.ms': 300000,  # 5 min max processing time
+            'session.timeout.ms': 45000,
+            'heartbeat.interval.ms': 15000,
+
+            # Fetch settings
+            'fetch.min.bytes': 1,
+            'fetch.max.wait.ms': 500,
+            'max.partition.fetch.bytes': 1048576,  # 1MB
+        })
+        self.consumer.subscribe(topics)
+        self.running = True
+
+    def process_messages(self, handler):
+        """
+        Process messages with at-least-once delivery.
+        Handler must be idempotent (safe to process duplicates).
+        """
+        while self.running:
+            msg = self.consumer.poll(timeout=1.0)
+
+            if msg is None:
+                continue
+
+            if msg.error():
+                if msg.error().code() == KafkaError._PARTITION_EOF:
+                    continue
+                else:
+                    logging.error(f"Consumer error: {msg.error()}")
+                    continue
+
+            try:
+                # Parse message
+                key = msg.key().decode('utf-8') if msg.key() else None
+                value = json.loads(msg.value().decode('utf-8'))
+
+                # Process (must be idempotent!)
+                handler(key, value)
+
+                # Commit AFTER successful processing
+                self.consumer.commit(msg)
+                logging.debug(f"Committed offset {msg.offset()}")
+
+            except json.JSONDecodeError as e:
+                logging.error(f"Invalid JSON: {e}")
+                # Commit to skip bad message (or send to DLQ)
+                self.consumer.commit(msg)
+
+            except Exception as e:
+                logging.error(f"Processing failed: {e}")
+                # DON'T commit - message will be redelivered
+                # Implement backoff to prevent tight retry loop
+
+    def close(self):
+        self.running = False
+        self.consumer.close()
+
+
+# Usage with idempotent handler
+def process_order(key: str, value: dict):
+    order_id = value['order_id']
+
+    # Idempotency check - have we processed this?
+    if db.exists(f"processed:{order_id}"):
+        logging.info(f"Order {order_id} already processed, skipping")
+        return
+
+    # Process the order
+    db.save_order(value)
+
+    # Mark as processed
+    db.set(f"processed:{order_id}", "1", ttl=86400)
+
+
+consumer = ReliableKafkaConsumer(
+    bootstrap_servers='kafka1:9092,kafka2:9092',
+    group_id='order-processor',
+    topics=['orders']
+)
+consumer.process_messages(process_order)
+                    </code>
+                </div>
+
+                <h4 class="mt-3">Go Implementation - High Performance Consumer</h4>
+                <div class="code-block">
+                    <code>
+// Go - High-throughput Kafka consumer with worker pool
+
+package main
+
+import (
+    "context"
+    "encoding/json"
+    "log"
+    "sync"
+
+    "github.com/segmentio/kafka-go"
+)
+
+type Message struct {
+    OrderID string  `json:"order_id"`
+    Amount  float64 `json:"amount"`
+}
+
+type KafkaConsumer struct {
+    reader      *kafka.Reader
+    workerCount int
+    messages    chan kafka.Message
+    wg          sync.WaitGroup
+}
+
+func NewKafkaConsumer(brokers []string, topic, groupID string, workers int) *KafkaConsumer {
+    reader := kafka.NewReader(kafka.ReaderConfig{
+        Brokers:        brokers,
+        Topic:          topic,
+        GroupID:        groupID,
+        MinBytes:       1,
+        MaxBytes:       10e6, // 10MB
+        CommitInterval: 0,    // Manual commit
+    })
+
+    return &KafkaConsumer{
+        reader:      reader,
+        workerCount: workers,
+        messages:    make(chan kafka.Message, workers*2),
+    }
+}
+
+func (c *KafkaConsumer) Start(ctx context.Context, handler func(Message) error) {
+    // Start worker pool
+    for i := 0; i < c.workerCount; i++ {
+        c.wg.Add(1)
+        go c.worker(ctx, handler)
+    }
+
+    // Read messages
+    for {
+        select {
+        case <-ctx.Done():
+            close(c.messages)
+            c.wg.Wait()
+            return
+        default:
+            msg, err := c.reader.FetchMessage(ctx)
+            if err != nil {
+                log.Printf("Fetch error: %v", err)
+                continue
+            }
+            c.messages <- msg
+        }
+    }
+}
+
+func (c *KafkaConsumer) worker(ctx context.Context, handler func(Message) error) {
+    defer c.wg.Done()
+
+    for msg := range c.messages {
+        var m Message
+        if err := json.Unmarshal(msg.Value, &m); err != nil {
+            log.Printf("Unmarshal error: %v", err)
+            c.commitMessage(ctx, msg) // Skip bad messages
+            continue
+        }
+
+        if err := handler(m); err != nil {
+            log.Printf("Handler error for %s: %v", m.OrderID, err)
+            // Don't commit - will retry on restart
+            continue
+        }
+
+        c.commitMessage(ctx, msg)
+    }
+}
+
+func (c *KafkaConsumer) commitMessage(ctx context.Context, msg kafka.Message) {
+    if err := c.reader.CommitMessages(ctx, msg); err != nil {
+        log.Printf("Commit error: %v", err)
+    }
+}
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Failure Scenarios</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Kafka Broker Failures</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+sequenceDiagram
+    participant P as Producer
+    participant B1 as Broker 1 (Leader)
+    participant B2 as Broker 2 (Follower)
+    participant B3 as Broker 3 (Follower)
+    participant ZK as Zookeeper
+
+    P->>B1: Write message
+    B1->>B2: Replicate
+    B1->>B3: Replicate
+    B2-->>B1: ACK
+    B3-->>B1: ACK
+    B1-->>P: ACK (acks=all)
+
+    Note over B1: Broker 1 CRASHES
+
+    B2->>ZK: Heartbeat missing
+    ZK->>B2: You are new leader
+    Note over B2: Broker 2 becomes leader
+    P->>B2: Reconnect, continue writing
+                    </div>
+                </div>
+
+                <h4>Recovery Configuration</h4>
+                <div class="code-block">
+                    <code>
+# Kafka broker configuration for fast failover
+
+# Replication factor (survive N-1 broker failures)
+default.replication.factor=3
+
+# Minimum replicas that must ACK before write is committed
+min.insync.replicas=2
+
+# With acks=all and min.insync.replicas=2:
+# - Can survive 1 broker failure (2 of 3 still available)
+# - Can't write if 2 brokers fail (only 1 < min.insync)
+
+# Leader election settings
+unclean.leader.election.enable=false  # Don't elect out-of-sync replicas
+
+# Controller failover (if controller broker dies)
+controller.socket.timeout.ms=30000
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Consumer Failures and Rebalancing</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>What Happens When a Consumer Dies</h4>
+                <ol>
+                    <li>Consumer stops sending heartbeats</li>
+                    <li>After session.timeout.ms, broker marks consumer as dead</li>
+                    <li>Consumer group coordinator triggers rebalance</li>
+                    <li>Partitions reassigned to remaining consumers</li>
+                    <li>Processing resumes from last committed offset</li>
+                </ol>
+
+                <div class="card mt-2" style="background: var(--error-bg);">
+                    <strong>Problem:</strong> Messages between last commit and crash will be reprocessed (duplicates).
+                    <br><br>
+                    <strong>Solution:</strong> Make handlers idempotent using deduplication:
+                </div>
+
+                <div class="code-block">
+                    <code>
+# Python - Idempotent message processing
+
+import hashlib
+import redis
+
+class IdempotentProcessor:
+    def __init__(self, redis_client: redis.Redis, ttl_seconds: int = 86400):
+        self.redis = redis_client
+        self.ttl = ttl_seconds
+
+    def process_once(self, message_id: str, handler, *args, **kwargs):
+        """
+        Execute handler only if message hasn't been processed before.
+        Uses Redis for distributed deduplication.
+        """
+        dedup_key = f"processed:{message_id}"
+
+        # Try to set the key (NX = only if not exists)
+        was_set = self.redis.set(dedup_key, "1", nx=True, ex=self.ttl)
+
+        if not was_set:
+            # Already processed
+            return {"status": "duplicate", "message_id": message_id}
+
+        try:
+            result = handler(*args, **kwargs)
+            return {"status": "processed", "result": result}
+        except Exception as e:
+            # Delete the key so message can be retried
+            self.redis.delete(dedup_key)
+            raise
+
+
+# Alternative: Use message content hash for deduplication
+def get_message_id(message: dict) -> str:
+    # Create deterministic ID from message content
+    content = json.dumps(message, sort_keys=True)
+    return hashlib.sha256(content.encode()).hexdigest()[:16]
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Data Loss Scenarios and Prevention</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Scenario</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Data Loss Risk</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Prevention</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Producer doesn't wait for ACK</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Message lost if broker crashes before replication</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Use acks=all</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">All replicas fail simultaneously</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Data loss if not on disk</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Spread replicas across racks/zones</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Consumer auto-commits before processing</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Message lost if consumer crashes mid-process</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Manual commit after processing</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Unclean leader election</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Out-of-sync replica becomes leader, loses recent messages</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">unclean.leader.election.enable=false</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 

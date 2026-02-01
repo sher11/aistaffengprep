@@ -412,9 +412,191 @@ def diameter(root):
             </div>
         </div>
 
+        <!-- Real-World Scale Examples -->
+        <h2 class="mt-4">Real-World Scale Examples</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Google/Bing: B-Trees for Search Index Storage</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Google indexes over 130 trillion web pages. Bing processes 12 billion queries per month. Both use B-tree variants (LSM trees, B+ trees) as the foundation of their search indexes.</p>
+
+                <h4>Why B-Trees Over Binary Trees?</h4>
+                <ul>
+                    <li><strong>Disk I/O optimization:</strong> B-trees have high branching factor (100-1000 children), minimizing disk reads</li>
+                    <li><strong>4 levels for 1 billion keys:</strong> With branching factor 1000, 4 disk reads find any key</li>
+                    <li><strong>Sequential access:</strong> B+ trees store all values in leaves, enabling range scans</li>
+                </ul>
+
+                <div class="code-block">
+                    <pre><code># B-Tree vs BST: Disk reads for 1 billion keys
+import math
+
+def disk_reads_bst(n):
+    """Binary tree: ~30 levels for 1B keys."""
+    return math.ceil(math.log2(n))
+
+def disk_reads_btree(n, branching_factor=1000):
+    """B-tree: ~4 levels for 1B keys."""
+    return math.ceil(math.log(n) / math.log(branching_factor))
+
+n = 1_000_000_000  # 1 billion keys
+print(f"BST: {disk_reads_bst(n)} disk reads")       # ~30
+print(f"B-tree: {disk_reads_btree(n)} disk reads")  # ~4
+
+# At 10ms per disk read:
+# BST: 300ms per lookup
+# B-tree: 40ms per lookup
+# 7.5x faster at scale!</code></pre>
+                </div>
+
+                <h4>Google's SSTable + LSM Tree</h4>
+                <p>Google's Bigtable (and LevelDB, RocksDB) uses Log-Structured Merge trees - essentially sorted arrays with binary search merged periodically. This optimizes for write-heavy workloads while maintaining O(log n) reads.</p>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>MongoDB: Tree-Based Indexing for Document Queries</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>MongoDB serves over 35,000 customers including Toyota, Cisco, and Adobe. Its WiredTiger storage engine uses B+ trees for all indexes.</p>
+
+                <h4>Compound Index Example</h4>
+                <div class="code-block">
+                    <pre><code># MongoDB index on (user_id, timestamp)
+# Internally: B+ tree where each node is sorted by user_id, then timestamp
+
+# This query uses the index efficiently:
+db.events.find({user_id: 123}).sort({timestamp: -1}).limit(10)
+# O(log n) to find user_id, then sequential scan of that user's events
+
+# This query CANNOT use the index well:
+db.events.find({timestamp: {"$gt": last_week}})
+# Index is sorted by user_id first! Must scan all users.
+
+# Key insight: compound index order matters for query patterns</code></pre>
+                </div>
+
+                <h4>Binary Search in Query Planning</h4>
+                <p>MongoDB's query planner uses binary search to:</p>
+                <ul>
+                    <li>Find the starting point in an index range scan</li>
+                    <li>Estimate result set sizes for query optimization</li>
+                    <li>Skip deleted documents efficiently</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Git: Merkle Trees for Version Control</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Git manages the Linux kernel (77 million lines of code, 1 million+ commits). Its efficiency comes from Merkle trees - a tree where each node is a cryptographic hash of its children.</p>
+
+                <h4>How Git Uses Trees</h4>
+                <ul>
+                    <li><strong>Commit tree:</strong> Each commit points to a tree of file snapshots</li>
+                    <li><strong>Diff detection:</strong> Compare tree hashes recursively - O(changed files), not O(all files)</li>
+                    <li><strong>Integrity:</strong> Any tampering changes root hash</li>
+                </ul>
+
+                <div class="code-block">
+                    <pre><code># Git's tree comparison is essentially this:
+def trees_differ(tree1, tree2):
+    """
+    O(number of differences) comparison.
+    If hashes match, entire subtrees are identical.
+    """
+    if tree1.hash == tree2.hash:
+        return []  # Entire subtree unchanged - prune!
+
+    differences = []
+
+    # Only recurse into children if hashes differ
+    for name in set(tree1.children) | set(tree2.children):
+        child1 = tree1.children.get(name)
+        child2 = tree2.children.get(name)
+
+        if child1 is None:
+            differences.append(f"Added: {name}")
+        elif child2 is None:
+            differences.append(f"Deleted: {name}")
+        elif child1.hash != child2.hash:
+            differences.extend(trees_differ(child1, child2))
+
+    return differences
+
+# Linux kernel: 77M lines, but most commits change < 100 files
+# Tree comparison: O(100) not O(77M)</code></pre>
+                </div>
+            </div>
+        </div>
+
         <!-- Quiz Section -->
         <h2 class="mt-4">Self-Check Quiz</h2>
         <div class="quiz-container" id="module-quiz"></div>
+
+        <!-- Interview Follow-up Questions -->
+        <h2 class="mt-4">Interview Follow-up Questions</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Common Follow-ups & What Interviewers Look For</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>1. "How would you handle a BST that becomes unbalanced?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Self-balancing trees: AVL (strict), Red-Black (relaxed)</li>
+                    <li>Trade-offs: AVL faster lookup, Red-Black faster insert/delete</li>
+                    <li>Real-world: Java TreeMap uses Red-Black, databases use B-trees</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not knowing that unbalanced BST degrades to O(n).</p>
+
+                <h4>2. "Why use 'left + (right - left) // 2' instead of '(left + right) // 2'?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Integer overflow in languages with fixed-size integers (Java, C++)</li>
+                    <li>Python handles big integers, but good practice for portability</li>
+                    <li>Alternative: unsigned right shift in Java: (left + right) >>> 1</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not knowing about overflow, or dismissing it as "Python doesn't have that problem."</p>
+
+                <h4>3. "When would you use DFS vs BFS for tree traversal?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>DFS (recursion/stack): Path finding, backtracking, memory-efficient for deep trees</li>
+                    <li>BFS (queue): Shortest path, level-order, finding closest nodes</li>
+                    <li>Space: DFS O(height), BFS O(width) - matters for wide vs deep trees</li>
+                </ul>
+                <p><strong>Red flags:</strong> Always defaulting to one without considering the problem structure.</p>
+
+                <h4>4. "Binary search returned -1. How do you find where to insert the element?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Return 'left' pointer - it's the insertion point</li>
+                    <li>bisect_left vs bisect_right for duplicates</li>
+                    <li>Understanding the invariant: all elements left of 'left' are smaller</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not understanding that binary search naturally finds insertion point.</p>
+
+                <h4>5. "How would you serialize/deserialize a binary tree?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Preorder traversal with null markers: "1,2,null,null,3,4,null,null,5"</li>
+                    <li>Level-order with null markers</li>
+                    <li>Discussion of space efficiency and parsing complexity</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not handling null nodes, or using inefficient representations.</p>
+            </div>
+        </div>
 
         <!-- Practice Problems -->
         <h2 class="mt-4">Practice Problems</h2>

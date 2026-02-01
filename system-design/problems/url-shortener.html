@@ -342,6 +342,348 @@ def generate_short_url(long_url):<br>
                 </div>
             </div>
 
+            <h2 class="mt-4">9. Complete Working Implementation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Production-Grade Service (Python)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - Complete URL Shortener with FastAPI, Redis, PostgreSQL
+# File: url_shortener/main.py
+
+from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel, HttpUrl
+from typing import Optional
+import redis
+import asyncpg
+import hashlib
+import time
+from contextlib import asynccontextmanager
+
+# Configuration
+REDIS_URL = "redis://localhost:6379"
+DATABASE_URL = "postgresql://user:pass@localhost/urlshortener"
+BASE_URL = "https://short.url"
+ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+# Models
+class ShortenRequest(BaseModel):
+    long_url: HttpUrl
+    custom_alias: Optional[str] = None
+    expires_in_days: Optional[int] = None
+
+class ShortenResponse(BaseModel):
+    short_url: str
+    short_code: str
+    long_url: str
+
+# Encoding
+def encode_base62(num: int) -> str:
+    if num == 0:
+        return ALPHABET[0]
+    result = []
+    while num > 0:
+        result.append(ALPHABET[num % 62])
+        num //= 62
+    return ''.join(reversed(result)).zfill(7)
+
+def decode_base62(s: str) -> int:
+    num = 0
+    for char in s:
+        num = num * 62 + ALPHABET.index(char)
+    return num
+
+# Application lifespan
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    app.state.redis = redis.asyncio.from_url(REDIS_URL)
+    app.state.db = await asyncpg.create_pool(DATABASE_URL)
+
+    # Create tables
+    async with app.state.db.acquire() as conn:
+        await conn.execute('''
+            CREATE TABLE IF NOT EXISTS urls (
+                id BIGSERIAL PRIMARY KEY,
+                short_code VARCHAR(10) UNIQUE NOT NULL,
+                long_url TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                expires_at TIMESTAMP,
+                click_count BIGINT DEFAULT 0
+            );
+            CREATE INDEX IF NOT EXISTS idx_short_code ON urls(short_code);
+        ''')
+
+    yield
+
+    # Shutdown
+    await app.state.redis.close()
+    await app.state.db.close()
+
+app = FastAPI(lifespan=lifespan)
+
+# Rate limiting dependency
+async def rate_limit(request: Request):
+    client_ip = request.client.host
+    key = f"rate:{client_ip}"
+    redis = request.app.state.redis
+
+    count = await redis.incr(key)
+    if count == 1:
+        await redis.expire(key, 60)
+
+    if count > 100:  # 100 requests per minute
+        raise HTTPException(429, "Rate limit exceeded")
+
+# Shorten endpoint
+@app.post("/api/v1/shorten", response_model=ShortenResponse)
+async def shorten_url(
+    req: ShortenRequest,
+    request: Request,
+    _: None = Depends(rate_limit)
+):
+    redis_client = request.app.state.redis
+    db_pool = request.app.state.db
+
+    # Handle custom alias
+    if req.custom_alias:
+        # Check if alias is available
+        existing = await redis_client.get(f"url:{req.custom_alias}")
+        if existing:
+            raise HTTPException(400, "Custom alias already taken")
+        short_code = req.custom_alias
+    else:
+        # Generate using atomic counter
+        counter = await redis_client.incr("url:counter")
+        short_code = encode_base62(counter)
+
+    # Store in database
+    async with db_pool.acquire() as conn:
+        expires_at = None
+        if req.expires_in_days:
+            expires_at = f"NOW() + INTERVAL '{req.expires_in_days} days'"
+
+        await conn.execute('''
+            INSERT INTO urls (short_code, long_url, expires_at)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (short_code) DO NOTHING
+        ''', short_code, str(req.long_url), expires_at)
+
+    # Cache the mapping
+    await redis_client.set(
+        f"url:{short_code}",
+        str(req.long_url),
+        ex=86400  # 24 hour cache
+    )
+
+    return ShortenResponse(
+        short_url=f"{BASE_URL}/{short_code}",
+        short_code=short_code,
+        long_url=str(req.long_url)
+    )
+
+# Redirect endpoint
+@app.get("/{short_code}")
+async def redirect_url(short_code: str, request: Request):
+    redis_client = request.app.state.redis
+    db_pool = request.app.state.db
+
+    # Check cache first
+    long_url = await redis_client.get(f"url:{short_code}")
+
+    if not long_url:
+        # Cache miss - check database
+        async with db_pool.acquire() as conn:
+            row = await conn.fetchrow('''
+                SELECT long_url, expires_at FROM urls
+                WHERE short_code = $1
+            ''', short_code)
+
+            if not row:
+                raise HTTPException(404, "URL not found")
+
+            if row['expires_at'] and row['expires_at'] < time.time():
+                raise HTTPException(410, "URL has expired")
+
+            long_url = row['long_url']
+
+            # Populate cache
+            await redis_client.set(f"url:{short_code}", long_url, ex=86400)
+
+    # Increment click counter (fire and forget)
+    await redis_client.incr(f"clicks:{short_code}")
+
+    # Use 302 for analytics tracking (301 would be cached by browser)
+    return RedirectResponse(url=long_url, status_code=302)
+
+# Analytics endpoint
+@app.get("/api/v1/stats/{short_code}")
+async def get_stats(short_code: str, request: Request):
+    redis_client = request.app.state.redis
+    db_pool = request.app.state.db
+
+    # Get click count from Redis
+    clicks = await redis_client.get(f"clicks:{short_code}")
+
+    async with db_pool.acquire() as conn:
+        row = await conn.fetchrow('''
+            SELECT long_url, created_at FROM urls WHERE short_code = $1
+        ''', short_code)
+
+        if not row:
+            raise HTTPException(404, "URL not found")
+
+    return {
+        "short_code": short_code,
+        "long_url": row['long_url'],
+        "created_at": row['created_at'].isoformat(),
+        "click_count": int(clicks or 0)
+    }
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">10. Failure Handling</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Edge Cases and Failures</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Scenario</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Impact</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Mitigation</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Redis counter unavailable</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Can't generate new short codes</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Pre-allocate ID ranges to each server</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Database write fails after counter increment</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Wasted ID (minor)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Accept - we have trillions of IDs</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hot URL (viral link)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cache stampede, DB overload</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">CDN caching, request coalescing</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cache and DB inconsistent</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Stale redirects</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Short TTL on cache, invalidate on update</td>
+                        </tr>
+                    </table>
+
+                    <h4>Hot URL Handling</h4>
+                    <div class="code-block">
+                        <code>
+# Python - Request coalescing for hot URLs
+
+import asyncio
+from typing import Dict
+
+class URLCache:
+    def __init__(self, redis_client, db_pool):
+        self.redis = redis_client
+        self.db = db_pool
+        self.pending: Dict[str, asyncio.Future] = {}
+        self.lock = asyncio.Lock()
+
+    async def get_url(self, short_code: str) -> str:
+        # Check cache
+        cached = await self.redis.get(f"url:{short_code}")
+        if cached:
+            return cached.decode()
+
+        # Request coalescing - only one DB query per short_code
+        async with self.lock:
+            if short_code in self.pending:
+                return await self.pending[short_code]
+
+            future = asyncio.Future()
+            self.pending[short_code] = future
+
+        try:
+            # Fetch from DB
+            async with self.db.acquire() as conn:
+                row = await conn.fetchrow(
+                    'SELECT long_url FROM urls WHERE short_code = $1',
+                    short_code
+                )
+
+            if not row:
+                future.set_exception(KeyError("URL not found"))
+                raise KeyError("URL not found")
+
+            long_url = row['long_url']
+
+            # Cache with longer TTL for hot URLs
+            await self.redis.set(f"url:{short_code}", long_url, ex=3600)
+
+            future.set_result(long_url)
+            return long_url
+
+        finally:
+            async with self.lock:
+                del self.pending[short_code]
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Abuse Prevention</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li><strong>Spam URLs:</strong> Check against blacklists (Google Safe Browsing API)</li>
+                        <li><strong>Phishing:</strong> Scan for known phishing patterns in URLs</li>
+                        <li><strong>Enumeration attacks:</strong> Don't use sequential IDs (use random offset)</li>
+                        <li><strong>Rate limiting:</strong> Per-IP and per-account limits</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+# URL safety check before shortening
+import aiohttp
+
+async def is_url_safe(url: str) -> bool:
+    """Check URL against Google Safe Browsing API."""
+    async with aiohttp.ClientSession() as session:
+        payload = {
+            "client": {"clientId": "urlshortener", "clientVersion": "1.0"},
+            "threatInfo": {
+                "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE"],
+                "platformTypes": ["ANY_PLATFORM"],
+                "threatEntryTypes": ["URL"],
+                "threatEntries": [{"url": url}]
+            }
+        }
+        async with session.post(
+            "https://safebrowsing.googleapis.com/v4/threatMatches:find",
+            params={"key": SAFE_BROWSING_API_KEY},
+            json=payload
+        ) as resp:
+            result = await resp.json()
+            return "matches" not in result  # Safe if no matches
+                        </code>
+                    </div>
+                </div>
+            </div>
+
             <h2 class="mt-4">8. Summary</h2>
 
             <div class="card">

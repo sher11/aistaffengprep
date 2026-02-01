@@ -238,6 +238,271 @@ flowchart TD
             </div>
         </div>
 
+        <h2 class="mt-4">Staff-Level Failure Categories</h2>
+
+        <p class="mt-3">At staff level, interviewers expect you to have experienced - and learned from - more significant failures. Here are categories to prepare:</p>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Team Failures Where You Were Responsible</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>As a leader, team failures are your failures. These stories show accountability and organizational awareness.</p>
+
+                <h4>Types of Team Failures to Prepare</h4>
+                <ul>
+                    <li><strong>Missed deadline due to planning failure:</strong> You underestimated scope, dependencies, or team capacity</li>
+                    <li><strong>Quality issues that shipped:</strong> Testing gaps, code review process failures</li>
+                    <li><strong>Morale/burnout problems:</strong> You pushed too hard or didn't notice warning signs</li>
+                    <li><strong>Communication breakdowns:</strong> Stakeholders were surprised, teams were misaligned</li>
+                    <li><strong>Hiring mistakes:</strong> You advocated for a candidate who didn't work out</li>
+                </ul>
+
+                <h4>Example: Team Delivery Failure</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "I led a team of 5 engineers on a payments compliance project with a regulatory deadline."</p>
+                    <p><strong>What happened:</strong> "We missed the deadline by 3 weeks. Two team members burned out and one transferred to another team shortly after."</p>
+                    <p><strong>My role in the failure:</strong> "I failed in three ways: I accepted an unrealistic timeline without pushing back with data. I didn't escalate early enough when I saw the team struggling. And I prioritized the deadline over my team's well-being, thinking we could 'push through.'"</p>
+                    <p><strong>What I learned:</strong></p>
+                    <ul>
+                        <li>"Sustainable pace matters more than any single deadline"</li>
+                        <li>"My job includes protecting the team from unrealistic commitments"</li>
+                        <li>"Early escalation with options is better than late escalation with excuses"</li>
+                    </ul>
+                    <p><strong>Changes made:</strong> "I now build 25% buffer into all estimates. I have weekly 1:1s focused on workload and energy levels. I've learned to say 'We can do X by that date, or Y by this date - which is more important?'"</p>
+                </div>
+
+                <h4>Key Principles for Team Failure Stories</h4>
+                <ul>
+                    <li>Take responsibility even when others contributed to the failure</li>
+                    <li>Never blame team members - frame as systemic or leadership issues</li>
+                    <li>Show you understand the broader impact (on people, not just projects)</li>
+                    <li>Demonstrate genuine change in how you lead</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Technological Failures: Decisions That Didn't Age Well</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Some technical decisions seem right at the time but prove problematic months or years later. These stories show long-term thinking development.</p>
+
+                <h4>Common Patterns</h4>
+                <ul>
+                    <li><strong>Technology choices:</strong> Framework/library that was abandoned, technology that didn't scale</li>
+                    <li><strong>Build vs. buy:</strong> Building something you should have bought (or vice versa)</li>
+                    <li><strong>Premature optimization:</strong> Over-engineering for scale that never came</li>
+                    <li><strong>Under-engineering:</strong> Shortcuts that created long-term technical debt</li>
+                    <li><strong>Vendor lock-in:</strong> Deep integration with a vendor that raised prices or degraded</li>
+                </ul>
+
+                <h4>Example: Framework Choice That Didn't Age Well</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "In 2019, I strongly advocated for using a specific GraphQL framework for our new API layer. It was cutting-edge and seemed perfect for our use case."</p>
+                    <p><strong>What happened:</strong> "Two years later, the framework was effectively abandoned by its maintainers. We had 40+ services using it and faced a difficult choice: fork and maintain it ourselves or undergo a costly migration."</p>
+                    <p><strong>My role:</strong> "I championed this choice. I was excited about the technology and didn't adequately assess sustainability risk - community size, corporate backing, maintainer activity."</p>
+                    <p><strong>What I learned:</strong></p>
+                    <ul>
+                        <li>"For foundational choices, boring and stable often beats cutting-edge"</li>
+                        <li>"Evaluate open-source projects on sustainability, not just features"</li>
+                        <li>"Build abstraction layers to reduce switching costs"</li>
+                    </ul>
+                    <p><strong>Changes made:</strong> "I created a technology evaluation rubric that includes: maintainer activity (>12 months), commercial backing, community size, and escape path cost. I now weight stability much higher for core infrastructure decisions."</p>
+                </div>
+
+                <h4>How to Frame These Stories</h4>
+                <ul>
+                    <li><strong>Acknowledge:</strong> "At the time, it seemed like the right choice because..."</li>
+                    <li><strong>New information:</strong> "What we didn't anticipate was..."</li>
+                    <li><strong>Ownership:</strong> "I should have considered... / My evaluation missed..."</li>
+                    <li><strong>Growth:</strong> "My decision framework now includes..."</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Architectural & Design Failures</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Architecture decisions have long-lasting consequences. Staff engineers should have stories about learning from architectural mistakes.</p>
+
+                <h4>Types of Architectural Failures</h4>
+                <ul>
+                    <li><strong>Wrong abstraction boundaries:</strong> Services that are too coupled or too fragmented</li>
+                    <li><strong>Scalability surprises:</strong> Design that hit unexpected limits</li>
+                    <li><strong>Data model mistakes:</strong> Schema decisions that became constraints</li>
+                    <li><strong>Integration patterns:</strong> Sync vs. async, REST vs. events, etc.</li>
+                    <li><strong>Security architecture:</strong> Insufficient isolation or access control design</li>
+                </ul>
+
+                <h4>Example: Microservices Granularity Mistake</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "I designed our order management system as 8 microservices, following what I understood to be best practices - one service per domain concept."</p>
+                    <p><strong>What happened:</strong> "Within 18 months, we had a distributed monolith. Services were tightly coupled, a single order required 12+ synchronous calls, and our p99 latency was 4 seconds. Debugging was nearly impossible."</p>
+                    <p><strong>My role:</strong> "I designed the service boundaries without sufficient understanding of the actual usage patterns. I applied microservices dogmatically rather than pragmatically."</p>
+                    <p><strong>What I learned:</strong></p>
+                    <ul>
+                        <li>"Start with a modular monolith and extract services based on proven boundaries"</li>
+                        <li>"Service boundaries should follow team boundaries, not domain concepts"</li>
+                        <li>"Distributed systems should have independent deployment and failure domains"</li>
+                        <li>"The cost of network calls is easy to underestimate"</li>
+                    </ul>
+                    <p><strong>Changes made:</strong> "We consolidated to 3 services aligned with team ownership. Latency dropped to 200ms. I now advocate for 'monolith first' and require proof of independent scaling needs before service extraction."</p>
+                </div>
+
+                <h4>Example: Data Model Regret</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "I designed our user preferences system with a flexible JSON column approach - seemed perfect for rapidly evolving requirements."</p>
+                    <p><strong>What happened:</strong> "Two years later, we couldn't efficiently query preferences, couldn't enforce data integrity, and had accumulated 50+ undocumented preference keys with inconsistent formats."</p>
+                    <p><strong>My role:</strong> "I optimized for developer flexibility over data integrity. I didn't consider the long-term cost of schema-less storage."</p>
+                    <p><strong>What I learned:</strong> "Flexibility has a cost. Structured data with clear contracts is almost always worth the upfront investment. 'Schemaless' really means 'schema in every consumer.'"</p>
+                    <p><strong>Changes made:</strong> "I now default to explicit schemas with versioning. If we need flexibility, I require a schema registry and migration plan from day one."</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Discussing Failures Without Revealing Company Secrets</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Confidentiality Guidelines for Failure Stories</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>What You Can Safely Share</h4>
+                <ul>
+                    <li><strong>General scale:</strong> "A system handling millions of requests" (not "our exact revenue numbers")</li>
+                    <li><strong>Category of problem:</strong> "A database scalability issue" (not "we hit MySQL row limits in the orders table")</li>
+                    <li><strong>Your personal learnings:</strong> What you would do differently</li>
+                    <li><strong>Process improvements:</strong> New practices you implemented (at general level)</li>
+                    <li><strong>Public information:</strong> Anything already in blog posts, conference talks, or news</li>
+                </ul>
+
+                <h4>What You Should NOT Share</h4>
+                <ul>
+                    <li><strong>Specific financial impact:</strong> "We lost $X million" unless it's public</li>
+                    <li><strong>Customer names or details:</strong> "A major customer was affected" not "Company X"</li>
+                    <li><strong>Unreleased product information:</strong> Future roadmap, cancelled projects</li>
+                    <li><strong>Security vulnerability specifics:</strong> Attack vectors, unpatched issues</li>
+                    <li><strong>Personnel issues:</strong> "A team member was fired" - keep focus on your actions</li>
+                    <li><strong>Legal or regulatory details:</strong> Ongoing litigation, compliance violations</li>
+                </ul>
+
+                <h4>Safe Framing Techniques</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Instead of...</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Say...</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"We had a data breach that exposed 100K users"</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"We had a security incident that required urgent response and led to significant process improvements"</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"The CTO made a bad call on..."</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"The organization chose a direction that I disagreed with, and I learned how to influence decisions earlier"</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"We wasted $2M on a project that was cancelled"</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"A significant initiative was cancelled due to changing priorities. I learned about validating assumptions earlier"</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Our competitor copied our feature and did it better"</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Market conditions changed during our development cycle, and we had to pivot"</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>When in Doubt</h4>
+                <div style="background: var(--warning-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p>Ask yourself: "Would my current employer be comfortable if this appeared in a news article attributed to me?"</p>
+                    <p>If not, generalize or choose a different example. You have plenty of failures to choose from - pick ones you can discuss freely.</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Advanced Scenarios: Growth Through Crisis</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Leading Teams Through Failure Recovery</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>At staff level, you're not just experiencing failures - you're helping teams recover from them. These stories demonstrate leadership maturity.</p>
+
+                <h4>Recovery Leadership Story Structure</h4>
+                <ol>
+                    <li><strong>The failure (15%):</strong> Brief context - what went wrong</li>
+                    <li><strong>Impact assessment (15%):</strong> How you evaluated damage and urgency</li>
+                    <li><strong>Team rally (30%):</strong> How you mobilized and supported the team</li>
+                    <li><strong>Recovery execution (25%):</strong> Actions taken, adjustments made</li>
+                    <li><strong>Rebuilding (15%):</strong> Restoring confidence, implementing improvements</li>
+                </ol>
+
+                <h4>Example: Project Recovery After Launch Failure</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "Our team's much-anticipated feature launch resulted in significant performance issues. Users were complaining, leadership was concerned, and team morale was at rock bottom."</p>
+                    <p><strong>Task:</strong> "I needed to stabilize the system, restore user trust, and help the team recover psychologically from a very public failure."</p>
+                    <p><strong>Action:</strong></p>
+                    <ul>
+                        <li>"First, I shielded the team from external pressure - I took all the stakeholder calls myself and gave the team space to focus"</li>
+                        <li>"Ran blameless assessment focused on systemic issues, not individual mistakes"</li>
+                        <li>"Broke recovery into 24-hour sprints with achievable goals to rebuild momentum"</li>
+                        <li>"Celebrated each milestone publicly - 'Database stable,' 'Latency under 200ms,' 'Zero errors this hour'"</li>
+                        <li>"After stabilization, facilitated honest retrospective about what went wrong and implemented 5 process changes"</li>
+                    </ul>
+                    <p><strong>Result:</strong> "System stable within 48 hours. More importantly, the team went on to ship three successful features that quarter with the improved process. Two team members later told me that experience shaped how they lead through crises."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Multi-Year Growth Arc Stories</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>The most compelling growth stories span years and show fundamental evolution in how you think and work.</p>
+
+                <h4>Multi-Year Arc Structure</h4>
+                <ol>
+                    <li><strong>Starting point:</strong> How you used to approach things</li>
+                    <li><strong>Pattern of failures:</strong> Multiple related mistakes (not just one)</li>
+                    <li><strong>Moment of realization:</strong> When you understood the underlying pattern</li>
+                    <li><strong>Fundamental change:</strong> How your approach shifted</li>
+                    <li><strong>Evidence of growth:</strong> Different outcomes with new approach</li>
+                </ol>
+
+                <h4>Example: Evolution as a Technical Leader</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Starting point:</strong> "Early in my career, I believed the best technical solution should always win. I'd write detailed analysis, present data, and expect rational decision-making."</p>
+                    <p><strong>Pattern of failures:</strong> "Multiple times, technically superior solutions were rejected. I blamed politics, said people weren't 'getting it.' I was frustrated and felt undervalued."</p>
+                    <p><strong>Realization:</strong> "After my third major proposal was rejected, my mentor pointed out that I was always presenting solutions to my problems, not stakeholders' problems. I was speaking engineer, not business."</p>
+                    <p><strong>Fundamental change:</strong> "I learned that technical decisions are business decisions. Every proposal now starts with 'What problem does this solve for whom?' and 'What does success look like in business terms?' The technical analysis comes after establishing shared context."</p>
+                    <p><strong>Evidence:</strong> "My proposal acceptance rate went from ~30% to ~80%. More importantly, even rejected proposals led to productive conversations about priorities. I stopped feeling like I was fighting the organization."</p>
+                </div>
+
+                <h4>Strong Multi-Year Arc Topics</h4>
+                <ul>
+                    <li>From individual contributor mindset to leader mindset</li>
+                    <li>From perfectionism to pragmatic delivery</li>
+                    <li>From conflict avoidance to productive disagreement</li>
+                    <li>From hero complex to team multiplication</li>
+                    <li>From technical focus to business awareness</li>
+                </ul>
+            </div>
+        </div>
+
         <h2 class="mt-4">Self-Check Quiz</h2>
         <div class="quiz-container" id="module-quiz"></div>
 

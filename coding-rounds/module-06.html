@@ -256,8 +256,588 @@ def combinations(n, k):
             </div>
         </div>
 
+        <!-- Pruning Strategies Section -->
+        <h2 class="mt-4">Pruning Strategies</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Why Pruning Matters</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Pruning eliminates branches of the search tree that cannot lead to valid solutions. Without pruning, backtracking degenerates to brute-force enumeration. Effective pruning can reduce exponential time complexity by orders of magnitude.</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TD
+    A[Search Space] --> B{Constraint Check}
+    B -->|Valid| C[Explore Branch]
+    B -->|Invalid| D["PRUNE - Skip entire subtree"]
+    C --> E[Recursive call]
+    D --> F["Significant speedup"]
+    style D fill:#ffcccc
+    style F fill:#ccffcc
+                    </div>
+                </div>
+
+                <h4>Types of Pruning</h4>
+                <ul>
+                    <li><strong>Feasibility Pruning:</strong> Skip choices that violate constraints (e.g., invalid queen placement)</li>
+                    <li><strong>Optimality Pruning:</strong> Skip branches that cannot improve on the best solution found so far</li>
+                    <li><strong>Symmetry Pruning:</strong> Avoid exploring symmetric configurations (e.g., in N-Queens, only explore half the first row)</li>
+                    <li><strong>Ordering Heuristics:</strong> Try most constrained choices first to fail early</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Pruning Examples with Code</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code># Example 1: Combination Sum with Pruning
+# Find all combinations that sum to target (can reuse elements)
+
+def combination_sum(candidates, target):
+    """
+    Pruning strategies:
+    1. Sort candidates to enable early termination
+    2. Skip if current candidate exceeds remaining target
+    3. Start from current index to avoid duplicate combinations
+    """
+    candidates.sort()  # Enable pruning
+    result = []
+
+    def backtrack(start, path, remaining):
+        if remaining == 0:
+            result.append(path[:])
+            return
+
+        for i in range(start, len(candidates)):
+            # PRUNING: If current candidate exceeds remaining,
+            # all subsequent (larger) candidates will too
+            if candidates[i] > remaining:
+                break  # Prune entire remaining branch
+
+            path.append(candidates[i])
+            # Allow reuse: pass i, not i+1
+            backtrack(i, path, remaining - candidates[i])
+            path.pop()
+
+    backtrack(0, [], target)
+    return result
+
+# Example 2: Subsets with Duplicates - Pruning duplicates
+def subsets_with_dup(nums):
+    """
+    When input has duplicates, prune to avoid duplicate subsets.
+    Key insight: Skip duplicate elements at the same recursion level.
+    """
+    nums.sort()  # Group duplicates together
+    result = []
+
+    def backtrack(start, path):
+        result.append(path[:])
+
+        for i in range(start, len(nums)):
+            # PRUNING: Skip duplicates at same level
+            # i > start ensures we don't skip first occurrence
+            if i > start and nums[i] == nums[i-1]:
+                continue  # Prune this branch
+
+            path.append(nums[i])
+            backtrack(i + 1, path)
+            path.pop()
+
+    backtrack(0, [])
+    return result
+
+# Example: [1,2,2] -> [[], [1], [1,2], [1,2,2], [2], [2,2]]
+# Without pruning: [[], [1], [1,2], [1,2,2], [1,2], [2], [2,2], [2]]  # duplicates!</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branch and Bound Section -->
+        <h2 class="mt-4">Branch and Bound Optimization</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Branch and Bound Explained</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Branch and Bound extends backtracking for optimization problems by maintaining a bound on the best solution. Branches are pruned when their best possible outcome cannot beat the current best.</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TD
+    A[Current Node] --> B{Calculate Bound}
+    B --> C{Bound better than best?}
+    C -->|Yes| D[Explore children]
+    C -->|No| E["PRUNE - Cannot improve"]
+    D --> F{Is leaf/solution?}
+    F -->|Yes| G[Update best if better]
+    F -->|No| H[Branch to children]
+    H --> A
+    style E fill:#ffcccc
+    style G fill:#ccffcc
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <pre><code># Branch and Bound for 0/1 Knapsack
+# Find maximum value without exceeding weight capacity
+
+def knapsack_branch_bound(weights, values, capacity):
+    """
+    Branch and Bound for 0/1 Knapsack.
+    Uses upper bound calculation to prune unpromising branches.
+
+    Upper bound = current value + (remaining capacity * best value/weight ratio)
+    """
+    n = len(weights)
+
+    # Sort items by value/weight ratio (descending) for better bounds
+    items = sorted(zip(weights, values), key=lambda x: x[1]/x[0], reverse=True)
+    weights = [item[0] for item in items]
+    values = [item[1] for item in items]
+
+    best_value = [0]  # Use list for mutable closure
+
+    def upper_bound(index, current_weight, current_value):
+        """Calculate optimistic upper bound using fractional knapsack."""
+        if current_weight > capacity:
+            return 0  # Infeasible
+
+        bound = current_value
+        remaining_capacity = capacity - current_weight
+
+        # Greedily add fractional items
+        for i in range(index, n):
+            if weights[i] <= remaining_capacity:
+                bound += values[i]
+                remaining_capacity -= weights[i]
+            else:
+                # Take fraction of this item
+                bound += (remaining_capacity / weights[i]) * values[i]
+                break
+
+        return bound
+
+    def branch_and_bound(index, current_weight, current_value):
+        # Base case: processed all items
+        if index == n:
+            best_value[0] = max(best_value[0], current_value)
+            return
+
+        # PRUNING: Check if this branch can beat current best
+        if upper_bound(index, current_weight, current_value) <= best_value[0]:
+            return  # Prune - cannot improve
+
+        # Branch 1: Include current item (if feasible)
+        if current_weight + weights[index] <= capacity:
+            branch_and_bound(
+                index + 1,
+                current_weight + weights[index],
+                current_value + values[index]
+            )
+
+        # Branch 2: Exclude current item
+        branch_and_bound(index + 1, current_weight, current_value)
+
+    branch_and_bound(0, 0, 0)
+    return best_value[0]
+
+# Example usage:
+# weights = [10, 20, 30]
+# values = [60, 100, 120]
+# capacity = 50
+# Result: 220 (items 2 and 3)</code></pre>
+                </div>
+
+                <h4>When to Use Branch and Bound</h4>
+                <ul>
+                    <li><strong>Optimization problems:</strong> Finding max/min (not just feasibility)</li>
+                    <li><strong>Good bound calculation:</strong> Tight bounds enable aggressive pruning</li>
+                    <li><strong>NP-hard problems:</strong> Traveling Salesman, Job Scheduling, Knapsack</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Full Sudoku Solver Section -->
+        <h2 class="mt-4">Complete Sudoku Solver</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Sudoku Solver with Constraint Propagation</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Sudoku is a classic constraint satisfaction problem. We combine backtracking with constraint propagation for efficiency.</p>
+
+                <div class="code-block">
+                    <pre><code>def solve_sudoku(board):
+    """
+    Solve Sudoku using backtracking with optimizations:
+    1. Track valid candidates for each cell using sets
+    2. Choose cell with fewest candidates (MRV heuristic)
+    3. Propagate constraints when placing digits
+
+    Time: O(9^(n*n)) worst case, but much better in practice
+    Space: O(n*n) for the board state
+    """
+
+    def get_candidates(board, row, col):
+        """Get valid digits for a cell."""
+        if board[row][col] != '.':
+            return set()
+
+        candidates = set('123456789')
+
+        # Remove digits in same row
+        for c in range(9):
+            candidates.discard(board[row][c])
+
+        # Remove digits in same column
+        for r in range(9):
+            candidates.discard(board[r][col])
+
+        # Remove digits in same 3x3 box
+        box_row, box_col = 3 * (row // 3), 3 * (col // 3)
+        for r in range(box_row, box_row + 3):
+            for c in range(box_col, box_col + 3):
+                candidates.discard(board[r][c])
+
+        return candidates
+
+    def find_empty_cell(board):
+        """
+        Find empty cell with fewest candidates (MRV heuristic).
+        This dramatically reduces the search space.
+        """
+        min_candidates = 10
+        best_cell = None
+
+        for row in range(9):
+            for col in range(9):
+                if board[row][col] == '.':
+                    candidates = get_candidates(board, row, col)
+                    if len(candidates) < min_candidates:
+                        min_candidates = len(candidates)
+                        best_cell = (row, col, candidates)
+
+                        # Early exit if only one candidate
+                        if min_candidates == 1:
+                            return best_cell
+
+                        # No valid candidates - impossible state
+                        if min_candidates == 0:
+                            return (row, col, set())
+
+        return best_cell
+
+    def backtrack():
+        cell = find_empty_cell(board)
+
+        # No empty cells - puzzle solved!
+        if cell is None:
+            return True
+
+        row, col, candidates = cell
+
+        # No valid candidates - backtrack
+        if not candidates:
+            return False
+
+        for digit in candidates:
+            # Make choice
+            board[row][col] = digit
+
+            # Recurse
+            if backtrack():
+                return True
+
+            # Undo choice (backtrack)
+            board[row][col] = '.'
+
+        return False
+
+    backtrack()
+    return board
+
+
+# Alternative: More efficient version with precomputed constraints
+class SudokuSolverOptimized:
+    """
+    Highly optimized Sudoku solver using:
+    1. Bitmask representation for O(1) constraint checking
+    2. Constraint propagation (naked singles)
+    3. MRV (Minimum Remaining Values) heuristic
+    """
+
+    def __init__(self, board):
+        self.board = board
+        # Bitmasks: 1 if digit available, 0 if taken
+        self.rows = [0b111111111] * 9  # 9 bits for digits 1-9
+        self.cols = [0b111111111] * 9
+        self.boxes = [0b111111111] * 9
+        self.empty_cells = []
+
+        # Initialize constraints from given numbers
+        for r in range(9):
+            for c in range(9):
+                if board[r][c] != '.':
+                    self._place(r, c, int(board[r][c]))
+                else:
+                    self.empty_cells.append((r, c))
+
+    def _box_index(self, r, c):
+        return (r // 3) * 3 + c // 3
+
+    def _place(self, r, c, digit):
+        """Place digit and update constraints."""
+        bit = 1 << (digit - 1)
+        self.rows[r] &= ~bit
+        self.cols[c] &= ~bit
+        self.boxes[self._box_index(r, c)] &= ~bit
+
+    def _remove(self, r, c, digit):
+        """Remove digit and restore constraints."""
+        bit = 1 << (digit - 1)
+        self.rows[r] |= bit
+        self.cols[c] |= bit
+        self.boxes[self._box_index(r, c)] |= bit
+
+    def _get_candidates(self, r, c):
+        """Get valid candidates using bitwise AND."""
+        return self.rows[r] & self.cols[c] & self.boxes[self._box_index(r, c)]
+
+    def _count_bits(self, n):
+        """Count set bits (available candidates)."""
+        count = 0
+        while n:
+            count += n & 1
+            n >>= 1
+        return count
+
+    def solve(self):
+        if not self.empty_cells:
+            return True
+
+        # MRV: Find cell with fewest candidates
+        min_count = 10
+        best_idx = 0
+        for i, (r, c) in enumerate(self.empty_cells):
+            candidates = self._get_candidates(r, c)
+            count = self._count_bits(candidates)
+            if count == 0:
+                return False  # No valid digit - backtrack
+            if count < min_count:
+                min_count = count
+                best_idx = i
+                if count == 1:
+                    break
+
+        r, c = self.empty_cells.pop(best_idx)
+        candidates = self._get_candidates(r, c)
+
+        for digit in range(1, 10):
+            if candidates & (1 << (digit - 1)):
+                self.board[r][c] = str(digit)
+                self._place(r, c, digit)
+
+                if self.solve():
+                    return True
+
+                self._remove(r, c, digit)
+
+        self.board[r][c] = '.'
+        self.empty_cells.insert(best_idx, (r, c))
+        return False</code></pre>
+                </div>
+
+                <h4>Key Optimizations Explained</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Technique</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">MRV Heuristic</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Reduces branching factor by choosing most constrained cell</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Bitmask Constraints</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(1) candidate lookup vs O(27) naive check</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Constraint Propagation</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Auto-fill forced cells, detect conflicts early</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Real-World Applications Section -->
+        <h2 class="mt-4">Real-World Applications at Scale</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Industry Applications of Backtracking</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>1. Google Maps Route Planning</h4>
+                <p>Google processes over 1 billion kilometers of directions daily. While A* handles most cases, complex multi-stop routes use constraint-based backtracking with aggressive pruning:</p>
+                <ul>
+                    <li>Vehicle routing with time windows (delivery scheduling)</li>
+                    <li>Multi-modal transportation optimization</li>
+                    <li>Real-time traffic constraint propagation</li>
+                </ul>
+
+                <h4>2. Compiler Register Allocation</h4>
+                <p>LLVM and GCC use graph coloring with backtracking for register allocation. Modern CPUs have 16-32 general-purpose registers, and optimal allocation directly impacts performance:</p>
+                <ul>
+                    <li>Variables as nodes, conflicts as edges</li>
+                    <li>Colors represent physical registers</li>
+                    <li>Backtracking when greedy coloring fails</li>
+                </ul>
+
+                <h4>3. SAT Solvers (Boolean Satisfiability)</h4>
+                <p>Modern SAT solvers (MiniSat, Z3) power critical infrastructure. Used in:</p>
+                <ul>
+                    <li>Hardware verification at Intel/AMD (billions of gate combinations)</li>
+                    <li>Cryptographic analysis</li>
+                    <li>Package dependency resolution (apt, npm, pip)</li>
+                </ul>
+                <p>DPLL algorithm combines backtracking with unit propagation, solving industrial instances with millions of variables.</p>
+
+                <div class="code-block">
+                    <pre><code># Simplified DPLL (basis of modern SAT solvers)
+def dpll(clauses, assignment=None):
+    """
+    Davis-Putnam-Logemann-Loveland algorithm.
+    Core of SAT solvers that verify Intel CPUs, prove theorems,
+    and resolve package dependencies.
+    """
+    if assignment is None:
+        assignment = {}
+
+    # Unit propagation: if clause has one literal, must be true
+    changed = True
+    while changed:
+        changed = False
+        for clause in clauses:
+            unassigned = [lit for lit in clause
+                         if abs(lit) not in assignment]
+
+            if not unassigned:
+                # All literals false - clause unsatisfied
+                if all(assignment.get(abs(lit), lit < 0) == (lit < 0)
+                       for lit in clause):
+                    return None  # Conflict - backtrack
+
+            elif len(unassigned) == 1:
+                # Unit clause - force assignment
+                lit = unassigned[0]
+                assignment[abs(lit)] = lit > 0
+                changed = True
+
+    # Check if all clauses satisfied
+    if all(any(assignment.get(abs(lit), None) == (lit > 0)
+               for lit in clause) for clause in clauses):
+        return assignment
+
+    # Pick unassigned variable (VSIDS heuristic in real solvers)
+    unassigned_vars = set()
+    for clause in clauses:
+        for lit in clause:
+            if abs(lit) not in assignment:
+                unassigned_vars.add(abs(lit))
+
+    if not unassigned_vars:
+        return None
+
+    var = next(iter(unassigned_vars))
+
+    # Try True
+    assignment[var] = True
+    result = dpll(clauses, assignment.copy())
+    if result:
+        return result
+
+    # Backtrack, try False
+    assignment[var] = False
+    return dpll(clauses, assignment.copy())</code></pre>
+                </div>
+            </div>
+        </div>
+
         <h2 class="mt-4">Self-Check Quiz</h2>
         <div class="quiz-container" id="module-quiz"></div>
+
+        <!-- Interview Follow-up Questions Section -->
+        <h2 class="mt-4">Interview Follow-up Questions</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Common Follow-ups & What Interviewers Look For</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>1. "How would you optimize this backtracking solution?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Mention specific pruning strategies (constraint propagation, bounds)</li>
+                    <li>Discuss ordering heuristics (most constrained variable first)</li>
+                    <li>Consider memoization if subproblems overlap</li>
+                </ul>
+                <p><strong>Red flags:</strong> Only suggesting "use DP instead" without understanding when backtracking is necessary (constraint satisfaction vs optimization).</p>
+
+                <h4>2. "What's the time complexity? Can you prove it?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Branching factor analysis (e.g., N-Queens: up to N choices per row)</li>
+                    <li>Depth of recursion tree</li>
+                    <li>Impact of pruning on average case vs worst case</li>
+                </ul>
+                <p><strong>Red flags:</strong> Saying "exponential" without specifics. Know that N-Queens is O(N!) worst case but often much better due to pruning.</p>
+
+                <h4>3. "How would you handle duplicate elements in the input?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Sort first to group duplicates</li>
+                    <li>Skip duplicates at the same recursion level: <code>if i > start and nums[i] == nums[i-1]: continue</code></li>
+                    <li>Explain WHY this works (same element at same position produces identical subtree)</li>
+                </ul>
+                <p><strong>Red flags:</strong> Using a set to deduplicate results (inefficient), not understanding why sorting helps.</p>
+
+                <h4>4. "Can you solve this iteratively instead of recursively?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Understanding that backtracking = DFS with pruning</li>
+                    <li>Explicit stack to track state (choice + position)</li>
+                    <li>Manual backtracking when popping from stack</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not knowing recursion can always be converted to iteration with explicit stack.</p>
+
+                <h4>5. "What if we need the optimal solution, not just any valid one?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Transition from backtracking to branch-and-bound</li>
+                    <li>Maintain global best and prune branches that can't improve</li>
+                    <li>Discuss bound calculation strategies</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not distinguishing between satisfiability (any solution) and optimization (best solution).</p>
+            </div>
+        </div>
 
         <h2 class="mt-4">Practice Problems</h2>
         <div class="card">
@@ -320,6 +900,18 @@ def combinations(n, k):
                     options: ["To save memory", "To explore other branches", "Required by Python", "For efficiency"],
                     correct: 1,
                     explanation: "Undoing allows us to try other choices from the same position, exploring the full solution space."
+                },
+                {
+                    question: "What is the MRV (Minimum Remaining Values) heuristic in backtracking?",
+                    options: ["Choose the largest value first", "Choose the variable with fewest valid options", "Minimize recursion depth", "Maximize pruning opportunities"],
+                    correct: 1,
+                    explanation: "MRV chooses the most constrained variable (fewest valid choices), causing failures earlier and reducing search space."
+                },
+                {
+                    question: "How does branch-and-bound differ from regular backtracking?",
+                    options: ["It uses iteration instead of recursion", "It maintains bounds to prune non-optimal branches", "It only works on graphs", "It doesn't undo choices"],
+                    correct: 1,
+                    explanation: "Branch-and-bound extends backtracking for optimization by pruning branches that cannot improve the best solution found."
                 }
             ];
             const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);

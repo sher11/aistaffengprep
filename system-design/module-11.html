@@ -367,6 +367,519 @@ flowchart TB
                         <li><strong>Connection State:</strong> Store in Redis for failover</li>
                         <li><strong>Horizontal Scaling:</strong> Add servers behind load balancer</li>
                     </ul>
+
+                    <h4 class="mt-3">Production WebSocket Server - Python</h4>
+                    <div class="code-block">
+                        <code>
+# Python - Scalable WebSocket server with FastAPI
+import asyncio
+import json
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from typing import Dict, Set
+import redis.asyncio as redis
+from dataclasses import dataclass
+import uuid
+
+app = FastAPI()
+
+@dataclass
+class ConnectionManager:
+    server_id: str = str(uuid.uuid4())[:8]
+
+    def __post_init__(self):
+        self.active_connections: Dict[str, Set[WebSocket]] = {}
+        self.redis: redis.Redis = None
+
+    async def connect(self):
+        self.redis = await redis.from_url("redis://localhost")
+        # Start listening for cross-server messages
+        asyncio.create_task(self._listen_for_broadcasts())
+
+    async def register(self, user_id: str, websocket: WebSocket):
+        await websocket.accept()
+
+        if user_id not in self.active_connections:
+            self.active_connections[user_id] = set()
+        self.active_connections[user_id].add(websocket)
+
+        # Track user -> server mapping
+        await self.redis.hset("ws:user_servers", user_id, self.server_id)
+        await self.redis.sadd(f"ws:server:{self.server_id}:users", user_id)
+
+        print(f"User {user_id} connected to server {self.server_id}")
+
+    async def disconnect(self, user_id: str, websocket: WebSocket):
+        if user_id in self.active_connections:
+            self.active_connections[user_id].discard(websocket)
+            if not self.active_connections[user_id]:
+                del self.active_connections[user_id]
+                await self.redis.hdel("ws:user_servers", user_id)
+                await self.redis.srem(f"ws:server:{self.server_id}:users", user_id)
+
+    async def send_to_user(self, user_id: str, message: dict):
+        """Send message to user, routing across servers if needed."""
+        # Check if user is on this server
+        if user_id in self.active_connections:
+            await self._send_local(user_id, message)
+        else:
+            # Publish to Redis for other servers
+            await self.redis.publish(
+                f"ws:messages:{user_id}",
+                json.dumps(message)
+            )
+
+    async def broadcast_to_channel(self, channel: str, message: dict):
+        """Broadcast to all subscribers of a channel."""
+        # Publish to Redis channel
+        await self.redis.publish(
+            f"ws:channel:{channel}",
+            json.dumps(message)
+        )
+
+    async def _send_local(self, user_id: str, message: dict):
+        """Send to local WebSocket connections."""
+        connections = self.active_connections.get(user_id, set())
+        dead_connections = set()
+
+        for ws in connections:
+            try:
+                await ws.send_json(message)
+            except Exception:
+                dead_connections.add(ws)
+
+        # Clean up dead connections
+        for ws in dead_connections:
+            await self.disconnect(user_id, ws)
+
+    async def _listen_for_broadcasts(self):
+        """Listen for messages from other servers."""
+        pubsub = self.redis.pubsub()
+        await pubsub.psubscribe("ws:messages:*", "ws:channel:*")
+
+        async for message in pubsub.listen():
+            if message["type"] == "pmessage":
+                pattern = message["pattern"].decode()
+                channel = message["channel"].decode()
+                data = json.loads(message["data"])
+
+                if pattern == "ws:messages:*":
+                    # Direct message to user
+                    user_id = channel.split(":")[-1]
+                    if user_id in self.active_connections:
+                        await self._send_local(user_id, data)
+                elif pattern == "ws:channel:*":
+                    # Channel broadcast - send to all local subscribers
+                    # (subscription logic not shown for brevity)
+                    pass
+
+
+manager = ConnectionManager()
+
+@app.on_event("startup")
+async def startup():
+    await manager.connect()
+
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    await manager.register(user_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            # Handle different message types
+            if data.get("type") == "message":
+                await manager.send_to_user(
+                    data["to"],
+                    {"from": user_id, "content": data["content"]}
+                )
+            elif data.get("type") == "subscribe":
+                # Subscribe to channel
+                pass
+    except WebSocketDisconnect:
+        await manager.disconnect(user_id, websocket)
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">Production WebSocket Server - Go</h4>
+                    <div class="code-block">
+                        <code>
+// Go - High-performance WebSocket server with gorilla/websocket
+
+package main
+
+import (
+    "encoding/json"
+    "log"
+    "net/http"
+    "sync"
+
+    "github.com/gorilla/websocket"
+    "github.com/redis/go-redis/v9"
+)
+
+type Client struct {
+    UserID string
+    Conn   *websocket.Conn
+    Send   chan []byte
+}
+
+type Hub struct {
+    clients    map[string]map[*Client]bool // userID -> clients
+    broadcast  chan []byte
+    register   chan *Client
+    unregister chan *Client
+    redis      *redis.Client
+    mu         sync.RWMutex
+}
+
+func newHub(redisAddr string) *Hub {
+    return &Hub{
+        clients:    make(map[string]map[*Client]bool),
+        broadcast:  make(chan []byte, 256),
+        register:   make(chan *Client),
+        unregister: make(chan *Client),
+        redis:      redis.NewClient(&redis.Options{Addr: redisAddr}),
+    }
+}
+
+func (h *Hub) run() {
+    for {
+        select {
+        case client := <-h.register:
+            h.mu.Lock()
+            if h.clients[client.UserID] == nil {
+                h.clients[client.UserID] = make(map[*Client]bool)
+            }
+            h.clients[client.UserID][client] = true
+            h.mu.Unlock()
+
+        case client := <-h.unregister:
+            h.mu.Lock()
+            if clients, ok := h.clients[client.UserID]; ok {
+                delete(clients, client)
+                close(client.Send)
+                if len(clients) == 0 {
+                    delete(h.clients, client.UserID)
+                }
+            }
+            h.mu.Unlock()
+
+        case message := <-h.broadcast:
+            h.mu.RLock()
+            for _, clients := range h.clients {
+                for client := range clients {
+                    select {
+                    case client.Send <- message:
+                    default:
+                        close(client.Send)
+                        delete(clients, client)
+                    }
+                }
+            }
+            h.mu.RUnlock()
+        }
+    }
+}
+
+func (h *Hub) sendToUser(userID string, message []byte) {
+    h.mu.RLock()
+    clients, ok := h.clients[userID]
+    h.mu.RUnlock()
+
+    if ok {
+        for client := range clients {
+            select {
+            case client.Send <- message:
+            default:
+                // Buffer full, skip
+            }
+        }
+    }
+}
+
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+    CheckOrigin:     func(r *http.Request) bool { return true },
+}
+
+func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+    userID := r.URL.Query().Get("user_id")
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+        log.Println(err)
+        return
+    }
+
+    client := &Client{
+        UserID: userID,
+        Conn:   conn,
+        Send:   make(chan []byte, 256),
+    }
+    hub.register <- client
+
+    // Start read/write pumps
+    go client.writePump()
+    go client.readPump(hub)
+}
+
+func (c *Client) writePump() {
+    defer c.Conn.Close()
+    for message := range c.Send {
+        if err := c.Conn.WriteMessage(websocket.TextMessage, message); err != nil {
+            return
+        }
+    }
+}
+
+func (c *Client) readPump(hub *Hub) {
+    defer func() {
+        hub.unregister <- c
+        c.Conn.Close()
+    }()
+
+    for {
+        _, message, err := c.Conn.ReadMessage()
+        if err != nil {
+            break
+        }
+        // Process message
+        var msg map[string]interface{}
+        json.Unmarshal(message, &msg)
+        // Route to recipient
+    }
+}
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Failure Scenarios</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>WebSocket Server Crash</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>What Happens</h4>
+                    <ol>
+                        <li>Server crashes, all connections drop</li>
+                        <li>Clients detect disconnect (no pong/heartbeat)</li>
+                        <li>Clients reconnect to load balancer</li>
+                        <li>Routed to different server</li>
+                        <li>Must sync missed messages</li>
+                    </ol>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant LB as Load Balancer
+    participant S1 as Server 1
+    participant S2 as Server 2
+    participant R as Redis
+
+    C->>LB: Connect
+    LB->>S1: Route
+    S1->>R: Register user
+    Note over S1: Server 1 CRASHES
+    C->>C: Detect disconnect
+    C->>LB: Reconnect
+    LB->>S2: Route to healthy server
+    S2->>R: Re-register user
+    S2->>R: Get pending messages
+    S2->>C: Deliver missed messages
+                        </div>
+                    </div>
+
+                    <h4>Recovery Implementation</h4>
+                    <div class="code-block">
+                        <code>
+# Python - Client-side reconnection with message sync
+
+class ResilientWebSocketClient:
+    def __init__(self, url: str, user_id: str):
+        self.url = url
+        self.user_id = user_id
+        self.last_message_id = None
+        self.reconnect_delay = 1.0
+        self.max_delay = 30.0
+
+    async def connect_with_retry(self):
+        while True:
+            try:
+                await self._connect()
+                self.reconnect_delay = 1.0  # Reset on success
+            except Exception as e:
+                print(f"Connection failed: {e}")
+                await asyncio.sleep(self.reconnect_delay)
+                # Exponential backoff with jitter
+                self.reconnect_delay = min(
+                    self.reconnect_delay * 2 * (0.5 + random.random()),
+                    self.max_delay
+                )
+
+    async def _connect(self):
+        async with websockets.connect(self.url) as ws:
+            # Request messages since last known ID
+            await ws.send(json.dumps({
+                "type": "sync",
+                "last_message_id": self.last_message_id
+            }))
+
+            async for message in ws:
+                data = json.loads(message)
+                self.last_message_id = data.get("message_id")
+                await self.handle_message(data)
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Redis Pub/Sub Failure</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>If Redis fails, cross-server messaging breaks down.</p>
+
+                    <h4>Mitigation Strategies</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Strategy</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Implementation</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Redis Sentinel/Cluster</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Automatic failover to replica</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Local queue buffering</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Queue messages during Redis outage, flush when recovered</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fallback to polling</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Degrade to HTTP polling if WebSocket infra fails</td>
+                        </tr>
+                    </table>
+
+                    <div class="code-block">
+                        <code>
+# Python - Message buffering during Redis outage
+
+class ResilientPubSub:
+    def __init__(self):
+        self.redis = None
+        self.buffer = []
+        self.buffer_limit = 10000
+        self.is_connected = False
+
+    async def publish(self, channel: str, message: dict):
+        if self.is_connected:
+            try:
+                await self.redis.publish(channel, json.dumps(message))
+            except redis.ConnectionError:
+                self.is_connected = False
+                self._buffer_message(channel, message)
+        else:
+            self._buffer_message(channel, message)
+            await self._try_reconnect()
+
+    def _buffer_message(self, channel: str, message: dict):
+        if len(self.buffer) < self.buffer_limit:
+            self.buffer.append((channel, message, time.time()))
+        else:
+            # Drop oldest messages
+            self.buffer.pop(0)
+            self.buffer.append((channel, message, time.time()))
+
+    async def _try_reconnect(self):
+        try:
+            await self.redis.ping()
+            self.is_connected = True
+            await self._flush_buffer()
+        except:
+            pass
+
+    async def _flush_buffer(self):
+        while self.buffer:
+            channel, message, timestamp = self.buffer.pop(0)
+            # Skip messages older than 5 minutes
+            if time.time() - timestamp < 300:
+                await self.redis.publish(channel, json.dumps(message))
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Thundering Herd on Reconnection</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>When a server restarts, all disconnected clients try to reconnect simultaneously.</p>
+
+                    <h4>Prevention</h4>
+                    <ul>
+                        <li><strong>Jittered reconnection:</strong> Clients wait random delay before reconnecting</li>
+                        <li><strong>Connection rate limiting:</strong> Server rejects connections above threshold</li>
+                        <li><strong>Gradual rollout:</strong> Only accept percentage of reconnections initially</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+# Go - Server-side connection rate limiting
+
+type ConnectionLimiter struct {
+    maxConnPerSecond int
+    tokens           chan struct{}
+}
+
+func NewConnectionLimiter(maxPerSecond int) *ConnectionLimiter {
+    cl := &ConnectionLimiter{
+        maxConnPerSecond: maxPerSecond,
+        tokens:           make(chan struct{}, maxPerSecond),
+    }
+
+    // Refill tokens every second
+    go func() {
+        ticker := time.NewTicker(time.Second)
+        for range ticker.C {
+            // Refill to max
+            for len(cl.tokens) < maxPerSecond {
+                select {
+                case cl.tokens <- struct{}{}:
+                default:
+                }
+            }
+        }
+    }()
+
+    return cl
+}
+
+func (cl *ConnectionLimiter) AllowConnection() bool {
+    select {
+    case <-cl.tokens:
+        return true
+    default:
+        return false
+    }
+}
+
+// Usage in WebSocket handler
+func handleConnection(w http.ResponseWriter, r *http.Request) {
+    if !limiter.AllowConnection() {
+        w.Header().Set("Retry-After", "5")
+        http.Error(w, "Too many connections", 503)
+        return
+    }
+    // Accept connection...
+}
+                        </code>
+                    </div>
                 </div>
             </div>
 

@@ -352,7 +352,290 @@ ZREVRANGE user:123:feed 0 19
                 </div>
             </div>
 
-            <h2 class="mt-4">8. Summary</h2>
+            <h2 class="mt-4">8. Working Implementation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Fan-out Service Implementation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - Hybrid Fan-out Feed Generator
+
+import asyncio
+from typing import List, Set
+import redis.asyncio as redis
+from dataclasses import dataclass
+import json
+import time
+
+CELEBRITY_THRESHOLD = 10000  # Followers to be considered "celebrity"
+
+@dataclass
+class Post:
+    post_id: str
+    author_id: str
+    content: str
+    timestamp: int
+    media_urls: List[str] = None
+
+class FeedService:
+    def __init__(self, redis_url: str):
+        self.redis = redis.from_url(redis_url)
+
+    async def publish_post(self, post: Post):
+        """
+        Handle new post with hybrid fan-out strategy.
+        """
+        # Get follower count
+        follower_count = await self.redis.scard(f"user:{post.author_id}:followers")
+
+        if follower_count > CELEBRITY_THRESHOLD:
+            # Celebrity - don't fan out, pull at read time
+            await self._store_celebrity_post(post)
+        else:
+            # Regular user - fan out to all followers
+            await self._fan_out_to_followers(post)
+
+    async def _fan_out_to_followers(self, post: Post):
+        """
+        Push post to each follower's feed cache.
+        Use async workers for large follower lists.
+        """
+        followers = await self.redis.smembers(f"user:{post.author_id}:followers")
+
+        # Batch updates for efficiency
+        pipe = self.redis.pipeline()
+        for follower_id in followers:
+            follower_id = follower_id.decode()
+            # Add to sorted set (score = timestamp for ordering)
+            pipe.zadd(
+                f"feed:{follower_id}",
+                {post.post_id: post.timestamp}
+            )
+            # Trim feed to last 1000 posts
+            pipe.zremrangebyrank(f"feed:{follower_id}", 0, -1001)
+
+        await pipe.execute()
+
+    async def _store_celebrity_post(self, post: Post):
+        """Store celebrity post separately - will be merged at read time."""
+        await self.redis.zadd(
+            f"celebrity_posts:{post.author_id}",
+            {post.post_id: post.timestamp}
+        )
+
+    async def get_feed(self, user_id: str, page: int = 0, size: int = 20) -> List[dict]:
+        """
+        Get user's feed with hybrid approach.
+        """
+        # 1. Get pre-computed feed (from regular users)
+        start = page * size
+        end = start + size - 1
+
+        cached_posts = await self.redis.zrevrange(
+            f"feed:{user_id}",
+            start, end,
+            withscores=True
+        )
+
+        # 2. Get posts from celebrities the user follows
+        celebrities = await self._get_followed_celebrities(user_id)
+        celebrity_posts = []
+
+        for celeb_id in celebrities:
+            posts = await self.redis.zrevrange(
+                f"celebrity_posts:{celeb_id}",
+                0, 50,  # Recent celebrity posts
+                withscores=True
+            )
+            celebrity_posts.extend(posts)
+
+        # 3. Merge and sort by timestamp
+        all_posts = list(cached_posts) + celebrity_posts
+        all_posts.sort(key=lambda x: x[1], reverse=True)
+
+        # 4. Apply ranking (simplified - in production use ML)
+        ranked = await self._apply_ranking(user_id, all_posts[:100])
+
+        # 5. Fetch full post data
+        post_ids = [p[0].decode() if isinstance(p[0], bytes) else p[0]
+                    for p in ranked[:size]]
+        return await self._get_posts_by_ids(post_ids)
+
+    async def _get_followed_celebrities(self, user_id: str) -> List[str]:
+        """Get celebrities that user follows."""
+        following = await self.redis.smembers(f"user:{user_id}:following")
+        celebrities = []
+
+        for uid in following:
+            uid = uid.decode()
+            follower_count = await self.redis.scard(f"user:{uid}:followers")
+            if follower_count > CELEBRITY_THRESHOLD:
+                celebrities.append(uid)
+
+        return celebrities
+
+    async def _apply_ranking(self, user_id: str, posts: List) -> List:
+        """
+        Apply simple ranking based on:
+        - Recency
+        - Engagement (likes, comments)
+        - User affinity
+        """
+        ranked = []
+        for post_id, timestamp in posts:
+            post_id = post_id.decode() if isinstance(post_id, bytes) else post_id
+
+            # Get engagement metrics
+            likes = int(await self.redis.get(f"post:{post_id}:likes") or 0)
+            comments = int(await self.redis.get(f"post:{post_id}:comments") or 0)
+
+            # Simple scoring formula
+            age_hours = (time.time() - timestamp) / 3600
+            engagement_score = likes + comments * 2
+            recency_decay = 1 / (1 + age_hours / 24)
+
+            score = engagement_score * recency_decay
+            ranked.append((post_id, score, timestamp))
+
+        ranked.sort(key=lambda x: x[1], reverse=True)
+        return [(p[0], p[2]) for p in ranked]
+
+    async def _get_posts_by_ids(self, post_ids: List[str]) -> List[dict]:
+        """Fetch full post objects."""
+        posts = []
+        for post_id in post_ids:
+            data = await self.redis.hgetall(f"post:{post_id}")
+            if data:
+                posts.append({k.decode(): v.decode() for k, v in data.items()})
+        return posts
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">9. Failure Scenarios</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Celebrity Post Problem</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>When a celebrity with 10M followers posts, fan-out would mean 10M Redis writes.</p>
+
+                    <h4>Solutions</h4>
+                    <ul>
+                        <li><strong>Hybrid approach:</strong> Don't fan-out celebrity posts; merge at read time</li>
+                        <li><strong>Async workers:</strong> Queue fan-out jobs, process in background</li>
+                        <li><strong>Tiered storage:</strong> Active users get push, inactive get pull</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+# Worker for async fan-out
+
+class FanOutWorker:
+    BATCH_SIZE = 1000
+
+    async def process_post(self, post: Post):
+        """Process fan-out in batches to avoid overwhelming Redis."""
+        followers = await self._get_followers_cursor(post.author_id)
+
+        batch = []
+        async for follower_id in followers:
+            batch.append(follower_id)
+
+            if len(batch) >= self.BATCH_SIZE:
+                await self._fan_out_batch(post, batch)
+                batch = []
+                await asyncio.sleep(0.01)  # Rate limit
+
+        if batch:
+            await self._fan_out_batch(post, batch)
+
+    async def _fan_out_batch(self, post: Post, followers: List[str]):
+        pipe = self.redis.pipeline()
+        for follower_id in followers:
+            pipe.zadd(f"feed:{follower_id}", {post.post_id: post.timestamp})
+        await pipe.execute()
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Cache Stampede on Cold Cache</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>When user's feed cache is empty (new user, cache eviction), rebuilding is expensive.</p>
+
+                    <div class="code-block">
+                        <code>
+# Feed cache warming with request coalescing
+
+class FeedCache:
+    def __init__(self):
+        self.rebuilding: Dict[str, asyncio.Future] = {}
+
+    async def get_feed(self, user_id: str) -> List[dict]:
+        # Check if cache exists
+        cached = await self.redis.exists(f"feed:{user_id}")
+
+        if cached:
+            return await self._get_cached_feed(user_id)
+
+        # Cache miss - check if already rebuilding
+        if user_id in self.rebuilding:
+            return await self.rebuilding[user_id]
+
+        # Start rebuild
+        future = asyncio.Future()
+        self.rebuilding[user_id] = future
+
+        try:
+            feed = await self._rebuild_feed(user_id)
+            future.set_result(feed)
+            return feed
+        finally:
+            del self.rebuilding[user_id]
+
+    async def _rebuild_feed(self, user_id: str) -> List[dict]:
+        """Rebuild feed from scratch - expensive operation."""
+        following = await self.redis.smembers(f"user:{user_id}:following")
+
+        posts = []
+        for author_id in following:
+            author_posts = await self.db.query('''
+                SELECT * FROM posts
+                WHERE author_id = %s
+                AND created_at > NOW() - INTERVAL 7 DAY
+                ORDER BY created_at DESC
+                LIMIT 50
+            ''', author_id)
+            posts.extend(author_posts)
+
+        # Sort and cache
+        posts.sort(key=lambda p: p['created_at'], reverse=True)
+
+        pipe = self.redis.pipeline()
+        for post in posts[:500]:
+            pipe.zadd(f"feed:{user_id}", {post['id']: post['created_at']})
+        pipe.expire(f"feed:{user_id}", 86400)
+        await pipe.execute()
+
+        return posts[:20]
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">10. Summary</h2>
 
             <div class="card">
                 <table style="width: 100%; border-collapse: collapse;">

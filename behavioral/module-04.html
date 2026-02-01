@@ -200,6 +200,187 @@ flowchart LR
             <p><strong>Result:</strong> "We went with the gradual approach with a 2-week parallel period instead of 4. The migration succeeded with zero incidents. More importantly, my colleague and I built a stronger working relationship through the process."</p>
         </div>
 
+        <h2 class="mt-4">Advanced Scenarios: Staff-Level Conflict Stories</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Cross-Team Conflict During Outages</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Outages create high-pressure conflicts. Teams blame each other, emotions run high, and decisions need to be made fast.</p>
+
+                <h4>Conflict Patterns During Incidents</h4>
+                <ul>
+                    <li><strong>Blame shifting:</strong> "It's not our service, it must be yours"</li>
+                    <li><strong>Process disputes:</strong> "You should have told us before deploying"</li>
+                    <li><strong>Resource conflicts:</strong> "We need your engineer to help, but they're not responding"</li>
+                    <li><strong>Escalation pressure:</strong> External stakeholders demanding answers</li>
+                </ul>
+
+                <h4>Story Structure for Crisis Conflict</h4>
+                <ol>
+                    <li><strong>Crisis context (15%):</strong> What was happening, what was at stake</li>
+                    <li><strong>Conflict moment (20%):</strong> The specific disagreement or blame</li>
+                    <li><strong>De-escalation (35%):</strong> How you redirected energy toward resolution</li>
+                    <li><strong>Resolution (20%):</strong> How the incident was resolved</li>
+                    <li><strong>Post-mortem repair (10%):</strong> Relationship and process fixes afterward</li>
+                </ol>
+
+                <h4>Example: Incident Blame Conflict</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "During a production outage, the Platform team was insisting the issue was in our service, while our metrics showed we were receiving malformed requests from their API gateway."</p>
+
+                    <p><strong>Conflict moment:</strong> "The Slack channel became heated. Their lead said, 'Your service has always been fragile.' Tension was rising and we were wasting time arguing instead of debugging."</p>
+
+                    <p><strong>Action:</strong></p>
+                    <ul>
+                        <li>"I took it off Slack and got both teams on a call"</li>
+                        <li>"Proposed: 'Let's assume both services might have issues. I'll assign one engineer to check our side while you check yours. We'll share findings in 15 minutes.'"</li>
+                        <li>"Created a shared timeline doc to focus on facts, not feelings"</li>
+                        <li>"When we found the root cause (in their gateway), I framed it as 'Now we can fix it' not 'We were right'"</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "Incident resolved in 40 minutes. In the post-mortem, I acknowledged we should have better input validation, and they acknowledged the gateway bug. We implemented automated contract testing between our services."</p>
+
+                    <p><strong>Relationship:</strong> "I reached out to their lead the next day to rebuild rapport. We're now on good terms and have a direct escalation path that bypasses Slack debates."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Multi-Team Alignment Conflicts</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Staff engineers often mediate when multiple teams have conflicting priorities or approaches.</p>
+
+                <h4>Common Multi-Team Conflicts</h4>
+                <ul>
+                    <li><strong>Priority conflicts:</strong> "Your team should work on our dependency first"</li>
+                    <li><strong>Technical approach:</strong> Multiple valid solutions, no clear winner</li>
+                    <li><strong>Ownership disputes:</strong> "That should be your responsibility, not ours"</li>
+                    <li><strong>Timeline disagreements:</strong> Different teams with different constraints</li>
+                </ul>
+
+                <h4>Mediation Approach</h4>
+                <ol>
+                    <li><strong>Separate meetings first:</strong> Understand each side's real concerns privately</li>
+                    <li><strong>Find the underlying interest:</strong> Often conflict is about concerns, not positions</li>
+                    <li><strong>Create evaluation criteria:</strong> Objective framework before discussing solutions</li>
+                    <li><strong>Facilitate, don't dictate:</strong> Help teams reach their own agreement</li>
+                    <li><strong>Document the agreement:</strong> Written commitment reduces future disputes</li>
+                </ol>
+
+                <h4>Example: Cross-Team Technical Alignment</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "Three teams needed to integrate with a new authentication service. Each team proposed a different integration pattern. Discussions in the architecture forum became circular - no one would budge."</p>
+
+                    <p><strong>Task:</strong> "I was asked to help break the deadlock. I had no authority over any of the teams."</p>
+
+                    <p><strong>Action:</strong></p>
+                    <ul>
+                        <li>"Met with each tech lead individually to understand their real constraints (not just preferences)"</li>
+                        <li>"Team A needed low latency. Team B needed offline capability. Team C needed audit trails."</li>
+                        <li>"Created an evaluation matrix with all three concerns weighted equally"</li>
+                        <li>"Discovered Team A's pattern actually satisfied Team C's needs with minor modification"</li>
+                        <li>"Proposed hybrid: Team A's pattern with Team B's fallback mechanism"</li>
+                        <li>"Facilitated joint meeting where each lead had to present benefits of the other approaches"</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "Agreement reached in one 90-minute meeting after weeks of circular debate. The hybrid approach addressed all constraints. I was later asked to mediate two other cross-team discussions."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Organizational Change Conflicts</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Reorgs, process changes, and leadership transitions create conflicts about direction, ownership, and priorities.</p>
+
+                <h4>Common Scenarios</h4>
+                <ul>
+                    <li><strong>Post-reorg confusion:</strong> Who owns what? Which priorities win?</li>
+                    <li><strong>New leader friction:</strong> Existing team vs. new management approach</li>
+                    <li><strong>Process change resistance:</strong> "We've always done it this way"</li>
+                    <li><strong>Layoff aftermath:</strong> Survivor guilt, increased workload, unclear ownership</li>
+                </ul>
+
+                <h4>Navigation Principles</h4>
+                <ul>
+                    <li><strong>Stay neutral:</strong> Don't take sides in political battles</li>
+                    <li><strong>Focus on work:</strong> Redirect energy to productive tasks</li>
+                    <li><strong>Bridge gaps:</strong> Help connect people who need to collaborate</li>
+                    <li><strong>Document decisions:</strong> Reduce "he said, she said" conflicts</li>
+                    <li><strong>Support transitions:</strong> Help new leaders succeed rather than testing them</li>
+                </ul>
+
+                <h4>Example: Post-Reorg Ownership Conflict</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "After a reorg, two teams both believed they owned the notification service. Both teams started making changes without coordinating, leading to conflicts and bugs."</p>
+
+                    <p><strong>Task:</strong> "I was a senior engineer on one of the teams but recognized this needed resolution regardless of which team 'won.'"</p>
+
+                    <p><strong>Action:</strong></p>
+                    <ul>
+                        <li>"Proposed a temporary ownership freeze while we figured this out"</li>
+                        <li>"Met with both managers and the director who made the reorg decision"</li>
+                        <li>"Created a document listing all notification service responsibilities and asked each team to claim what they thought they owned"</li>
+                        <li>"Made the overlap visible - turns out it was only 20% of the service"</li>
+                        <li>"Proposed splitting along functional lines rather than all-or-nothing"</li>
+                        <li>"Offered to be the interface person during 3-month transition period"</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "Clean ownership boundary established. Both teams agreed on interface contracts. No more conflicting changes. The director later used our resolution approach as a template for other post-reorg conflicts."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Escalation Decision Framework</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Knowing when to escalate is as important as conflict resolution skills.</p>
+
+                <h4>Escalate When:</h4>
+                <ul>
+                    <li><strong>Multiple good-faith attempts failed:</strong> You've genuinely tried</li>
+                    <li><strong>Decision authority is unclear:</strong> No one has the right to decide</li>
+                    <li><strong>Stakes are too high for delay:</strong> Continued conflict causes real damage</li>
+                    <li><strong>Safety/legal/ethical issues:</strong> Never delay on these</li>
+                    <li><strong>Pattern of behavior:</strong> Same person causing repeated conflicts</li>
+                </ul>
+
+                <h4>Don't Escalate When:</h4>
+                <ul>
+                    <li><strong>You haven't really tried:</strong> Direct conversation should come first</li>
+                    <li><strong>You want to "win":</strong> Escalation isn't a weapon</li>
+                    <li><strong>It's just uncomfortable:</strong> Difficult conversations are your job</li>
+                    <li><strong>The issue is trivial:</strong> Pick your battles</li>
+                </ul>
+
+                <h4>How to Escalate Professionally</h4>
+                <ol>
+                    <li>Document your attempts at resolution</li>
+                    <li>Present the conflict neutrally (not "they're wrong")</li>
+                    <li>Explain the business impact of the impasse</li>
+                    <li>Propose options, including your recommendation</li>
+                    <li>Ask for help facilitating, not for a ruling in your favor</li>
+                </ol>
+
+                <div style="background: var(--warning-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <h5>Interview Tip</h5>
+                    <p>When telling escalation stories, emphasize what you tried before escalating. The interviewer wants to see that escalation was a last resort, not your first move.</p>
+                </div>
+            </div>
+        </div>
+
         <h2 class="mt-4">Self-Check Quiz</h2>
         <div class="quiz-container" id="module-quiz"></div>
 

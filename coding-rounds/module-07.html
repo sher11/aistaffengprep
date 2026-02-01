@@ -245,8 +245,334 @@ def merge_k_lists(lists):
             </div>
         </div>
 
+        <!-- Real-World Scale Examples -->
+        <h2 class="mt-4">Real-World Scale Examples</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Google Search: Sorting Billions of Results</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Google processes 8.5 billion searches per day. Each query matches millions of documents that must be ranked and sorted. But users only see the top 10 - this is a Top-K problem at massive scale.</p>
+
+                <h4>Why Full Sorting is Impossible</h4>
+                <ul>
+                    <li><strong>Query "python":</strong> Matches ~1 billion documents</li>
+                    <li><strong>Full sort:</strong> O(n log n) = 30 billion comparisons</li>
+                    <li><strong>Top-K with heap:</strong> O(n log k) = 10 billion comparisons for top 1000</li>
+                    <li><strong>Reality:</strong> Google uses multi-stage filtering + heap merge</li>
+                </ul>
+
+                <div class="code-block">
+                    <pre><code># Google-style distributed top-K search results
+import heapq
+
+class DistributedSearchRanker:
+    """
+    Search results come from 1000s of index shards.
+    Each shard returns its local top-K, then we merge.
+    """
+    def __init__(self, num_shards=1000, local_k=100, global_k=10):
+        self.num_shards = num_shards
+        self.local_k = local_k
+        self.global_k = global_k
+
+    def search_shard(self, shard_id, query):
+        """
+        Each shard has ~1M documents.
+        Returns top local_k results using heap.
+        """
+        # In reality: TF-IDF / BM25 scoring + PageRank
+        results = self.score_documents(shard_id, query)
+
+        # Use min-heap of size k to find top-k
+        # O(n log k) where n = documents in shard
+        top_k = heapq.nlargest(self.local_k, results, key=lambda x: x['score'])
+        return top_k
+
+    def merge_results(self, shard_results):
+        """
+        Merge top-k from each shard into global top-k.
+        This is k-way merge with heap: O(shards * local_k * log(shards))
+        """
+        # Create iterator for each shard's results
+        iterators = [iter(sorted(r, key=lambda x: -x['score']))
+                    for r in shard_results]
+
+        # Min heap of (negative_score, shard_index, doc)
+        heap = []
+        for i, it in enumerate(iterators):
+            try:
+                doc = next(it)
+                heapq.heappush(heap, (-doc['score'], i, doc, it))
+            except StopIteration:
+                pass
+
+        # Extract global top-k
+        global_top_k = []
+        while heap and len(global_top_k) < self.global_k:
+            neg_score, shard_idx, doc, it = heapq.heappop(heap)
+            global_top_k.append(doc)
+
+            try:
+                next_doc = next(it)
+                heapq.heappush(heap, (-next_doc['score'], shard_idx, next_doc, it))
+            except StopIteration:
+                pass
+
+        return global_top_k
+
+# Google optimization: "Two-phase ranking"
+# Phase 1: Fast scorer returns top 1000 (approximate)
+# Phase 2: Expensive ML model re-ranks top 1000 precisely</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Twitter: Real-Time Timeline Ranking with Heaps</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Twitter processes 500 million tweets per day. Your timeline merges tweets from 1000s of accounts you follow, ranked by relevance - a classic k-way merge problem.</p>
+
+                <h4>Fan-out on Read vs Write</h4>
+                <div class="code-block">
+                    <pre><code># Twitter-style timeline generation
+import heapq
+from collections import defaultdict
+
+class TimelineService:
+    """
+    Two approaches to timeline:
+    1. Fan-out on write: Pre-compute timelines (fast read, slow write)
+    2. Fan-out on read: Compute on demand (slow read, fast write)
+
+    Twitter uses hybrid: celebrities fan-out on read, others on write.
+    """
+    def __init__(self):
+        self.user_tweets = defaultdict(list)  # user -> [tweets]
+        self.followers = defaultdict(set)      # user -> {followers}
+        self.precomputed_timelines = {}        # For non-celebrity users
+
+    def post_tweet(self, user_id, tweet):
+        """O(1) for celebrities, O(followers) for regular users."""
+        self.user_tweets[user_id].append(tweet)
+
+        if self.is_celebrity(user_id):
+            # Don't fan out - too many followers
+            pass
+        else:
+            # Fan-out on write to followers' precomputed timelines
+            for follower in self.followers[user_id]:
+                if follower in self.precomputed_timelines:
+                    self._add_to_timeline(follower, tweet)
+
+    def get_timeline(self, user_id, limit=20):
+        """
+        Merge tweets from followed users using heap.
+        O(following * tweets_per_user * log(following))
+        """
+        following = self.get_following(user_id)
+
+        # Create heap of (timestamp, tweet, user_iterator)
+        heap = []
+        iterators = {}
+
+        for followed_user in following:
+            tweets = self.user_tweets[followed_user]
+            if tweets:
+                # Iterator from newest to oldest
+                it = iter(reversed(tweets))
+                tweet = next(it)
+                iterators[followed_user] = it
+                # Use negative timestamp for max-heap behavior
+                heapq.heappush(heap, (-tweet['timestamp'], followed_user, tweet))
+
+        # Extract top 'limit' tweets
+        timeline = []
+        while heap and len(timeline) < limit:
+            _, user, tweet = heapq.heappop(heap)
+            timeline.append(tweet)
+
+            it = iterators.get(user)
+            if it:
+                try:
+                    next_tweet = next(it)
+                    heapq.heappush(heap, (-next_tweet['timestamp'], user, next_tweet))
+                except StopIteration:
+                    pass
+
+        return timeline
+
+# Reality: ML ranking layer on top for "relevance" vs just recency</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Apache Spark: External Sorting for Big Data</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>When data exceeds memory, external sorting becomes essential. Apache Spark, used by Netflix, Uber, and Airbnb, implements sophisticated external merge sort.</p>
+
+                <h4>External Sort Algorithm</h4>
+                <div class="code-block">
+                    <pre><code># External merge sort (basis of Spark's shuffle)
+import heapq
+import tempfile
+import os
+
+class ExternalSorter:
+    """
+    Sort data larger than memory.
+    Used in: Spark shuffle, database ORDER BY, MapReduce.
+    """
+    def __init__(self, memory_limit_mb=100):
+        self.memory_limit = memory_limit_mb * 1024 * 1024
+        self.temp_files = []
+
+    def sort(self, input_file, output_file, key_func=lambda x: x):
+        """
+        Phase 1: Create sorted runs that fit in memory
+        Phase 2: K-way merge sorted runs
+
+        I/O complexity: O(N/M * log(N/M)) disk reads
+        where N = data size, M = memory size
+        """
+        # Phase 1: Create sorted runs
+        self._create_sorted_runs(input_file, key_func)
+
+        # Phase 2: K-way merge
+        self._merge_runs(output_file, key_func)
+
+        # Cleanup temp files
+        for f in self.temp_files:
+            os.unlink(f)
+
+    def _create_sorted_runs(self, input_file, key_func):
+        """Load chunks, sort in memory, write to temp files."""
+        chunk = []
+        chunk_size = 0
+
+        with open(input_file, 'r') as f:
+            for line in f:
+                chunk.append(line)
+                chunk_size += len(line)
+
+                if chunk_size >= self.memory_limit:
+                    self._write_sorted_run(chunk, key_func)
+                    chunk = []
+                    chunk_size = 0
+
+            if chunk:
+                self._write_sorted_run(chunk, key_func)
+
+    def _write_sorted_run(self, chunk, key_func):
+        """Sort chunk and write to temp file."""
+        chunk.sort(key=key_func)
+
+        temp_fd, temp_path = tempfile.mkstemp()
+        with os.fdopen(temp_fd, 'w') as f:
+            for line in chunk:
+                f.write(line)
+
+        self.temp_files.append(temp_path)
+
+    def _merge_runs(self, output_file, key_func):
+        """K-way merge using min-heap."""
+        # Open all temp files
+        file_handles = [open(f, 'r') for f in self.temp_files]
+
+        # Initialize heap with first element from each file
+        heap = []
+        for i, fh in enumerate(file_handles):
+            line = fh.readline()
+            if line:
+                heapq.heappush(heap, (key_func(line), i, line))
+
+        # Merge
+        with open(output_file, 'w') as out:
+            while heap:
+                _, file_idx, line = heapq.heappop(heap)
+                out.write(line)
+
+                next_line = file_handles[file_idx].readline()
+                if next_line:
+                    heapq.heappush(heap, (key_func(next_line), file_idx, next_line))
+
+        # Close file handles
+        for fh in file_handles:
+            fh.close()
+
+# Spark optimization: Adaptive query execution chooses sort vs hash
+# based on data characteristics at runtime</code></pre>
+                </div>
+            </div>
+        </div>
+
         <h2 class="mt-4">Self-Check Quiz</h2>
         <div class="quiz-container" id="module-quiz"></div>
+
+        <!-- Interview Follow-up Questions -->
+        <h2 class="mt-4">Interview Follow-up Questions</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Common Follow-ups & What Interviewers Look For</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>1. "Why use a min-heap for finding top-K largest elements?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Min-heap of size K: smallest element is the "gatekeeper"</li>
+                    <li>If new element > min, pop min and push new element</li>
+                    <li>O(n log k) vs O(n log n) for full sort</li>
+                </ul>
+                <p><strong>Red flags:</strong> Using max-heap and keeping all n elements.</p>
+
+                <h4>2. "When would you use QuickSelect instead of a heap for top-K?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>QuickSelect: O(n) average but modifies input array</li>
+                    <li>Heap: O(n log k) but maintains streaming capability</li>
+                    <li>QuickSelect: O(n^2) worst case without randomization</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not knowing QuickSelect exists or its trade-offs.</p>
+
+                <h4>3. "How would you maintain a running median of a stream?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Two heaps: max-heap for lower half, min-heap for upper half</li>
+                    <li>Balance sizes (differ by at most 1)</li>
+                    <li>Median = top of larger heap or average of both tops</li>
+                </ul>
+                <p><strong>Red flags:</strong> Sorting the entire stream for each query.</p>
+
+                <h4>4. "Why is Merge Sort preferred for external sorting?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Sequential disk access (merge reads sequentially from runs)</li>
+                    <li>Predictable I/O pattern (no random access like QuickSort)</li>
+                    <li>Stable sorting often required for databases</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not understanding disk I/O constraints.</p>
+
+                <h4>5. "How would you sort 1TB of data with only 1GB of RAM?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>External merge sort: create 1000 sorted runs, k-way merge</li>
+                    <li>Optimization: use multiple disk buffers to overlap I/O and CPU</li>
+                    <li>Real systems: replacement selection for longer initial runs</li>
+                </ul>
+                <p><strong>Red flags:</strong> Only knowing in-memory sorting algorithms.</p>
+            </div>
+        </div>
 
         <h2 class="mt-4">Practice Problems</h2>
         <div class="card">
@@ -304,6 +630,18 @@ def merge_k_lists(lists):
                     options: ["Max heap", "Min heap", "Both", "Neither"],
                     correct: 1,
                     explanation: "Python heapq is a min heap. For max heap, negate values."
+                },
+                {
+                    question: "Why is heapify O(n) instead of O(n log n)?",
+                    options: ["It uses a different algorithm", "Most nodes are near the bottom and sift down a short distance", "It's only approximate", "Python optimizes it specially"],
+                    correct: 1,
+                    explanation: "Heapify uses sift-down from the bottom up. Half the nodes are leaves (0 work), quarter are one level up (1 swap max), etc. The sum converges to O(n)."
+                },
+                {
+                    question: "For maintaining a running median, what two heaps do you use?",
+                    options: ["Two min heaps", "Two max heaps", "Max heap for smaller half, min heap for larger half", "Min heap for smaller half, max heap for larger half"],
+                    correct: 2,
+                    explanation: "Max heap stores smaller half (top = largest of small), min heap stores larger half (top = smallest of large). Median is at the tops."
                 }
             ];
             const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);

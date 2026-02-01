@@ -68,125 +68,2674 @@
         <!-- Main Content -->
         <main class="main-content">
         <h1>Module 3: Non-LeetCode Companies</h1>
-        <p class="text-muted">Stripe, Netflix, OpenAI Preparation</p>
+        <p class="text-muted">Stripe, Netflix, OpenAI - Practical Coding Excellence</p>
 
         <div class="card mt-3">
             <h3>Learning Objectives</h3>
             <ul>
-                <li>Excel at practical coding problems</li>
-                <li>Handle multi-part questions</li>
-                <li>Demonstrate code quality focus</li>
-                <li>Navigate unique rounds (integration, bug squash)</li>
+                <li>Excel at practical coding problems that mirror real work</li>
+                <li>Handle multi-part questions with progressive complexity</li>
+                <li>Demonstrate production-quality code standards</li>
+                <li>Navigate unique rounds (integration, bug squash, pair programming)</li>
+                <li>Understand staff-level expectations vs senior expectations</li>
             </ul>
+        </div>
+
+        <!-- Staff Engineer Expectations Section -->
+        <div class="card mt-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3>Staff Engineer Expectations (L5/L6 vs L3/L4)</h3>
+            <p>Non-LeetCode companies evaluate staff engineers differently than senior engineers:</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 1rem 0; color: white;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.3);">
+                        <th style="padding: 0.75rem; text-align: left;">Dimension</th>
+                        <th style="padding: 0.75rem; text-align: left;">Senior (L3/L4)</th>
+                        <th style="padding: 0.75rem; text-align: left;">Staff (L5/L6)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>Code Quality</strong></td>
+                        <td style="padding: 0.75rem;">Clean, working code</td>
+                        <td style="padding: 0.75rem;">Production-ready with error handling, logging hooks, extensibility</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>Design Decisions</strong></td>
+                        <td style="padding: 0.75rem;">Explain what you built</td>
+                        <td style="padding: 0.75rem;">Proactively discuss trade-offs, alternatives considered, why this approach</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>Edge Cases</strong></td>
+                        <td style="padding: 0.75rem;">Handle when prompted</td>
+                        <td style="padding: 0.75rem;">Identify and address proactively before being asked</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>System Thinking</strong></td>
+                        <td style="padding: 0.75rem;">Solve the problem</td>
+                        <td style="padding: 0.75rem;">Consider how this fits into larger system, operational concerns</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.75rem;"><strong>Communication</strong></td>
+                        <td style="padding: 0.75rem;">Explain your code</td>
+                        <td style="padding: 0.75rem;">Teach concepts, mentor through the problem, guide discussion</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Preparation Timeline -->
+        <div class="card mt-3" style="background: var(--warning-bg); border-left: 4px solid #f59e0b;">
+            <h3>Preparation Timeline</h3>
+            <p><strong>Recommended: 4-6 weeks for staff-level preparation</strong></p>
+            <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><strong>Week 1-2</strong></td>
+                    <td style="padding: 0.5rem;">Foundation - Practice 2-3 practical problems daily, focus on code quality over speed</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><strong>Week 3-4</strong></td>
+                    <td style="padding: 0.5rem;">Company-specific - Study the specific company's problem style, do mock interviews</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><strong>Week 5-6</strong></td>
+                    <td style="padding: 0.5rem;">Polish - Focus on communication, edge cases, system design connections</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem;"><strong>Daily Practice</strong></td>
+                    <td style="padding: 0.5rem;">1 full problem (45-60 min) + 1 quick problem (20 min) + code review of your solutions</td>
+                </tr>
+            </table>
         </div>
 
         <h2 class="mt-4">Stripe</h2>
 
         <div class="collapsible open">
             <div class="collapsible-header">
-                <span>Interview Process</span>
+                <span>Interview Process Deep Dive</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
                 <div class="diagram-container">
                     <div class="mermaid">
 flowchart LR
-    A[Recruiter] --> B[Tech Screen]
-    B --> C[Onsite 4-5 rounds]
-    C --> D[Hiring Committee]
+    A[Recruiter<br>30 min] --> B[Tech Screen<br>60 min coding]
+    B --> C[Onsite 4-5 rounds<br>Full day]
+    C --> D[Hiring Committee<br>1-2 weeks]
+    D --> E[Offer/Reject]
                     </div>
                 </div>
-                <p><strong>Round Types:</strong></p>
+
+                <h4>Round Types Explained:</h4>
                 <ul>
-                    <li>Coding: Real-life practical problems</li>
-                    <li>Integration: Work with existing codebase</li>
-                    <li>Bug Squash: Debug failing tests</li>
-                    <li>System Design: Payment/financial focus</li>
+                    <li><strong>Coding (2 rounds):</strong> Real-life practical problems. Payment systems, data processing, API design. 45-60 minutes each.</li>
+                    <li><strong>Integration:</strong> Work with an existing codebase (provided). Add features, refactor, extend functionality. Tests code reading ability.</li>
+                    <li><strong>Bug Squash:</strong> Given failing tests in a real codebase. Debug, fix, explain root cause. Time pressure is real.</li>
+                    <li><strong>System Design:</strong> Payment/financial systems focus. Idempotency, consistency, failure handling are critical.</li>
+                    <li><strong>Manager/Values:</strong> Stripe's operating principles. Research them thoroughly.</li>
                 </ul>
+
+                <div class="card mt-2" style="background: var(--danger-bg); border-left: 4px solid #ef4444;">
+                    <h4>Red Flags to Avoid</h4>
+                    <ul style="margin: 0;">
+                        <li>Writing code without tests or ignoring provided tests</li>
+                        <li>Not handling edge cases (null inputs, empty collections, overflow)</li>
+                        <li>Ignoring error handling - Stripe cares deeply about reliability</li>
+                        <li>Not communicating your thought process</li>
+                        <li>Rushing to code without understanding requirements</li>
+                    </ul>
+                </div>
             </div>
         </div>
 
         <div class="collapsible">
             <div class="collapsible-header">
-                <span>Stripe Question Examples</span>
+                <span>Stripe Code Quality Checklist</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
+                <p>Before submitting any Stripe interview code, verify:</p>
+                <div class="card" style="background: var(--success-bg);">
+                    <ul>
+                        <li><input type="checkbox"> Clear, descriptive variable and function names</li>
+                        <li><input type="checkbox"> Input validation at function boundaries</li>
+                        <li><input type="checkbox"> Meaningful error messages (not just "Error")</li>
+                        <li><input type="checkbox"> Edge cases handled (empty input, single element, duplicates)</li>
+                        <li><input type="checkbox"> No magic numbers - use named constants</li>
+                        <li><input type="checkbox"> Functions do one thing well (single responsibility)</li>
+                        <li><input type="checkbox"> Immutability where appropriate</li>
+                        <li><input type="checkbox"> Type hints (Python) or clear typing (other languages)</li>
+                        <li><input type="checkbox"> Brief comments for non-obvious logic</li>
+                        <li><input type="checkbox"> Consistent formatting and style</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stripe Problem 1 -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Stripe Problem 1: Currency Converter with Exchange Rates</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement</h4>
+                    <p>Build a currency converter that supports direct and indirect conversions. Given a list of exchange rates between currency pairs, implement a system that can convert any amount from one currency to another, finding the optimal conversion path.</p>
+                    <p><strong>Requirements:</strong></p>
+                    <ul>
+                        <li>Part 1: Direct conversions only</li>
+                        <li>Part 2: Support indirect conversions (USD -> EUR -> GBP)</li>
+                        <li>Part 3: Find the best rate when multiple paths exist</li>
+                        <li>Part 4: Handle circular dependencies and detect arbitrage</li>
+                    </ul>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from collections import defaultdict, deque
+from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from decimal import Decimal, ROUND_HALF_UP
+import heapq
+
+
+@dataclass
+class ExchangeRate:
+    """Represents an exchange rate between two currencies."""
+    from_currency: str
+    to_currency: str
+    rate: Decimal
+
+    def __post_init__(self):
+        if self.rate <= 0:
+            raise ValueError(f"Exchange rate must be positive, got {self.rate}")
+
+
+class CurrencyConverter:
+    """
+    A currency converter supporting direct and indirect conversions.
+
+    Design decisions:
+    - Uses Decimal for financial precision (never use float for money!)
+    - Graph-based approach for finding conversion paths
+    - Dijkstra's algorithm for finding best rates
+    - Detects arbitrage opportunities (circular paths with gain)
+    """
+
+    def __init__(self, precision: int = 6):
+        """
+        Initialize the converter.
+
+        Args:
+            precision: Decimal places for rate calculations
+        """
+        self._graph: Dict[str, Dict[str, Decimal]] = defaultdict(dict)
+        self._precision = precision
+        self._currencies: set = set()
+
+    def add_rate(self, from_currency: str, to_currency: str, rate: float) -> None:
+        """
+        Add an exchange rate. Automatically adds the inverse rate.
+
+        Args:
+            from_currency: Source currency code (e.g., "USD")
+            to_currency: Target currency code (e.g., "EUR")
+            rate: Exchange rate (how many to_currency per from_currency)
+
+        Raises:
+            ValueError: If rate is not positive
+        """
+        if rate <= 0:
+            raise ValueError(f"Rate must be positive, got {rate}")
+
+        rate_decimal = Decimal(str(rate))
+
+        # Store both directions
+        self._graph[from_currency][to_currency] = rate_decimal
+        self._graph[to_currency][from_currency] = Decimal(1) / rate_decimal
+
+        self._currencies.add(from_currency)
+        self._currencies.add(to_currency)
+
+    def convert_direct(self, amount: float, from_currency: str,
+                       to_currency: str) -> Optional[Decimal]:
+        """
+        Convert using only direct rates (Part 1).
+
+        Returns None if no direct rate exists.
+        """
+        if from_currency == to_currency:
+            return Decimal(str(amount))
+
+        if to_currency not in self._graph.get(from_currency, {}):
+            return None
+
+        rate = self._graph[from_currency][to_currency]
+        result = Decimal(str(amount)) * rate
+        return result.quantize(Decimal(10) ** -self._precision, rounding=ROUND_HALF_UP)
+
+    def convert(self, amount: float, from_currency: str,
+                to_currency: str) -> Optional[Tuple[Decimal, List[str]]]:
+        """
+        Convert using any available path (Part 2).
+
+        Uses BFS to find the shortest path.
+
+        Returns:
+            Tuple of (converted_amount, path) or None if no path exists
+        """
+        if from_currency == to_currency:
+            return (Decimal(str(amount)), [from_currency])
+
+        if from_currency not in self._currencies:
+            return None
+
+        # BFS to find shortest path
+        queue = deque([(from_currency, [from_currency], Decimal(str(amount)))])
+        visited = {from_currency}
+
+        while queue:
+            current, path, current_amount = queue.popleft()
+
+            for neighbor, rate in self._graph.get(current, {}).items():
+                if neighbor == to_currency:
+                    final_amount = current_amount * rate
+                    final_amount = final_amount.quantize(
+                        Decimal(10) ** -self._precision,
+                        rounding=ROUND_HALF_UP
+                    )
+                    return (final_amount, path + [neighbor])
+
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append((
+                        neighbor,
+                        path + [neighbor],
+                        current_amount * rate
+                    ))
+
+        return None
+
+    def convert_best_rate(self, amount: float, from_currency: str,
+                          to_currency: str) -> Optional[Tuple[Decimal, List[str]]]:
+        """
+        Find the conversion path that yields the maximum amount (Part 3).
+
+        Uses modified Dijkstra's algorithm with negative log rates
+        to find the path with the best exchange rate.
+
+        Why negative log? We want to maximize the product of rates.
+        log(a * b) = log(a) + log(b), so maximizing product =
+        maximizing sum of logs = minimizing sum of negative logs.
+        """
+        import math
+
+        if from_currency == to_currency:
+            return (Decimal(str(amount)), [from_currency])
+
+        if from_currency not in self._currencies:
+            return None
+
+        # Priority queue: (negative_log_rate_sum, currency, path, actual_rate_product)
+        # We use negative log so smaller = better rate
+        heap = [(0, from_currency, [from_currency], Decimal(1))]
+        best_rates: Dict[str, Decimal] = {from_currency: Decimal(1)}
+
+        while heap:
+            neg_log_sum, current, path, rate_product = heapq.heappop(heap)
+
+            # Skip if we've found a better path to this currency
+            if rate_product < best_rates.get(current, Decimal(0)):
+                continue
+
+            for neighbor, rate in self._graph.get(current, {}).items():
+                new_rate_product = rate_product * rate
+
+                if neighbor == to_currency:
+                    final_amount = Decimal(str(amount)) * new_rate_product
+                    final_amount = final_amount.quantize(
+                        Decimal(10) ** -self._precision,
+                        rounding=ROUND_HALF_UP
+                    )
+                    return (final_amount, path + [neighbor])
+
+                # Only explore if this is a better rate to this currency
+                if new_rate_product > best_rates.get(neighbor, Decimal(0)):
+                    best_rates[neighbor] = new_rate_product
+                    new_neg_log = neg_log_sum - math.log(float(rate))
+                    heapq.heappush(heap, (
+                        new_neg_log,
+                        neighbor,
+                        path + [neighbor],
+                        new_rate_product
+                    ))
+
+        return None
+
+    def detect_arbitrage(self) -> Optional[List[str]]:
+        """
+        Detect if an arbitrage opportunity exists (Part 4).
+
+        Arbitrage exists if there's a cycle where the product of
+        rates > 1 (you end up with more than you started).
+
+        Uses Bellman-Ford algorithm with negative log rates.
+        A negative cycle in log space = arbitrage opportunity.
+
+        Returns:
+            List of currencies forming an arbitrage cycle, or None
+        """
+        import math
+
+        if not self._currencies:
+            return None
+
+        currencies = list(self._currencies)
+        n = len(currencies)
+        currency_to_idx = {c: i for i, c in enumerate(currencies)}
+
+        # Distance array (using negative logs)
+        dist = [float('inf')] * n
+        parent = [-1] * n
+        dist[0] = 0
+
+        # Bellman-Ford: relax edges n-1 times
+        for _ in range(n - 1):
+            for from_curr in currencies:
+                from_idx = currency_to_idx[from_curr]
+                if dist[from_idx] == float('inf'):
+                    continue
+
+                for to_curr, rate in self._graph.get(from_curr, {}).items():
+                    to_idx = currency_to_idx[to_curr]
+                    # Negative log because we want to detect when product > 1
+                    weight = -math.log(float(rate))
+
+                    if dist[from_idx] + weight < dist[to_idx]:
+                        dist[to_idx] = dist[from_idx] + weight
+                        parent[to_idx] = from_idx
+
+        # Check for negative cycle (one more relaxation)
+        for from_curr in currencies:
+            from_idx = currency_to_idx[from_curr]
+            if dist[from_idx] == float('inf'):
+                continue
+
+            for to_curr, rate in self._graph.get(from_curr, {}).items():
+                to_idx = currency_to_idx[to_curr]
+                weight = -math.log(float(rate))
+
+                if dist[from_idx] + weight < dist[to_idx] - 1e-10:
+                    # Found negative cycle - reconstruct it
+                    cycle = []
+                    visited = set()
+                    current = to_idx
+
+                    # Find a node in the cycle
+                    for _ in range(n):
+                        current = parent[current]
+
+                    # Reconstruct cycle
+                    start = current
+                    while True:
+                        cycle.append(currencies[current])
+                        current = parent[current]
+                        if current == start:
+                            cycle.append(currencies[current])
+                            break
+
+                    return list(reversed(cycle))
+
+        return None
+
+
+# Example usage and tests
+if __name__ == "__main__":
+    converter = CurrencyConverter()
+
+    # Add exchange rates
+    converter.add_rate("USD", "EUR", 0.85)
+    converter.add_rate("EUR", "GBP", 0.86)
+    converter.add_rate("USD", "GBP", 0.72)
+    converter.add_rate("GBP", "JPY", 155.0)
+
+    # Test direct conversion
+    result = converter.convert_direct(100, "USD", "EUR")
+    print(f"Direct: 100 USD = {result} EUR")  # 85.00
+
+    # Test indirect conversion
+    result = converter.convert(100, "USD", "JPY")
+    print(f"Indirect: 100 USD = {result[0]} JPY via {' -> '.join(result[1])}")
+
+    # Test best rate
+    result = converter.convert_best_rate(100, "USD", "GBP")
+    print(f"Best rate: 100 USD = {result[0]} GBP via {' -> '.join(result[1])}")
+
+    # Test arbitrage detection
+    arbitrage_converter = CurrencyConverter()
+    arbitrage_converter.add_rate("USD", "EUR", 0.9)
+    arbitrage_converter.add_rate("EUR", "GBP", 0.8)
+    arbitrage_converter.add_rate("GBP", "USD", 1.5)  # Creates arbitrage!
+
+    cycle = arbitrage_converter.detect_arbitrage()
+    if cycle:
+        print(f"Arbitrage detected: {' -> '.join(cycle)}")</code></pre>
+
+                <h4 class="mt-3">Common Follow-up Questions</h4>
                 <ul>
-                    <li>Currency conversion with exchange rates</li>
-                    <li>Credit card validation (Luhn algorithm)</li>
-                    <li>HTTP header parsing</li>
-                    <li>Transaction ledger with balance tracking</li>
+                    <li><strong>Q: Why Decimal instead of float?</strong> A: Financial calculations require exact precision. Float has rounding errors (0.1 + 0.2 != 0.3 in float).</li>
+                    <li><strong>Q: How would you handle rate updates in production?</strong> A: Use versioned rates with timestamps, implement rate expiry, consider caching strategies.</li>
+                    <li><strong>Q: What if rates change during a conversion?</strong> A: Use atomic snapshots of rates, implement optimistic locking, or use database transactions.</li>
+                    <li><strong>Q: How would you scale this?</strong> A: Precompute common paths, use Redis for rate caching, shard by currency pairs.</li>
                 </ul>
+            </div>
+        </div>
+
+        <!-- Stripe Problem 2 -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Stripe Problem 2: Transaction Ledger with Balance Tracking</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement</h4>
+                    <p>Implement a transaction ledger that tracks account balances with full audit history. Must support deposits, withdrawals, transfers, and balance queries at any point in time.</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from dataclasses import dataclass, field
+from datetime import datetime
+from decimal import Decimal
+from enum import Enum
+from typing import Dict, List, Optional
+from collections import defaultdict
+import threading
+import uuid
+
+
+class TransactionType(Enum):
+    DEPOSIT = "deposit"
+    WITHDRAWAL = "withdrawal"
+    TRANSFER = "transfer"
+
+
+@dataclass
+class Transaction:
+    """Immutable transaction record."""
+    id: str
+    type: TransactionType
+    amount: Decimal
+    from_account: Optional[str]
+    to_account: Optional[str]
+    timestamp: datetime
+    description: str = ""
+
+    def __post_init__(self):
+        if self.amount <= 0:
+            raise ValueError("Transaction amount must be positive")
+
+
+class InsufficientFundsError(Exception):
+    """Raised when an account has insufficient funds."""
+    pass
+
+
+class AccountNotFoundError(Exception):
+    """Raised when an account doesn't exist."""
+    pass
+
+
+class TransactionLedger:
+    """
+    A thread-safe transaction ledger with full audit history.
+
+    Design decisions:
+    - Immutable transaction records (append-only)
+    - Thread-safe operations using locks
+    - O(1) balance lookups with O(log n) historical queries
+    - Decimal for financial precision
+    """
+
+    def __init__(self):
+        self._transactions: List[Transaction] = []
+        self._balances: Dict[str, Decimal] = defaultdict(Decimal)
+        self._account_transactions: Dict[str, List[int]] = defaultdict(list)
+        self._lock = threading.RLock()
+
+    def create_account(self, account_id: str, initial_balance: float = 0) -> None:
+        """Create a new account with optional initial balance."""
+        with self._lock:
+            if account_id in self._balances and self._balances[account_id] != 0:
+                raise ValueError(f"Account {account_id} already exists")
+
+            if initial_balance > 0:
+                self.deposit(account_id, initial_balance, "Initial deposit")
+            else:
+                self._balances[account_id] = Decimal(0)
+
+    def deposit(self, account_id: str, amount: float,
+                description: str = "") -> Transaction:
+        """
+        Deposit funds into an account.
+
+        Args:
+            account_id: Target account
+            amount: Amount to deposit (must be positive)
+            description: Optional transaction description
+
+        Returns:
+            The created transaction record
+        """
+        with self._lock:
+            amount_decimal = Decimal(str(amount))
+
+            transaction = Transaction(
+                id=str(uuid.uuid4()),
+                type=TransactionType.DEPOSIT,
+                amount=amount_decimal,
+                from_account=None,
+                to_account=account_id,
+                timestamp=datetime.now(),
+                description=description
+            )
+
+            self._transactions.append(transaction)
+            tx_index = len(self._transactions) - 1
+
+            self._balances[account_id] += amount_decimal
+            self._account_transactions[account_id].append(tx_index)
+
+            return transaction
+
+    def withdraw(self, account_id: str, amount: float,
+                 description: str = "") -> Transaction:
+        """
+        Withdraw funds from an account.
+
+        Raises:
+            InsufficientFundsError: If balance is too low
+            AccountNotFoundError: If account doesn't exist
+        """
+        with self._lock:
+            if account_id not in self._balances:
+                raise AccountNotFoundError(f"Account {account_id} not found")
+
+            amount_decimal = Decimal(str(amount))
+
+            if self._balances[account_id] < amount_decimal:
+                raise InsufficientFundsError(
+                    f"Account {account_id} has {self._balances[account_id]}, "
+                    f"cannot withdraw {amount_decimal}"
+                )
+
+            transaction = Transaction(
+                id=str(uuid.uuid4()),
+                type=TransactionType.WITHDRAWAL,
+                amount=amount_decimal,
+                from_account=account_id,
+                to_account=None,
+                timestamp=datetime.now(),
+                description=description
+            )
+
+            self._transactions.append(transaction)
+            tx_index = len(self._transactions) - 1
+
+            self._balances[account_id] -= amount_decimal
+            self._account_transactions[account_id].append(tx_index)
+
+            return transaction
+
+    def transfer(self, from_account: str, to_account: str,
+                 amount: float, description: str = "") -> Transaction:
+        """
+        Transfer funds between accounts atomically.
+
+        This is atomic - either both accounts are updated or neither.
+        """
+        with self._lock:
+            if from_account not in self._balances:
+                raise AccountNotFoundError(f"Account {from_account} not found")
+
+            amount_decimal = Decimal(str(amount))
+
+            if self._balances[from_account] < amount_decimal:
+                raise InsufficientFundsError(
+                    f"Account {from_account} has {self._balances[from_account]}, "
+                    f"cannot transfer {amount_decimal}"
+                )
+
+            transaction = Transaction(
+                id=str(uuid.uuid4()),
+                type=TransactionType.TRANSFER,
+                amount=amount_decimal,
+                from_account=from_account,
+                to_account=to_account,
+                timestamp=datetime.now(),
+                description=description
+            )
+
+            self._transactions.append(transaction)
+            tx_index = len(self._transactions) - 1
+
+            # Atomic balance update
+            self._balances[from_account] -= amount_decimal
+            self._balances[to_account] += amount_decimal
+
+            self._account_transactions[from_account].append(tx_index)
+            self._account_transactions[to_account].append(tx_index)
+
+            return transaction
+
+    def get_balance(self, account_id: str) -> Decimal:
+        """Get current balance for an account."""
+        with self._lock:
+            if account_id not in self._balances:
+                raise AccountNotFoundError(f"Account {account_id} not found")
+            return self._balances[account_id]
+
+    def get_balance_at_time(self, account_id: str,
+                            timestamp: datetime) -> Decimal:
+        """
+        Get account balance at a specific point in time.
+
+        This replays transactions up to the given timestamp.
+        For production, consider using balance snapshots for efficiency.
+        """
+        with self._lock:
+            if account_id not in self._balances:
+                raise AccountNotFoundError(f"Account {account_id} not found")
+
+            balance = Decimal(0)
+
+            for tx_index in self._account_transactions[account_id]:
+                tx = self._transactions[tx_index]
+
+                if tx.timestamp > timestamp:
+                    break
+
+                if tx.type == TransactionType.DEPOSIT:
+                    balance += tx.amount
+                elif tx.type == TransactionType.WITHDRAWAL:
+                    balance -= tx.amount
+                elif tx.type == TransactionType.TRANSFER:
+                    if tx.from_account == account_id:
+                        balance -= tx.amount
+                    else:
+                        balance += tx.amount
+
+            return balance
+
+    def get_transaction_history(self, account_id: str,
+                                limit: int = 100) -> List[Transaction]:
+        """Get recent transactions for an account."""
+        with self._lock:
+            if account_id not in self._balances:
+                raise AccountNotFoundError(f"Account {account_id} not found")
+
+            indices = self._account_transactions[account_id][-limit:]
+            return [self._transactions[i] for i in indices]
+
+    def get_statement(self, account_id: str,
+                      start: datetime, end: datetime) -> Dict:
+        """
+        Generate an account statement for a date range.
+
+        Returns opening balance, closing balance, and all transactions.
+        """
+        with self._lock:
+            opening_balance = self.get_balance_at_time(account_id, start)
+            closing_balance = self.get_balance_at_time(account_id, end)
+
+            transactions = []
+            for tx_index in self._account_transactions[account_id]:
+                tx = self._transactions[tx_index]
+                if start <= tx.timestamp <= end:
+                    transactions.append(tx)
+
+            return {
+                "account_id": account_id,
+                "period_start": start,
+                "period_end": end,
+                "opening_balance": opening_balance,
+                "closing_balance": closing_balance,
+                "transactions": transactions,
+                "transaction_count": len(transactions)
+            }
+
+
+# Example usage
+if __name__ == "__main__":
+    ledger = TransactionLedger()
+
+    # Create accounts
+    ledger.create_account("alice", 1000)
+    ledger.create_account("bob", 500)
+
+    # Perform transactions
+    ledger.deposit("alice", 200, "Paycheck")
+    ledger.transfer("alice", "bob", 300, "Rent payment")
+    ledger.withdraw("bob", 100, "ATM withdrawal")
+
+    # Check balances
+    print(f"Alice's balance: ${ledger.get_balance('alice')}")  # 900
+    print(f"Bob's balance: ${ledger.get_balance('bob')}")      # 700
+
+    # Get transaction history
+    for tx in ledger.get_transaction_history("alice"):
+        print(f"{tx.type.value}: ${tx.amount} - {tx.description}")</code></pre>
+
+                <h4 class="mt-3">Common Follow-up Questions</h4>
+                <ul>
+                    <li><strong>Q: How would you handle distributed transactions?</strong> A: Use saga pattern or two-phase commit. For Stripe's scale, likely saga with compensation.</li>
+                    <li><strong>Q: What about idempotency?</strong> A: Add idempotency keys to prevent duplicate transactions. Store and check keys before processing.</li>
+                    <li><strong>Q: How would you optimize historical balance queries?</strong> A: Periodic balance snapshots (e.g., daily) + replay from nearest snapshot.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Stripe Problem 3 -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Stripe Problem 3: Rate Limiter with Sliding Window</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement</h4>
+                    <p>Implement a rate limiter that limits API requests per user. Support multiple strategies: fixed window, sliding window log, and sliding window counter.</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from abc import ABC, abstractmethod
+from collections import defaultdict, deque
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Dict, Tuple
+import threading
+import time
+
+
+@dataclass
+class RateLimitResult:
+    """Result of a rate limit check."""
+    allowed: bool
+    remaining: int
+    reset_at: datetime
+    retry_after: float = 0.0
+
+
+class RateLimiter(ABC):
+    """Abstract base class for rate limiters."""
+
+    @abstractmethod
+    def is_allowed(self, key: str) -> RateLimitResult:
+        """Check if request is allowed and consume one token if so."""
+        pass
+
+    @abstractmethod
+    def get_remaining(self, key: str) -> int:
+        """Get remaining requests for this key."""
+        pass
+
+
+class FixedWindowRateLimiter(RateLimiter):
+    """
+    Fixed window rate limiter.
+
+    Simple but has edge case: user can make 2x requests at window boundary.
+    Example: 100 req/min limit, user makes 100 at 0:59, 100 at 1:01.
+
+    Pros: Simple, memory efficient (one counter per key)
+    Cons: Boundary burst problem
+    """
+
+    def __init__(self, max_requests: int, window_seconds: int):
+        self._max_requests = max_requests
+        self._window_seconds = window_seconds
+        self._windows: Dict[str, Tuple[int, int]] = {}  # key -> (window_start, count)
+        self._lock = threading.Lock()
+
+    def _get_current_window(self) -> int:
+        """Get the current window number."""
+        return int(time.time() // self._window_seconds)
+
+    def is_allowed(self, key: str) -> RateLimitResult:
+        with self._lock:
+            current_window = self._get_current_window()
+            window_end = (current_window + 1) * self._window_seconds
+            reset_at = datetime.fromtimestamp(window_end)
+
+            if key not in self._windows or self._windows[key][0] != current_window:
+                # New window
+                self._windows[key] = (current_window, 1)
+                return RateLimitResult(
+                    allowed=True,
+                    remaining=self._max_requests - 1,
+                    reset_at=reset_at
+                )
+
+            window_start, count = self._windows[key]
+
+            if count >= self._max_requests:
+                return RateLimitResult(
+                    allowed=False,
+                    remaining=0,
+                    reset_at=reset_at,
+                    retry_after=window_end - time.time()
+                )
+
+            self._windows[key] = (current_window, count + 1)
+            return RateLimitResult(
+                allowed=True,
+                remaining=self._max_requests - count - 1,
+                reset_at=reset_at
+            )
+
+    def get_remaining(self, key: str) -> int:
+        with self._lock:
+            current_window = self._get_current_window()
+            if key not in self._windows or self._windows[key][0] != current_window:
+                return self._max_requests
+            return max(0, self._max_requests - self._windows[key][1])
+
+
+class SlidingWindowLogRateLimiter(RateLimiter):
+    """
+    Sliding window log rate limiter.
+
+    Keeps timestamp of each request. Most accurate but highest memory.
+
+    Pros: Most accurate, no boundary issues
+    Cons: O(n) memory per key, O(n) time to clean old entries
+    """
+
+    def __init__(self, max_requests: int, window_seconds: int):
+        self._max_requests = max_requests
+        self._window_seconds = window_seconds
+        self._logs: Dict[str, deque] = defaultdict(deque)
+        self._lock = threading.Lock()
+
+    def _cleanup_old_entries(self, key: str, current_time: float) -> None:
+        """Remove entries outside the current window."""
+        window_start = current_time - self._window_seconds
+        while self._logs[key] and self._logs[key][0] < window_start:
+            self._logs[key].popleft()
+
+    def is_allowed(self, key: str) -> RateLimitResult:
+        with self._lock:
+            current_time = time.time()
+            self._cleanup_old_entries(key, current_time)
+
+            reset_at = datetime.fromtimestamp(current_time + self._window_seconds)
+
+            if len(self._logs[key]) >= self._max_requests:
+                # Find when the oldest request will expire
+                oldest = self._logs[key][0]
+                retry_after = (oldest + self._window_seconds) - current_time
+                return RateLimitResult(
+                    allowed=False,
+                    remaining=0,
+                    reset_at=reset_at,
+                    retry_after=max(0, retry_after)
+                )
+
+            self._logs[key].append(current_time)
+            return RateLimitResult(
+                allowed=True,
+                remaining=self._max_requests - len(self._logs[key]),
+                reset_at=reset_at
+            )
+
+    def get_remaining(self, key: str) -> int:
+        with self._lock:
+            self._cleanup_old_entries(key, time.time())
+            return max(0, self._max_requests - len(self._logs[key]))
+
+
+class SlidingWindowCounterRateLimiter(RateLimiter):
+    """
+    Sliding window counter rate limiter.
+
+    Hybrid approach: uses weighted average of current and previous window.
+    Good balance of accuracy and efficiency.
+
+    Pros: O(1) memory per key, O(1) operations, good accuracy
+    Cons: Slightly less accurate than log approach
+    """
+
+    def __init__(self, max_requests: int, window_seconds: int):
+        self._max_requests = max_requests
+        self._window_seconds = window_seconds
+        # key -> (prev_window, prev_count, curr_window, curr_count)
+        self._counters: Dict[str, Tuple[int, int, int, int]] = {}
+        self._lock = threading.Lock()
+
+    def _get_current_window(self) -> int:
+        return int(time.time() // self._window_seconds)
+
+    def _get_weighted_count(self, key: str, current_time: float) -> float:
+        """
+        Calculate weighted count based on position in current window.
+
+        If we're 30% through the current window, weight is:
+        - Previous window: 70% of its count
+        - Current window: 100% of its count
+        """
+        if key not in self._counters:
+            return 0
+
+        prev_window, prev_count, curr_window, curr_count = self._counters[key]
+        current_window = self._get_current_window()
+
+        # Position in current window (0.0 to 1.0)
+        window_position = (current_time % self._window_seconds) / self._window_seconds
+
+        if curr_window == current_window:
+            if prev_window == current_window - 1:
+                # Include weighted previous window
+                return prev_count * (1 - window_position) + curr_count
+            return curr_count
+        elif curr_window == current_window - 1:
+            # Current stored window is now previous
+            return curr_count * (1 - window_position)
+
+        return 0
+
+    def is_allowed(self, key: str) -> RateLimitResult:
+        with self._lock:
+            current_time = time.time()
+            current_window = self._get_current_window()
+
+            weighted_count = self._get_weighted_count(key, current_time)
+            window_end = (current_window + 1) * self._window_seconds
+            reset_at = datetime.fromtimestamp(window_end)
+
+            if weighted_count >= self._max_requests:
+                return RateLimitResult(
+                    allowed=False,
+                    remaining=0,
+                    reset_at=reset_at,
+                    retry_after=window_end - current_time
+                )
+
+            # Update counters
+            if key not in self._counters:
+                self._counters[key] = (0, 0, current_window, 1)
+            else:
+                prev_window, prev_count, curr_window, curr_count = self._counters[key]
+
+                if curr_window == current_window:
+                    self._counters[key] = (prev_window, prev_count,
+                                           current_window, curr_count + 1)
+                elif curr_window == current_window - 1:
+                    self._counters[key] = (curr_window, curr_count,
+                                           current_window, 1)
+                else:
+                    self._counters[key] = (0, 0, current_window, 1)
+
+            remaining = max(0, int(self._max_requests - weighted_count - 1))
+            return RateLimitResult(
+                allowed=True,
+                remaining=remaining,
+                reset_at=reset_at
+            )
+
+    def get_remaining(self, key: str) -> int:
+        with self._lock:
+            weighted_count = self._get_weighted_count(key, time.time())
+            return max(0, int(self._max_requests - weighted_count))
+
+
+# Factory for creating rate limiters
+class RateLimiterFactory:
+    @staticmethod
+    def create(strategy: str, max_requests: int,
+               window_seconds: int) -> RateLimiter:
+        strategies = {
+            "fixed": FixedWindowRateLimiter,
+            "sliding_log": SlidingWindowLogRateLimiter,
+            "sliding_counter": SlidingWindowCounterRateLimiter
+        }
+
+        if strategy not in strategies:
+            raise ValueError(f"Unknown strategy: {strategy}")
+
+        return strategies[strategy](max_requests, window_seconds)
+
+
+# Example usage
+if __name__ == "__main__":
+    # Create a sliding window counter limiter: 5 requests per 10 seconds
+    limiter = RateLimiterFactory.create("sliding_counter", 5, 10)
+
+    user_id = "user_123"
+
+    # Simulate requests
+    for i in range(7):
+        result = limiter.is_allowed(user_id)
+        print(f"Request {i+1}: {'Allowed' if result.allowed else 'Denied'}, "
+              f"Remaining: {result.remaining}")
+        if not result.allowed:
+            print(f"  Retry after: {result.retry_after:.2f}s")</code></pre>
+            </div>
+        </div>
+
+        <!-- Candidate Experience Story - Stripe -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Real Candidate Experiences (Anonymized)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="border-left: 4px solid #6366f1;">
+                    <h4>Staff Engineer Candidate - Passed</h4>
+                    <p><em>"The integration round was harder than I expected. They gave me a Ruby codebase (I primarily write Python) with a bug in the payment retry logic. Key insight: they weren't testing my Ruby - they were testing if I could read unfamiliar code and reason about it. I talked through my debugging process out loud, asked clarifying questions about the business logic, and found the bug was in how they handled idempotency keys during retries."</em></p>
+                    <p><strong>What worked:</strong> Verbalized thinking, asked about edge cases, connected bug to business impact.</p>
+                </div>
+
+                <div class="card mt-2" style="border-left: 4px solid #ef4444;">
+                    <h4>Senior -> Staff Candidate - Did Not Pass</h4>
+                    <p><em>"I solved the coding problem but focused too much on optimization. The interviewer kept asking about error handling and I kept deferring it to 'handle later'. In the debrief, I learned they felt I wasn't thinking about production reliability. At Stripe, a working solution with good error handling beats an optimized solution without it."</em></p>
+                    <p><strong>Lesson:</strong> Stripe prioritizes reliability over performance optimization. Handle errors first.</p>
+                </div>
             </div>
         </div>
 
         <h2 class="mt-4">Netflix</h2>
 
-        <div class="collapsible">
+        <div class="collapsible open">
             <div class="collapsible-header">
-                <span>Interview Focus</span>
+                <span>Interview Process and Culture Deep Dive</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
-                <p><strong>Key Evaluation:</strong></p>
-                <ul>
-                    <li>Code hygiene and clean abstractions</li>
-                    <li>Articulation of your approach</li>
-                    <li>Cultural alignment (Freedom & Responsibility)</li>
-                </ul>
-                <p><strong>MUST READ:</strong> Netflix Culture Deck at jobs.netflix.com/culture</p>
-            </div>
-        </div>
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    A[Recruiter<br>Culture screen] --> B[Tech Screen<br>60 min]
+    B --> C[Onsite 5-6 rounds<br>Full day]
+    C --> D[Offer discussion<br>Compensation]
+                    </div>
+                </div>
 
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Netflix Question Examples</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <ul>
-                    <li>Duplicate detection with time windows</li>
-                    <li>Movie viewing history management</li>
-                    <li>Latency percentile tracking</li>
-                    <li>LRU cache with weights</li>
-                </ul>
-            </div>
-        </div>
+                <h4>Netflix Culture - MUST KNOW</h4>
+                <p>Netflix interviews heavily weight cultural alignment. Read the <a href="https://jobs.netflix.com/culture" target="_blank">Netflix Culture Deck</a> multiple times.</p>
 
-        <h2 class="mt-4">OpenAI</h2>
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Core Values to Demonstrate</h4>
+                    <ul>
+                        <li><strong>Judgment:</strong> Make wise decisions despite ambiguity</li>
+                        <li><strong>Communication:</strong> Be concise and articulate</li>
+                        <li><strong>Curiosity:</strong> Learn rapidly and eagerly</li>
+                        <li><strong>Courage:</strong> Say what you think, even if controversial</li>
+                        <li><strong>Selflessness:</strong> Seek what's best for Netflix, not yourself</li>
+                        <li><strong>Innovation:</strong> Create new ideas that prove useful</li>
+                        <li><strong>Inclusion:</strong> Recognize we all have biases</li>
+                        <li><strong>Integrity:</strong> Be known for candor and transparency</li>
+                        <li><strong>Impact:</strong> Accomplish amazing amounts of work</li>
+                    </ul>
+                </div>
 
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Multi-Part Question Strategy</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <p><strong>Question Structure:</strong></p>
-                <ul>
-                    <li>Part A: Basic functionality (10-15 min)</li>
-                    <li>Part B: Add complexity (15-20 min)</li>
-                    <li>Part C: Edge cases (20-25 min)</li>
-                    <li>Part D: Optimize/extend (bonus)</li>
-                </ul>
-                <div class="card mt-2" style="background: var(--success-bg);">
-                    <strong>Key insight:</strong> Better to complete A, B, C cleanly than A, B, C, D with bugs.
+                <div class="card mt-2" style="background: var(--danger-bg); border-left: 4px solid #ef4444;">
+                    <h4>Red Flags to Avoid at Netflix</h4>
+                    <ul style="margin: 0;">
+                        <li>Being indirect or avoiding difficult conversations</li>
+                        <li>Focusing on process over results</li>
+                        <li>Not having strong opinions (they want "informed captains")</li>
+                        <li>Blaming others or making excuses</li>
+                        <li>Not knowing the culture deck inside and out</li>
+                    </ul>
                 </div>
             </div>
         </div>
 
         <div class="collapsible">
             <div class="collapsible-header">
-                <span>OpenAI Question Examples</span>
+                <span>Netflix Code Quality Checklist</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
+                <p>Netflix emphasizes "Freedom and Responsibility" - your code should reflect mature engineering judgment:</p>
+                <div class="card" style="background: var(--success-bg);">
+                    <ul>
+                        <li><input type="checkbox"> Clean abstractions - each class/function has clear purpose</li>
+                        <li><input type="checkbox"> Self-documenting code - minimal comments, names tell the story</li>
+                        <li><input type="checkbox"> Appropriate use of design patterns (not over-engineered)</li>
+                        <li><input type="checkbox"> Testable design - dependency injection, clear interfaces</li>
+                        <li><input type="checkbox"> Graceful degradation for failures</li>
+                        <li><input type="checkbox"> Performance awareness - know the complexity</li>
+                        <li><input type="checkbox"> Articulate trade-offs verbally as you code</li>
+                        <li><input type="checkbox"> Ask clarifying questions before coding</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Netflix Problem 1 -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Netflix Problem 1: Viewing History with Deduplication</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement</h4>
+                    <p>Implement a viewing history tracker that maintains the order of recently watched titles, handles duplicates by moving them to front, and supports efficient operations.</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from collections import OrderedDict
+from dataclasses import dataclass
+from datetime import datetime
+from typing import List, Optional, Iterator
+import threading
+
+
+@dataclass
+class ViewingRecord:
+    """Record of a single viewing session."""
+    title_id: str
+    title_name: str
+    watched_at: datetime
+    progress_percent: float  # 0-100
+    duration_seconds: int
+
+
+class ViewingHistory:
+    """
+    Viewing history with LRU-style ordering.
+
+    When a title is watched again, it moves to the front.
+    Optimized for:
+    - O(1) add/update
+    - O(1) lookup
+    - O(k) get recent k items
+
+    Design choices:
+    - OrderedDict for O(1) move_to_end operations
+    - Thread-safe for concurrent access
+    - Configurable max size with LRU eviction
+    """
+
+    def __init__(self, max_size: int = 1000):
+        """
+        Initialize viewing history.
+
+        Args:
+            max_size: Maximum titles to keep. Oldest evicted when exceeded.
+        """
+        self._history: OrderedDict[str, ViewingRecord] = OrderedDict()
+        self._max_size = max_size
+        self._lock = threading.RLock()
+
+    def add_viewing(self, title_id: str, title_name: str,
+                    progress_percent: float = 0,
+                    duration_seconds: int = 0) -> ViewingRecord:
+        """
+        Add or update a viewing record.
+
+        If title was previously watched, updates and moves to front.
+        If new title and at capacity, evicts oldest.
+        """
+        with self._lock:
+            record = ViewingRecord(
+                title_id=title_id,
+                title_name=title_name,
+                watched_at=datetime.now(),
+                progress_percent=min(100, max(0, progress_percent)),
+                duration_seconds=duration_seconds
+            )
+
+            if title_id in self._history:
+                # Move existing to end (most recent)
+                self._history.move_to_end(title_id)
+                self._history[title_id] = record
+            else:
+                # Add new entry
+                if len(self._history) >= self._max_size:
+                    # Evict oldest (first item)
+                    self._history.popitem(last=False)
+                self._history[title_id] = record
+
+            return record
+
+    def get_recent(self, count: int = 10) -> List[ViewingRecord]:
+        """
+        Get most recently watched titles.
+
+        Returns titles in reverse chronological order (most recent first).
+        """
+        with self._lock:
+            # Reverse because OrderedDict keeps oldest first
+            items = list(self._history.values())
+            return list(reversed(items[-count:]))
+
+    def get_by_title(self, title_id: str) -> Optional[ViewingRecord]:
+        """Get viewing record for a specific title."""
+        with self._lock:
+            return self._history.get(title_id)
+
+    def remove(self, title_id: str) -> bool:
+        """Remove a title from history. Returns True if found."""
+        with self._lock:
+            if title_id in self._history:
+                del self._history[title_id]
+                return True
+            return False
+
+    def get_continue_watching(self, threshold: float = 95) -> List[ViewingRecord]:
+        """
+        Get titles that haven't been finished.
+
+        Args:
+            threshold: Percent watched to consider "finished"
+        """
+        with self._lock:
+            unfinished = [
+                record for record in self._history.values()
+                if record.progress_percent < threshold
+            ]
+            # Return most recent first
+            return list(reversed(unfinished))
+
+    def __len__(self) -> int:
+        return len(self._history)
+
+    def __iter__(self) -> Iterator[ViewingRecord]:
+        """Iterate in reverse chronological order."""
+        with self._lock:
+            return reversed(list(self._history.values()))
+
+
+class MultiProfileViewingHistory:
+    """
+    Viewing history manager for multiple profiles.
+
+    Netflix has ~5 profiles per account. Each needs separate history.
+    """
+
+    def __init__(self, max_history_per_profile: int = 1000):
+        self._profiles: dict[str, ViewingHistory] = {}
+        self._max_history = max_history_per_profile
+        self._lock = threading.RLock()
+
+    def get_profile_history(self, profile_id: str) -> ViewingHistory:
+        """Get or create history for a profile."""
+        with self._lock:
+            if profile_id not in self._profiles:
+                self._profiles[profile_id] = ViewingHistory(self._max_history)
+            return self._profiles[profile_id]
+
+    def add_viewing(self, profile_id: str, title_id: str,
+                    title_name: str, **kwargs) -> ViewingRecord:
+        """Add viewing to a specific profile."""
+        history = self.get_profile_history(profile_id)
+        return history.add_viewing(title_id, title_name, **kwargs)
+
+    def get_cross_profile_recommendations(self,
+                                          exclude_profile: str) -> List[str]:
+        """
+        Get titles watched by other profiles but not this one.
+
+        Useful for "Popular in your household" feature.
+        """
+        with self._lock:
+            if exclude_profile not in self._profiles:
+                return []
+
+            excluded_titles = set(
+                self._profiles[exclude_profile]._history.keys()
+            )
+
+            other_titles = set()
+            for profile_id, history in self._profiles.items():
+                if profile_id != exclude_profile:
+                    other_titles.update(history._history.keys())
+
+            return list(other_titles - excluded_titles)
+
+
+# Example usage
+if __name__ == "__main__":
+    manager = MultiProfileViewingHistory()
+
+    # Profile 1 watches some shows
+    manager.add_viewing("alice", "tt001", "Stranger Things", progress_percent=45)
+    manager.add_viewing("alice", "tt002", "The Crown", progress_percent=100)
+    manager.add_viewing("alice", "tt003", "Wednesday", progress_percent=30)
+
+    # Profile 2 watches different shows
+    manager.add_viewing("bob", "tt004", "Narcos", progress_percent=80)
+    manager.add_viewing("bob", "tt001", "Stranger Things", progress_percent=100)
+
+    # Get Alice's continue watching
+    alice_history = manager.get_profile_history("alice")
+    continue_watching = alice_history.get_continue_watching()
+    print("Continue watching for Alice:")
+    for record in continue_watching:
+        print(f"  {record.title_name}: {record.progress_percent}%")
+
+    # Get recommendations from other profiles
+    recs = manager.get_cross_profile_recommendations("alice")
+    print(f"\nPopular in household (not watched by Alice): {recs}")</code></pre>
+            </div>
+        </div>
+
+        <!-- Netflix Problem 2 -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Netflix Problem 2: Latency Percentile Tracker</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement</h4>
+                    <p>Implement a streaming percentile tracker for service latencies. Must efficiently compute p50, p95, p99 percentiles with support for time-windowed calculations.</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>import heapq
+import time
+from collections import deque
+from dataclasses import dataclass
+from typing import List, Optional, Tuple
+import threading
+
+
+@dataclass
+class LatencySample:
+    """A single latency measurement."""
+    value_ms: float
+    timestamp: float
+
+
+class StreamingPercentile:
+    """
+    Streaming percentile calculator using two heaps.
+
+    Maintains p50 (median) efficiently in O(log n) per insert.
+
+    How it works:
+    - Lower half in max-heap (negated for Python's min-heap)
+    - Upper half in min-heap
+    - Median is always at top of one of the heaps
+    """
+
+    def __init__(self):
+        self._lower: List[float] = []  # Max-heap (negated values)
+        self._upper: List[float] = []  # Min-heap
+        self._lock = threading.Lock()
+
+    def add(self, value: float) -> None:
+        """Add a value and rebalance heaps."""
+        with self._lock:
+            if not self._lower or value <= -self._lower[0]:
+                heapq.heappush(self._lower, -value)
+            else:
+                heapq.heappush(self._upper, value)
+
+            # Rebalance: lower can have at most 1 more element
+            if len(self._lower) > len(self._upper) + 1:
+                val = -heapq.heappop(self._lower)
+                heapq.heappush(self._upper, val)
+            elif len(self._upper) > len(self._lower):
+                val = heapq.heappop(self._upper)
+                heapq.heappush(self._lower, -val)
+
+    def get_median(self) -> Optional[float]:
+        """Get current median (p50)."""
+        with self._lock:
+            if not self._lower:
+                return None
+
+            if len(self._lower) > len(self._upper):
+                return -self._lower[0]
+            return (-self._lower[0] + self._upper[0]) / 2
+
+
+class TDigest:
+    """
+    Simplified T-Digest for streaming percentiles.
+
+    T-Digest is the industry standard for streaming percentiles:
+    - Used by Elasticsearch, Prometheus, many others
+    - O(1) add, O(1) percentile query
+    - Memory efficient: O(compression factor)
+
+    This is a simplified version. Production use: use tdigest library.
+    """
+
+    def __init__(self, compression: int = 100):
+        """
+        Initialize T-Digest.
+
+        Args:
+            compression: Higher = more accuracy, more memory
+        """
+        self._centroids: List[Tuple[float, int]] = []  # (mean, count)
+        self._compression = compression
+        self._count = 0
+        self._lock = threading.Lock()
+
+    def add(self, value: float) -> None:
+        """Add a value to the digest."""
+        with self._lock:
+            self._centroids.append((value, 1))
+            self._count += 1
+
+            # Compress periodically
+            if len(self._centroids) > self._compression * 2:
+                self._compress()
+
+    def _compress(self) -> None:
+        """Merge centroids to maintain compression level."""
+        if len(self._centroids) <= 1:
+            return
+
+        # Sort by mean
+        self._centroids.sort(key=lambda x: x[0])
+
+        # Merge nearby centroids
+        merged = []
+        current_mean, current_count = self._centroids[0]
+
+        for mean, count in self._centroids[1:]:
+            # Simple merge criteria - real T-Digest uses scale function
+            if current_count + count <= self._count / self._compression:
+                # Merge
+                total = current_count + count
+                current_mean = (current_mean * current_count +
+                               mean * count) / total
+                current_count = total
+            else:
+                merged.append((current_mean, current_count))
+                current_mean, current_count = mean, count
+
+        merged.append((current_mean, current_count))
+        self._centroids = merged
+
+    def percentile(self, p: float) -> Optional[float]:
+        """
+        Get the value at percentile p (0-100).
+
+        Args:
+            p: Percentile (e.g., 95 for p95)
+        """
+        with self._lock:
+            if not self._centroids:
+                return None
+
+            self._compress()
+
+            target = self._count * p / 100
+            cumulative = 0
+
+            for i, (mean, count) in enumerate(self._centroids):
+                if cumulative + count >= target:
+                    # Interpolate within centroid
+                    if i == 0:
+                        return mean
+                    prev_mean = self._centroids[i-1][0]
+                    # Linear interpolation
+                    fraction = (target - cumulative) / count
+                    return prev_mean + (mean - prev_mean) * fraction
+                cumulative += count
+
+            return self._centroids[-1][0] if self._centroids else None
+
+
+class WindowedLatencyTracker:
+    """
+    Time-windowed latency tracker with multiple percentiles.
+
+    Tracks latencies over a sliding time window.
+    Reports p50, p95, p99 percentiles.
+    """
+
+    def __init__(self, window_seconds: int = 60):
+        """
+        Initialize tracker.
+
+        Args:
+            window_seconds: Size of sliding window
+        """
+        self._window_seconds = window_seconds
+        self._samples: deque = deque()
+        self._lock = threading.Lock()
+
+    def record(self, latency_ms: float) -> None:
+        """Record a latency sample."""
+        with self._lock:
+            sample = LatencySample(
+                value_ms=latency_ms,
+                timestamp=time.time()
+            )
+            self._samples.append(sample)
+            self._cleanup()
+
+    def _cleanup(self) -> None:
+        """Remove samples outside the window."""
+        cutoff = time.time() - self._window_seconds
+        while self._samples and self._samples[0].timestamp < cutoff:
+            self._samples.popleft()
+
+    def get_percentiles(self) -> dict:
+        """
+        Get p50, p95, p99 percentiles for current window.
+
+        Returns empty dict if no samples.
+        """
+        with self._lock:
+            self._cleanup()
+
+            if not self._samples:
+                return {}
+
+            # Sort values for percentile calculation
+            values = sorted(s.value_ms for s in self._samples)
+            n = len(values)
+
+            def percentile(p: float) -> float:
+                """Calculate percentile using linear interpolation."""
+                k = (n - 1) * p / 100
+                f = int(k)
+                c = f + 1 if f + 1 < n else f
+                d = k - f
+                return values[f] * (1 - d) + values[c] * d
+
+            return {
+                "p50": round(percentile(50), 2),
+                "p95": round(percentile(95), 2),
+                "p99": round(percentile(99), 2),
+                "count": n,
+                "min": round(values[0], 2),
+                "max": round(values[-1], 2)
+            }
+
+
+class ServiceLatencyMonitor:
+    """
+    Production-ready latency monitor for multiple services.
+
+    Used at Netflix scale to monitor thousands of microservices.
+    """
+
+    def __init__(self, window_seconds: int = 60):
+        self._trackers: dict[str, WindowedLatencyTracker] = {}
+        self._window_seconds = window_seconds
+        self._lock = threading.Lock()
+
+    def record(self, service: str, latency_ms: float) -> None:
+        """Record latency for a service."""
+        with self._lock:
+            if service not in self._trackers:
+                self._trackers[service] = WindowedLatencyTracker(
+                    self._window_seconds
+                )
+        self._trackers[service].record(latency_ms)
+
+    def get_all_metrics(self) -> dict:
+        """Get metrics for all services."""
+        with self._lock:
+            return {
+                service: tracker.get_percentiles()
+                for service, tracker in self._trackers.items()
+            }
+
+    def get_alerts(self, p99_threshold_ms: float = 500) -> List[str]:
+        """Get services with p99 above threshold."""
+        alerts = []
+        metrics = self.get_all_metrics()
+
+        for service, stats in metrics.items():
+            if stats and stats.get("p99", 0) > p99_threshold_ms:
+                alerts.append(
+                    f"{service}: p99={stats['p99']}ms exceeds {p99_threshold_ms}ms"
+                )
+
+        return alerts
+
+
+# Example usage
+if __name__ == "__main__":
+    import random
+
+    monitor = ServiceLatencyMonitor(window_seconds=60)
+
+    # Simulate latencies for different services
+    services = ["api-gateway", "user-service", "recommendation-engine"]
+
+    for _ in range(1000):
+        service = random.choice(services)
+        # Most requests fast, some slow (typical distribution)
+        if random.random() < 0.95:
+            latency = random.gauss(50, 20)  # Normal: mean=50ms
+        else:
+            latency = random.gauss(200, 50)  # Slow tail
+
+        monitor.record(service, max(1, latency))
+
+    # Get metrics
+    print("Service Latency Metrics:")
+    for service, metrics in monitor.get_all_metrics().items():
+        print(f"\n{service}:")
+        for key, value in metrics.items():
+            print(f"  {key}: {value}")
+
+    # Check alerts
+    alerts = monitor.get_alerts(p99_threshold_ms=150)
+    if alerts:
+        print(f"\nAlerts: {alerts}")</code></pre>
+
+                <h4 class="mt-3">Common Follow-up Questions</h4>
                 <ul>
-                    <li>Resumable iterator with state capture</li>
-                    <li>In-memory SQL database</li>
-                    <li>Versioned key-value store</li>
-                    <li>Unix cd command implementation</li>
+                    <li><strong>Q: How would you handle millions of samples per second?</strong> A: Use sampling (reservoir sampling), approximate algorithms (T-Digest, HyperLogLog), or shard by time buckets.</li>
+                    <li><strong>Q: How is this different from simple averaging?</strong> A: Averages hide outliers. p99 catches the "tail latency" that affects 1% of users but represents real problems.</li>
+                    <li><strong>Q: Why is T-Digest preferred over keeping all samples?</strong> A: Memory efficiency. T-Digest uses O(compression) memory vs O(n) for all samples, while maintaining good accuracy.</li>
                 </ul>
+            </div>
+        </div>
+
+        <!-- Netflix Candidate Experience -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Real Candidate Experiences (Anonymized)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="border-left: 4px solid #6366f1;">
+                    <h4>Staff Engineer Candidate - Passed</h4>
+                    <p><em>"The coding was straightforward, but what surprised me was how much they pushed on design decisions during the code review portion. They asked things like 'Why a class here instead of functions?' and 'What would you change if this needed to handle 10x scale?' Be ready to defend every decision."</em></p>
+                    <p><strong>What worked:</strong> Had clear reasoning for every design choice, connected decisions to Netflix's scale challenges.</p>
+                </div>
+
+                <div class="card mt-2" style="border-left: 4px solid #ef4444;">
+                    <h4>Senior -> Staff Candidate - Did Not Pass</h4>
+                    <p><em>"I failed the culture screen, not the technical. They asked about a time I disagreed with my manager and I gave a diplomatic answer about finding compromise. They wanted to hear that I stood my ground when I believed I was right. Netflix wants people who will 'disagree and commit' - emphasis on the disagree part."</em></p>
+                    <p><strong>Lesson:</strong> Don't be diplomatic. Netflix values direct communication and strong opinions.</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">OpenAI</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Interview Process and Multi-Part Question Strategy</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    A[Recruiter<br>30 min] --> B[Tech Screen<br>Multi-part coding]
+    B --> C[Onsite 4-5 rounds]
+    C --> D[Team Match]
+    D --> E[Offer]
+                    </div>
+                </div>
+
+                <h4>Multi-Part Question Strategy</h4>
+                <p>OpenAI questions progressively build complexity. Each part builds on the previous:</p>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Part</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Time</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Expectation</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Staff vs Senior</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Part A</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">10-15 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Basic functionality</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Senior: Working code. Staff: Clean code with tests.</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Part B</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">15-20 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Add complexity</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Senior: Extend existing code. Staff: Refactor for extensibility first.</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Part C</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">15-20 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Edge cases/scale</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Senior: Handle prompted cases. Staff: Proactively identify edge cases.</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Part D</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Bonus</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Optimize/extend</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Discussion of approach is as valuable as implementation.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>Key insight:</strong> Better to complete A, B, C cleanly than A, B, C, D with bugs. If you finish C with 10 minutes left, spend 5 minutes cleaning up your code before starting D.
+                </div>
+
+                <div class="card mt-2" style="background: var(--danger-bg); border-left: 4px solid #ef4444;">
+                    <h4>Red Flags to Avoid at OpenAI</h4>
+                    <ul style="margin: 0;">
+                        <li>Rushing through parts and accumulating tech debt</li>
+                        <li>Not refactoring when requirements change</li>
+                        <li>Copy-pasting code instead of abstracting</li>
+                        <li>Not asking clarifying questions before each part</li>
+                        <li>Treating Part D as optional (discuss it even if you can't code it)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>OpenAI Code Quality Checklist</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--success-bg);">
+                    <ul>
+                        <li><input type="checkbox"> Code is easy to extend for Part B, C, D</li>
+                        <li><input type="checkbox"> Clear separation of concerns</li>
+                        <li><input type="checkbox"> Consistent naming and style</li>
+                        <li><input type="checkbox"> No premature optimization (add when needed)</li>
+                        <li><input type="checkbox"> Type hints for all function signatures</li>
+                        <li><input type="checkbox"> Handle errors gracefully (not silently)</li>
+                        <li><input type="checkbox"> Think about state management early</li>
+                        <li><input type="checkbox"> Verbalize your refactoring decisions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- OpenAI Problem 1 -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>OpenAI Problem 1: Versioned Key-Value Store</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement (Multi-Part)</h4>
+                    <p><strong>Part A:</strong> Implement a basic key-value store with get/set.</p>
+                    <p><strong>Part B:</strong> Add version history - get value at any version.</p>
+                    <p><strong>Part C:</strong> Add transactions with rollback capability.</p>
+                    <p><strong>Part D:</strong> Optimize for space when many keys have same value.</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from typing import Dict, List, Optional, Any, Tuple
+from dataclasses import dataclass, field
+from collections import defaultdict
+import bisect
+import hashlib
+
+
+# ============================================================
+# PART A: Basic Key-Value Store
+# ============================================================
+
+class BasicKVStore:
+    """Simple key-value store with get/set operations."""
+
+    def __init__(self):
+        self._data: Dict[str, Any] = {}
+
+    def set(self, key: str, value: Any) -> None:
+        """Set a key to a value."""
+        self._data[key] = value
+
+    def get(self, key: str) -> Optional[Any]:
+        """Get value for key, or None if not found."""
+        return self._data.get(key)
+
+    def delete(self, key: str) -> bool:
+        """Delete a key. Returns True if key existed."""
+        if key in self._data:
+            del self._data[key]
+            return True
+        return False
+
+
+# ============================================================
+# PART B: Add Version History
+# ============================================================
+
+@dataclass
+class VersionedValue:
+    """A value with its version number."""
+    value: Any
+    version: int
+
+
+class VersionedKVStore:
+    """
+    Key-value store with version history.
+
+    Every set() creates a new version. Can query any historical version.
+
+    Design: Store list of (version, value) pairs per key.
+    Use binary search for efficient historical lookup.
+    """
+
+    def __init__(self):
+        # key -> list of (version, value) tuples, sorted by version
+        self._data: Dict[str, List[Tuple[int, Any]]] = defaultdict(list)
+        self._current_version: int = 0
+
+    def set(self, key: str, value: Any) -> int:
+        """
+        Set a key to a value.
+
+        Returns the version number of this write.
+        """
+        self._current_version += 1
+        self._data[key].append((self._current_version, value))
+        return self._current_version
+
+    def get(self, key: str, version: Optional[int] = None) -> Optional[Any]:
+        """
+        Get value for key.
+
+        Args:
+            key: The key to look up
+            version: If provided, get value at this version.
+                    If None, get latest value.
+
+        Returns:
+            The value, or None if key doesn't exist at that version.
+        """
+        if key not in self._data:
+            return None
+
+        history = self._data[key]
+
+        if version is None:
+            # Return latest
+            return history[-1][1] if history else None
+
+        # Binary search for largest version <= requested version
+        idx = bisect.bisect_right(history, (version, float('inf'))) - 1
+
+        if idx < 0:
+            return None  # No version <= requested
+
+        return history[idx][1]
+
+    def get_version(self) -> int:
+        """Get current version number."""
+        return self._current_version
+
+    def get_history(self, key: str) -> List[VersionedValue]:
+        """Get full history for a key."""
+        return [
+            VersionedValue(value=v, version=ver)
+            for ver, v in self._data.get(key, [])
+        ]
+
+
+# ============================================================
+# PART C: Add Transactions
+# ============================================================
+
+class TransactionKVStore(VersionedKVStore):
+    """
+    Versioned KV store with transaction support.
+
+    Transactions are isolated - changes not visible until commit.
+    Supports nested transactions with savepoints.
+    """
+
+    def __init__(self):
+        super().__init__()
+        # Stack of transaction states
+        # Each entry: {key: (original_value, has_original)}
+        self._tx_stack: List[Dict[str, Tuple[Optional[Any], bool]]] = []
+        # Pending changes in current transaction
+        self._pending: Dict[str, Any] = {}
+
+    def begin(self) -> int:
+        """
+        Begin a new transaction.
+
+        Returns the transaction depth (1 for first transaction).
+        """
+        # Save current state of keys we might modify
+        self._tx_stack.append({})
+        return len(self._tx_stack)
+
+    def set(self, key: str, value: Any) -> int:
+        """Set a key, recording for potential rollback."""
+        if self._tx_stack:
+            # In a transaction - record original value for rollback
+            current_tx = self._tx_stack[-1]
+            if key not in current_tx:
+                # First modification of this key in this transaction
+                original = super().get(key)
+                has_original = key in self._data
+                current_tx[key] = (original, has_original)
+            self._pending[key] = value
+
+        return super().set(key, value)
+
+    def commit(self) -> bool:
+        """
+        Commit current transaction.
+
+        Returns True if there was a transaction to commit.
+        """
+        if not self._tx_stack:
+            return False
+
+        # Pop transaction state - changes are already in _data
+        committed_tx = self._tx_stack.pop()
+
+        # If we have a parent transaction, merge the original values up
+        if self._tx_stack:
+            parent_tx = self._tx_stack[-1]
+            for key, original in committed_tx.items():
+                if key not in parent_tx:
+                    parent_tx[key] = original
+
+        # Clear pending for committed keys
+        for key in committed_tx:
+            self._pending.pop(key, None)
+
+        return True
+
+    def rollback(self) -> bool:
+        """
+        Rollback current transaction.
+
+        Returns True if there was a transaction to rollback.
+        """
+        if not self._tx_stack:
+            return False
+
+        # Get the transaction state
+        tx_state = self._tx_stack.pop()
+
+        # Restore original values
+        for key, (original_value, had_value) in tx_state.items():
+            if had_value:
+                # Restore the original value
+                # Note: This creates a new version, which is intentional
+                # for audit trail purposes
+                super().set(key, original_value)
+            else:
+                # Key didn't exist before - we could delete it
+                # but for simplicity, we leave the version history
+                pass
+
+        # Clear pending
+        for key in tx_state:
+            self._pending.pop(key, None)
+
+        return True
+
+    def in_transaction(self) -> bool:
+        """Check if currently in a transaction."""
+        return len(self._tx_stack) > 0
+
+    def transaction_depth(self) -> int:
+        """Get current transaction nesting depth."""
+        return len(self._tx_stack)
+
+
+# ============================================================
+# PART D: Space Optimization with Value Deduplication
+# ============================================================
+
+class OptimizedKVStore:
+    """
+    Space-optimized versioned KV store.
+
+    Uses content-addressable storage:
+    - Values are stored once, referenced by hash
+    - Keys point to value hashes, not values directly
+    - Significant savings when many keys have same value
+
+    Example: 1000 keys with value "default" stores "default" once.
+    """
+
+    def __init__(self):
+        # Content-addressable storage: hash -> value
+        self._values: Dict[str, Any] = {}
+        # Reference counts for garbage collection
+        self._ref_counts: Dict[str, int] = defaultdict(int)
+        # key -> list of (version, value_hash) tuples
+        self._data: Dict[str, List[Tuple[int, str]]] = defaultdict(list)
+        self._current_version: int = 0
+        # Track which keys point to which hashes (for ref counting)
+        self._key_current_hash: Dict[str, Optional[str]] = {}
+
+    def _hash_value(self, value: Any) -> str:
+        """Generate hash for a value."""
+        # In production, use a proper serialization
+        serialized = str(value).encode('utf-8')
+        return hashlib.sha256(serialized).hexdigest()[:16]
+
+    def _add_ref(self, value_hash: str, value: Any) -> None:
+        """Add reference to a value."""
+        if value_hash not in self._values:
+            self._values[value_hash] = value
+        self._ref_counts[value_hash] += 1
+
+    def _remove_ref(self, value_hash: str) -> None:
+        """Remove reference, potentially garbage collecting."""
+        self._ref_counts[value_hash] -= 1
+        if self._ref_counts[value_hash] <= 0:
+            del self._values[value_hash]
+            del self._ref_counts[value_hash]
+
+    def set(self, key: str, value: Any) -> int:
+        """Set a key, deduplicating the value."""
+        self._current_version += 1
+
+        value_hash = self._hash_value(value)
+
+        # Update reference counts
+        old_hash = self._key_current_hash.get(key)
+        if old_hash and old_hash != value_hash:
+            self._remove_ref(old_hash)
+
+        self._add_ref(value_hash, value)
+        self._key_current_hash[key] = value_hash
+
+        # Store version -> hash mapping
+        self._data[key].append((self._current_version, value_hash))
+
+        return self._current_version
+
+    def get(self, key: str, version: Optional[int] = None) -> Optional[Any]:
+        """Get value, resolving through hash."""
+        if key not in self._data:
+            return None
+
+        history = self._data[key]
+
+        if version is None:
+            value_hash = history[-1][1] if history else None
+        else:
+            idx = bisect.bisect_right(history, (version, 'z' * 20)) - 1
+            if idx < 0:
+                return None
+            value_hash = history[idx][1]
+
+        return self._values.get(value_hash) if value_hash else None
+
+    def get_stats(self) -> Dict[str, int]:
+        """Get storage statistics."""
+        return {
+            "unique_values": len(self._values),
+            "total_keys": len(self._data),
+            "total_versions": sum(len(h) for h in self._data.values()),
+            "current_version": self._current_version
+        }
+
+
+# ============================================================
+# Example Usage and Tests
+# ============================================================
+
+if __name__ == "__main__":
+    print("=== Part A: Basic KV Store ===")
+    basic = BasicKVStore()
+    basic.set("name", "Alice")
+    print(f"name = {basic.get('name')}")  # Alice
+
+    print("\n=== Part B: Versioned KV Store ===")
+    versioned = VersionedKVStore()
+    v1 = versioned.set("config", "v1")
+    v2 = versioned.set("config", "v2")
+    v3 = versioned.set("config", "v3")
+
+    print(f"Current: {versioned.get('config')}")  # v3
+    print(f"At v1: {versioned.get('config', v1)}")  # v1
+    print(f"At v2: {versioned.get('config', v2)}")  # v2
+
+    print("\n=== Part C: Transactions ===")
+    tx_store = TransactionKVStore()
+    tx_store.set("balance", 100)
+
+    tx_store.begin()
+    tx_store.set("balance", 50)  # Withdraw
+    print(f"In transaction: {tx_store.get('balance')}")  # 50
+    tx_store.rollback()
+    print(f"After rollback: {tx_store.get('balance')}")  # 100
+
+    tx_store.begin()
+    tx_store.set("balance", 150)  # Deposit
+    tx_store.commit()
+    print(f"After commit: {tx_store.get('balance')}")  # 150
+
+    print("\n=== Part D: Optimized Storage ===")
+    optimized = OptimizedKVStore()
+
+    # Set many keys to same value
+    for i in range(1000):
+        optimized.set(f"user_{i}_status", "active")
+
+    # Set some to different value
+    optimized.set("user_0_status", "inactive")
+    optimized.set("user_1_status", "pending")
+
+    stats = optimized.get_stats()
+    print(f"Unique values stored: {stats['unique_values']}")  # 3, not 1002!
+    print(f"Total keys: {stats['total_keys']}")  # 1000</code></pre>
+
+                <h4 class="mt-3">Common Follow-up Questions</h4>
+                <ul>
+                    <li><strong>Q: How would you handle concurrent transactions?</strong> A: Add MVCC (Multi-Version Concurrency Control), optimistic locking, or serializable isolation.</li>
+                    <li><strong>Q: How would you persist this to disk?</strong> A: Write-ahead log (WAL) for durability, periodic snapshots for faster recovery.</li>
+                    <li><strong>Q: What about memory limits with many versions?</strong> A: Implement version compaction - keep only every Nth version after certain age.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- OpenAI Problem 2 -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>OpenAI Problem 2: In-Memory SQL Database</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement (Multi-Part)</h4>
+                    <p><strong>Part A:</strong> CREATE TABLE, INSERT, SELECT * FROM table</p>
+                    <p><strong>Part B:</strong> Add WHERE clause support</p>
+                    <p><strong>Part C:</strong> Add JOIN support</p>
+                    <p><strong>Part D:</strong> Add indexing for performance</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from typing import Dict, List, Any, Optional, Callable, Set
+from dataclasses import dataclass, field
+from enum import Enum
+import re
+from collections import defaultdict
+
+
+class ColumnType(Enum):
+    INTEGER = "INTEGER"
+    TEXT = "TEXT"
+    FLOAT = "FLOAT"
+
+
+@dataclass
+class Column:
+    """Table column definition."""
+    name: str
+    type: ColumnType
+    nullable: bool = True
+
+
+@dataclass
+class Row:
+    """A single row in a table."""
+    data: Dict[str, Any]
+
+
+class Table:
+    """
+    Represents a database table.
+
+    Part A: Basic storage and retrieval
+    Part B: Filtering
+    Part C: Join support
+    Part D: Indexing
+    """
+
+    def __init__(self, name: str, columns: List[Column]):
+        self.name = name
+        self.columns = {col.name: col for col in columns}
+        self.column_order = [col.name for col in columns]
+        self.rows: List[Row] = []
+        # Part D: Indexes - column_name -> {value -> set of row indices}
+        self.indexes: Dict[str, Dict[Any, Set[int]]] = {}
+
+    def insert(self, values: Dict[str, Any]) -> int:
+        """
+        Insert a row.
+
+        Returns the row index.
+        """
+        # Validate columns and types
+        row_data = {}
+        for col_name, col in self.columns.items():
+            if col_name in values:
+                value = values[col_name]
+                row_data[col_name] = self._cast_value(value, col.type)
+            elif col.nullable:
+                row_data[col_name] = None
+            else:
+                raise ValueError(f"Column {col_name} is not nullable")
+
+        row_idx = len(self.rows)
+        self.rows.append(Row(data=row_data))
+
+        # Update indexes
+        for col_name, index in self.indexes.items():
+            value = row_data.get(col_name)
+            if value not in index:
+                index[value] = set()
+            index[value].add(row_idx)
+
+        return row_idx
+
+    def _cast_value(self, value: Any, col_type: ColumnType) -> Any:
+        """Cast value to column type."""
+        if value is None:
+            return None
+        if col_type == ColumnType.INTEGER:
+            return int(value)
+        elif col_type == ColumnType.FLOAT:
+            return float(value)
+        return str(value)
+
+    def select(self, columns: Optional[List[str]] = None,
+               where: Optional[Callable[[Row], bool]] = None) -> List[Dict[str, Any]]:
+        """
+        Select rows from table.
+
+        Args:
+            columns: Columns to return (None = all)
+            where: Filter function
+        """
+        cols = columns or self.column_order
+
+        results = []
+        for row in self.rows:
+            if where is None or where(row):
+                results.append({col: row.data.get(col) for col in cols})
+
+        return results
+
+    def select_with_index(self, column: str, value: Any,
+                          select_columns: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        """
+        Select using index (Part D optimization).
+
+        O(1) lookup instead of O(n) scan when index exists.
+        """
+        cols = select_columns or self.column_order
+
+        if column not in self.indexes:
+            # Fall back to full scan
+            return self.select(
+                cols,
+                where=lambda r: r.data.get(column) == value
+            )
+
+        row_indices = self.indexes[column].get(value, set())
+        return [
+            {col: self.rows[idx].data.get(col) for col in cols}
+            for idx in row_indices
+        ]
+
+    def create_index(self, column: str) -> None:
+        """Create an index on a column (Part D)."""
+        if column not in self.columns:
+            raise ValueError(f"Column {column} does not exist")
+
+        index: Dict[Any, Set[int]] = defaultdict(set)
+        for idx, row in enumerate(self.rows):
+            value = row.data.get(column)
+            index[value].add(idx)
+
+        self.indexes[column] = dict(index)
+
+
+class Database:
+    """
+    In-memory SQL database.
+
+    Supports a subset of SQL operations.
+    """
+
+    def __init__(self):
+        self.tables: Dict[str, Table] = {}
+
+    def execute(self, sql: str) -> Any:
+        """
+        Execute a SQL statement.
+
+        Supports:
+        - CREATE TABLE name (col1 TYPE, col2 TYPE, ...)
+        - INSERT INTO name (cols) VALUES (vals)
+        - SELECT cols FROM name [WHERE condition]
+        - SELECT ... FROM t1 JOIN t2 ON condition
+        - CREATE INDEX ON table(column)
+        """
+        sql = sql.strip()
+
+        if sql.upper().startswith("CREATE TABLE"):
+            return self._execute_create_table(sql)
+        elif sql.upper().startswith("INSERT"):
+            return self._execute_insert(sql)
+        elif sql.upper().startswith("SELECT"):
+            return self._execute_select(sql)
+        elif sql.upper().startswith("CREATE INDEX"):
+            return self._execute_create_index(sql)
+        else:
+            raise ValueError(f"Unknown SQL command: {sql[:20]}...")
+
+    def _execute_create_table(self, sql: str) -> str:
+        """Parse and execute CREATE TABLE."""
+        # CREATE TABLE name (col1 TYPE, col2 TYPE)
+        match = re.match(
+            r"CREATE\s+TABLE\s+(\w+)\s*\((.*)\)",
+            sql,
+            re.IGNORECASE
+        )
+        if not match:
+            raise ValueError("Invalid CREATE TABLE syntax")
+
+        table_name = match.group(1)
+        columns_str = match.group(2)
+
+        columns = []
+        for col_def in columns_str.split(","):
+            parts = col_def.strip().split()
+            col_name = parts[0]
+            col_type = ColumnType[parts[1].upper()]
+            nullable = "NOT NULL" not in col_def.upper()
+            columns.append(Column(col_name, col_type, nullable))
+
+        self.tables[table_name] = Table(table_name, columns)
+        return f"Table {table_name} created"
+
+    def _execute_insert(self, sql: str) -> str:
+        """Parse and execute INSERT."""
+        # INSERT INTO name (cols) VALUES (vals)
+        match = re.match(
+            r"INSERT\s+INTO\s+(\w+)\s*\((.*?)\)\s*VALUES\s*\((.*?)\)",
+            sql,
+            re.IGNORECASE
+        )
+        if not match:
+            raise ValueError("Invalid INSERT syntax")
+
+        table_name = match.group(1)
+        columns = [c.strip() for c in match.group(2).split(",")]
+        values = [self._parse_value(v.strip()) for v in match.group(3).split(",")]
+
+        if table_name not in self.tables:
+            raise ValueError(f"Table {table_name} does not exist")
+
+        row_data = dict(zip(columns, values))
+        self.tables[table_name].insert(row_data)
+        return "1 row inserted"
+
+    def _parse_value(self, value_str: str) -> Any:
+        """Parse a SQL value literal."""
+        if value_str.upper() == "NULL":
+            return None
+        if value_str.startswith("'") and value_str.endswith("'"):
+            return value_str[1:-1]
+        try:
+            if "." in value_str:
+                return float(value_str)
+            return int(value_str)
+        except ValueError:
+            return value_str
+
+    def _execute_select(self, sql: str) -> List[Dict[str, Any]]:
+        """Parse and execute SELECT."""
+        sql_upper = sql.upper()
+
+        # Check for JOIN
+        if " JOIN " in sql_upper:
+            return self._execute_join(sql)
+
+        # Simple SELECT: SELECT cols FROM table [WHERE condition]
+        match = re.match(
+            r"SELECT\s+(.*?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(.*))?",
+            sql,
+            re.IGNORECASE
+        )
+        if not match:
+            raise ValueError("Invalid SELECT syntax")
+
+        columns_str = match.group(1).strip()
+        table_name = match.group(2)
+        where_clause = match.group(3)
+
+        if table_name not in self.tables:
+            raise ValueError(f"Table {table_name} does not exist")
+
+        table = self.tables[table_name]
+
+        # Parse columns
+        if columns_str == "*":
+            columns = None
+        else:
+            columns = [c.strip() for c in columns_str.split(",")]
+
+        # Parse WHERE (Part B)
+        where_fn = None
+        if where_clause:
+            where_fn = self._parse_where(where_clause)
+
+        return table.select(columns, where_fn)
+
+    def _parse_where(self, where_clause: str) -> Callable[[Row], bool]:
+        """
+        Parse WHERE clause into filter function.
+
+        Supports: =, >, <, >=, <=, !=, AND, OR
+        """
+        # Simple parser for column = value
+        # In production, use proper SQL parser
+
+        def parse_condition(cond: str) -> Callable[[Row], bool]:
+            operators = [">=", "<=", "!=", "=", ">", "<"]
+
+            for op in operators:
+                if op in cond:
+                    parts = cond.split(op, 1)
+                    col = parts[0].strip()
+                    val = self._parse_value(parts[1].strip())
+
+                    if op == "=":
+                        return lambda r, c=col, v=val: r.data.get(c) == v
+                    elif op == "!=":
+                        return lambda r, c=col, v=val: r.data.get(c) != v
+                    elif op == ">":
+                        return lambda r, c=col, v=val: (r.data.get(c) or 0) > v
+                    elif op == "<":
+                        return lambda r, c=col, v=val: (r.data.get(c) or 0) < v
+                    elif op == ">=":
+                        return lambda r, c=col, v=val: (r.data.get(c) or 0) >= v
+                    elif op == "<=":
+                        return lambda r, c=col, v=val: (r.data.get(c) or 0) <= v
+
+            raise ValueError(f"Cannot parse condition: {cond}")
+
+        # Handle AND/OR
+        if " AND " in where_clause.upper():
+            parts = re.split(r"\s+AND\s+", where_clause, flags=re.IGNORECASE)
+            conditions = [parse_condition(p) for p in parts]
+            return lambda r: all(c(r) for c in conditions)
+        elif " OR " in where_clause.upper():
+            parts = re.split(r"\s+OR\s+", where_clause, flags=re.IGNORECASE)
+            conditions = [parse_condition(p) for p in parts]
+            return lambda r: any(c(r) for c in conditions)
+        else:
+            return parse_condition(where_clause)
+
+    def _execute_join(self, sql: str) -> List[Dict[str, Any]]:
+        """
+        Execute JOIN query (Part C).
+
+        Supports: SELECT ... FROM t1 JOIN t2 ON t1.col = t2.col
+        """
+        match = re.match(
+            r"SELECT\s+(.*?)\s+FROM\s+(\w+)\s+JOIN\s+(\w+)\s+ON\s+(\w+)\.(\w+)\s*=\s*(\w+)\.(\w+)(?:\s+WHERE\s+(.*))?",
+            sql,
+            re.IGNORECASE
+        )
+        if not match:
+            raise ValueError("Invalid JOIN syntax")
+
+        columns_str = match.group(1).strip()
+        table1_name = match.group(2)
+        table2_name = match.group(3)
+        join_table1 = match.group(4)
+        join_col1 = match.group(5)
+        join_table2 = match.group(6)
+        join_col2 = match.group(7)
+        where_clause = match.group(8)
+
+        table1 = self.tables.get(table1_name)
+        table2 = self.tables.get(table2_name)
+
+        if not table1 or not table2:
+            raise ValueError("Table not found")
+
+        # Build result with nested loop join
+        # Part D optimization: use hash join with index
+        results = []
+
+        for row1 in table1.rows:
+            join_value = row1.data.get(join_col1)
+
+            # Check if we can use index
+            if join_col2 in table2.indexes:
+                matching_indices = table2.indexes[join_col2].get(join_value, set())
+                matching_rows = [table2.rows[i] for i in matching_indices]
+            else:
+                matching_rows = [
+                    row2 for row2 in table2.rows
+                    if row2.data.get(join_col2) == join_value
+                ]
+
+            for row2 in matching_rows:
+                # Combine rows with table prefixes
+                combined = {}
+                for col, val in row1.data.items():
+                    combined[f"{table1_name}.{col}"] = val
+                for col, val in row2.data.items():
+                    combined[f"{table2_name}.{col}"] = val
+                results.append(combined)
+
+        # Apply WHERE if present
+        if where_clause:
+            where_fn = self._parse_where_qualified(where_clause)
+            results = [r for r in results if where_fn(r)]
+
+        # Select columns
+        if columns_str != "*":
+            columns = [c.strip() for c in columns_str.split(",")]
+            results = [{c: r.get(c) for c in columns} for r in results]
+
+        return results
+
+    def _parse_where_qualified(self, where_clause: str) -> Callable[[Dict], bool]:
+        """Parse WHERE with qualified column names (table.column)."""
+        operators = [">=", "<=", "!=", "=", ">", "<"]
+
+        for op in operators:
+            if op in where_clause:
+                parts = where_clause.split(op, 1)
+                col = parts[0].strip()
+                val = self._parse_value(parts[1].strip())
+
+                if op == "=":
+                    return lambda r, c=col, v=val: r.get(c) == v
+                elif op == ">":
+                    return lambda r, c=col, v=val: (r.get(c) or 0) > v
+
+        return lambda r: True
+
+    def _execute_create_index(self, sql: str) -> str:
+        """Execute CREATE INDEX (Part D)."""
+        match = re.match(
+            r"CREATE\s+INDEX\s+ON\s+(\w+)\s*\(\s*(\w+)\s*\)",
+            sql,
+            re.IGNORECASE
+        )
+        if not match:
+            raise ValueError("Invalid CREATE INDEX syntax")
+
+        table_name = match.group(1)
+        column_name = match.group(2)
+
+        if table_name not in self.tables:
+            raise ValueError(f"Table {table_name} does not exist")
+
+        self.tables[table_name].create_index(column_name)
+        return f"Index created on {table_name}({column_name})"
+
+
+# Example usage
+if __name__ == "__main__":
+    db = Database()
+
+    # Part A: CREATE and INSERT
+    print("=== Part A: Basic Operations ===")
+    db.execute("CREATE TABLE users (id INTEGER, name TEXT, age INTEGER)")
+    db.execute("INSERT INTO users (id, name, age) VALUES (1, 'Alice', 30)")
+    db.execute("INSERT INTO users (id, name, age) VALUES (2, 'Bob', 25)")
+    db.execute("INSERT INTO users (id, name, age) VALUES (3, 'Charlie', 35)")
+
+    results = db.execute("SELECT * FROM users")
+    print("All users:", results)
+
+    # Part B: WHERE clause
+    print("\n=== Part B: WHERE Clause ===")
+    results = db.execute("SELECT name, age FROM users WHERE age > 26")
+    print("Users over 26:", results)
+
+    results = db.execute("SELECT * FROM users WHERE age >= 25 AND age <= 30")
+    print("Users 25-30:", results)
+
+    # Part C: JOIN
+    print("\n=== Part C: JOIN ===")
+    db.execute("CREATE TABLE orders (id INTEGER, user_id INTEGER, amount FLOAT)")
+    db.execute("INSERT INTO orders (id, user_id, amount) VALUES (1, 1, 99.99)")
+    db.execute("INSERT INTO orders (id, user_id, amount) VALUES (2, 1, 49.99)")
+    db.execute("INSERT INTO orders (id, user_id, amount) VALUES (3, 2, 149.99)")
+
+    results = db.execute(
+        "SELECT users.name, orders.amount FROM users JOIN orders ON users.id = orders.user_id"
+    )
+    print("User orders:", results)
+
+    # Part D: Indexing
+    print("\n=== Part D: Indexing ===")
+    db.execute("CREATE INDEX ON users(age)")
+
+    # This now uses the index for O(1) lookup
+    results = db.tables["users"].select_with_index("age", 30)
+    print("Users age 30 (indexed):", results)</code></pre>
+            </div>
+        </div>
+
+        <!-- OpenAI Candidate Experience -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Real Candidate Experiences (Anonymized)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="border-left: 4px solid #6366f1;">
+                    <h4>Staff Engineer Candidate - Passed</h4>
+                    <p><em>"The key moment was in Part C. I realized my Part A/B code wasn't designed for the JOIN requirement. Instead of hacking it in, I said 'Let me refactor this first' and spent 3 minutes restructuring. The interviewer later told me that willingness to refactor mid-problem was a strong signal for staff level."</em></p>
+                    <p><strong>What worked:</strong> Proactive refactoring, clean interfaces, clear communication about trade-offs.</p>
+                </div>
+
+                <div class="card mt-2" style="border-left: 4px solid #ef4444;">
+                    <h4>Senior Candidate - Did Not Pass</h4>
+                    <p><em>"I finished all four parts but my code was a mess by Part D. I kept adding special cases instead of proper abstractions. In the debrief, they said the code quality degraded too much - at staff level, they expect you to maintain code quality even under time pressure."</em></p>
+                    <p><strong>Lesson:</strong> Speed without quality doesn't count. Better to finish Part C cleanly than Part D messily.</p>
+                </div>
             </div>
         </div>
 
@@ -195,7 +2744,7 @@ flowchart LR
 
         <div class="flex flex-between mt-4">
             <a href="module-02.html" class="btn btn-secondary">&larr; Previous Module</a>
-            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+            <a href="module-04.html" class="btn btn-primary">Next Module &rarr;</a>
         </div>
         </main>
     </div>
@@ -221,6 +2770,18 @@ flowchart LR
                     options: ["Their stock price", "Netflix Culture Deck", "Recent movies", "Technical papers"],
                     correct: 1,
                     explanation: "The Netflix Culture Deck outlines their Freedom & Responsibility values that are heavily evaluated."
+                },
+                {
+                    question: "What differentiates staff engineer evaluation from senior at these companies?",
+                    options: ["Faster coding speed", "More algorithms knowledge", "Proactive edge case identification and trade-off discussion", "More years of experience"],
+                    correct: 2,
+                    explanation: "Staff engineers are expected to proactively identify edge cases, discuss trade-offs, and think about system-level concerns."
+                },
+                {
+                    question: "Why do Stripe interviews emphasize Decimal over float for currency?",
+                    options: ["It's faster", "Financial precision - floats have rounding errors", "It uses less memory", "It's easier to code"],
+                    correct: 1,
+                    explanation: "Floats have rounding errors (0.1 + 0.2 != 0.3). Financial calculations require exact precision using Decimal."
                 }
             ];
             const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);

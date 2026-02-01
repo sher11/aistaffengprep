@@ -199,7 +199,366 @@ flowchart TB
                 </div>
             </div>
 
-            <h2 class="mt-4">5. Summary</h2>
+            <h2 class="mt-4">5. Working Implementation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>WebSocket Chat Server (Python)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - Chat server with FastAPI WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from dataclasses import dataclass, field
+from typing import Dict, Set, Optional
+import json
+import time
+import uuid
+import redis.asyncio as redis
+import asyncio
+
+app = FastAPI()
+
+@dataclass
+class Message:
+    id: str
+    sender_id: str
+    recipient_id: str
+    content: str
+    timestamp: int
+    delivered: bool = False
+    read: bool = False
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "sender_id": self.sender_id,
+            "recipient_id": self.recipient_id,
+            "content": self.content,
+            "timestamp": self.timestamp,
+            "delivered": self.delivered,
+            "read": self.read
+        }
+
+class ChatServer:
+    def __init__(self):
+        self.connections: Dict[str, WebSocket] = {}
+        self.redis: Optional[redis.Redis] = None
+        self.server_id = str(uuid.uuid4())[:8]
+
+    async def connect_redis(self):
+        self.redis = await redis.from_url("redis://localhost")
+        # Start listening for messages from other servers
+        asyncio.create_task(self._subscribe_to_messages())
+
+    async def register(self, user_id: str, websocket: WebSocket):
+        await websocket.accept()
+        self.connections[user_id] = websocket
+
+        # Store user -> server mapping
+        await self.redis.hset("chat:user_servers", user_id, self.server_id)
+
+        # Update presence
+        await self.redis.hset("chat:presence", user_id, json.dumps({
+            "status": "online",
+            "last_seen": int(time.time())
+        }))
+
+        # Deliver pending messages
+        await self._deliver_pending_messages(user_id, websocket)
+
+        # Notify friends about online status
+        await self._broadcast_presence(user_id, "online")
+
+    async def disconnect(self, user_id: str):
+        if user_id in self.connections:
+            del self.connections[user_id]
+
+        await self.redis.hdel("chat:user_servers", user_id)
+        await self.redis.hset("chat:presence", user_id, json.dumps({
+            "status": "offline",
+            "last_seen": int(time.time())
+        }))
+
+        await self._broadcast_presence(user_id, "offline")
+
+    async def send_message(self, message: Message):
+        # Generate message ID (Snowflake-style)
+        message.id = f"{int(time.time() * 1000)}-{uuid.uuid4().hex[:8]}"
+        message.timestamp = int(time.time() * 1000)
+
+        # Store message in database (async)
+        await self._persist_message(message)
+
+        # Try to deliver
+        recipient_server = await self.redis.hget("chat:user_servers", message.recipient_id)
+
+        if recipient_server:
+            if recipient_server.decode() == self.server_id:
+                # Same server - deliver directly
+                await self._deliver_to_local(message)
+            else:
+                # Different server - publish via Redis
+                await self.redis.publish(
+                    f"chat:messages:{message.recipient_id}",
+                    json.dumps(message.to_dict())
+                )
+        else:
+            # User offline - queue for later
+            await self._queue_for_offline(message)
+
+        # Send acknowledgment to sender
+        if message.sender_id in self.connections:
+            await self.connections[message.sender_id].send_json({
+                "type": "ack",
+                "message_id": message.id,
+                "status": "sent"
+            })
+
+    async def _deliver_to_local(self, message: Message):
+        if message.recipient_id in self.connections:
+            ws = self.connections[message.recipient_id]
+            await ws.send_json({
+                "type": "message",
+                "data": message.to_dict()
+            })
+            message.delivered = True
+            await self._mark_delivered(message.id)
+
+    async def _queue_for_offline(self, message: Message):
+        # Store in Redis list for offline delivery
+        await self.redis.lpush(
+            f"chat:pending:{message.recipient_id}",
+            json.dumps(message.to_dict())
+        )
+        # Trim to prevent unbounded growth
+        await self.redis.ltrim(f"chat:pending:{message.recipient_id}", 0, 999)
+
+    async def _deliver_pending_messages(self, user_id: str, websocket: WebSocket):
+        # Get all pending messages
+        messages = await self.redis.lrange(f"chat:pending:{user_id}", 0, -1)
+
+        for msg_json in reversed(messages):  # Oldest first
+            msg = json.loads(msg_json)
+            await websocket.send_json({
+                "type": "message",
+                "data": msg
+            })
+
+        # Clear pending messages
+        await self.redis.delete(f"chat:pending:{user_id}")
+
+    async def _subscribe_to_messages(self):
+        pubsub = self.redis.pubsub()
+        await pubsub.psubscribe("chat:messages:*")
+
+        async for msg in pubsub.listen():
+            if msg["type"] == "pmessage":
+                channel = msg["channel"].decode()
+                user_id = channel.split(":")[-1]
+                data = json.loads(msg["data"])
+
+                if user_id in self.connections:
+                    await self.connections[user_id].send_json({
+                        "type": "message",
+                        "data": data
+                    })
+
+    async def _persist_message(self, message: Message):
+        # In production: write to Cassandra/ScyllaDB
+        await self.redis.hset(
+            f"chat:msg:{message.id}",
+            mapping=message.to_dict()
+        )
+
+    async def _mark_delivered(self, message_id: str):
+        await self.redis.hset(f"chat:msg:{message_id}", "delivered", "true")
+
+    async def _broadcast_presence(self, user_id: str, status: str):
+        # Get user's contacts and notify them
+        # Simplified - in production, get from social graph
+        pass
+
+
+chat_server = ChatServer()
+
+@app.on_event("startup")
+async def startup():
+    await chat_server.connect_redis()
+
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    await chat_server.register(user_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+
+            if data["type"] == "message":
+                message = Message(
+                    id="",  # Will be generated
+                    sender_id=user_id,
+                    recipient_id=data["to"],
+                    content=data["content"],
+                    timestamp=0
+                )
+                await chat_server.send_message(message)
+
+            elif data["type"] == "typing":
+                # Broadcast typing indicator
+                pass
+
+            elif data["type"] == "read":
+                # Mark message as read
+                pass
+
+    except WebSocketDisconnect:
+        await chat_server.disconnect(user_id)
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">6. Failure Scenarios</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Message Ordering and Delivery Guarantees</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Challenge: Out-of-Order Messages</h4>
+                    <p>Network delays can cause messages to arrive in wrong order.</p>
+
+                    <div class="code-block">
+                        <code>
+# Python - Client-side message ordering
+
+class MessageBuffer:
+    """
+    Buffer and reorder messages on the client side.
+    Uses sequence numbers for ordering.
+    """
+    def __init__(self, conversation_id: str):
+        self.conversation_id = conversation_id
+        self.expected_seq = 0
+        self.buffer: Dict[int, Message] = {}
+        self.delivered: List[Message] = []
+
+    def add_message(self, message: Message) -> List[Message]:
+        """
+        Add message and return any messages that can be delivered.
+        """
+        seq = message.sequence_number
+
+        if seq == self.expected_seq:
+            # In order - deliver immediately
+            result = [message]
+            self.expected_seq += 1
+
+            # Check buffer for consecutive messages
+            while self.expected_seq in self.buffer:
+                result.append(self.buffer.pop(self.expected_seq))
+                self.expected_seq += 1
+
+            return result
+
+        elif seq > self.expected_seq:
+            # Out of order - buffer it
+            self.buffer[seq] = message
+            return []
+
+        else:
+            # Duplicate - ignore
+            return []
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Connection Loss and Recovery</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Scenario</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">What Happens</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Solution</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">User goes offline mid-conversation</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Messages queued in Redis</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Deliver when user reconnects</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Server crashes</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">All connections on that server lost</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Client reconnects to different server</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Redis pub/sub down</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cross-server messages fail</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fallback to polling database</td>
+                        </tr>
+                    </table>
+
+                    <div class="code-block">
+                        <code>
+# Client-side reconnection with message sync
+class ChatClient:
+    def __init__(self, user_id: str, server_url: str):
+        self.user_id = user_id
+        self.server_url = server_url
+        self.last_message_id = None
+        self.pending_acks: Set[str] = set()
+
+    async def connect(self):
+        while True:
+            try:
+                async with websockets.connect(
+                    f"{self.server_url}/ws/{self.user_id}"
+                ) as ws:
+                    # Sync messages since last known
+                    await ws.send(json.dumps({
+                        "type": "sync",
+                        "last_message_id": self.last_message_id
+                    }))
+
+                    # Resend any unacknowledged messages
+                    for msg in self.pending_acks:
+                        await ws.send(msg)
+
+                    await self._message_loop(ws)
+
+            except websockets.ConnectionClosed:
+                await asyncio.sleep(self._backoff())
+
+    async def send_message(self, to: str, content: str):
+        msg = {
+            "type": "message",
+            "to": to,
+            "content": content,
+            "client_id": str(uuid.uuid4())  # For deduplication
+        }
+        self.pending_acks.add(json.dumps(msg))
+        await self.ws.send(json.dumps(msg))
+
+    def _handle_ack(self, ack):
+        # Remove from pending when server acknowledges
+        for msg in list(self.pending_acks):
+            if json.loads(msg).get("client_id") == ack["client_id"]:
+                self.pending_acks.remove(msg)
+                break
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">7. Summary</h2>
 
             <div class="card">
                 <table style="width: 100%; border-collapse: collapse;">

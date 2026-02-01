@@ -229,6 +229,203 @@ flowchart LR
             </div>
         </div>
 
+        <h2 class="mt-4">Advanced STAR: Staff-Level Complexity</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>STAR for Multi-Year Initiatives</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Staff engineers often lead initiatives spanning 1-3 years. Standard STAR needs adaptation for these stories.</p>
+
+                <h4>Modified Structure for Long Projects</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Component</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Standard STAR</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Multi-Year STAR</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Situation</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">What was happening</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">The long-term problem or vision</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Task</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Your specific role</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Your role + the multi-year roadmap</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Action</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Steps you took</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">2-3 key phases with pivots and learnings</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Result</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Quantified outcome</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cumulative impact + ongoing value</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Example: Platform Migration (2-Year Initiative)</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "Our deployment process was a competitive disadvantage - 2-week release cycles while competitors deployed daily. This limited how fast we could respond to customer needs and was affecting engineer retention."</p>
+
+                    <p><strong>Task:</strong> "I proposed and led a 2-year initiative to modernize our CI/CD platform. Year 1 focused on foundation and pilot teams; Year 2 on org-wide rollout and self-service capabilities."</p>
+
+                    <p><strong>Action (Phase-based):</strong></p>
+                    <ul>
+                        <li><strong>Phase 1 (Q1-Q2):</strong> "Built proof of concept with my team. Demonstrated 10x faster deployments. Used this to secure executive sponsorship."</li>
+                        <li><strong>Phase 2 (Q3-Q4):</strong> "Expanded to 3 pilot teams. Hit unexpected resistance from security team - paused to co-design approval gates that satisfied their concerns."</li>
+                        <li><strong>Phase 3 (Year 2):</strong> "Created self-service onboarding. Shifted from push to pull - teams started requesting migration. Trained platform champions on each team."</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "Today, 85% of services deploy via CI/CD. Average deployment time: 30 minutes (from 2 weeks). We've shipped 4,000+ deployments this year. Engineer satisfaction with tooling improved from 3.2 to 4.5/5."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>STAR for Crisis Leadership</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Outages, security incidents, and other crises require a modified STAR that shows leadership under pressure.</p>
+
+                <h4>Crisis STAR Structure</h4>
+                <ol>
+                    <li><strong>Situation (15%):</strong> What was happening, severity, what was at stake</li>
+                    <li><strong>Task (10%):</strong> Your role (often self-appointed during crises)</li>
+                    <li><strong>Action - Immediate (25%):</strong> How you coordinated initial response</li>
+                    <li><strong>Action - Resolution (25%):</strong> How the issue was resolved</li>
+                    <li><strong>Action - Prevention (15%):</strong> Systemic improvements after</li>
+                    <li><strong>Result (10%):</strong> Impact of both crisis and improvements</li>
+                </ol>
+
+                <h4>Example: Production Outage</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "At 2 AM on Black Friday, our checkout service began returning 500 errors. Revenue was dropping at approximately $10K per minute."</p>
+
+                    <p><strong>Task:</strong> "I was the senior engineer on-call. The junior engineer who initially responded was overwhelmed, so I took incident command."</p>
+
+                    <p><strong>Action - Immediate:</strong></p>
+                    <ul>
+                        <li>"Established war room and assigned roles: I led debugging, one engineer handled external communication, one monitored dashboards"</li>
+                        <li>"Set up 10-minute status update cadence to stakeholders"</li>
+                    </ul>
+
+                    <p><strong>Action - Resolution:</strong></p>
+                    <ul>
+                        <li>"Identified root cause within 15 minutes: database connection pool exhaustion from a config change"</li>
+                        <li>"Made decision to rollback rather than forward-fix given the stakes"</li>
+                        <li>"Service restored in 35 minutes total downtime"</li>
+                    </ul>
+
+                    <p><strong>Action - Prevention:</strong></p>
+                    <ul>
+                        <li>"Led blameless post-mortem focusing on systemic gaps"</li>
+                        <li>"Implemented mandatory connection pool load testing in staging"</li>
+                        <li>"Created runbook for similar incidents"</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "Total impact: $350K in lost revenue. However, the improvements we made have prevented similar incidents for 18 months, and our average incident resolution time improved 40%."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>STAR for Organizational Change</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Staff engineers often lead through reorgs, process changes, and cultural shifts. These stories need to show leadership and adaptability.</p>
+
+                <h4>Key Elements</h4>
+                <ul>
+                    <li>Acknowledge the change and its impact on people</li>
+                    <li>Show how you provided stability and direction</li>
+                    <li>Demonstrate protecting the team while supporting leadership</li>
+                    <li>Never badmouth the change or leadership decisions</li>
+                </ul>
+
+                <h4>Example: Leading Through Reorg</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "Our engineering org went through a major restructure. My team was split across two new organizations, we got a new manager, and there was significant uncertainty about priorities. We had a critical Q4 launch at risk."</p>
+
+                    <p><strong>Task:</strong> "Although I wasn't in management, I was the most senior engineer who understood all the systems involved. People were looking to me for direction."</p>
+
+                    <p><strong>Action:</strong></p>
+                    <ul>
+                        <li>"Created a single source of truth document for launch readiness - maintained it as confusion swirled"</li>
+                        <li>"Ran daily standups across the newly split teams to maintain coordination"</li>
+                        <li>"When people asked political questions, I redirected to the work"</li>
+                        <li>"Proactively briefed the new director on project status - helped them look informed"</li>
+                        <li>"Connected people who needed to collaborate but didn't know each other yet"</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "We launched on time despite the chaos. The new director later told me my steadiness was why she trusted me to lead future cross-team work. Two team members thanked me specifically for keeping things on track."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>STAR for Escalation Decisions</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Interviewers want to know you have judgment about when to escalate vs. when to handle things yourself.</p>
+
+                <h4>Escalation STAR Structure</h4>
+                <ol>
+                    <li><strong>Situation:</strong> The problem and why it couldn't be resolved at your level</li>
+                    <li><strong>Task:</strong> What you needed to achieve through escalation</li>
+                    <li><strong>Action - Attempts:</strong> What you tried before escalating</li>
+                    <li><strong>Action - Escalation:</strong> How you escalated professionally</li>
+                    <li><strong>Result:</strong> Resolution and maintained relationships</li>
+                </ol>
+
+                <h4>Key Messages</h4>
+                <ul>
+                    <li>Escalation was a last resort, not first response</li>
+                    <li>You came with solutions, not just problems</li>
+                    <li>You represented all perspectives fairly</li>
+                    <li>You maintained relationships after resolution</li>
+                </ul>
+
+                <h4>Example: Cross-Team Escalation</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "Our team needed the Platform team to complete an API migration by March 1 for our Q1 launch. They indicated they couldn't prioritize it until Q2 due to their own commitments."</p>
+
+                    <p><strong>Task:</strong> "I needed to get alignment on priorities without damaging the relationship with Platform, who we'd need to work with for years."</p>
+
+                    <p><strong>Action - Attempts:</strong></p>
+                    <ul>
+                        <li>"Met twice with Platform's tech lead to understand their constraints"</li>
+                        <li>"Offered to loan an engineer to help with their work"</li>
+                        <li>"Proposed reduced scope - they declined as it wouldn't help their timeline"</li>
+                    </ul>
+
+                    <p><strong>Action - Escalation:</strong></p>
+                    <ul>
+                        <li>"Documented attempts and wrote neutral summary of both teams' constraints"</li>
+                        <li>"Presented three options to my director: (1) leadership align priorities, (2) we build workaround, (3) we accept Q2"</li>
+                        <li>"Recommended option 1 if achievable, option 2 as fallback"</li>
+                        <li>"Explicitly stated I wanted help facilitating, not a ruling in my favor"</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "Directors met and agreed on priority alignment. Platform shifted resources. We launched on time. I reached out to Platform's lead afterward to acknowledge their team's extra effort and maintain the relationship."</p>
+                </div>
+            </div>
+        </div>
+
         <h2 class="mt-4">Self-Check Quiz</h2>
         <div class="quiz-container" id="module-quiz"></div>
 

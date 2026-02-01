@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Staff Engineer Interview Prep</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/animations.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
-    <nav class="navbar">
+    <nav class="navbar glass-nav">
         <div class="nav-container">
             <a href="index.html" class="logo">StaffEngPrep</a>
             <ul class="nav-links">
@@ -20,173 +21,642 @@
         </div>
     </nav>
 
+    <!-- Animated Background Particles -->
+    <div class="particles-container">
+        <div class="particle particle-1"></div>
+        <div class="particle particle-2"></div>
+        <div class="particle particle-3"></div>
+        <div class="particle particle-4"></div>
+        <div class="particle particle-5"></div>
+        <div class="particle particle-6"></div>
+    </div>
+
     <div class="container">
-        <div class="hero">
-            <h1>Staff Engineer Interview Preparation</h1>
-            <p>Interactive learning platform to help you ace your staff-level engineering interviews</p>
+        <!-- Hero Section with Hard Disk Animation -->
+        <div class="hero hero-enhanced">
+            <div class="hero-content">
+                <div class="hero-text fade-in-up">
+                    <h1 class="hero-title">Staff Engineer Interview Preparation</h1>
+                    <p class="hero-subtitle">Master the skills needed to ace staff-level engineering interviews at top tech companies</p>
+                    <div class="hero-cta">
+                        <a href="#roadmap" class="btn btn-primary btn-glow">Start Learning</a>
+                        <a href="#stats" class="btn btn-secondary btn-outline">View Roadmap</a>
+                    </div>
+                </div>
+                <div class="hero-visual fade-in-right">
+                    <!-- Animated Hard Disk -->
+                    <div class="hard-disk-container">
+                        <div class="hard-disk">
+                            <div class="disk-body">
+                                <div class="disk-platter">
+                                    <div class="platter-surface">
+                                        <div class="track track-1"></div>
+                                        <div class="track track-2"></div>
+                                        <div class="track track-3"></div>
+                                        <div class="track track-4"></div>
+                                        <div class="track track-5"></div>
+                                        <div class="sector sector-1"></div>
+                                        <div class="sector sector-2"></div>
+                                        <div class="sector sector-3"></div>
+                                        <div class="sector sector-4"></div>
+                                        <div class="spindle"></div>
+                                        <div class="data-bits">
+                                            <span class="bit">1</span>
+                                            <span class="bit">0</span>
+                                            <span class="bit">1</span>
+                                            <span class="bit">1</span>
+                                            <span class="bit">0</span>
+                                            <span class="bit">1</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="actuator-arm">
+                                    <div class="arm-base"></div>
+                                    <div class="arm-body"></div>
+                                    <div class="read-write-head">
+                                        <div class="head-light"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="disk-reflection"></div>
+                        </div>
+                        <div class="data-stream">
+                            <span class="stream-bit">0</span>
+                            <span class="stream-bit">1</span>
+                            <span class="stream-bit">1</span>
+                            <span class="stream-bit">0</span>
+                            <span class="stream-bit">1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="scroll-indicator">
+                <div class="scroll-arrow"></div>
+            </div>
         </div>
 
+        <!-- Stats Section -->
+        <section class="stats-section" id="stats">
+            <div class="stats-grid">
+                <div class="stat-card glass-card scroll-reveal">
+                    <div class="stat-number counter" data-target="33">0</div>
+                    <div class="stat-label">Total Modules</div>
+                    <div class="stat-bar"></div>
+                </div>
+                <div class="stat-card glass-card scroll-reveal" style="animation-delay: 0.1s;">
+                    <div class="stat-number counter" data-target="4">0</div>
+                    <div class="stat-label">Learning Domains</div>
+                    <div class="stat-bar"></div>
+                </div>
+                <div class="stat-card glass-card scroll-reveal" style="animation-delay: 0.2s;">
+                    <div class="stat-number counter" data-target="50">0</div>
+                    <div class="stat-label">Practice Questions</div>
+                    <div class="stat-bar"></div>
+                </div>
+                <div class="stat-card glass-card scroll-reveal" style="animation-delay: 0.3s;">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Weeks to Complete</div>
+                    <div class="stat-bar"></div>
+                </div>
+            </div>
+        </section>
+
         <!-- Overall Progress -->
-        <div class="progress-container" id="overall-progress">
+        <div class="progress-container glass-card scroll-reveal" id="overall-progress">
             <div class="progress-header">
                 <span><strong>Overall Progress</strong></span>
                 <span class="progress-label">0% Complete</span>
             </div>
-            <div class="progress-bar">
+            <div class="progress-bar progress-bar-animated">
                 <div class="progress-fill" style="width: 0%"></div>
             </div>
         </div>
 
-        <!-- Learning Path Overview -->
-        <h2 class="mb-3">Learning Path</h2>
+        <!-- Complete Roadmap Section -->
+        <section class="roadmap-section" id="roadmap">
+            <h2 class="section-title scroll-reveal">
+                <span class="title-icon">&#x1F5FA;</span>
+                Complete Learning Roadmap
+            </h2>
+            <p class="section-subtitle scroll-reveal">Follow this structured path to master staff-level engineering interviews</p>
 
-        <div class="diagram-container">
-            <div class="mermaid">
-flowchart LR
-    subgraph "Phase 1"
-        A[Coding Rounds]
-        B[System Design]
-    end
-
-    subgraph "Phase 2"
-        C[Company-Specific]
-        D[Behavioral]
-    end
-
-    subgraph "Phase 3"
-        E[Mock Interviews]
-        F[Review & Practice]
-    end
-
-    A --> C
-    B --> C
-    C --> E
-    D --> E
-    E --> F
-            </div>
-        </div>
-
-        <!-- Topic Cards -->
-        <h2 class="mt-4 mb-3">Topics</h2>
-
-        <div class="card-grid">
-            <div class="card">
-                <h3>Coding Rounds</h3>
-                <p>Master algorithms, data structures, and non-LeetCode style problems for staff-level interviews.</p>
-                <div class="progress-bar mb-2" id="coding-progress">
-                    <div class="progress-fill" style="width: 0%"></div>
+            <!-- Timeline Roadmap -->
+            <div class="roadmap-timeline">
+                <!-- Phase 1: Coding Foundations -->
+                <div class="roadmap-phase scroll-reveal">
+                    <div class="phase-header phase-coding">
+                        <div class="phase-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="16 18 22 12 16 6"></polyline>
+                                <polyline points="8 6 2 12 8 18"></polyline>
+                            </svg>
+                        </div>
+                        <div class="phase-info">
+                            <h3>Phase 1: Coding Mastery</h3>
+                            <span class="phase-duration">4-5 Weeks | 9 Modules</span>
+                        </div>
+                        <a href="coding-rounds/index.html" class="phase-link">Start &rarr;</a>
+                    </div>
+                    <div class="phase-modules">
+                        <div class="module-track">
+                            <div class="module-item-roadmap" onclick="window.location.href='coding-rounds/module-01.html'">
+                                <span class="module-num">01</span>
+                                <span class="module-name">Foundations</span>
+                                <span class="module-time">3-4h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='coding-rounds/module-02.html'">
+                                <span class="module-num">02</span>
+                                <span class="module-name">Arrays & Two Pointers</span>
+                                <span class="module-time">4-5h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='coding-rounds/module-03.html'">
+                                <span class="module-num">03</span>
+                                <span class="module-name">Trees & Binary Search</span>
+                                <span class="module-time">5-6h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='coding-rounds/module-04.html'">
+                                <span class="module-num">04</span>
+                                <span class="module-name">Graphs</span>
+                                <span class="module-time">6-7h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='coding-rounds/module-05.html'">
+                                <span class="module-num">05</span>
+                                <span class="module-name">Dynamic Programming</span>
+                                <span class="module-time">8-10h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='coding-rounds/module-06.html'">
+                                <span class="module-num">06</span>
+                                <span class="module-name">Backtracking</span>
+                                <span class="module-time">4-5h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='coding-rounds/module-07.html'">
+                                <span class="module-num">07</span>
+                                <span class="module-name">Heaps & Sorting</span>
+                                <span class="module-time">4-5h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='coding-rounds/module-08.html'">
+                                <span class="module-num">08</span>
+                                <span class="module-name">Non-LeetCode Problems</span>
+                                <span class="module-time">5-6h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='coding-rounds/module-09.html'">
+                                <span class="module-num">09</span>
+                                <span class="module-name">Interview Simulation</span>
+                                <span class="module-time">6-8h</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <a href="coding-rounds/index.html" class="card-link">Start Learning &rarr;</a>
-            </div>
 
-            <div class="card">
-                <h3>System Design</h3>
-                <p>Learn to design scalable distributed systems and nail the system design interview.</p>
-                <div class="progress-bar mb-2" id="systemDesign-progress">
-                    <div class="progress-fill" style="width: 0%"></div>
+                <!-- Phase 2: System Design -->
+                <div class="roadmap-phase scroll-reveal">
+                    <div class="phase-header phase-system">
+                        <div class="phase-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                            </svg>
+                        </div>
+                        <div class="phase-info">
+                            <h3>Phase 2: System Design</h3>
+                            <span class="phase-duration">4-5 Weeks | 12 Modules + Problems</span>
+                        </div>
+                        <a href="system-design/index.html" class="phase-link">Start &rarr;</a>
+                    </div>
+                    <div class="phase-modules">
+                        <div class="module-track">
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-01.html'">
+                                <span class="module-num">01</span>
+                                <span class="module-name">Scalability Fundamentals</span>
+                                <span class="module-time">4-5h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-02.html'">
+                                <span class="module-num">02</span>
+                                <span class="module-name">Database Systems</span>
+                                <span class="module-time">5-6h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-03.html'">
+                                <span class="module-num">03</span>
+                                <span class="module-name">Distributed Systems</span>
+                                <span class="module-time">6-7h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-04.html'">
+                                <span class="module-num">04</span>
+                                <span class="module-name">Storage & Data Processing</span>
+                                <span class="module-time">5-6h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-05.html'">
+                                <span class="module-num">05</span>
+                                <span class="module-name">Seminal Papers</span>
+                                <span class="module-time">6-8h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-09.html'">
+                                <span class="module-num">06</span>
+                                <span class="module-name">API Design</span>
+                                <span class="module-time">3-4h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-10.html'">
+                                <span class="module-num">07</span>
+                                <span class="module-name">Numbers to Know</span>
+                                <span class="module-time">2-3h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-11.html'">
+                                <span class="module-num">08</span>
+                                <span class="module-name">Real-time Updates</span>
+                                <span class="module-time">3-4h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-12.html'">
+                                <span class="module-num">09</span>
+                                <span class="module-name">Rate Limiting</span>
+                                <span class="module-time">3-4h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-06.html'">
+                                <span class="module-num">10</span>
+                                <span class="module-name">Common Problems</span>
+                                <span class="module-time">4-5h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-07.html'">
+                                <span class="module-num">11</span>
+                                <span class="module-name">Framework Mastery</span>
+                                <span class="module-time">4-5h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='system-design/module-08.html'">
+                                <span class="module-num">12</span>
+                                <span class="module-name">Mock Interviews</span>
+                                <span class="module-time">6-8h</span>
+                            </div>
+                        </div>
+                        <div class="module-track practice-problems">
+                            <div class="track-label">Practice Problems</div>
+                            <div class="problem-items">
+                                <div class="problem-item" onclick="window.location.href='system-design/problems/url-shortener.html'">
+                                    <span class="problem-difficulty easy">Easy</span>
+                                    <span>URL Shortener</span>
+                                </div>
+                                <div class="problem-item" onclick="window.location.href='system-design/problems/news-feed.html'">
+                                    <span class="problem-difficulty medium">Medium</span>
+                                    <span>News Feed</span>
+                                </div>
+                                <div class="problem-item" onclick="window.location.href='system-design/problems/chat-system.html'">
+                                    <span class="problem-difficulty medium">Medium</span>
+                                    <span>Chat System</span>
+                                </div>
+                                <div class="problem-item" onclick="window.location.href='system-design/problems/video-streaming.html'">
+                                    <span class="problem-difficulty hard">Hard</span>
+                                    <span>Video Streaming</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <a href="system-design/index.html" class="card-link">Start Learning &rarr;</a>
-            </div>
 
-            <div class="card">
-                <h3>Company-Specific</h3>
-                <p>Targeted preparation for top companies: Stripe, Netflix, OpenAI, Anthropic, and more.</p>
-                <div class="progress-bar mb-2" id="companySpecific-progress">
-                    <div class="progress-fill" style="width: 0%"></div>
+                <!-- Phase 3: Company-Specific -->
+                <div class="roadmap-phase scroll-reveal">
+                    <div class="phase-header phase-company">
+                        <div class="phase-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                        </div>
+                        <div class="phase-info">
+                            <h3>Phase 3: Company-Specific</h3>
+                            <span class="phase-duration">2-3 Weeks | 6 Modules</span>
+                        </div>
+                        <a href="company-specific/index.html" class="phase-link">Start &rarr;</a>
+                    </div>
+                    <div class="phase-modules">
+                        <div class="module-track">
+                            <div class="module-item-roadmap" onclick="window.location.href='company-specific/module-01.html'">
+                                <span class="module-num">01</span>
+                                <span class="module-name">Research Framework</span>
+                                <span class="module-time">2-3h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='company-specific/module-02.html'">
+                                <span class="module-num">02</span>
+                                <span class="module-name">Interview Patterns</span>
+                                <span class="module-time">3-4h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='company-specific/module-03.html'">
+                                <span class="module-num">03</span>
+                                <span class="module-name">Non-LeetCode Companies</span>
+                                <span class="module-time">4-5h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='company-specific/module-04.html'">
+                                <span class="module-num">04</span>
+                                <span class="module-name">Assessment-First Companies</span>
+                                <span class="module-time">3-4h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='company-specific/module-05.html'">
+                                <span class="module-num">05</span>
+                                <span class="module-name">Systems-Heavy Companies</span>
+                                <span class="module-time">4-5h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='company-specific/module-06.html'">
+                                <span class="module-num">06</span>
+                                <span class="module-name">Culture Alignment</span>
+                                <span class="module-time">2-3h</span>
+                            </div>
+                        </div>
+                        <div class="company-logos">
+                            <span class="company-tag">Stripe</span>
+                            <span class="company-tag">Netflix</span>
+                            <span class="company-tag">OpenAI</span>
+                            <span class="company-tag">Anthropic</span>
+                            <span class="company-tag">Databricks</span>
+                            <span class="company-tag">Snowflake</span>
+                        </div>
+                    </div>
                 </div>
-                <a href="company-specific/index.html" class="card-link">Start Learning &rarr;</a>
-            </div>
 
-            <div class="card">
-                <h3>Behavioral Rounds</h3>
-                <p>Prepare compelling stories and master the STAR method for staff-level behavioral questions.</p>
-                <div class="progress-bar mb-2" id="behavioral-progress">
-                    <div class="progress-fill" style="width: 0%"></div>
+                <!-- Phase 4: Behavioral -->
+                <div class="roadmap-phase scroll-reveal">
+                    <div class="phase-header phase-behavioral">
+                        <div class="phase-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <div class="phase-info">
+                            <h3>Phase 4: Behavioral Excellence</h3>
+                            <span class="phase-duration">2-3 Weeks | 6 Modules</span>
+                        </div>
+                        <a href="behavioral/index.html" class="phase-link">Start &rarr;</a>
+                    </div>
+                    <div class="phase-modules">
+                        <div class="module-track">
+                            <div class="module-item-roadmap" onclick="window.location.href='behavioral/module-01.html'">
+                                <span class="module-num">01</span>
+                                <span class="module-name">STAR Framework</span>
+                                <span class="module-time">2-3h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='behavioral/module-02.html'">
+                                <span class="module-num">02</span>
+                                <span class="module-name">Story Mining</span>
+                                <span class="module-time">3-4h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='behavioral/module-03.html'">
+                                <span class="module-num">03</span>
+                                <span class="module-name">Technical Leadership</span>
+                                <span class="module-time">3-4h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='behavioral/module-04.html'">
+                                <span class="module-num">04</span>
+                                <span class="module-name">Conflict Resolution</span>
+                                <span class="module-time">2-3h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='behavioral/module-05.html'">
+                                <span class="module-num">05</span>
+                                <span class="module-name">Failure & Growth</span>
+                                <span class="module-time">2-3h</span>
+                            </div>
+                            <div class="module-item-roadmap" onclick="window.location.href='behavioral/module-06.html'">
+                                <span class="module-num">06</span>
+                                <span class="module-name">Influence Without Authority</span>
+                                <span class="module-time">3-4h</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <a href="behavioral/index.html" class="card-link">Start Learning &rarr;</a>
             </div>
-        </div>
+        </section>
 
-        <!-- Key Stats -->
-        <h2 class="mt-4 mb-3">What You'll Learn</h2>
+        <!-- Topic Cards with Enhanced Hover Effects -->
+        <section class="topics-section">
+            <h2 class="section-title scroll-reveal">Quick Access to Topics</h2>
 
-        <div class="card-grid">
-            <div class="card text-center">
-                <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem;">9</h3>
-                <p>Coding Modules</p>
-            </div>
-            <div class="card text-center">
-                <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem;">8</h3>
-                <p>System Design Topics</p>
-            </div>
-            <div class="card text-center">
-                <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem;">6</h3>
-                <p>Company Profiles</p>
-            </div>
-            <div class="card text-center">
-                <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem;">50+</h3>
-                <p>Practice Questions</p>
-            </div>
-        </div>
+            <div class="card-grid">
+                <div class="card glass-card topic-card scroll-reveal" onclick="window.location.href='coding-rounds/index.html'" style="cursor: pointer;">
+                    <div class="card-icon card-icon-coding">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Coding Rounds</h3>
+                    <p>Master algorithms, data structures, and non-LeetCode style problems for staff-level interviews.</p>
+                    <div class="card-meta">
+                        <span>9 modules</span>
+                        <span>45-55 hours</span>
+                    </div>
+                    <div class="progress-bar mb-2" id="coding-progress">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <span class="card-link">Start Learning &rarr;</span>
+                </div>
 
-        <!-- Quick Start Guide -->
-        <h2 class="mt-4 mb-3">Quick Start Guide</h2>
+                <div class="card glass-card topic-card scroll-reveal" onclick="window.location.href='system-design/index.html'" style="cursor: pointer; animation-delay: 0.1s;">
+                    <div class="card-icon card-icon-system">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </div>
+                    <h3>System Design</h3>
+                    <p>Learn to design scalable distributed systems and nail the system design interview.</p>
+                    <div class="card-meta">
+                        <span>12 modules + problems</span>
+                        <span>50-65 hours</span>
+                    </div>
+                    <div class="progress-bar mb-2" id="systemDesign-progress">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <span class="card-link">Start Learning &rarr;</span>
+                </div>
 
-        <div class="collapsible open">
-            <div class="collapsible-header">
-                <span>Week 1-4: Build Foundations</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <ul>
-                    <li>Complete Coding Modules 1-4 (Foundations, Arrays, Trees, Graphs)</li>
-                    <li>Start System Design Module 1-2 (Scalability, Databases)</li>
-                    <li>Practice 3-5 coding problems daily</li>
-                </ul>
-            </div>
-        </div>
+                <div class="card glass-card topic-card scroll-reveal" onclick="window.location.href='company-specific/index.html'" style="cursor: pointer; animation-delay: 0.2s;">
+                    <div class="card-icon card-icon-company">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Company-Specific</h3>
+                    <p>Targeted preparation for top companies: Stripe, Netflix, OpenAI, Anthropic, and more.</p>
+                    <div class="card-meta">
+                        <span>6 modules</span>
+                        <span>18-24 hours</span>
+                    </div>
+                    <div class="progress-bar mb-2" id="companySpecific-progress">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <span class="card-link">Start Learning &rarr;</span>
+                </div>
 
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Week 5-8: Deepen Understanding</span>
-                <span class="collapsible-icon">&#9660;</span>
+                <div class="card glass-card topic-card scroll-reveal" onclick="window.location.href='behavioral/index.html'" style="cursor: pointer; animation-delay: 0.3s;">
+                    <div class="card-icon card-icon-behavioral">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <h3>Behavioral Rounds</h3>
+                    <p>Prepare compelling stories and master the STAR method for staff-level behavioral questions.</p>
+                    <div class="card-meta">
+                        <span>6 modules</span>
+                        <span>15-21 hours</span>
+                    </div>
+                    <div class="progress-bar mb-2" id="behavioral-progress">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <span class="card-link">Start Learning &rarr;</span>
+                </div>
             </div>
-            <div class="collapsible-content">
-                <ul>
-                    <li>Complete Coding Modules 5-7 (DP, Backtracking, Heaps)</li>
-                    <li>System Design Modules 3-5 (Distributed Systems, Papers)</li>
-                    <li>Begin Company-Specific research</li>
-                </ul>
-            </div>
-        </div>
+        </section>
 
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Week 9-12: Interview Preparation</span>
-                <span class="collapsible-icon">&#9660;</span>
+        <!-- Quick Start Guide with Timeline -->
+        <section class="quickstart-section">
+            <h2 class="section-title scroll-reveal">12-Week Study Plan</h2>
+            <p class="section-subtitle scroll-reveal">A structured approach to prepare for your staff engineer interview</p>
+
+            <div class="timeline-container">
+                <div class="timeline-track"></div>
+
+                <div class="timeline-item scroll-reveal">
+                    <div class="timeline-marker">
+                        <span>1-4</span>
+                    </div>
+                    <div class="timeline-content glass-card">
+                        <h4>Weeks 1-4: Build Foundations</h4>
+                        <ul>
+                            <li>Complete Coding Modules 1-4 (Foundations, Arrays, Trees, Graphs)</li>
+                            <li>Start System Design Module 1-2 (Scalability, Databases)</li>
+                            <li>Practice 3-5 coding problems daily</li>
+                            <li>Read DDIA chapters 1-4</li>
+                        </ul>
+                        <div class="timeline-focus">
+                            <span class="focus-tag">Primary: Coding</span>
+                            <span class="focus-tag">Secondary: System Design</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item scroll-reveal">
+                    <div class="timeline-marker">
+                        <span>5-8</span>
+                    </div>
+                    <div class="timeline-content glass-card">
+                        <h4>Weeks 5-8: Deepen Understanding</h4>
+                        <ul>
+                            <li>Complete Coding Modules 5-7 (DP, Backtracking, Heaps)</li>
+                            <li>System Design Modules 3-7 (Distributed Systems, APIs)</li>
+                            <li>Begin Company-Specific research</li>
+                            <li>Start preparing 5-7 behavioral stories</li>
+                        </ul>
+                        <div class="timeline-focus">
+                            <span class="focus-tag">Primary: System Design</span>
+                            <span class="focus-tag">Secondary: Behavioral</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item scroll-reveal">
+                    <div class="timeline-marker">
+                        <span>9-12</span>
+                    </div>
+                    <div class="timeline-content glass-card">
+                        <h4>Weeks 9-12: Interview Preparation</h4>
+                        <ul>
+                            <li>Complete Coding Module 8-9 (Non-LeetCode, Interview Simulation)</li>
+                            <li>System Design Mock Interviews (2-3 per week)</li>
+                            <li>Complete Company-Specific prep for target companies</li>
+                            <li>Practice behavioral answers with recording</li>
+                            <li>Schedule real mock interviews</li>
+                        </ul>
+                        <div class="timeline-focus">
+                            <span class="focus-tag">Primary: Mock Interviews</span>
+                            <span class="focus-tag">Secondary: Company Fit</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="collapsible-content">
-                <ul>
-                    <li>Complete Coding Module 8-9 (Non-LeetCode, Interview Simulation)</li>
-                    <li>System Design Modules 6-8 (Common Problems, Framework, Mocks)</li>
-                    <li>Behavioral preparation and story practice</li>
-                    <li>Schedule mock interviews</li>
-                </ul>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features-section">
+            <h2 class="section-title scroll-reveal">Why StaffEngPrep?</h2>
+
+            <div class="features-grid">
+                <div class="feature-card glass-card scroll-reveal">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    <h4>Staff-Level Focus</h4>
+                    <p>Content specifically designed for senior and staff engineer interviews, not entry-level prep.</p>
+                </div>
+
+                <div class="feature-card glass-card scroll-reveal" style="animation-delay: 0.1s;">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+                        </svg>
+                    </div>
+                    <h4>Interactive Learning</h4>
+                    <p>Quizzes, progress tracking, and spaced repetition to reinforce concepts effectively.</p>
+                </div>
+
+                <div class="feature-card glass-card scroll-reveal" style="animation-delay: 0.2s;">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        </svg>
+                    </div>
+                    <h4>Real-World Examples</h4>
+                    <p>Learn how Netflix, Google, and Amazon actually build their systems at scale.</p>
+                </div>
+
+                <div class="feature-card glass-card scroll-reveal" style="animation-delay: 0.3s;">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                    </div>
+                    <h4>Structured Curriculum</h4>
+                    <p>Clear learning path with time estimates to plan your preparation effectively.</p>
+                </div>
             </div>
-        </div>
+        </section>
 
         <!-- Spaced Repetition Preview -->
-        <h2 class="mt-4 mb-3">Today's Review</h2>
+        <section class="review-section">
+            <h2 class="section-title scroll-reveal">Today's Review</h2>
 
-        <div class="review-schedule" id="review-schedule">
-            <p class="text-muted">Complete some modules to start building your review schedule.</p>
-        </div>
+            <div class="review-schedule glass-card scroll-reveal" id="review-schedule">
+                <p class="text-muted">Complete some modules to start building your review schedule.</p>
+            </div>
+        </section>
 
     </div>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>Built for engineers, by engineers. Ace your staff-level interview.</p>
+            <div class="footer-links">
+                <a href="coding-rounds/index.html">Coding</a>
+                <a href="system-design/index.html">System Design</a>
+                <a href="company-specific/index.html">Companies</a>
+                <a href="behavioral/index.html">Behavioral</a>
+            </div>
+        </div>
+    </footer>
+
     <script src="assets/js/app.js"></script>
     <script>
-        // Initialize review schedule with sample concepts once progress is made
+        // Initialize review schedule and progress
         document.addEventListener('DOMContentLoaded', function() {
             const progress = StaffEngPrep.ProgressTracker.getProgress();
             const dueReviews = StaffEngPrep.ProgressTracker.getDueReviews();
@@ -198,6 +668,66 @@ flowchart LR
                 }));
                 StaffEngPrep.renderReviewSchedule('review-schedule', concepts);
             }
+
+            // Scroll reveal animation
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.scroll-reveal').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Counter animation
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const increment = target / 50;
+                let current = 0;
+
+                const updateCounter = () => {
+                    if (current < target) {
+                        current += increment;
+                        counter.textContent = Math.ceil(current);
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.textContent = target + '+';
+                    }
+                };
+
+                // Start counter when visible
+                const counterObserver = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        updateCounter();
+                        counterObserver.disconnect();
+                    }
+                }, { threshold: 0.5 });
+
+                counterObserver.observe(counter);
+            });
+
+            // Smooth scroll for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
         });
     </script>
 </body>

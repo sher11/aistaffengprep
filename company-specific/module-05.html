@@ -68,47 +68,764 @@
         <!-- Main Content -->
         <main class="main-content">
         <h1>Module 5: Systems-Heavy Companies</h1>
-        <p class="text-muted">Databricks, Snowflake Preparation</p>
+        <p class="text-muted">Databricks, Snowflake - Deep Systems Knowledge Required</p>
 
         <div class="card mt-3">
             <h3>Learning Objectives</h3>
             <ul>
-                <li>Demonstrate deep systems knowledge</li>
-                <li>Handle panel presentation format</li>
-                <li>Discuss trade-offs effectively</li>
-                <li>Show domain expertise</li>
+                <li>Demonstrate deep distributed systems knowledge</li>
+                <li>Master the panel presentation format (Snowflake specialty)</li>
+                <li>Connect coding questions to actual product architecture</li>
+                <li>Discuss CAP theorem, consistency models, and trade-offs fluently</li>
+                <li>Show staff-level architectural thinking in code and design</li>
             </ul>
+        </div>
+
+        <!-- Staff Engineer Expectations Section -->
+        <div class="card mt-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3>Staff Engineer Expectations (L5/L6 vs L3/L4)</h3>
+            <p>Systems-heavy companies have the highest bar for distributed systems knowledge:</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 1rem 0; color: white;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.3);">
+                        <th style="padding: 0.75rem; text-align: left;">Dimension</th>
+                        <th style="padding: 0.75rem; text-align: left;">Senior (L3/L4)</th>
+                        <th style="padding: 0.75rem; text-align: left;">Staff (L5/L6)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>Systems Knowledge</strong></td>
+                        <td style="padding: 0.75rem;">Understand CAP, basic distributed concepts</td>
+                        <td style="padding: 0.75rem;">Deep expertise: consensus, isolation levels, partition strategies</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>Coding Questions</strong></td>
+                        <td style="padding: 0.75rem;">Solve the problem correctly</td>
+                        <td style="padding: 0.75rem;">Connect to distributed systems implications, discuss scaling</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>Panel Presentation</strong></td>
+                        <td style="padding: 0.75rem;">Explain a project clearly</td>
+                        <td style="padding: 0.75rem;">Drive technical decisions, handle deep-dive questions, show impact</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>Product Knowledge</strong></td>
+                        <td style="padding: 0.75rem;">Know what the company does</td>
+                        <td style="padding: 0.75rem;">Deep understanding of architecture, competitive landscape</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.75rem;"><strong>Trade-off Discussion</strong></td>
+                        <td style="padding: 0.75rem;">Mention trade-offs when asked</td>
+                        <td style="padding: 0.75rem;">Proactively analyze trade-offs, propose alternatives with reasoning</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Preparation Timeline -->
+        <div class="card mt-3" style="background: var(--warning-bg); border-left: 4px solid #f59e0b;">
+            <h3>Preparation Timeline</h3>
+            <p><strong>Recommended: 6-8 weeks for staff-level preparation</strong></p>
+            <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><strong>Week 1-2</strong></td>
+                    <td style="padding: 0.5rem;">Distributed Systems Foundations - Read DDIA chapters 5-9, understand consistency models</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><strong>Week 3-4</strong></td>
+                    <td style="padding: 0.5rem;">Product Deep Dive - Study Databricks/Snowflake architecture, read engineering blogs</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><strong>Week 5-6</strong></td>
+                    <td style="padding: 0.5rem;">Coding Practice - Focus on concurrency, data structures for systems problems</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><strong>Week 7-8</strong></td>
+                    <td style="padding: 0.5rem;">Panel Prep - Create presentation, practice delivery, prepare for Q&A</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem;"><strong>Daily Practice</strong></td>
+                    <td style="padding: 0.5rem;">1 systems coding problem (45 min) + 30 min reading (papers, blogs)</td>
+                </tr>
+            </table>
         </div>
 
         <h2 class="mt-4">Databricks</h2>
 
         <div class="collapsible open">
             <div class="collapsible-header">
-                <span>Focus Areas</span>
+                <span>Interview Process and Product Context</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    A[Recruiter<br>30 min] --> B[Tech Screen<br>60 min coding]
+    B --> C[Onsite<br>4-5 rounds]
+    C --> D[Hiring Committee]
+    D --> E[Offer]
+                    </div>
+                </div>
+
+                <h4>Databricks Products You Must Know:</h4>
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Delta Lake</h4>
+                        <p>ACID transactions on data lakes. Combines best of data warehouses and data lakes.</p>
+                        <ul>
+                            <li>Time travel (versioning)</li>
+                            <li>Schema enforcement</li>
+                            <li>Unified batch/streaming</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Unity Catalog</h4>
+                        <p>Unified governance for data and AI assets across clouds.</p>
+                        <ul>
+                            <li>Fine-grained access control</li>
+                            <li>Data lineage tracking</li>
+                            <li>Cross-workspace sharing</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>MLflow</h4>
+                        <p>Open-source platform for ML lifecycle management.</p>
+                        <ul>
+                            <li>Experiment tracking</li>
+                            <li>Model registry</li>
+                            <li>Model serving</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Photon Engine</h4>
+                        <p>Vectorized query engine for massive speedups.</p>
+                        <ul>
+                            <li>C++ native execution</li>
+                            <li>SIMD optimizations</li>
+                            <li>Adaptive query execution</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h4 class="mt-3">How Products Connect to Interview Questions:</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Question Type</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Product Connection</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Why They Ask</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Versioned data structures</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Delta Lake time travel</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Core to their product</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Concurrent writes/locking</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Delta Lake ACID</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Daily engineering work</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Graph traversal</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Data lineage in Unity Catalog</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Governance features</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Rate limiting/scheduling</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Resource management</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Multi-tenant platform</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Databricks Problem 1: Snapshot HashSet with Versioning</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement</h4>
+                    <p>Implement a HashSet that supports snapshots. You should be able to add/remove elements and query the set at any previous snapshot.</p>
+                    <p><strong>Connection to Databricks:</strong> This directly relates to Delta Lake's time travel feature. Delta Lake uses transaction logs to enable queries at any point in time.</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from typing import Dict, Set, Optional, List
+from collections import defaultdict
+import threading
+
+
+class SnapshotHashSet:
+    """
+    A HashSet with snapshot capability - query the set at any past snapshot.
+
+    Design rationale (connect to Delta Lake):
+    - Like Delta Lake, we maintain a transaction log of changes
+    - Each snapshot is identified by a monotonically increasing ID
+    - We can reconstruct state at any snapshot by replaying the log
+
+    Space-time trade-off:
+    - This implementation optimizes for read at snapshot (O(1))
+    - At cost of extra space (O(elements * snapshots) worst case)
+
+    Alternative designs:
+    1. Store full copy at each snapshot: O(n) space per snapshot, O(1) read
+    2. Store only deltas: O(delta) space, O(snapshots) read
+    3. Copy-on-write with structural sharing: O(delta) space, O(log n) read
+
+    We use approach #2 with optimization for common case.
+    """
+
+    def __init__(self):
+        # Current state
+        self._current: Set[int] = set()
+
+        # Change log: snapshot_id -> list of (element, is_add) tuples
+        self._changelog: Dict[int, List[tuple]] = defaultdict(list)
+
+        # Element -> list of (snapshot_id, is_present) for efficient lookup
+        self._element_history: Dict[int, List[tuple]] = defaultdict(list)
+
+        self._snapshot_id: int = 0
+        self._lock = threading.RLock()
+
+    def add(self, element: int) -> bool:
+        """
+        Add an element to the set.
+        Returns True if element was not already present.
+        """
+        with self._lock:
+            if element in self._current:
+                return False
+
+            self._current.add(element)
+            # Record in changelog for current snapshot
+            self._changelog[self._snapshot_id].append((element, True))
+            return True
+
+    def remove(self, element: int) -> bool:
+        """
+        Remove an element from the set.
+        Returns True if element was present.
+        """
+        with self._lock:
+            if element not in self._current:
+                return False
+
+            self._current.remove(element)
+            self._changelog[self._snapshot_id].append((element, False))
+            return True
+
+    def contains(self, element: int) -> bool:
+        """Check if element exists in current set."""
+        with self._lock:
+            return element in self._current
+
+    def snapshot(self) -> int:
+        """
+        Take a snapshot and return its ID.
+
+        After this, queries to this snapshot_id will return
+        the state as of this moment.
+        """
+        with self._lock:
+            current_snap = self._snapshot_id
+
+            # Finalize the changelog for this snapshot
+            # Convert to element history for efficient lookup
+            for element, is_add in self._changelog[current_snap]:
+                self._element_history[element].append((current_snap, is_add))
+
+            # Move to next snapshot
+            self._snapshot_id += 1
+            return current_snap
+
+    def contains_at_snapshot(self, element: int, snapshot_id: int) -> bool:
+        """
+        Check if element existed at a specific snapshot.
+
+        Time complexity: O(log S) where S is number of snapshots
+        that affected this element.
+        """
+        with self._lock:
+            if snapshot_id >= self._snapshot_id:
+                raise ValueError(f"Snapshot {snapshot_id} doesn't exist yet")
+
+            history = self._element_history.get(element, [])
+
+            if not history:
+                return False
+
+            # Binary search for the latest change <= snapshot_id
+            left, right = 0, len(history) - 1
+            result = False
+
+            while left <= right:
+                mid = (left + right) // 2
+                snap, is_present = history[mid]
+
+                if snap <= snapshot_id:
+                    result = is_present
+                    left = mid + 1
+                else:
+                    right = mid - 1
+
+            return result
+
+    def get_snapshot_state(self, snapshot_id: int) -> Set[int]:
+        """
+        Reconstruct the full set at a snapshot.
+
+        Use sparingly - this is O(elements) operation.
+        In production Delta Lake, this would read from checkpoint files.
+        """
+        with self._lock:
+            if snapshot_id >= self._snapshot_id:
+                raise ValueError(f"Snapshot {snapshot_id} doesn't exist yet")
+
+            result = set()
+            for element, history in self._element_history.items():
+                for snap, is_present in history:
+                    if snap > snapshot_id:
+                        break
+                    if is_present:
+                        result.add(element)
+                    else:
+                        result.discard(element)
+
+            return result
+
+    def compact(self, up_to_snapshot: int) -> None:
+        """
+        Compact changelog up to a snapshot (like Delta Lake's VACUUM).
+
+        Removes ability to query snapshots before up_to_snapshot
+        but frees memory.
+        """
+        with self._lock:
+            # Remove old changelog entries
+            to_remove = [s for s in self._changelog if s < up_to_snapshot]
+            for snap in to_remove:
+                del self._changelog[snap]
+
+            # Compact element history
+            for element in list(self._element_history.keys()):
+                history = self._element_history[element]
+                # Keep only the latest entry before up_to_snapshot
+                # plus all entries after
+                new_history = []
+                latest_before = None
+
+                for snap, is_present in history:
+                    if snap < up_to_snapshot:
+                        latest_before = (snap, is_present)
+                    else:
+                        if latest_before:
+                            new_history.append(latest_before)
+                            latest_before = None
+                        new_history.append((snap, is_present))
+
+                if latest_before and not new_history:
+                    new_history.append(latest_before)
+
+                self._element_history[element] = new_history
+
+
+# ============================================================
+# Staff Engineer Extension: Distributed Version
+# ============================================================
+
+class DistributedSnapshotSet:
+    """
+    Distributed version showing how to handle partitioning.
+
+    Key considerations for staff-level discussion:
+    1. Snapshot coordination across partitions
+    2. Consistency guarantees
+    3. Handling node failures during snapshot
+    """
+
+    def __init__(self, num_partitions: int = 4):
+        self._partitions = [SnapshotHashSet() for _ in range(num_partitions)]
+        self._global_snapshot = 0
+        self._lock = threading.RLock()
+
+    def _get_partition(self, element: int) -> int:
+        """Consistent hashing to partition."""
+        return hash(element) % len(self._partitions)
+
+    def add(self, element: int) -> bool:
+        partition = self._get_partition(element)
+        return self._partitions[partition].add(element)
+
+    def remove(self, element: int) -> bool:
+        partition = self._get_partition(element)
+        return self._partitions[partition].remove(element)
+
+    def contains(self, element: int) -> bool:
+        partition = self._get_partition(element)
+        return self._partitions[partition].contains(element)
+
+    def global_snapshot(self) -> int:
+        """
+        Take a coordinated snapshot across all partitions.
+
+        In real distributed systems, this would use 2PC or similar.
+        """
+        with self._lock:
+            snap_id = self._global_snapshot
+            self._global_snapshot += 1
+
+            # Take snapshot on all partitions (in real system: 2PC)
+            for partition in self._partitions:
+                partition.snapshot()
+
+            return snap_id
+
+
+# Example usage
+if __name__ == "__main__":
+    s = SnapshotHashSet()
+
+    # Add some elements
+    s.add(1)
+    s.add(2)
+    s.add(3)
+    snap1 = s.snapshot()  # Snapshot 0: {1, 2, 3}
+
+    s.remove(2)
+    s.add(4)
+    snap2 = s.snapshot()  # Snapshot 1: {1, 3, 4}
+
+    s.add(5)
+    s.remove(1)
+    snap3 = s.snapshot()  # Snapshot 2: {3, 4, 5}
+
+    # Query at different snapshots
+    print(f"Snapshot 0: {s.get_snapshot_state(snap1)}")  # {1, 2, 3}
+    print(f"Snapshot 1: {s.get_snapshot_state(snap2)}")  # {1, 3, 4}
+    print(f"Snapshot 2: {s.get_snapshot_state(snap3)}")  # {3, 4, 5}
+
+    print(f"Contains 2 at snap 0: {s.contains_at_snapshot(2, snap1)}")  # True
+    print(f"Contains 2 at snap 1: {s.contains_at_snapshot(2, snap2)}")  # False</code></pre>
+
+                <h4 class="mt-3">Staff Engineer Follow-up Discussion Points</h4>
                 <ul>
-                    <li>Deep understanding of coding and systems</li>
-                    <li>Practical, non-LeetCode problems</li>
-                    <li>Distributed systems knowledge</li>
-                    <li>Data processing concepts</li>
+                    <li><strong>Q: How does Delta Lake actually implement time travel?</strong>
+                        <p>A: Delta Lake uses a transaction log (_delta_log directory) with JSON files for each commit. Checkpoints are created periodically. To read at a version, it reads the checkpoint + delta files.</p>
+                    </li>
+                    <li><strong>Q: What's the space/time trade-off here?</strong>
+                        <p>A: We trade space (storing history) for time (fast point-in-time queries). Delta Lake balances this with checkpointing and VACUUM operations.</p>
+                    </li>
+                    <li><strong>Q: How would you handle distributed snapshots?</strong>
+                        <p>A: Two-phase commit for coordinated snapshots, or use vector clocks for eventual consistency. Delta Lake uses optimistic concurrency with conflict detection.</p>
+                    </li>
                 </ul>
             </div>
         </div>
 
         <div class="collapsible">
             <div class="collapsible-header">
-                <span>Databricks Question Examples</span>
+                <span>Databricks Problem 2: Concurrent Data Writer with Locking</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
-                <ul>
-                    <li>Shortest path with multiple transport modes</li>
-                    <li>Snapshot set (HashSet with versioning)</li>
-                    <li>Concurrent data writer (thread-safe)</li>
-                    <li>Key-value store with locking</li>
-                </ul>
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement</h4>
+                    <p>Implement a concurrent key-value store that supports multiple writers with optimistic concurrency control. Detect conflicts and allow retries.</p>
+                    <p><strong>Connection to Databricks:</strong> Delta Lake uses optimistic concurrency control. Multiple writers can write simultaneously; conflicts are detected at commit time.</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Set, Callable
+from datetime import datetime
+from enum import Enum
+import threading
+import time
+import uuid
+
+
+class ConflictError(Exception):
+    """Raised when a write conflict is detected."""
+    def __init__(self, key: str, expected_version: int, actual_version: int):
+        self.key = key
+        self.expected_version = expected_version
+        self.actual_version = actual_version
+        super().__init__(
+            f"Conflict on key '{key}': expected version {expected_version}, "
+            f"found {actual_version}"
+        )
+
+
+class IsolationLevel(Enum):
+    READ_UNCOMMITTED = "read_uncommitted"
+    READ_COMMITTED = "read_committed"
+    REPEATABLE_READ = "repeatable_read"
+    SERIALIZABLE = "serializable"
+
+
+@dataclass
+class WriteIntent:
+    """Represents a pending write in a transaction."""
+    key: str
+    value: any
+    expected_version: int
+
+
+@dataclass
+class VersionedValue:
+    """A value with version metadata."""
+    value: any
+    version: int
+    timestamp: datetime
+    writer_id: str
+
+
+class ConcurrentKVStore:
+    """
+    Key-value store with optimistic concurrency control.
+
+    Design (mirrors Delta Lake):
+    - Writers read current version, make changes locally
+    - At commit, verify versions haven't changed
+    - If conflict, abort and retry
+
+    Isolation levels supported:
+    - Read Committed: See only committed data
+    - Serializable: Full isolation (this implementation)
+    """
+
+    def __init__(self):
+        self._data: Dict[str, VersionedValue] = {}
+        self._lock = threading.RLock()
+        self._commit_lock = threading.Lock()
+        self._active_transactions: Dict[str, 'Transaction'] = {}
+
+    def get(self, key: str) -> Optional[tuple]:
+        """
+        Get value and version for a key.
+        Returns (value, version) or None if not found.
+        """
+        with self._lock:
+            if key not in self._data:
+                return None
+            entry = self._data[key]
+            return (entry.value, entry.version)
+
+    def put(self, key: str, value: any, expected_version: int = -1,
+            writer_id: str = "anonymous") -> int:
+        """
+        Put a value with optimistic concurrency check.
+
+        Args:
+            key: The key
+            value: The value
+            expected_version: Version you expect (-1 for new key)
+            writer_id: Identifier for the writer
+
+        Returns the new version number.
+        Raises ConflictError if version mismatch.
+        """
+        with self._commit_lock:
+            current = self._data.get(key)
+
+            if expected_version == -1:
+                # Expecting new key
+                if current is not None:
+                    raise ConflictError(key, -1, current.version)
+                new_version = 0
+            else:
+                # Expecting specific version
+                if current is None:
+                    raise ConflictError(key, expected_version, -1)
+                if current.version != expected_version:
+                    raise ConflictError(key, expected_version, current.version)
+                new_version = current.version + 1
+
+            self._data[key] = VersionedValue(
+                value=value,
+                version=new_version,
+                timestamp=datetime.now(),
+                writer_id=writer_id
+            )
+            return new_version
+
+    def begin_transaction(self, isolation: IsolationLevel = IsolationLevel.SERIALIZABLE) -> 'Transaction':
+        """Start a new transaction."""
+        return Transaction(self, isolation)
+
+
+class Transaction:
+    """
+    Represents a transaction with read/write sets.
+
+    Implements serializable isolation via:
+    1. Track all reads with their versions
+    2. Track all writes
+    3. At commit, verify read set unchanged
+    4. Apply writes atomically
+    """
+
+    def __init__(self, store: ConcurrentKVStore,
+                 isolation: IsolationLevel = IsolationLevel.SERIALIZABLE):
+        self.id = str(uuid.uuid4())[:8]
+        self._store = store
+        self._isolation = isolation
+        self._read_set: Dict[str, int] = {}  # key -> version at read time
+        self._write_set: Dict[str, any] = {}  # key -> new value
+        self._committed = False
+        self._aborted = False
+
+    def get(self, key: str) -> Optional[any]:
+        """Read a key within the transaction."""
+        if self._committed or self._aborted:
+            raise RuntimeError("Transaction already completed")
+
+        # Check write set first (read your writes)
+        if key in self._write_set:
+            return self._write_set[key]
+
+        # Read from store
+        result = self._store.get(key)
+        if result is None:
+            self._read_set[key] = -1  # Track that key didn't exist
+            return None
+
+        value, version = result
+        self._read_set[key] = version
+        return value
+
+    def put(self, key: str, value: any) -> None:
+        """Write a key within the transaction."""
+        if self._committed or self._aborted:
+            raise RuntimeError("Transaction already completed")
+
+        # If we haven't read this key, read it to get expected version
+        if key not in self._read_set:
+            result = self._store.get(key)
+            self._read_set[key] = result[1] if result else -1
+
+        self._write_set[key] = value
+
+    def commit(self) -> bool:
+        """
+        Attempt to commit the transaction.
+
+        Returns True if successful, False if conflict detected.
+        """
+        if self._committed or self._aborted:
+            raise RuntimeError("Transaction already completed")
+
+        with self._store._commit_lock:
+            # Validate read set (no other writer modified what we read)
+            for key, expected_version in self._read_set.items():
+                current = self._store.get(key)
+                current_version = current[1] if current else -1
+
+                if current_version != expected_version:
+                    self._aborted = True
+                    return False
+
+            # Apply writes
+            for key, value in self._write_set.items():
+                expected = self._read_set.get(key, -1)
+                self._store.put(key, value, expected, self.id)
+
+            self._committed = True
+            return True
+
+    def rollback(self) -> None:
+        """Abort the transaction."""
+        self._aborted = True
+        self._write_set.clear()
+        self._read_set.clear()
+
+
+def with_retry(max_retries: int = 3, delay: float = 0.1):
+    """
+    Decorator for automatic transaction retry on conflict.
+
+    This is the pattern Delta Lake uses - operations are
+    automatically retried on conflict.
+    """
+    def decorator(func: Callable):
+        def wrapper(store: ConcurrentKVStore, *args, **kwargs):
+            for attempt in range(max_retries):
+                tx = store.begin_transaction()
+                try:
+                    result = func(tx, *args, **kwargs)
+                    if tx.commit():
+                        return result
+                    # Conflict - will retry
+                    time.sleep(delay * (2 ** attempt))  # Exponential backoff
+                except Exception as e:
+                    tx.rollback()
+                    raise e
+
+            raise RuntimeError(f"Failed after {max_retries} retries")
+        return wrapper
+    return decorator
+
+
+# Example: Bank transfer with automatic retry
+@with_retry(max_retries=5)
+def transfer(tx: Transaction, from_account: str, to_account: str, amount: float):
+    """Transfer money between accounts."""
+    from_balance = tx.get(from_account) or 0
+    to_balance = tx.get(to_account) or 0
+
+    if from_balance < amount:
+        raise ValueError("Insufficient funds")
+
+    tx.put(from_account, from_balance - amount)
+    tx.put(to_account, to_balance + amount)
+    return True
+
+
+# Example usage
+if __name__ == "__main__":
+    store = ConcurrentKVStore()
+
+    # Initialize accounts
+    store.put("alice", 1000, -1, "init")
+    store.put("bob", 500, -1, "init")
+
+    print("Initial balances:")
+    print(f"  Alice: {store.get('alice')[0]}")
+    print(f"  Bob: {store.get('bob')[0]}")
+
+    # Concurrent transfers
+    import concurrent.futures
+
+    def do_transfer(from_acc, to_acc, amount):
+        try:
+            transfer(store, from_acc, to_acc, amount)
+            return f"{from_acc} -> {to_acc}: ${amount} SUCCESS"
+        except Exception as e:
+            return f"{from_acc} -> {to_acc}: ${amount} FAILED: {e}"
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        futures = [
+            executor.submit(do_transfer, "alice", "bob", 100),
+            executor.submit(do_transfer, "bob", "alice", 50),
+            executor.submit(do_transfer, "alice", "bob", 200),
+        ]
+
+        for future in concurrent.futures.as_completed(futures):
+            print(future.result())
+
+    print("\nFinal balances:")
+    print(f"  Alice: {store.get('alice')[0]}")
+    print(f"  Bob: {store.get('bob')[0]}")
+    print(f"  Total: {store.get('alice')[0] + store.get('bob')[0]}")  # Should be 1500</code></pre>
             </div>
         </div>
 
@@ -116,16 +833,58 @@
 
         <div class="collapsible open">
             <div class="collapsible-header">
-                <span>Interview Structure</span>
+                <span>Interview Process and Panel Presentation</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
                 <div class="diagram-container">
                     <div class="mermaid">
 flowchart LR
-    A[Tech Screen<br>2 questions] --> B[Onsite]
-    B --> C[Panel Presentation<br>30 min, 5-6 interviewers]
-    C --> D[Decision]
+    A[Recruiter<br>30 min] --> B[Tech Screen<br>2 questions]
+    B --> C[Virtual Onsite<br>4-5 rounds]
+    C --> D[Panel Presentation<br>30 min + Q&A]
+    D --> E[Hiring Committee]
+    E --> F[Offer]
+                    </div>
+                </div>
+
+                <h4>Snowflake Architecture You Must Know:</h4>
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>Cloud Services Layer</h4>
+                        <p>The "brain" - handles authentication, metadata, query optimization.</p>
+                        <ul>
+                            <li>Query parsing & optimization</li>
+                            <li>Metadata management</li>
+                            <li>Access control</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Query Processing Layer</h4>
+                        <p>Virtual warehouses - massively parallel processing.</p>
+                        <ul>
+                            <li>Elastic scaling (up/down)</li>
+                            <li>Isolated compute</li>
+                            <li>Multi-cluster warehouses</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Storage Layer</h4>
+                        <p>Centralized storage on cloud object stores (S3, Azure, GCS).</p>
+                        <ul>
+                            <li>Compressed columnar format</li>
+                            <li>Automatic clustering</li>
+                            <li>Zero-copy cloning</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Key Innovation</h4>
+                        <p>Separation of compute and storage enables unique capabilities.</p>
+                        <ul>
+                            <li>Pay per use (no idle cost)</li>
+                            <li>Instant scaling</li>
+                            <li>Concurrent workloads</li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -133,64 +892,600 @@ flowchart LR
 
         <div class="collapsible">
             <div class="collapsible-header">
-                <span>Panel Presentation Guide</span>
+                <span>Panel Presentation Guide - Staff Level</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
-                <p><strong>Slide Structure (10-12 slides):</strong></p>
-                <ol>
-                    <li>Title and intro</li>
-                    <li>Context/problem space</li>
-                    <li>Requirements/constraints</li>
-                    <li>Solution overview</li>
-                    <li>Architecture diagram</li>
-                    <li>Key technical decisions</li>
-                    <li>Trade-offs considered</li>
-                    <li>Implementation challenges</li>
-                    <li>Results/metrics</li>
-                    <li>Learnings</li>
-                </ol>
-                <div class="card mt-2" style="background: var(--success-bg);">
-                    <strong>Tips:</strong> Know exact numbers, be honest about unknowns, practice timing (30 min strict).
+                <h4>Presentation Structure (10-12 slides, 15-20 min talk + 10-15 min Q&A)</h4>
+
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Recommended Slide Outline</h4>
+                    <ol>
+                        <li><strong>Title Slide</strong> - Project name, your role, date</li>
+                        <li><strong>Problem Context</strong> - What business problem? Why now? What was the impact of not solving it?</li>
+                        <li><strong>Requirements</strong> - Functional + non-functional. Include scale numbers.</li>
+                        <li><strong>Architecture Overview</strong> - High-level diagram, key components</li>
+                        <li><strong>Deep Dive: Key Technical Decision #1</strong> - What, why, trade-offs</li>
+                        <li><strong>Deep Dive: Key Technical Decision #2</strong> - What, why, trade-offs</li>
+                        <li><strong>Implementation Challenges</strong> - What was hard? How did you solve it?</li>
+                        <li><strong>Results & Metrics</strong> - Quantify the impact. Before/after numbers.</li>
+                        <li><strong>What I Would Do Differently</strong> - Shows growth mindset</li>
+                        <li><strong>Learnings</strong> - Technical and non-technical insights</li>
+                    </ol>
+                </div>
+
+                <h4 class="mt-3">Example Presentation Outline: Query Cache System</h4>
+                <div class="card">
+                    <h4>Slide 2: Problem Context</h4>
+                    <ul>
+                        <li>Dashboards making repeated queries (30% duplicate in 5-min window)</li>
+                        <li>Warehouse costs growing 40% quarter-over-quarter</li>
+                        <li>P95 latency for common queries: 8 seconds</li>
+                        <li>Business ask: Reduce costs and improve dashboard responsiveness</li>
+                    </ul>
+                </div>
+
+                <div class="card mt-2">
+                    <h4>Slide 5: Technical Decision - Cache Invalidation Strategy</h4>
+                    <p><strong>Decision:</strong> Hybrid TTL + dependency-based invalidation</p>
+                    <p><strong>Alternatives considered:</strong></p>
+                    <ul>
+                        <li>TTL only: Simple but stale data risk - rejected</li>
+                        <li>Eager invalidation: Consistent but complex, overhead - rejected</li>
+                        <li>Hybrid: Default TTL (5 min) + explicit invalidation on data changes</li>
+                    </ul>
+                    <p><strong>Trade-off:</strong> Accepted some staleness (configurable) for simplicity and performance</p>
+                </div>
+
+                <h4 class="mt-3">Common Panel Questions (Prepare Answers)</h4>
+                <ul>
+                    <li>"Walk me through the data flow for query X"</li>
+                    <li>"What happens when [component] fails?"</li>
+                    <li>"How did you handle [edge case]?"</li>
+                    <li>"What would you change if you had 10x scale?"</li>
+                    <li>"Why didn't you use [alternative technology]?"</li>
+                    <li>"What was your specific contribution vs the team's?"</li>
+                    <li>"How did you convince others of your approach?"</li>
+                </ul>
+
+                <div class="card mt-3" style="background: var(--danger-bg); border-left: 4px solid #ef4444;">
+                    <h4>Panel Presentation Failure Cases & Recovery</h4>
+                    <table style="width: 100%;">
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 0.5rem;"><strong>Failure</strong></td>
+                            <td style="padding: 0.5rem;"><strong>Recovery Strategy</strong></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 0.5rem;">Running out of time</td>
+                            <td style="padding: 0.5rem;">Skip to results slide, offer to discuss details in Q&A</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 0.5rem;">Can't answer a question</td>
+                            <td style="padding: 0.5rem;">"I don't know, but here's how I'd find out..." or "That's a great question - in retrospect we should have considered..."</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 0.5rem;">Hostile question</td>
+                            <td style="padding: 0.5rem;">Acknowledge the concern, explain your reasoning, admit limitations</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 0.5rem;">Technical screen sharing issues</td>
+                            <td style="padding: 0.5rem;">Have backup: PDF on shared drive, describe diagrams verbally</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem;">Realizing a mistake in your design</td>
+                            <td style="padding: 0.5rem;">Acknowledge it: "You're right, that's a weakness. Here's how I'd address it now..."</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <h2 class="mt-4">Systems Knowledge Required</h2>
+        <h2 class="mt-4">Distributed Systems Concepts in Interviews</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>CAP Theorem in Practice</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph TD
+    CAP[CAP Theorem]
+    CAP --> C[Consistency<br>All nodes see same data]
+    CAP --> A[Availability<br>Every request gets response]
+    CAP --> P[Partition Tolerance<br>Works despite network failures]
+
+    C & A --> CA[CA Systems<br>Traditional RDBMS]
+    C & P --> CP[CP Systems<br>HBase, MongoDB]
+    A & P --> AP[AP Systems<br>Cassandra, DynamoDB]
+                    </div>
+                </div>
+
+                <h4>How CAP Appears in Interviews</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Company</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Product Context</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">CAP Choice</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Interview Question Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Databricks</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Delta Lake transactions</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">CP (strong consistency)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"How would you handle write conflicts?"</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Snowflake</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Query result cache</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">AP (eventual consistency OK)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"What's acceptable staleness for cached results?"</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Both</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Metadata catalog</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">CP (must be consistent)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"How do you ensure schema changes are seen by all queries?"</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Staff Engineer Talking Points</h4>
+                <ul>
+                    <li><strong>CAP is a simplification</strong> - In practice, you tune consistency levels per operation</li>
+                    <li><strong>PACELC</strong> - Extends CAP: During Partition, choose A or C; Else, choose Latency or Consistency</li>
+                    <li><strong>Consistency spectrum</strong> - From linearizable to eventual, with levels in between (causal, read-your-writes)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Staff Engineer Coding: Distributed Lock Manager</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement</h4>
+                    <p>Implement a distributed lock manager that supports lock acquisition, release, and handles timeouts. Include deadlock detection.</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Dict, Set, Optional, List
+from enum import Enum
+import threading
+import time
+import heapq
+
+
+class LockMode(Enum):
+    SHARED = "shared"      # Multiple readers
+    EXCLUSIVE = "exclusive"  # Single writer
+
+
+@dataclass
+class LockRequest:
+    """A request to acquire a lock."""
+    resource: str
+    mode: LockMode
+    holder: str
+    acquired_at: Optional[datetime] = None
+    timeout_at: Optional[datetime] = None
+
+
+@dataclass
+class LockState:
+    """Current state of a lock."""
+    resource: str
+    mode: Optional[LockMode] = None
+    holders: Set[str] = field(default_factory=set)
+    waiting: List[LockRequest] = field(default_factory=list)
+
+
+class DeadlockError(Exception):
+    """Raised when deadlock is detected."""
+    def __init__(self, cycle: List[str]):
+        self.cycle = cycle
+        super().__init__(f"Deadlock detected: {' -> '.join(cycle)}")
+
+
+class LockTimeoutError(Exception):
+    """Raised when lock acquisition times out."""
+    pass
+
+
+class DistributedLockManager:
+    """
+    Distributed Lock Manager with deadlock detection.
+
+    Design notes:
+    - Supports shared (read) and exclusive (write) locks
+    - Uses wait-die scheme for deadlock prevention
+    - Implements wound-wait as alternative
+    - Timeout-based lock release for fault tolerance
+
+    In production (Databricks/Snowflake context):
+    - Would use ZooKeeper, etcd, or Redis for coordination
+    - Need lease renewal for long-running operations
+    - Consider lock hierarchies for efficiency
+    """
+
+    def __init__(self, deadlock_detection: bool = True,
+                 default_timeout_seconds: int = 30):
+        self._locks: Dict[str, LockState] = {}
+        self._holder_resources: Dict[str, Set[str]] = {}  # holder -> resources held
+        self._holder_waiting: Dict[str, str] = {}  # holder -> resource waiting for
+        self._lock = threading.RLock()
+        self._condition = threading.Condition(self._lock)
+        self._deadlock_detection = deadlock_detection
+        self._default_timeout = default_timeout_seconds
+
+    def acquire(self, resource: str, holder: str,
+                mode: LockMode = LockMode.EXCLUSIVE,
+                timeout_seconds: Optional[int] = None) -> bool:
+        """
+        Acquire a lock on a resource.
+
+        Args:
+            resource: Resource identifier
+            holder: Who is requesting the lock
+            mode: SHARED or EXCLUSIVE
+            timeout_seconds: How long to wait (None = default)
+
+        Returns True if acquired, raises on timeout/deadlock.
+        """
+        timeout = timeout_seconds or self._default_timeout
+        deadline = datetime.now() + timedelta(seconds=timeout)
+
+        with self._condition:
+            # Initialize lock state if needed
+            if resource not in self._locks:
+                self._locks[resource] = LockState(resource=resource)
+
+            lock_state = self._locks[resource]
+
+            # Check if we can acquire immediately
+            if self._can_acquire(lock_state, holder, mode):
+                self._do_acquire(lock_state, holder, mode)
+                return True
+
+            # Need to wait
+            request = LockRequest(
+                resource=resource,
+                mode=mode,
+                holder=holder,
+                timeout_at=deadline
+            )
+            lock_state.waiting.append(request)
+            self._holder_waiting[holder] = resource
+
+            # Check for deadlock before waiting
+            if self._deadlock_detection:
+                cycle = self._detect_deadlock(holder)
+                if cycle:
+                    lock_state.waiting.remove(request)
+                    del self._holder_waiting[holder]
+                    raise DeadlockError(cycle)
+
+            # Wait for lock
+            while not self._can_acquire(lock_state, holder, mode):
+                remaining = (deadline - datetime.now()).total_seconds()
+                if remaining <= 0:
+                    lock_state.waiting.remove(request)
+                    del self._holder_waiting[holder]
+                    raise LockTimeoutError(
+                        f"Timeout acquiring {mode.value} lock on {resource}"
+                    )
+
+                self._condition.wait(timeout=min(remaining, 1.0))
+
+                # Re-check for deadlock after wait
+                if self._deadlock_detection:
+                    cycle = self._detect_deadlock(holder)
+                    if cycle:
+                        lock_state.waiting.remove(request)
+                        del self._holder_waiting[holder]
+                        raise DeadlockError(cycle)
+
+            # Acquired!
+            lock_state.waiting.remove(request)
+            if holder in self._holder_waiting:
+                del self._holder_waiting[holder]
+            self._do_acquire(lock_state, holder, mode)
+            return True
+
+    def _can_acquire(self, lock_state: LockState, holder: str,
+                     mode: LockMode) -> bool:
+        """Check if lock can be acquired."""
+        # No one holds the lock
+        if not lock_state.holders:
+            return True
+
+        # Already hold the lock
+        if holder in lock_state.holders:
+            # Upgrade from SHARED to EXCLUSIVE?
+            if mode == LockMode.EXCLUSIVE and lock_state.mode == LockMode.SHARED:
+                # Can only upgrade if we're the only holder
+                return len(lock_state.holders) == 1
+            return True
+
+        # Someone else holds it
+        if lock_state.mode == LockMode.EXCLUSIVE:
+            return False  # Exclusive lock blocks everyone
+
+        # Current lock is SHARED
+        if mode == LockMode.SHARED:
+            return True  # Multiple readers OK
+        else:
+            return False  # EXCLUSIVE request blocked by readers
+
+    def _do_acquire(self, lock_state: LockState, holder: str,
+                    mode: LockMode) -> None:
+        """Actually acquire the lock."""
+        lock_state.holders.add(holder)
+        lock_state.mode = mode
+
+        if holder not in self._holder_resources:
+            self._holder_resources[holder] = set()
+        self._holder_resources[holder].add(lock_state.resource)
+
+    def release(self, resource: str, holder: str) -> bool:
+        """
+        Release a lock.
+
+        Returns True if lock was held and released.
+        """
+        with self._condition:
+            if resource not in self._locks:
+                return False
+
+            lock_state = self._locks[resource]
+
+            if holder not in lock_state.holders:
+                return False
+
+            lock_state.holders.remove(holder)
+
+            if holder in self._holder_resources:
+                self._holder_resources[holder].discard(resource)
+
+            # Clear lock state if no holders
+            if not lock_state.holders:
+                lock_state.mode = None
+
+            # Wake up waiters
+            self._condition.notify_all()
+            return True
+
+    def release_all(self, holder: str) -> int:
+        """Release all locks held by a holder. Returns count released."""
+        with self._condition:
+            resources = list(self._holder_resources.get(holder, set()))
+            count = 0
+            for resource in resources:
+                if self.release(resource, holder):
+                    count += 1
+            return count
+
+    def _detect_deadlock(self, start_holder: str) -> Optional[List[str]]:
+        """
+        Detect deadlock using cycle detection in wait-for graph.
+
+        Wait-for graph: holder A -> holder B if A is waiting for
+        a resource held by B.
+        """
+        visited = set()
+        path = []
+
+        def dfs(holder: str) -> Optional[List[str]]:
+            if holder in visited:
+                # Found cycle
+                cycle_start = path.index(holder)
+                return path[cycle_start:] + [holder]
+
+            if holder not in self._holder_waiting:
+                return None
+
+            visited.add(holder)
+            path.append(holder)
+
+            # Find who holds the resource we're waiting for
+            waiting_for = self._holder_waiting[holder]
+            if waiting_for in self._locks:
+                for other_holder in self._locks[waiting_for].holders:
+                    if other_holder != holder:
+                        result = dfs(other_holder)
+                        if result:
+                            return result
+
+            path.pop()
+            return None
+
+        return dfs(start_holder)
+
+    def get_lock_info(self, resource: str) -> Optional[Dict]:
+        """Get information about a lock."""
+        with self._lock:
+            if resource not in self._locks:
+                return None
+
+            state = self._locks[resource]
+            return {
+                "resource": resource,
+                "mode": state.mode.value if state.mode else None,
+                "holders": list(state.holders),
+                "waiting_count": len(state.waiting)
+            }
+
+
+# ============================================================
+# Read-Write Lock with Upgrade Support
+# ============================================================
+
+class ReadWriteLock:
+    """
+    Read-Write lock with upgrade/downgrade support.
+
+    More efficient than the general lock manager for the
+    common reader/writer pattern.
+    """
+
+    def __init__(self):
+        self._lock = threading.RLock()
+        self._read_ready = threading.Condition(self._lock)
+        self._readers = 0
+        self._writer = False
+        self._writer_waiting = 0
+
+    def acquire_read(self, timeout: float = None) -> bool:
+        """Acquire read lock."""
+        with self._read_ready:
+            deadline = time.time() + timeout if timeout else None
+
+            while self._writer or self._writer_waiting > 0:
+                remaining = None
+                if deadline:
+                    remaining = deadline - time.time()
+                    if remaining <= 0:
+                        return False
+
+                self._read_ready.wait(remaining)
+
+            self._readers += 1
+            return True
+
+    def release_read(self):
+        """Release read lock."""
+        with self._read_ready:
+            self._readers -= 1
+            if self._readers == 0:
+                self._read_ready.notify_all()
+
+    def acquire_write(self, timeout: float = None) -> bool:
+        """Acquire write lock."""
+        with self._read_ready:
+            deadline = time.time() + timeout if timeout else None
+            self._writer_waiting += 1
+
+            try:
+                while self._readers > 0 or self._writer:
+                    remaining = None
+                    if deadline:
+                        remaining = deadline - time.time()
+                        if remaining <= 0:
+                            return False
+
+                    self._read_ready.wait(remaining)
+
+                self._writer = True
+                return True
+            finally:
+                self._writer_waiting -= 1
+
+    def release_write(self):
+        """Release write lock."""
+        with self._read_ready:
+            self._writer = False
+            self._read_ready.notify_all()
+
+
+# Example usage
+if __name__ == "__main__":
+    lm = DistributedLockManager()
+
+    def worker(name: str, resources: List[str]):
+        try:
+            for resource in resources:
+                print(f"{name} trying to acquire {resource}")
+                lm.acquire(resource, name, LockMode.EXCLUSIVE, timeout_seconds=5)
+                print(f"{name} acquired {resource}")
+                time.sleep(0.1)
+
+            # Do work...
+            time.sleep(0.5)
+
+        except DeadlockError as e:
+            print(f"{name} deadlock: {e}")
+        except LockTimeoutError as e:
+            print(f"{name} timeout: {e}")
+        finally:
+            released = lm.release_all(name)
+            print(f"{name} released {released} locks")
+
+    # Create potential deadlock scenario
+    threads = [
+        threading.Thread(target=worker, args=("Worker1", ["A", "B"])),
+        threading.Thread(target=worker, args=("Worker2", ["B", "A"])),
+    ]
+
+    for t in threads:
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    print("\nLock info for A:", lm.get_lock_info("A"))
+    print("Lock info for B:", lm.get_lock_info("B"))</code></pre>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Systems Knowledge Deep Dive</h2>
 
         <div class="card-grid">
             <div class="card">
                 <h4>Distributed Systems</h4>
                 <ul>
-                    <li>CAP theorem</li>
-                    <li>Consistency models</li>
-                    <li>Consensus algorithms</li>
+                    <li><strong>CAP theorem</strong> - Trade-offs in distributed systems</li>
+                    <li><strong>Consistency models</strong> - Linearizable, sequential, causal, eventual</li>
+                    <li><strong>Consensus algorithms</strong> - Paxos, Raft basics</li>
+                    <li><strong>Replication</strong> - Leader-follower, multi-leader, leaderless</li>
                 </ul>
             </div>
             <div class="card">
                 <h4>Data Systems</h4>
                 <ul>
-                    <li>LSM trees vs B-trees</li>
-                    <li>Write-ahead logging</li>
-                    <li>Indexing approaches</li>
+                    <li><strong>LSM trees vs B-trees</strong> - Write vs read optimization</li>
+                    <li><strong>Write-ahead logging</strong> - Durability guarantees</li>
+                    <li><strong>Indexing approaches</strong> - B-tree, hash, bitmap, columnar</li>
+                    <li><strong>Partitioning</strong> - Hash, range, composite</li>
                 </ul>
             </div>
             <div class="card">
                 <h4>Concurrency</h4>
                 <ul>
-                    <li>Thread synchronization</li>
-                    <li>Lock strategies</li>
-                    <li>Deadlock prevention</li>
+                    <li><strong>Thread synchronization</strong> - Mutexes, semaphores, monitors</li>
+                    <li><strong>Lock strategies</strong> - Optimistic vs pessimistic</li>
+                    <li><strong>Deadlock prevention</strong> - Wait-die, wound-wait</li>
+                    <li><strong>Lock-free data structures</strong> - CAS operations</li>
                 </ul>
             </div>
             <div class="card">
                 <h4>Databases</h4>
                 <ul>
-                    <li>Transaction isolation</li>
-                    <li>Query optimization</li>
-                    <li>Storage engines</li>
+                    <li><strong>Transaction isolation</strong> - Read committed, repeatable read, serializable</li>
+                    <li><strong>MVCC</strong> - Multi-version concurrency control</li>
+                    <li><strong>Query optimization</strong> - Cost-based, rule-based</li>
+                    <li><strong>Storage engines</strong> - Row vs column stores</li>
                 </ul>
             </div>
+        </div>
+
+        <div class="card mt-3" style="background: var(--danger-bg); border-left: 4px solid #ef4444;">
+            <h4>Red Flags to Avoid</h4>
+            <ul style="margin: 0;">
+                <li>Not knowing the company's core product architecture</li>
+                <li>Unable to explain CAP theorem with concrete examples</li>
+                <li>Not discussing trade-offs in your solutions</li>
+                <li>Panel presentation: Going over time, not knowing exact metrics</li>
+                <li>Coding: Not considering concurrency implications</li>
+                <li>Saying "I don't know" without attempting to reason through it</li>
+            </ul>
         </div>
 
         <h2 class="mt-4">Self-Check Quiz</h2>
@@ -198,7 +1493,7 @@ flowchart LR
 
         <div class="flex flex-between mt-4">
             <a href="module-04.html" class="btn btn-secondary">&larr; Previous Module</a>
-            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+            <a href="module-06.html" class="btn btn-primary">Next Module &rarr;</a>
         </div>
         </main>
     </div>
@@ -218,6 +1513,24 @@ flowchart LR
                     options: ["Frontend frameworks", "Distributed systems fundamentals", "Marketing strategy", "Design patterns only"],
                     correct: 1,
                     explanation: "Systems-heavy companies expect deep understanding of distributed systems."
+                },
+                {
+                    question: "What Databricks product uses time travel?",
+                    options: ["Unity Catalog", "MLflow", "Delta Lake", "Photon Engine"],
+                    correct: 2,
+                    explanation: "Delta Lake provides ACID transactions including time travel capability."
+                },
+                {
+                    question: "In CAP theorem, what does Snowflake's query cache optimize for?",
+                    options: ["Consistency only", "Availability and Partition tolerance (AP)", "Consistency and Availability (CA)", "None of the above"],
+                    correct: 1,
+                    explanation: "Query caches typically choose AP - eventual consistency is acceptable for cached results."
+                },
+                {
+                    question: "What should you do if you can't answer a panel question?",
+                    options: ["Make up an answer", "Say 'I don't know' and stop", "Explain how you'd find out and reason through it", "Change the subject"],
+                    correct: 2,
+                    explanation: "Show your thinking process - explain how you'd investigate and reason through the problem."
                 }
             ];
             const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);

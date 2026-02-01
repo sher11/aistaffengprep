@@ -201,6 +201,278 @@ flowchart TD
             </div>
         </div>
 
+        <h2 class="mt-4">Worked Example 1: Mining Stories from a Migration Project</h2>
+
+        <div class="card mt-3" style="background: var(--info-bg);">
+            <h4>The Raw Experience</h4>
+            <p><strong>Project:</strong> Led migration of payment processing from monolith to microservices over 18 months. Team of 8 engineers. $2B annual transaction volume. Required coordination with 5 partner teams.</p>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Story 1: Technical Leadership (Architecture Decision)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Question fit:</strong> "Tell me about a significant technical decision you made"</p>
+
+                <p><strong>Situation:</strong> "Our payment monolith handled $2B in transactions annually but was hitting scalability limits. Deployments required 4-hour maintenance windows, and a single bug could affect all payment types."</p>
+
+                <p><strong>Task:</strong> "As the tech lead, I was responsible for evaluating architectural options and driving the decision process with stakeholders from payments, platform, and security teams."</p>
+
+                <p><strong>Action:</strong></p>
+                <ul>
+                    <li>Created evaluation matrix comparing: (1) vertical scaling, (2) modular monolith, (3) event-driven microservices</li>
+                    <li>Built proof-of-concept for each approach with realistic load testing at 3x projected volume</li>
+                    <li>Wrote RFC documenting trade-offs: operational complexity vs. deployment flexibility vs. team autonomy</li>
+                    <li>Facilitated decision meeting with platform, security, and SRE leads - addressed concerns about eventual consistency and observability</li>
+                    <li>Proposed phased approach: strangler fig pattern starting with lowest-risk payment type</li>
+                </ul>
+
+                <p><strong>Result:</strong> "We migrated successfully over 18 months with zero payment failures. Deployment time dropped from 4 hours to 15 minutes per service. The decision framework I created became the standard for major architectural decisions across the engineering org."</p>
+
+                <p><strong>Key angles emphasized:</strong> Analysis process, stakeholder management, risk mitigation, framework creation</p>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Story 2: Conflict Resolution (Team Disagreement)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Question fit:</strong> "Tell me about a time you resolved a conflict on your team"</p>
+
+                <p><strong>Situation:</strong> "During our payment migration, the platform team insisted on Kafka for event streaming while our team preferred RabbitMQ. Both sides had valid technical arguments, and the disagreement was blocking progress."</p>
+
+                <p><strong>Task:</strong> "I needed to resolve this impasse without pulling in management, since both teams would need to work together for the next 18 months."</p>
+
+                <p><strong>Action:</strong></p>
+                <ul>
+                    <li>Scheduled separate 1:1s with both tech leads to understand their underlying concerns (not just stated positions)</li>
+                    <li>Discovered platform team's real concern was operational support - they were already on-call for Kafka</li>
+                    <li>Our team's concern was message ordering guarantees for payment events</li>
+                    <li>Proposed compromise: Kafka for infrastructure, with custom partitioning scheme ensuring ordering</li>
+                    <li>Offered to have my team take initial on-call burden during learning curve</li>
+                </ul>
+
+                <p><strong>Result:</strong> "Both teams agreed within a week. We delivered the integration on schedule. More importantly, I built a strong relationship with the platform lead - we collaborated easily on three subsequent projects."</p>
+
+                <p><strong>Key angles emphasized:</strong> Understanding underlying interests, finding creative solutions, relationship building</p>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Story 3: Failure & Growth (Timeline Miss)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Question fit:</strong> "Tell me about a time you failed or made a significant mistake"</p>
+
+                <p><strong>Situation:</strong> "During our payment migration, I committed to migrating the credit card processing service in Q3, which was critical for Black Friday traffic."</p>
+
+                <p><strong>Task:</strong> "I was responsible for the timeline and had assured leadership we'd be ready."</p>
+
+                <p><strong>Action (what went wrong):</strong></p>
+                <ul>
+                    <li>I underestimated the complexity of PCI compliance recertification for the new architecture</li>
+                    <li>Gave the estimate after only 2 days of discovery instead of proper investigation</li>
+                    <li>Didn't involve the security team early enough - they surfaced blockers in week 6 of a 10-week plan</li>
+                </ul>
+
+                <p><strong>Action (recovery):</strong></p>
+                <ul>
+                    <li>Immediately flagged the risk to leadership with three options: reduced scope, pushed timeline, or added resources</li>
+                    <li>Worked with security to parallelize compliance work</li>
+                    <li>Accepted we'd miss the original date and communicated updated timeline</li>
+                </ul>
+
+                <p><strong>Result:</strong> "We shipped 3 weeks late - after Black Friday, which meant running old and new systems in parallel during peak. No incidents, but significant operational burden. I now require minimum one-week discovery sprints before committing to timelines, and I include security/compliance teams from day one on regulated systems."</p>
+
+                <p><strong>Key angles emphasized:</strong> Owning the mistake, specific behavior changes, applied learning</p>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Worked Example 2: Mining Stories from Mentorship Experience</h2>
+
+        <div class="card mt-3" style="background: var(--info-bg);">
+            <h4>The Raw Experience</h4>
+            <p><strong>Experience:</strong> Mentored a junior engineer (2 years experience) for 18 months. She went from struggling with code reviews to leading a 3-person feature team. Also ran a weekly "office hours" session that became an org-wide practice.</p>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Story 4: People Development (1:1 Mentorship)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Question fit:</strong> "Tell me about how you've developed other engineers"</p>
+
+                <p><strong>Situation:</strong> "Sarah joined my team with 2 years of experience but was struggling. Her code reviews took 3-4 rounds, she rarely spoke in design discussions, and her manager was considering putting her on a PIP."</p>
+
+                <p><strong>Task:</strong> "I offered to mentor her because I saw potential - her questions were insightful even when she didn't speak up publicly."</p>
+
+                <p><strong>Action:</strong></p>
+                <ul>
+                    <li>Started with weekly 1:1s focused on understanding her blockers - discovered she was afraid of being wrong in public</li>
+                    <li>Created "pre-meetings" where we'd review her ideas before team discussions so she felt prepared</li>
+                    <li>Pair-programmed on her PRs, teaching her to self-review with a checklist before requesting review</li>
+                    <li>Gradually increased stretch assignments: leading small features, then presenting designs, then mentoring an intern</li>
+                    <li>Celebrated wins publicly to build her confidence and reputation</li>
+                </ul>
+
+                <p><strong>Result:</strong> "Within 9 months, her code reviews passed first round 80% of the time. She led her first feature end-to-end. By month 18, she was promoted to senior engineer and now leads a 3-person team. Her manager told me the mentorship 'transformed' her trajectory."</p>
+
+                <p><strong>Key angles emphasized:</strong> Individualized approach, systematic progression, measurable growth</p>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Story 5: Influence Through Teaching (Scaling Impact)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Question fit:</strong> "Tell me about how you've multiplied your impact" or "How have you influenced engineering culture?"</p>
+
+                <p><strong>Situation:</strong> "I noticed that junior engineers across teams were asking similar questions in Slack - about testing patterns, code review norms, debugging approaches. Senior engineers were answering the same questions repeatedly."</p>
+
+                <p><strong>Task:</strong> "I wanted to create a scalable solution that would help juniors ramp faster and free up senior engineers' time."</p>
+
+                <p><strong>Action:</strong></p>
+                <ul>
+                    <li>Started informal weekly "office hours" - 30 minutes open to any engineer with any technical question</li>
+                    <li>Initially 2-3 attendees; shared notes in Slack after each session</li>
+                    <li>Noticed patterns in questions and created short write-ups on common topics</li>
+                    <li>Recruited two other senior engineers to rotate hosting with me</li>
+                    <li>Proposed to engineering leadership as official program; they allocated 1 hour/week of "company time"</li>
+                </ul>
+
+                <p><strong>Result:</strong> "Office hours grew to 15-20 weekly attendees across 6 teams. Onboarding survey scores for 'access to senior help' improved 40%. Three other senior engineers now run office hours in their domains. The notes became a searchable knowledge base with 100+ entries."</p>
+
+                <p><strong>Key angles emphasized:</strong> Identifying leverage, building sustainable programs, organizational influence</p>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Avoiding Cliche Stories</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Overdone Stories to Avoid (or Differentiate)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Cliche Story</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Why It's Weak</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">How to Differentiate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Worked extra hours to meet deadline"</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Shows effort, not skill or judgment</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Focus on how you prioritized, de-scoped, or negotiated instead of grinding</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Disagreed with manager but did it their way"</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Shows compliance, not influence</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Show how you presented data, gained partial wins, or learned they were right</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Fixed a critical bug under pressure"</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Expected skill, not staff-level impact</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Focus on systemic improvements you made after: runbooks, testing, monitoring</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Convinced team to use my preferred technology"</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Sounds like ego over collaboration</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Emphasize evaluation process, incorporating others' concerns, trade-offs accepted</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"I was the only one who could solve it"</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Suggests knowledge hoarding, not leadership</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Show how you documented, taught, or built team capability afterward</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4 class="mt-3">Red Flags Interviewers Notice</h4>
+                <ul>
+                    <li><strong>Hero complex:</strong> Every story positions you as the sole savior</li>
+                    <li><strong>Victim positioning:</strong> External forces are always to blame</li>
+                    <li><strong>No failures:</strong> Suspiciously perfect track record</li>
+                    <li><strong>All recent:</strong> No stories from 2-3 years ago suggests job-hopping or limited experience</li>
+                    <li><strong>Vague impact:</strong> "Things improved" without numbers or specific outcomes</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Adapting Stories for Company Culture</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Culture-Specific Story Framing</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Company Type</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">What They Value</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">How to Adapt Your Stories</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Early-stage startup</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Speed, scrappiness, wearing many hats</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Emphasize velocity, pragmatic trade-offs, doing whatever was needed</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Growth-stage startup</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Scaling, building process, hiring</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Emphasize creating repeatable processes, building team capacity, technical debt balance</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Big Tech (FAANG)</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Scale, data-driven decisions, influence</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Emphasize metrics, cross-team coordination, RFC processes, long-term thinking</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Enterprise/Finance</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Reliability, compliance, risk management</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Emphasize security considerations, thorough testing, stakeholder management</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Mission-driven/Non-profit</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Impact, collaboration, values alignment</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Connect technical work to user/mission impact, emphasize team success over individual</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4 class="mt-3">Example: Same Story, Different Framings</h4>
+                <p><strong>Core Story:</strong> Led database migration to improve query performance</p>
+
+                <div style="margin: 1rem 0; padding: 1rem; border-left: 3px solid var(--primary-color); background: var(--code-bg);">
+                    <strong>Startup framing:</strong> "We were losing customers because search was slow. I proposed and shipped a migration in 3 weeks, improving response time 10x. I handled the data migration myself over a weekend to minimize downtime."
+                </div>
+
+                <div style="margin: 1rem 0; padding: 1rem; border-left: 3px solid var(--primary-color); background: var(--code-bg);">
+                    <strong>Big Tech framing:</strong> "Our search latency was p99 800ms, impacting 10M daily users. I wrote an RFC evaluating 3 database options, gathered feedback from storage and SRE teams, and led a 6-month phased migration. We reduced p99 to 80ms while maintaining 99.99% availability."
+                </div>
+
+                <div style="margin: 1rem 0; padding: 1rem; border-left: 3px solid var(--primary-color); background: var(--code-bg);">
+                    <strong>Enterprise framing:</strong> "Our legacy database was creating compliance risks and query timeouts during audits. I built a business case showing migration ROI, worked with security to ensure SOC2 requirements were met, and implemented a rollback strategy that satisfied risk management."
+                </div>
+            </div>
+        </div>
+
         <h2 class="mt-4">Story Versatility</h2>
 
         <div class="collapsible open">
@@ -217,6 +489,100 @@ flowchart TD
                     <li><strong>Failure:</strong> Focus on challenges, what went wrong, recovery</li>
                 </ul>
                 <p><strong>Technique:</strong> Keep situation/task similar, emphasize different actions, tailor result to question.</p>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Advanced Scenarios: Stories Every Staff Engineer Needs</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Crisis Leadership Stories</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Staff engineers are expected to lead during outages and incidents. Have stories ready for:</p>
+
+                <h4>Production Outage Leadership</h4>
+                <ul>
+                    <li><strong>Show:</strong> Calm under pressure, systematic debugging, clear communication</li>
+                    <li><strong>Include:</strong> How you coordinated the team, communicated to stakeholders, and ran the post-mortem</li>
+                    <li><strong>Emphasize:</strong> Systemic improvements implemented afterward</li>
+                </ul>
+
+                <h4>Security Incident Response</h4>
+                <ul>
+                    <li><strong>Show:</strong> Appropriate escalation, cross-functional coordination, balancing speed with thoroughness</li>
+                    <li><strong>Caution:</strong> Never reveal specific vulnerabilities or company secrets</li>
+                    <li><strong>Safe framing:</strong> "We discovered a vulnerability in a third-party dependency..." or "We identified suspicious access patterns..."</li>
+                </ul>
+
+                <h4>Sample Crisis Story Structure</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "At 2 AM, we received alerts that our payment service was returning errors for 30% of transactions."</p>
+                    <p><strong>Task:</strong> "As the senior engineer on-call, I needed to coordinate response, restore service, and communicate status."</p>
+                    <p><strong>Action:</strong> "I immediately paged the payments team lead, established a war room, and assigned roles: I led debugging, one engineer handled customer communication templates, another monitored dashboards. Within 20 minutes we identified a database connection pool exhaustion caused by a config change deployed that afternoon."</p>
+                    <p><strong>Result:</strong> "Service restored in 45 minutes total. I led the post-mortem that resulted in mandatory connection pool testing in staging and deployment cool-down periods. We haven't had a similar incident in 18 months."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Multi-Year Initiative Narratives</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Staff engineers often drive initiatives spanning 1-3 years. These stories demonstrate strategic thinking and persistence.</p>
+
+                <h4>How to Structure Long-Term Stories</h4>
+                <ol>
+                    <li><strong>Vision (15%):</strong> What future state you were working toward</li>
+                    <li><strong>Roadmap (20%):</strong> How you broke it into phases</li>
+                    <li><strong>Key Milestones (40%):</strong> 2-3 significant moments (wins, pivots, challenges)</li>
+                    <li><strong>Current State (15%):</strong> Where things stand now</li>
+                    <li><strong>Lessons (10%):</strong> What you learned about long-term initiatives</li>
+                </ol>
+
+                <h4>Example: Platform Modernization (2-Year Initiative)</h4>
+                <p><strong>Vision:</strong> "I recognized our deployment process was a competitive disadvantage - 2-week release cycles when competitors shipped daily."</p>
+                <p><strong>Roadmap:</strong> "Year 1: CI/CD foundation and pilot teams. Year 2: Org-wide rollout and self-service platform."</p>
+                <p><strong>Key moments:</strong></p>
+                <ul>
+                    <li>"Month 3: First team deployed to production in 20 minutes instead of 2 weeks - created internal buzz"</li>
+                    <li>"Month 9: Had to pause and address security team's concerns about automated deployments"</li>
+                    <li>"Month 15: Reached tipping point where teams were requesting to migrate rather than us pushing"</li>
+                </ul>
+                <p><strong>Current state:</strong> "85% of services now deploy via CI/CD. Average deployment time: 30 minutes. We've shipped to production 4,000 times this year."</p>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Leading Through Organizational Change</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Reorgs, layoffs, and leadership changes are part of corporate life. Staff engineers must lead through uncertainty.</p>
+
+                <h4>Stories to Prepare</h4>
+                <ul>
+                    <li><strong>Reorg navigation:</strong> How you helped your team adapt to new structure/manager</li>
+                    <li><strong>Priority shifts:</strong> How you handled project cancellation or dramatic pivot</li>
+                    <li><strong>Layoff survivor:</strong> How you maintained team morale and productivity (be sensitive)</li>
+                    <li><strong>Leadership vacuum:</strong> How you stepped up when a key leader departed</li>
+                </ul>
+
+                <h4>Key Messages to Convey</h4>
+                <ul>
+                    <li>Acknowledged team concerns without adding negativity</li>
+                    <li>Focused on what you could control</li>
+                    <li>Maintained technical standards despite chaos</li>
+                    <li>Helped leadership understand ground-level impact</li>
+                </ul>
+
+                <div style="background: var(--warning-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <strong>Caution:</strong> Never badmouth previous employers or leadership. Frame as "navigating change" not "surviving bad management."
+                </div>
             </div>
         </div>
 

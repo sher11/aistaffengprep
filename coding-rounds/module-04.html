@@ -401,9 +401,300 @@ def count_components(n, edges):
             </div>
         </div>
 
+        <!-- Real-World Scale Examples -->
+        <h2 class="mt-4">Real-World Scale Examples</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>LinkedIn: Graph Algorithms at 900M+ Users</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>LinkedIn's social graph has 900+ million members and 60+ million companies. Their graph infrastructure processes trillions of edges for features like "People You May Know" and connection path finding.</p>
+
+                <h4>The "2nd Degree Connection" Problem</h4>
+                <ul>
+                    <li><strong>Scale:</strong> Average user has 500 connections, each has 500 more</li>
+                    <li><strong>Challenge:</strong> Finding mutual connections = BFS to depth 2</li>
+                    <li><strong>Solution:</strong> Pre-compute and cache 2nd-degree neighborhoods</li>
+                </ul>
+
+                <div class="code-block">
+                    <pre><code># LinkedIn-style "People You May Know" simplified
+from collections import defaultdict
+
+class SocialGraph:
+    """
+    LinkedIn processes 300M+ API calls/day for connection queries.
+    Key insight: pre-compute what you query frequently.
+    """
+    def __init__(self):
+        self.connections = defaultdict(set)  # user -> set of connections
+        self.second_degree_cache = {}  # Pre-computed for active users
+
+    def add_connection(self, user_a, user_b):
+        self.connections[user_a].add(user_b)
+        self.connections[user_b].add(user_a)
+        # Invalidate cache for both users
+        self.second_degree_cache.pop(user_a, None)
+        self.second_degree_cache.pop(user_b, None)
+
+    def get_second_degree(self, user):
+        """
+        BFS to depth 2. LinkedIn caches this for active users.
+        Without caching: O(connections * avg_connections) per request.
+        """
+        if user in self.second_degree_cache:
+            return self.second_degree_cache[user]
+
+        first_degree = self.connections[user]
+        second_degree = set()
+
+        for friend in first_degree:
+            for friend_of_friend in self.connections[friend]:
+                if friend_of_friend != user and friend_of_friend not in first_degree:
+                    second_degree.add(friend_of_friend)
+
+        self.second_degree_cache[user] = second_degree
+        return second_degree
+
+    def people_you_may_know(self, user, limit=10):
+        """
+        Rank 2nd-degree connections by mutual connection count.
+        LinkedIn uses ML models on top of this base signal.
+        """
+        second_degree = self.get_second_degree(user)
+        first_degree = self.connections[user]
+
+        # Count mutual connections
+        scores = {}
+        for candidate in second_degree:
+            mutual = len(self.connections[candidate] & first_degree)
+            scores[candidate] = mutual
+
+        # Return top candidates by mutual connections
+        ranked = sorted(scores.items(), key=lambda x: -x[1])
+        return [user for user, score in ranked[:limit]]</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Google Maps: Shortest Path at Global Scale</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Google Maps serves over 1 billion users, processing 1 billion kilometers of directions daily. The road network graph has billions of nodes (intersections) and edges (road segments).</p>
+
+                <h4>Why Not Just Dijkstra?</h4>
+                <ul>
+                    <li><strong>Problem:</strong> Dijkstra explores in all directions until finding destination</li>
+                    <li><strong>At scale:</strong> NYC to LA would explore entire US road network</li>
+                    <li><strong>Solution:</strong> Hierarchical graphs + precomputation</li>
+                </ul>
+
+                <div class="code-block">
+                    <pre><code># Simplified Contraction Hierarchies (used by Google Maps, OSRM)
+import heapq
+
+class ContractionHierarchies:
+    """
+    Preprocess graph to enable bidirectional search on "important" nodes only.
+    Preprocessing: O(n log n) time, O(n) space
+    Query: O(log n) average, vs O(n) for Dijkstra
+    """
+    def __init__(self, graph):
+        self.graph = graph
+        self.importance = {}  # Node importance ranking
+        self.shortcuts = defaultdict(list)  # Added shortcut edges
+
+    def preprocess(self):
+        """
+        Contract nodes in order of importance.
+        Add shortcuts to preserve shortest paths.
+        Google does this offline - takes hours for continent-scale.
+        """
+        # Simplified: importance = degree (real algorithm more complex)
+        nodes = sorted(self.graph.keys(),
+                      key=lambda n: len(self.graph[n]))
+
+        for i, node in enumerate(nodes):
+            self.importance[node] = i
+            self._contract_node(node)
+
+    def _contract_node(self, node):
+        """Add shortcuts between neighbors if node is on shortest path."""
+        neighbors = list(self.graph[node])
+        for u in neighbors:
+            for v in neighbors:
+                if u != v:
+                    # Check if shortest u->v goes through node
+                    uv_through_node = (
+                        self._edge_weight(u, node) +
+                        self._edge_weight(node, v)
+                    )
+                    direct_uv = self._edge_weight(u, v)
+
+                    if uv_through_node < direct_uv:
+                        # Add shortcut
+                        self.shortcuts[u].append((v, uv_through_node))
+
+    def query(self, source, target):
+        """
+        Bidirectional Dijkstra, but only explore "upward" in hierarchy.
+        Dramatically reduces search space.
+        """
+        # Forward search from source (upward in importance)
+        forward_dist = {source: 0}
+        forward_heap = [(0, source)]
+
+        # Backward search from target (upward in importance)
+        backward_dist = {target: 0}
+        backward_heap = [(0, target)]
+
+        best_dist = float('inf')
+
+        while forward_heap or backward_heap:
+            # Alternate between forward and backward
+            # Only explore nodes with higher importance
+            # Meet in the middle at high-importance "hub" nodes
+            pass  # Full implementation omitted for brevity
+
+        return best_dist
+
+# Result: NYC to LA query in milliseconds, not minutes</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Facebook: Graph Partitioning for Social Feed</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Facebook's social graph has 3 billion users and trillions of edges. Storing this on a single machine is impossible. Graph partitioning determines which users are stored together.</p>
+
+                <h4>The Challenge</h4>
+                <ul>
+                    <li><strong>Goal:</strong> Minimize cross-machine queries when loading a user's feed</li>
+                    <li><strong>Constraint:</strong> Balanced partition sizes for even load distribution</li>
+                    <li><strong>This is NP-hard:</strong> Facebook uses approximation algorithms</li>
+                </ul>
+
+                <div class="code-block">
+                    <pre><code># Simplified graph partitioning (real version uses METIS, Pregel)
+class GraphPartitioner:
+    """
+    Assign users to servers to minimize cross-server edges.
+    Facebook re-partitions periodically as friendships change.
+    """
+    def __init__(self, graph, num_partitions):
+        self.graph = graph
+        self.num_partitions = num_partitions
+        self.assignment = {}  # node -> partition
+
+    def partition_balanced(self):
+        """
+        Greedy balanced partitioning.
+        Assign each node to partition with most existing friends.
+        """
+        partition_sizes = [0] * self.num_partitions
+        max_size = len(self.graph) // self.num_partitions + 1
+
+        for node in self.graph:
+            # Count friends in each partition
+            friend_counts = [0] * self.num_partitions
+            for friend in self.graph[node]:
+                if friend in self.assignment:
+                    friend_counts[self.assignment[friend]] += 1
+
+            # Assign to partition with most friends (if not full)
+            for p in sorted(range(self.num_partitions),
+                          key=lambda x: -friend_counts[x]):
+                if partition_sizes[p] < max_size:
+                    self.assignment[node] = p
+                    partition_sizes[p] += 1
+                    break
+
+    def edge_cut_ratio(self):
+        """Measure partitioning quality: % of edges crossing partitions."""
+        cross_edges = 0
+        total_edges = 0
+
+        for node in self.graph:
+            for neighbor in self.graph[node]:
+                total_edges += 1
+                if self.assignment[node] != self.assignment[neighbor]:
+                    cross_edges += 1
+
+        return cross_edges / total_edges if total_edges else 0
+
+# Facebook achieves ~10% edge cut - 90% of friend data is local!</code></pre>
+                </div>
+            </div>
+        </div>
+
         <!-- Quiz Section -->
         <h2 class="mt-4">Self-Check Quiz</h2>
         <div class="quiz-container" id="module-quiz"></div>
+
+        <!-- Interview Follow-up Questions -->
+        <h2 class="mt-4">Interview Follow-up Questions</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Common Follow-ups & What Interviewers Look For</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>1. "How would you detect a cycle in a directed vs undirected graph?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Undirected: DFS with parent tracking, or Union-Find</li>
+                    <li>Directed: DFS with 3 colors (white/gray/black) or topological sort</li>
+                    <li>Why the difference: back edge to parent is not a cycle in undirected graphs</li>
+                </ul>
+                <p><strong>Red flags:</strong> Using the same algorithm for both, not understanding edge classification.</p>
+
+                <h4>2. "When would you use adjacency matrix vs adjacency list?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Matrix: Dense graphs, O(1) edge lookup needed, small graphs</li>
+                    <li>List: Sparse graphs (most real-world graphs), memory efficiency</li>
+                    <li>Real numbers: Social network with 1M users has 1M nodes but avg 500 edges each</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not knowing space complexity: O(V^2) vs O(V+E).</p>
+
+                <h4>3. "How would you handle negative edge weights?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Dijkstra fails with negative edges</li>
+                    <li>Bellman-Ford: O(VE), handles negative weights, detects negative cycles</li>
+                    <li>Real use case: arbitrage detection in currency exchange</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not knowing Dijkstra's limitation.</p>
+
+                <h4>4. "How does Union-Find achieve near O(1) operations?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Path compression: flatten tree on find()</li>
+                    <li>Union by rank: attach smaller tree under larger</li>
+                    <li>Combined: O(alpha(n)) - inverse Ackermann, practically O(1)</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not knowing both optimizations are needed together.</p>
+
+                <h4>5. "How would you find shortest path in a graph with billions of nodes?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Precomputation: Contraction Hierarchies, ALT, Hub Labeling</li>
+                    <li>Partitioning: Divide graph into regions, precompute boundary distances</li>
+                    <li>Trade-off: preprocessing time vs query time</li>
+                </ul>
+                <p><strong>Red flags:</strong> Only knowing Dijkstra/BFS without discussing scale.</p>
+            </div>
+        </div>
 
         <!-- Practice Problems -->
         <h2 class="mt-4">Practice Problems</h2>

@@ -334,9 +334,311 @@ flowchart TD
             </div>
         </div>
 
+        <!-- Real-World Scale Examples -->
+        <h2 class="mt-4">Real-World Scale Examples</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Netflix/Spotify: Recommendation Systems Using DP</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Netflix's recommendation engine generates $1B+ in annual value. Spotify's Discover Weekly reaches 100M+ listeners. Both use dynamic programming in their recommendation pipelines.</p>
+
+                <h4>Sequence Alignment for Music Playlists</h4>
+                <p>Finding similar listening patterns between users is essentially a variant of Longest Common Subsequence (LCS).</p>
+
+                <div class="code-block">
+                    <pre><code># Spotify-style playlist similarity using LCS variant
+def playlist_similarity(playlist_a, playlist_b, genre_weights):
+    """
+    Modified LCS that considers genre similarity, not just exact matches.
+    Used to find users with similar taste for collaborative filtering.
+
+    Time: O(m*n), Space: O(min(m,n)) with optimization
+    """
+    m, n = len(playlist_a), len(playlist_b)
+    # Space-optimized: only keep two rows
+    prev = [0] * (n + 1)
+    curr = [0] * (n + 1)
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            song_a = playlist_a[i-1]
+            song_b = playlist_b[j-1]
+
+            if song_a == song_b:
+                # Exact match: full score
+                curr[j] = prev[j-1] + 1.0
+            else:
+                # Partial match based on genre similarity
+                genre_sim = get_genre_similarity(song_a, song_b, genre_weights)
+                if genre_sim > 0.7:  # Similar genre
+                    curr[j] = max(prev[j-1] + genre_sim * 0.5,
+                                 prev[j], curr[j-1])
+                else:
+                    curr[j] = max(prev[j], curr[j-1])
+
+        prev, curr = curr, [0] * (n + 1)
+
+    return prev[n] / max(m, n)  # Normalize by length
+
+# Netflix: Similar approach for "users who watched X also watched Y"
+# At scale: approximate with MinHash/LSH, not exact DP</code></pre>
+                </div>
+
+                <h4>Knapsack for Content Budget Allocation</h4>
+                <p>Netflix spends $17B/year on content. Deciding which shows to license is a knapsack problem: maximize viewer engagement within budget constraints.</p>
+
+                <div class="code-block">
+                    <pre><code># Simplified Netflix content acquisition optimization
+def content_acquisition(shows, budget, regional_quotas):
+    """
+    0/1 Knapsack with multiple constraints:
+    - Total budget
+    - Regional content quotas (EU requires 30% European content)
+    - Genre diversity requirements
+
+    This is multi-dimensional knapsack - NP-hard, solved with DP + heuristics.
+    """
+    n = len(shows)
+    # dp[budget_used][eu_content_hours] = max engagement
+    dp = {}
+
+    for show in shows:
+        cost = show['license_cost']
+        hours = show['runtime_hours']
+        engagement = show['predicted_views'] * show['avg_watch_time']
+        is_eu = show['region'] == 'EU'
+
+        # Update DP table (simplified - real version has more dimensions)
+        new_dp = {}
+        for (b, eu), eng in dp.items():
+            # Don't take this show
+            if (b, eu) not in new_dp or new_dp[(b, eu)] < eng:
+                new_dp[(b, eu)] = eng
+
+            # Take this show (if within budget)
+            new_b = b + cost
+            new_eu = eu + (hours if is_eu else 0)
+            if new_b <= budget:
+                new_eng = eng + engagement
+                if (new_b, new_eu) not in new_dp or new_dp[(new_b, new_eu)] < new_eng:
+                    new_dp[(new_b, new_eu)] = new_eng
+
+        dp = new_dp
+
+    # Find best allocation meeting EU quota
+    eu_quota = budget * 0.3  # 30% must be EU content
+    best = max((eng for (b, eu), eng in dp.items() if eu >= eu_quota), default=0)
+    return best</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Google Docs: Edit Distance for Operational Transform</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Google Docs supports 100M+ concurrent users editing documents. Edit distance algorithms power conflict resolution when multiple users edit simultaneously.</p>
+
+                <h4>Operational Transformation</h4>
+                <div class="code-block">
+                    <pre><code># Google Docs-style diff detection using edit distance
+def compute_edit_operations(old_text, new_text):
+    """
+    Compute minimum edit operations to transform old_text to new_text.
+    Used for:
+    1. Showing "Track Changes" in documents
+    2. Syncing edits between users
+    3. Version history compression
+
+    Time: O(m*n), but optimized with diagonal banding for similar texts.
+    """
+    m, n = len(old_text), len(new_text)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    ops = [[None] * (n + 1) for _ in range(m + 1)]
+
+    # Base cases
+    for i in range(m + 1):
+        dp[i][0] = i
+        ops[i][0] = ('delete', i-1) if i > 0 else None
+    for j in range(n + 1):
+        dp[0][j] = j
+        ops[0][j] = ('insert', j-1) if j > 0 else None
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if old_text[i-1] == new_text[j-1]:
+                dp[i][j] = dp[i-1][j-1]
+                ops[i][j] = ('match', i-1, j-1)
+            else:
+                choices = [
+                    (dp[i-1][j] + 1, ('delete', i-1)),
+                    (dp[i][j-1] + 1, ('insert', j-1)),
+                    (dp[i-1][j-1] + 1, ('replace', i-1, j-1))
+                ]
+                dp[i][j], ops[i][j] = min(choices, key=lambda x: x[0])
+
+    # Backtrack to get operations
+    operations = []
+    i, j = m, n
+    while i > 0 or j > 0:
+        op = ops[i][j]
+        if op[0] == 'match':
+            i, j = i-1, j-1
+        elif op[0] == 'delete':
+            operations.append(('DELETE', op[1], old_text[op[1]]))
+            i -= 1
+        elif op[0] == 'insert':
+            operations.append(('INSERT', op[1], new_text[op[1]]))
+            j -= 1
+        else:  # replace
+            operations.append(('REPLACE', op[1], old_text[op[1]], new_text[op[2]]))
+            i, j = i-1, j-1
+
+    return list(reversed(operations))
+
+# At Google scale: use Myers diff algorithm O(ND) where D = edit distance
+# Most edits are small, so D << m*n</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Amazon: Warehouse Robot Path Planning</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Amazon has 750,000+ robots in its fulfillment centers. Path planning for robots avoiding collisions is solved with DP-based algorithms.</p>
+
+                <h4>Multi-Agent Path Finding</h4>
+                <div class="code-block">
+                    <pre><code># Simplified Amazon warehouse robot path planning
+def robot_path_with_obstacles(grid, robots, goals):
+    """
+    Find collision-free paths for multiple robots.
+    Each robot must reach its goal without colliding with others.
+
+    This is a DP problem over (time, position_robot1, position_robot2, ...)
+    State space explodes exponentially - Amazon uses hierarchical decomposition.
+    """
+    from functools import lru_cache
+    rows, cols = len(grid), len(grid[0])
+
+    @lru_cache(maxsize=None)
+    def min_cost(time, positions):
+        """
+        DP: minimum cost to reach goals from current positions at given time.
+        positions = tuple of (row, col) for each robot
+        """
+        # Base case: all robots at goals
+        if all(pos == goal for pos, goal in zip(positions, goals)):
+            return 0
+
+        # Time limit to prevent infinite loops
+        if time > rows * cols * 2:
+            return float('inf')
+
+        min_total = float('inf')
+
+        # Try all combinations of moves (each robot: up/down/left/right/wait)
+        for moves in generate_move_combinations(len(robots)):
+            new_positions = []
+            valid = True
+
+            for i, (pos, move) in enumerate(zip(positions, moves)):
+                new_pos = apply_move(pos, move)
+
+                # Check bounds and obstacles
+                if not is_valid(new_pos, grid):
+                    valid = False
+                    break
+
+                # Check collision with other robots' new positions
+                if new_pos in new_positions:
+                    valid = False
+                    break
+
+                new_positions.append(new_pos)
+
+            if valid:
+                future_cost = min_cost(time + 1, tuple(new_positions))
+                move_cost = sum(1 for m in moves if m != 'wait')
+                min_total = min(min_total, move_cost + future_cost)
+
+        return min_total
+
+    return min_cost(0, tuple(r['start'] for r in robots))
+
+# Real Amazon: Conflict-Based Search (CBS) with DP for individual paths
+# Handles 1000s of robots with bounded-suboptimal solutions</code></pre>
+                </div>
+            </div>
+        </div>
+
         <!-- Quiz Section -->
         <h2 class="mt-4">Self-Check Quiz</h2>
         <div class="quiz-container" id="module-quiz"></div>
+
+        <!-- Interview Follow-up Questions -->
+        <h2 class="mt-4">Interview Follow-up Questions</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Common Follow-ups & What Interviewers Look For</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>1. "How would you optimize the space complexity of this DP solution?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Identify which previous states are needed (often just previous row)</li>
+                    <li>Rolling array technique: O(n*m) to O(min(n,m))</li>
+                    <li>Trade-off: can't reconstruct solution path without full table</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not recognizing when space optimization is possible.</p>
+
+                <h4>2. "When would you use memoization vs tabulation?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Memoization (top-down): Only computes needed states, easier to write</li>
+                    <li>Tabulation (bottom-up): No recursion overhead, easier to optimize space</li>
+                    <li>Memoization better when not all states needed (sparse state space)</li>
+                </ul>
+                <p><strong>Red flags:</strong> Always defaulting to one approach without justification.</p>
+
+                <h4>3. "How do you identify the recurrence relation?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Ask: "What decision do I make at each step?"</li>
+                    <li>Define state clearly: dp[i] = "answer for subproblem using first i elements"</li>
+                    <li>Express dp[i] in terms of smaller subproblems</li>
+                </ul>
+                <p><strong>Red flags:</strong> Jumping to code without defining state and recurrence.</p>
+
+                <h4>4. "This DP is O(n^3). Can you make it faster?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Monotonic queue/stack optimization for certain patterns</li>
+                    <li>Divide and conquer DP (Knuth optimization)</li>
+                    <li>Convex hull trick for slope queries</li>
+                </ul>
+                <p><strong>Red flags:</strong> Not knowing that DP can sometimes be optimized beyond naive recurrence.</p>
+
+                <h4>5. "How would you handle this if the input size is too large for DP?"</h4>
+                <p><strong>What they're looking for:</strong></p>
+                <ul>
+                    <li>Approximation algorithms (greedy with bounded error)</li>
+                    <li>State space reduction (only consider "interesting" states)</li>
+                    <li>Heuristics + pruning (branch and bound)</li>
+                </ul>
+                <p><strong>Red flags:</strong> Saying "DP won't work" without suggesting alternatives.</p>
+            </div>
+        </div>
 
         <!-- Practice Problems -->
         <h2 class="mt-4">Practice Problems</h2>

@@ -197,7 +197,471 @@ flowchart LR
                 </div>
             </div>
 
-            <h2 class="mt-4">6. Summary</h2>
+            <h2 class="mt-4">6. Working Implementation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Video Upload and Processing Pipeline</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+# Python - Video Upload and Transcoding Service
+
+from fastapi import FastAPI, UploadFile, BackgroundTasks
+from pydantic import BaseModel
+import boto3
+import subprocess
+import os
+import json
+from typing import List
+import uuid
+
+app = FastAPI()
+s3 = boto3.client('s3')
+sqs = boto3.client('sqs')
+
+BUCKET = "video-storage"
+TRANSCODE_QUEUE = "video-transcode-queue"
+
+# Output presets
+PRESETS = [
+    {"name": "360p", "width": 640, "height": 360, "bitrate": "800k"},
+    {"name": "720p", "width": 1280, "height": 720, "bitrate": "2500k"},
+    {"name": "1080p", "width": 1920, "height": 1080, "bitrate": "5000k"},
+]
+
+class UploadResponse(BaseModel):
+    video_id: str
+    upload_url: str
+    status: str
+
+@app.post("/api/v1/videos/upload", response_model=UploadResponse)
+async def initiate_upload(
+    filename: str,
+    content_type: str,
+    background_tasks: BackgroundTasks
+):
+    """Generate presigned URL for direct-to-S3 upload."""
+    video_id = str(uuid.uuid4())
+
+    # Generate presigned URL for client upload
+    presigned = s3.generate_presigned_url(
+        'put_object',
+        Params={
+            'Bucket': BUCKET,
+            'Key': f'raw/{video_id}/{filename}',
+            'ContentType': content_type
+        },
+        ExpiresIn=3600
+    )
+
+    return UploadResponse(
+        video_id=video_id,
+        upload_url=presigned,
+        status="awaiting_upload"
+    )
+
+@app.post("/api/v1/videos/{video_id}/complete")
+async def complete_upload(video_id: str, background_tasks: BackgroundTasks):
+    """Called after client completes S3 upload. Triggers transcoding."""
+
+    # Queue transcoding job
+    sqs.send_message(
+        QueueUrl=TRANSCODE_QUEUE,
+        MessageBody=json.dumps({
+            "video_id": video_id,
+            "presets": [p["name"] for p in PRESETS]
+        })
+    )
+
+    return {"status": "processing", "video_id": video_id}
+
+
+# Transcoding Worker
+class TranscodeWorker:
+    """
+    Worker that processes videos from the queue.
+    In production: run on GPU instances for speed.
+    """
+
+    def process_job(self, job: dict):
+        video_id = job["video_id"]
+
+        # Download raw video
+        raw_path = f"/tmp/{video_id}/raw.mp4"
+        s3.download_file(
+            BUCKET,
+            f"raw/{video_id}/video.mp4",
+            raw_path
+        )
+
+        # Transcode to each preset
+        for preset in PRESETS:
+            output_path = self._transcode(raw_path, preset, video_id)
+            self._segment_video(output_path, preset, video_id)
+
+        # Generate master playlist
+        self._create_master_playlist(video_id)
+
+        # Update status
+        self._mark_ready(video_id)
+
+    def _transcode(self, input_path: str, preset: dict, video_id: str) -> str:
+        output_path = f"/tmp/{video_id}/{preset['name']}.mp4"
+
+        cmd = [
+            'ffmpeg', '-i', input_path,
+            '-vf', f"scale={preset['width']}:{preset['height']}",
+            '-b:v', preset['bitrate'],
+            '-c:v', 'libx264',
+            '-preset', 'medium',
+            '-c:a', 'aac',
+            '-b:a', '128k',
+            output_path
+        ]
+        subprocess.run(cmd, check=True)
+        return output_path
+
+    def _segment_video(self, input_path: str, preset: dict, video_id: str):
+        """Split into HLS segments."""
+        output_dir = f"/tmp/{video_id}/{preset['name']}"
+        os.makedirs(output_dir, exist_ok=True)
+
+        cmd = [
+            'ffmpeg', '-i', input_path,
+            '-c', 'copy',
+            '-f', 'hls',
+            '-hls_time', '6',  # 6-second segments
+            '-hls_playlist_type', 'vod',
+            '-hls_segment_filename', f"{output_dir}/segment_%03d.ts",
+            f"{output_dir}/playlist.m3u8"
+        ]
+        subprocess.run(cmd, check=True)
+
+        # Upload segments to S3
+        for file in os.listdir(output_dir):
+            s3.upload_file(
+                f"{output_dir}/{file}",
+                BUCKET,
+                f"transcoded/{video_id}/{preset['name']}/{file}"
+            )
+
+    def _create_master_playlist(self, video_id: str):
+        """Create HLS master playlist with all quality levels."""
+        playlist = "#EXTM3U\n"
+
+        for preset in PRESETS:
+            bandwidth = int(preset['bitrate'].replace('k', '000'))
+            playlist += f"#EXT-X-STREAM-INF:BANDWIDTH={bandwidth},"
+            playlist += f"RESOLUTION={preset['width']}x{preset['height']}\n"
+            playlist += f"{preset['name']}/playlist.m3u8\n"
+
+        # Upload master playlist
+        s3.put_object(
+            Bucket=BUCKET,
+            Key=f"transcoded/{video_id}/master.m3u8",
+            Body=playlist,
+            ContentType="application/vnd.apple.mpegurl"
+        )
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Adaptive Bitrate Client Implementation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+// JavaScript - ABR Video Player Logic
+
+class AdaptiveBitratePlayer {
+    constructor(videoElement, manifestUrl) {
+        this.video = videoElement;
+        this.manifestUrl = manifestUrl;
+        this.variants = [];
+        this.currentVariant = null;
+        this.bandwidthEstimate = 1000000; // Start with 1 Mbps
+        this.downloadHistory = [];
+    }
+
+    async initialize() {
+        // Fetch and parse master playlist
+        const manifest = await this.fetchManifest(this.manifestUrl);
+        this.variants = this.parseVariants(manifest);
+
+        // Select initial quality based on estimated bandwidth
+        this.currentVariant = this.selectVariant();
+
+        // Start playback
+        await this.startPlayback();
+    }
+
+    parseVariants(manifest) {
+        const variants = [];
+        const lines = manifest.split('\n');
+
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].startsWith('#EXT-X-STREAM-INF')) {
+                const bandwidth = parseInt(
+                    lines[i].match(/BANDWIDTH=(\d+)/)[1]
+                );
+                const resolution = lines[i].match(/RESOLUTION=(\d+x\d+)/)?.[1];
+                const url = lines[i + 1];
+
+                variants.push({ bandwidth, resolution, url });
+            }
+        }
+
+        return variants.sort((a, b) => a.bandwidth - b.bandwidth);
+    }
+
+    selectVariant() {
+        // Select highest quality that fits in 80% of estimated bandwidth
+        const targetBandwidth = this.bandwidthEstimate * 0.8;
+
+        for (let i = this.variants.length - 1; i >= 0; i--) {
+            if (this.variants[i].bandwidth <= targetBandwidth) {
+                return this.variants[i];
+            }
+        }
+
+        return this.variants[0]; // Fallback to lowest
+    }
+
+    async fetchSegment(url) {
+        const startTime = performance.now();
+
+        const response = await fetch(url);
+        const data = await response.arrayBuffer();
+
+        const endTime = performance.now();
+        const duration = (endTime - startTime) / 1000;
+        const size = data.byteLength;
+
+        // Update bandwidth estimate (EWMA)
+        const measuredBandwidth = (size * 8) / duration;
+        this.updateBandwidthEstimate(measuredBandwidth);
+
+        return data;
+    }
+
+    updateBandwidthEstimate(measured) {
+        // Exponentially weighted moving average
+        const alpha = 0.3;
+        this.bandwidthEstimate = alpha * measured +
+                                 (1 - alpha) * this.bandwidthEstimate;
+
+        // Check if we should switch quality
+        const newVariant = this.selectVariant();
+        if (newVariant !== this.currentVariant) {
+            console.log(`Switching from ${this.currentVariant.resolution} ` +
+                       `to ${newVariant.resolution}`);
+            this.currentVariant = newVariant;
+        }
+    }
+
+    getBufferHealth() {
+        // Return seconds of video buffered ahead
+        const buffered = this.video.buffered;
+        if (buffered.length === 0) return 0;
+
+        return buffered.end(buffered.length - 1) - this.video.currentTime;
+    }
+}
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">7. Failure Scenarios</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>CDN and Origin Failures</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Scenario</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Impact</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Mitigation</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">CDN edge server down</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Regional users affected</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">DNS failover to other edges</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Origin storage unavailable</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cache misses fail globally</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Multi-region replication, stale-while-revalidate</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Transcoding queue backup</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Videos stuck "processing"</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Auto-scaling workers, priority queues</td>
+                        </tr>
+                    </table>
+
+                    <h4>Multi-CDN Failover</h4>
+                    <div class="code-block">
+                        <code>
+# Python - Multi-CDN URL generation with failover
+
+class MultiCDNRouter:
+    CDN_PROVIDERS = [
+        {"name": "cloudfront", "base_url": "https://d123.cloudfront.net"},
+        {"name": "fastly", "base_url": "https://video.fastly.net"},
+        {"name": "akamai", "base_url": "https://video.akamai.net"},
+    ]
+
+    def __init__(self):
+        self.health_status = {cdn["name"]: True for cdn in self.CDN_PROVIDERS}
+
+    def get_video_url(self, video_id: str, region: str) -> str:
+        """Select CDN based on health and region."""
+        for cdn in self.CDN_PROVIDERS:
+            if self.health_status[cdn["name"]]:
+                return f"{cdn['base_url']}/videos/{video_id}/master.m3u8"
+
+        # All CDNs down - return direct origin URL
+        return f"https://origin.storage.com/videos/{video_id}/master.m3u8"
+
+    def report_failure(self, cdn_name: str, video_id: str):
+        """Called when client reports CDN failure."""
+        self.health_status[cdn_name] = False
+        # Schedule health check to re-enable
+        asyncio.create_task(self._health_check(cdn_name))
+
+    async def _health_check(self, cdn_name: str):
+        await asyncio.sleep(30)
+        # Check if CDN is healthy
+        try:
+            async with aiohttp.ClientSession() as session:
+                cdn = next(c for c in self.CDN_PROVIDERS if c["name"] == cdn_name)
+                async with session.head(f"{cdn['base_url']}/health") as resp:
+                    if resp.status == 200:
+                        self.health_status[cdn_name] = True
+        except:
+            # Still unhealthy, check again later
+            asyncio.create_task(self._health_check(cdn_name))
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Playback Failures and Recovery</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+// JavaScript - Robust video player with error recovery
+
+class ResilientVideoPlayer {
+    constructor(videoElement, sources) {
+        this.video = videoElement;
+        this.sources = sources; // Multiple CDN URLs
+        this.currentSourceIndex = 0;
+        this.retryCount = 0;
+        this.maxRetries = 3;
+
+        this.setupErrorHandling();
+    }
+
+    setupErrorHandling() {
+        this.video.addEventListener('error', (e) => {
+            this.handleError(e);
+        });
+
+        // Stall detection
+        this.stallTimer = null;
+        this.video.addEventListener('waiting', () => {
+            this.stallTimer = setTimeout(() => {
+                this.handleStall();
+            }, 10000); // 10 second stall threshold
+        });
+
+        this.video.addEventListener('playing', () => {
+            if (this.stallTimer) {
+                clearTimeout(this.stallTimer);
+                this.stallTimer = null;
+            }
+        });
+    }
+
+    handleError(error) {
+        console.error('Video error:', error);
+
+        if (this.retryCount < this.maxRetries) {
+            this.retryCount++;
+            this.retryPlayback();
+        } else if (this.currentSourceIndex < this.sources.length - 1) {
+            // Try next CDN
+            this.currentSourceIndex++;
+            this.retryCount = 0;
+            this.switchSource();
+        } else {
+            this.showErrorMessage('Video unavailable. Please try again later.');
+        }
+    }
+
+    handleStall() {
+        console.warn('Video stalled - attempting recovery');
+
+        // Try reducing quality
+        if (this.currentQuality > 0) {
+            this.currentQuality--;
+            this.switchQuality();
+        } else {
+            // Already at lowest quality - try different CDN
+            this.handleError(new Error('Persistent stall'));
+        }
+    }
+
+    async retryPlayback() {
+        const currentTime = this.video.currentTime;
+        await this.video.load();
+        this.video.currentTime = currentTime;
+        await this.video.play();
+    }
+
+    switchSource() {
+        const newSource = this.sources[this.currentSourceIndex];
+        console.log(`Switching to CDN: ${newSource}`);
+
+        const currentTime = this.video.currentTime;
+        this.video.src = newSource;
+        this.video.currentTime = currentTime;
+        this.video.play();
+
+        // Report failure of previous CDN
+        this.reportCDNFailure(this.sources[this.currentSourceIndex - 1]);
+    }
+
+    reportCDNFailure(cdnUrl) {
+        // Report to backend for monitoring
+        fetch('/api/v1/cdn/report-failure', {
+            method: 'POST',
+            body: JSON.stringify({ url: cdnUrl, error: 'playback_failure' })
+        });
+    }
+}
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">8. Summary</h2>
 
             <div class="card">
                 <table style="width: 100%; border-collapse: collapse;">

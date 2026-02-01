@@ -68,114 +68,1811 @@
         <!-- Main Content -->
         <main class="main-content">
         <h1>Module 4: Assessment-First Companies</h1>
-        <p class="text-muted">Anthropic, CodeSignal Preparation</p>
+        <p class="text-muted">Anthropic and CodeSignal-Based Hiring - Deep Preparation Guide</p>
 
         <div class="card mt-3">
             <h3>Learning Objectives</h3>
             <ul>
-                <li>Maximize completion rate in timed assessments</li>
-                <li>Write clean, modular code quickly</li>
-                <li>Manage time across multi-level problems</li>
-                <li>Achieve target scores (520+/600)</li>
+                <li>Maximize completion rate in timed CodeSignal assessments</li>
+                <li>Write clean, modular code quickly under pressure</li>
+                <li>Understand score progression and what each level represents</li>
+                <li>Prepare for Anthropic's full interview process beyond the OA</li>
+                <li>Master the specific problem patterns that appear in GCA/SHL assessments</li>
             </ul>
+        </div>
+
+        <!-- Staff Engineer Expectations Section -->
+        <div class="card mt-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3>Staff Engineer Expectations (L5/L6 vs L3/L4)</h3>
+            <p>Assessment-first companies still differentiate staff engineers in later rounds:</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 1rem 0; color: white;">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.3);">
+                        <th style="padding: 0.75rem; text-align: left;">Dimension</th>
+                        <th style="padding: 0.75rem; text-align: left;">Senior (L3/L4)</th>
+                        <th style="padding: 0.75rem; text-align: left;">Staff (L5/L6)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>OA Score Target</strong></td>
+                        <td style="padding: 0.75rem;">480-520 (Levels 1-3)</td>
+                        <td style="padding: 0.75rem;">520-580+ (All 4 levels, clean code)</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>Code Quality</strong></td>
+                        <td style="padding: 0.75rem;">Working solution</td>
+                        <td style="padding: 0.75rem;">Production-quality: modular, tested, documented</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>Follow-up Design</strong></td>
+                        <td style="padding: 0.75rem;">Explain your solution</td>
+                        <td style="padding: 0.75rem;">Discuss scaling, failure modes, alternatives</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <td style="padding: 0.75rem;"><strong>System Thinking</strong></td>
+                        <td style="padding: 0.75rem;">Solve the immediate problem</td>
+                        <td style="padding: 0.75rem;">Connect to broader architectural concerns</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.75rem;"><strong>Technical Depth</strong></td>
+                        <td style="padding: 0.75rem;">Know common patterns</td>
+                        <td style="padding: 0.75rem;">Deep expertise in ML/AI systems (for Anthropic)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Preparation Timeline -->
+        <div class="card mt-3" style="background: var(--warning-bg); border-left: 4px solid #f59e0b;">
+            <h3>Preparation Timeline</h3>
+            <p><strong>Recommended: 3-4 weeks focused preparation</strong></p>
+            <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><strong>Week 1</strong></td>
+                    <td style="padding: 0.5rem;">Foundations - Practice 2-3 multi-level problems daily, focus on time management</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><strong>Week 2</strong></td>
+                    <td style="padding: 0.5rem;">Speed training - Take 2-3 timed practice assessments, analyze where time is lost</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><strong>Week 3</strong></td>
+                    <td style="padding: 0.5rem;">Code quality - Practice writing clean code fast, establish your templates</td>
+                </tr>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem;"><strong>Week 4</strong></td>
+                    <td style="padding: 0.5rem;">System design prep - Prepare for follow-up rounds, research Anthropic's tech stack</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem;"><strong>Daily Practice</strong></td>
+                    <td style="padding: 0.5rem;">1 timed problem set (70-90 min) OR 2 individual timed problems (30 min each)</td>
+                </tr>
+            </table>
         </div>
 
         <h2 class="mt-4">Anthropic Interview Process</h2>
 
-        <div class="diagram-container">
-            <div class="mermaid">
-flowchart LR
-    A[CodeSignal OA<br>520+ target] --> B[Tech Screen]
-    B --> C[Onsite]
-    C --> D[Decision]
-            </div>
-        </div>
-
-        <h2 class="mt-4">CodeSignal Assessment</h2>
-
         <div class="collapsible open">
             <div class="collapsible-header">
-                <span>Assessment Structure</span>
+                <span>Complete Interview Flow</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
-                <ul>
-                    <li><strong>Duration:</strong> 70-90 minutes</li>
-                    <li><strong>Format:</strong> 4 levels of increasing difficulty</li>
-                    <li><strong>Target:</strong> 520+ out of 600 to advance</li>
-                </ul>
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    A[Application] --> B[CodeSignal OA<br>520+ target]
+    B --> C[Recruiter Screen<br>30 min]
+    C --> D[Tech Screen<br>60 min coding]
+    D --> E[Virtual Onsite<br>4-5 rounds]
+    E --> F[Team Match<br>Discussion]
+    F --> G[Offer]
+                    </div>
+                </div>
+
+                <h4>Round Details:</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Round</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Duration</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Focus</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Staff Expectations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>CodeSignal OA</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">70-90 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">4-level coding assessment</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">520+ score, clean code</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Tech Screen</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">60 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Live coding, similar to OA style</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Explain trade-offs, discuss extensions</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>System Design</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">60 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">ML systems, infrastructure</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Deep knowledge of ML infra, scaling</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Technical Deep Dive</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">60 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Past project discussion</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Lead complex projects, influence decisions</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Values/Culture</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">45-60 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">AI safety, ethics, collaboration</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Thoughtful perspective on AI impact</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <h4>Anthropic-Specific Preparation</h4>
+                    <ul>
+                        <li><strong>Read Anthropic's research papers</strong> - especially on Constitutional AI, RLHF, and Claude's architecture</li>
+                        <li><strong>Understand AI safety</strong> - be prepared to discuss alignment, interpretability, and responsible AI</li>
+                        <li><strong>Know their products</strong> - Claude API, Claude.ai, their approach to safety</li>
+                        <li><strong>Technical depth</strong> - ML infrastructure, distributed training, inference optimization</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">CodeSignal Assessment Deep Dive</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Assessment Structure and Scoring</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
                 <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
                     <thead>
                         <tr style="background: var(--border-color);">
                             <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Level</th>
                             <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Points</th>
-                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Time</th>
-                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Priority</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Difficulty</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Time Target</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Typical Pattern</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Level 1</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~100</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">10-15 min</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Must complete</td></tr>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Level 2</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~150</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">15-20 min</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Must complete</td></tr>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Level 3</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~175</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">20-25 min</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Should complete</td></tr>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Level 4</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~175</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">20-25 min</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Nice to have</td></tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Level 1</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~100</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Easy</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">10-12 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">String/array manipulation, basic CRUD</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Level 2</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~150</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Easy-Medium</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">15-18 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hash maps, basic algorithms, extend L1</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Level 3</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~175</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Medium</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">20-25 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Multi-user logic, constraints, state management</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Level 4</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">~175</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Medium-Hard</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">20-25 min</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Edge cases, optimization, complex logic</td>
+                        </tr>
                     </tbody>
                 </table>
+
+                <h4>Score Progression Examples</h4>
+                <div class="card-grid">
+                    <div class="card" style="border-left: 4px solid #ef4444;">
+                        <h4>450 Score (Below Target)</h4>
+                        <ul>
+                            <li>Completed: L1, L2, partial L3</li>
+                            <li>Issues: Time ran out, bugs in L2</li>
+                            <li>Code quality: Acceptable</li>
+                            <li><strong>Outcome:</strong> Usually filtered out</li>
+                        </ul>
+                    </div>
+                    <div class="card" style="border-left: 4px solid #f59e0b;">
+                        <h4>520 Score (Target)</h4>
+                        <ul>
+                            <li>Completed: L1, L2, L3 fully</li>
+                            <li>L4: Partial or skipped</li>
+                            <li>Code quality: Good, clean structure</li>
+                            <li><strong>Outcome:</strong> Moves to next round</li>
+                        </ul>
+                    </div>
+                    <div class="card" style="border-left: 4px solid #22c55e;">
+                        <h4>580 Score (Excellent)</h4>
+                        <ul>
+                            <li>Completed: All 4 levels</li>
+                            <li>Code quality: Production-ready</li>
+                            <li>Time remaining for cleanup</li>
+                            <li><strong>Outcome:</strong> Strong signal, fast-tracked</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h4 class="mt-3">Scoring Factors</h4>
+                <ul>
+                    <li><strong>Correctness (60%):</strong> All test cases pass. Partial credit for some tests.</li>
+                    <li><strong>Cleanliness (15%):</strong> Formatting, naming conventions, consistent style.</li>
+                    <li><strong>Modularity (15%):</strong> Function decomposition, no repeated code, clear structure.</li>
+                    <li><strong>Efficiency (10%):</strong> Reasonable time/space complexity. Don't need optimal, but avoid O(n^3) when O(n) is obvious.</li>
+                </ul>
             </div>
         </div>
 
         <div class="collapsible">
             <div class="collapsible-header">
-                <span>Scoring Factors</span>
+                <span>Time Management Strategy</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+gantt
+    title 70-Minute Assessment Strategy
+    dateFormat mm
+    axisFormat %M min
+    section Level 1
+    Read & Plan       :a1, 00, 2m
+    Implement         :a2, after a1, 8m
+    Test & Submit     :a3, after a2, 2m
+    section Level 2
+    Read & Plan       :b1, after a3, 3m
+    Implement         :b2, after b1, 12m
+    Test & Submit     :b3, after b2, 3m
+    section Level 3
+    Read & Plan       :c1, after b3, 3m
+    Implement         :c2, after c1, 17m
+    Test & Submit     :c3, after c2, 5m
+    section Level 4
+    Read & Plan       :d1, after c3, 2m
+    Implement         :d2, after d1, 10m
+    Final Review      :d3, after d2, 3m
+                    </div>
+                </div>
+
+                <div class="card-grid mt-3">
+                    <div class="card">
+                        <h4>First Pass (L1-L2)</h4>
+                        <p>Complete quickly but correctly. These are foundation points. Don't over-engineer - just make them work.</p>
+                        <p><strong>Target: 25 minutes total</strong></p>
+                    </div>
+                    <div class="card">
+                        <h4>Second Pass (L3)</h4>
+                        <p>Build on existing code. Add methods carefully. This is where most candidates get stuck.</p>
+                        <p><strong>Target: 25 minutes</strong></p>
+                    </div>
+                    <div class="card">
+                        <h4>Final Push (L4)</h4>
+                        <p>Only if L1-L3 are solid. Don't break earlier levels. It's OK to discuss approach without completing.</p>
+                        <p><strong>Target: 15 minutes</strong></p>
+                    </div>
+                    <div class="card">
+                        <h4>Buffer Time</h4>
+                        <p>Keep 5 minutes for final testing and code cleanup. Fix obvious bugs, improve naming.</p>
+                        <p><strong>Target: 5 minutes</strong></p>
+                    </div>
+                </div>
+
+                <div class="card mt-3" style="background: var(--danger-bg); border-left: 4px solid #ef4444;">
+                    <h4>Red Flags to Avoid</h4>
+                    <ul style="margin: 0;">
+                        <li>Spending 20+ minutes on Level 1 (it should be easy)</li>
+                        <li>Not reading all requirements before coding</li>
+                        <li>Skipping test cases - always run tests before submitting</li>
+                        <li>Trying to optimize early - get it working first</li>
+                        <li>Copy-pasting code instead of refactoring</li>
+                        <li>Not using helper functions - modular code scores higher</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Problem 1 -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Practice Problem 1: Task Scheduler System (All 4 Levels)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement</h4>
+                    <p>Build a task scheduling system for managing recurring and one-time tasks.</p>
+                    <p><strong>Level 1:</strong> Basic task creation and retrieval</p>
+                    <p><strong>Level 2:</strong> Add scheduling (one-time tasks with due dates)</p>
+                    <p><strong>Level 3:</strong> Add recurring tasks and conflict detection</p>
+                    <p><strong>Level 4:</strong> Add priority-based scheduling and optimization</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Set
+from enum import Enum
+import heapq
+
+
+class TaskStatus(Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
+class RecurrenceType(Enum):
+    NONE = "none"
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+
+
+class Priority(Enum):
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    URGENT = 4
+
+
+# ============================================================
+# LEVEL 1: Basic Task Management
+# ============================================================
+
+@dataclass
+class Task:
+    """Represents a task in the system."""
+    id: str
+    title: str
+    description: str = ""
+    status: TaskStatus = TaskStatus.PENDING
+    created_at: datetime = field(default_factory=datetime.now)
+    # Level 2 additions
+    due_date: Optional[datetime] = None
+    # Level 3 additions
+    recurrence: RecurrenceType = RecurrenceType.NONE
+    # Level 4 additions
+    priority: Priority = Priority.MEDIUM
+    estimated_minutes: int = 30
+
+
+class TaskScheduler:
+    """
+    Task scheduling system with multi-level functionality.
+
+    Level 1: Basic CRUD operations
+    Level 2: Due date scheduling
+    Level 3: Recurring tasks and conflict detection
+    Level 4: Priority-based scheduling
+    """
+
+    def __init__(self):
+        self._tasks: Dict[str, Task] = {}
+        self._next_id: int = 1
+        # Level 3: Track scheduled time slots
+        self._scheduled_slots: Dict[str, Set[datetime]] = {}  # task_id -> set of scheduled times
+
+    # -------------------- LEVEL 1 --------------------
+
+    def create_task(self, title: str, description: str = "") -> Task:
+        """Create a new task and return it."""
+        task_id = f"task_{self._next_id}"
+        self._next_id += 1
+
+        task = Task(
+            id=task_id,
+            title=title,
+            description=description
+        )
+        self._tasks[task_id] = task
+        return task
+
+    def get_task(self, task_id: str) -> Optional[Task]:
+        """Get a task by ID."""
+        return self._tasks.get(task_id)
+
+    def list_tasks(self, status: Optional[TaskStatus] = None) -> List[Task]:
+        """List all tasks, optionally filtered by status."""
+        tasks = list(self._tasks.values())
+        if status:
+            tasks = [t for t in tasks if t.status == status]
+        return tasks
+
+    def update_task_status(self, task_id: str, status: TaskStatus) -> bool:
+        """Update a task's status. Returns True if successful."""
+        task = self._tasks.get(task_id)
+        if not task:
+            return False
+        task.status = status
+        return True
+
+    def delete_task(self, task_id: str) -> bool:
+        """Delete a task. Returns True if successful."""
+        if task_id in self._tasks:
+            del self._tasks[task_id]
+            self._scheduled_slots.pop(task_id, None)
+            return True
+        return False
+
+    # -------------------- LEVEL 2 --------------------
+
+    def schedule_task(self, task_id: str, due_date: datetime) -> bool:
+        """
+        Schedule a task with a due date.
+
+        Returns True if successful, False if task not found.
+        """
+        task = self._tasks.get(task_id)
+        if not task:
+            return False
+
+        task.due_date = due_date
+        return True
+
+    def get_overdue_tasks(self, as_of: Optional[datetime] = None) -> List[Task]:
+        """Get all tasks that are past their due date."""
+        check_time = as_of or datetime.now()
+        return [
+            task for task in self._tasks.values()
+            if task.due_date
+            and task.due_date < check_time
+            and task.status not in (TaskStatus.COMPLETED, TaskStatus.CANCELLED)
+        ]
+
+    def get_tasks_due_soon(self, hours: int = 24) -> List[Task]:
+        """Get tasks due within the next N hours."""
+        now = datetime.now()
+        cutoff = now + timedelta(hours=hours)
+        return [
+            task for task in self._tasks.values()
+            if task.due_date
+            and now <= task.due_date <= cutoff
+            and task.status not in (TaskStatus.COMPLETED, TaskStatus.CANCELLED)
+        ]
+
+    # -------------------- LEVEL 3 --------------------
+
+    def set_recurrence(self, task_id: str, recurrence: RecurrenceType) -> bool:
+        """
+        Set a task to recur.
+
+        When a recurring task is completed, a new instance is created
+        with the next due date.
+        """
+        task = self._tasks.get(task_id)
+        if not task:
+            return False
+
+        task.recurrence = recurrence
+        return True
+
+    def complete_task(self, task_id: str) -> Optional[Task]:
+        """
+        Complete a task.
+
+        If the task is recurring, creates the next occurrence.
+        Returns the new task if created, None otherwise.
+        """
+        task = self._tasks.get(task_id)
+        if not task:
+            return None
+
+        task.status = TaskStatus.COMPLETED
+
+        # Handle recurring tasks
+        if task.recurrence != RecurrenceType.NONE and task.due_date:
+            return self._create_next_occurrence(task)
+
+        return None
+
+    def _create_next_occurrence(self, original: Task) -> Task:
+        """Create the next occurrence of a recurring task."""
+        # Calculate next due date
+        if original.recurrence == RecurrenceType.DAILY:
+            next_due = original.due_date + timedelta(days=1)
+        elif original.recurrence == RecurrenceType.WEEKLY:
+            next_due = original.due_date + timedelta(weeks=1)
+        elif original.recurrence == RecurrenceType.MONTHLY:
+            # Simple month addition (handle edge cases in production)
+            next_due = original.due_date + timedelta(days=30)
+        else:
+            return None
+
+        # Create new task
+        new_task = self.create_task(original.title, original.description)
+        new_task.due_date = next_due
+        new_task.recurrence = original.recurrence
+        new_task.priority = original.priority
+        new_task.estimated_minutes = original.estimated_minutes
+
+        return new_task
+
+    def check_conflicts(self, task_id: str, proposed_time: datetime,
+                        duration_minutes: int = 30) -> List[Task]:
+        """
+        Check if scheduling a task at a time would conflict with others.
+
+        Returns list of conflicting tasks.
+        """
+        proposed_end = proposed_time + timedelta(minutes=duration_minutes)
+        conflicts = []
+
+        for other_id, other_task in self._tasks.items():
+            if other_id == task_id:
+                continue
+
+            if not other_task.due_date:
+                continue
+
+            if other_task.status in (TaskStatus.COMPLETED, TaskStatus.CANCELLED):
+                continue
+
+            other_end = other_task.due_date + timedelta(minutes=other_task.estimated_minutes)
+
+            # Check for overlap
+            if (proposed_time < other_end and proposed_end > other_task.due_date):
+                conflicts.append(other_task)
+
+        return conflicts
+
+    # -------------------- LEVEL 4 --------------------
+
+    def set_priority(self, task_id: str, priority: Priority,
+                     estimated_minutes: int = None) -> bool:
+        """Set task priority and optionally update time estimate."""
+        task = self._tasks.get(task_id)
+        if not task:
+            return False
+
+        task.priority = priority
+        if estimated_minutes is not None:
+            task.estimated_minutes = estimated_minutes
+        return True
+
+    def get_optimal_schedule(self, available_minutes: int,
+                             as_of: Optional[datetime] = None) -> List[Task]:
+        """
+        Get optimal task order given available time.
+
+        Uses priority-weighted scheduling:
+        - Higher priority tasks first
+        - Among same priority, earlier due dates first
+        - Fits as many tasks as possible in available time
+
+        This is a variation of the knapsack problem.
+        """
+        check_time = as_of or datetime.now()
+
+        # Get pending tasks
+        pending = [
+            t for t in self._tasks.values()
+            if t.status == TaskStatus.PENDING
+        ]
+
+        if not pending:
+            return []
+
+        # Sort by priority (descending) then by due date (ascending)
+        def sort_key(task: Task):
+            due = task.due_date or datetime.max
+            return (-task.priority.value, due)
+
+        pending.sort(key=sort_key)
+
+        # Greedy selection within time budget
+        selected = []
+        remaining_time = available_minutes
+
+        for task in pending:
+            if task.estimated_minutes <= remaining_time:
+                selected.append(task)
+                remaining_time -= task.estimated_minutes
+
+        return selected
+
+    def auto_schedule(self, task_id: str,
+                      preferred_start: datetime,
+                      working_hours: tuple = (9, 17)) -> Optional[datetime]:
+        """
+        Automatically find the next available slot for a task.
+
+        Args:
+            task_id: Task to schedule
+            preferred_start: Earliest start time
+            working_hours: Tuple of (start_hour, end_hour)
+
+        Returns the scheduled time, or None if task not found.
+        """
+        task = self._tasks.get(task_id)
+        if not task:
+            return None
+
+        candidate = preferred_start
+        max_attempts = 100  # Prevent infinite loop
+
+        for _ in range(max_attempts):
+            # Adjust to working hours
+            if candidate.hour < working_hours[0]:
+                candidate = candidate.replace(
+                    hour=working_hours[0], minute=0, second=0
+                )
+            elif candidate.hour >= working_hours[1]:
+                # Move to next day
+                candidate = (candidate + timedelta(days=1)).replace(
+                    hour=working_hours[0], minute=0, second=0
+                )
+
+            # Check for conflicts
+            conflicts = self.check_conflicts(
+                task_id, candidate, task.estimated_minutes
+            )
+
+            if not conflicts:
+                task.due_date = candidate
+                return candidate
+
+            # Move past the latest conflicting task
+            latest_conflict_end = max(
+                c.due_date + timedelta(minutes=c.estimated_minutes)
+                for c in conflicts
+            )
+            candidate = latest_conflict_end
+
+        return None
+
+    def get_daily_agenda(self, date: datetime) -> List[Dict]:
+        """
+        Get formatted agenda for a specific date.
+
+        Returns tasks sorted by time with priority indicators.
+        """
+        day_start = date.replace(hour=0, minute=0, second=0)
+        day_end = day_start + timedelta(days=1)
+
+        tasks_for_day = [
+            t for t in self._tasks.values()
+            if t.due_date
+            and day_start <= t.due_date < day_end
+            and t.status not in (TaskStatus.COMPLETED, TaskStatus.CANCELLED)
+        ]
+
+        # Sort by time
+        tasks_for_day.sort(key=lambda t: t.due_date)
+
+        agenda = []
+        for task in tasks_for_day:
+            priority_indicator = "!" * task.priority.value
+            agenda.append({
+                "time": task.due_date.strftime("%H:%M"),
+                "title": task.title,
+                "priority": priority_indicator,
+                "duration": f"{task.estimated_minutes}min",
+                "status": task.status.value
+            })
+
+        return agenda
+
+
+# ============================================================
+# Example Usage and Tests
+# ============================================================
+
+if __name__ == "__main__":
+    scheduler = TaskScheduler()
+
+    print("=== Level 1: Basic CRUD ===")
+    task1 = scheduler.create_task("Write documentation", "API docs for v2")
+    task2 = scheduler.create_task("Review PRs", "Weekly PR review")
+    print(f"Created: {task1.id}, {task2.id}")
+    print(f"All tasks: {[t.title for t in scheduler.list_tasks()]}")
+
+    print("\n=== Level 2: Scheduling ===")
+    tomorrow = datetime.now() + timedelta(days=1)
+    scheduler.schedule_task(task1.id, tomorrow)
+    scheduler.schedule_task(task2.id, datetime.now() - timedelta(hours=2))
+
+    overdue = scheduler.get_overdue_tasks()
+    print(f"Overdue tasks: {[t.title for t in overdue]}")
+
+    due_soon = scheduler.get_tasks_due_soon(hours=48)
+    print(f"Due soon: {[t.title for t in due_soon]}")
+
+    print("\n=== Level 3: Recurring Tasks ===")
+    daily_standup = scheduler.create_task("Daily standup", "Team sync")
+    scheduler.schedule_task(daily_standup.id, datetime.now().replace(hour=9, minute=0))
+    scheduler.set_recurrence(daily_standup.id, RecurrenceType.DAILY)
+
+    # Complete and see next occurrence
+    next_standup = scheduler.complete_task(daily_standup.id)
+    print(f"Next standup due: {next_standup.due_date}")
+
+    print("\n=== Level 4: Priority Scheduling ===")
+    urgent = scheduler.create_task("Fix production bug")
+    scheduler.set_priority(urgent.id, Priority.URGENT, estimated_minutes=60)
+    scheduler.schedule_task(urgent.id, datetime.now())
+
+    low_priority = scheduler.create_task("Update README")
+    scheduler.set_priority(low_priority.id, Priority.LOW, estimated_minutes=30)
+
+    optimal = scheduler.get_optimal_schedule(available_minutes=90)
+    print(f"Optimal schedule for 90 min: {[t.title for t in optimal]}")
+
+    # Auto-schedule
+    new_task = scheduler.create_task("Code review")
+    scheduled_time = scheduler.auto_schedule(
+        new_task.id,
+        datetime.now().replace(hour=10, minute=0)
+    )
+    print(f"Auto-scheduled at: {scheduled_time}")
+
+    # Daily agenda
+    print("\n=== Daily Agenda ===")
+    agenda = scheduler.get_daily_agenda(datetime.now())
+    for item in agenda:
+        print(f"  {item['time']} {item['priority']} {item['title']} ({item['duration']})")</code></pre>
+            </div>
+        </div>
+
+        <!-- Full Problem 2 -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Practice Problem 2: File System Cache (All 4 Levels)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement</h4>
+                    <p>Build a file system cache for frequently accessed files.</p>
+                    <p><strong>Level 1:</strong> Basic put/get operations with size limit</p>
+                    <p><strong>Level 2:</strong> Add LRU eviction policy</p>
+                    <p><strong>Level 3:</strong> Add TTL (time-to-live) for entries</p>
+                    <p><strong>Level 4:</strong> Add statistics and cache warming</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from collections import OrderedDict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Callable, Any
+import threading
+import time
+
+
+@dataclass
+class CacheEntry:
+    """Represents a cached item."""
+    key: str
+    value: Any
+    size_bytes: int
+    created_at: datetime = field(default_factory=datetime.now)
+    last_accessed: datetime = field(default_factory=datetime.now)
+    ttl_seconds: Optional[int] = None
+    access_count: int = 0
+
+    def is_expired(self) -> bool:
+        """Check if entry has expired based on TTL."""
+        if self.ttl_seconds is None:
+            return False
+        expiry = self.created_at + timedelta(seconds=self.ttl_seconds)
+        return datetime.now() > expiry
+
+
+# ============================================================
+# LEVEL 1 & 2: Basic Cache with LRU Eviction
+# ============================================================
+
+class FileSystemCache:
+    """
+    File system cache with LRU eviction.
+
+    Level 1: Basic put/get with size limit
+    Level 2: LRU eviction policy
+    Level 3: TTL support
+    Level 4: Statistics and cache warming
+    """
+
+    def __init__(self, max_size_bytes: int, default_ttl: Optional[int] = None):
+        """
+        Initialize the cache.
+
+        Args:
+            max_size_bytes: Maximum total size of cached items
+            default_ttl: Default TTL in seconds (None = no expiry)
+        """
+        self._max_size = max_size_bytes
+        self._default_ttl = default_ttl
+        self._current_size = 0
+
+        # OrderedDict maintains insertion order for LRU
+        self._cache: OrderedDict[str, CacheEntry] = OrderedDict()
+        self._lock = threading.RLock()
+
+        # Level 4: Statistics
+        self._stats = {
+            "hits": 0,
+            "misses": 0,
+            "evictions": 0,
+            "expirations": 0
+        }
+
+    # -------------------- LEVEL 1: Basic Operations --------------------
+
+    def put(self, key: str, value: Any, size_bytes: int,
+            ttl_seconds: Optional[int] = None) -> bool:
+        """
+        Store an item in the cache.
+
+        Args:
+            key: Unique identifier
+            value: The value to cache
+            size_bytes: Size of the value in bytes
+            ttl_seconds: Optional TTL override
+
+        Returns True if stored successfully.
+        """
+        with self._lock:
+            # Check if item is too large for cache
+            if size_bytes > self._max_size:
+                return False
+
+            # Remove existing entry if present
+            if key in self._cache:
+                self._remove_entry(key)
+
+            # Evict until we have space (Level 2)
+            while self._current_size + size_bytes > self._max_size:
+                if not self._evict_one():
+                    return False  # Nothing to evict
+
+            # Create and store entry
+            entry = CacheEntry(
+                key=key,
+                value=value,
+                size_bytes=size_bytes,
+                ttl_seconds=ttl_seconds if ttl_seconds is not None else self._default_ttl
+            )
+
+            self._cache[key] = entry
+            self._current_size += size_bytes
+
+            return True
+
+    def get(self, key: str) -> Optional[Any]:
+        """
+        Retrieve an item from the cache.
+
+        Returns None if not found or expired.
+        Updates access time for LRU.
+        """
+        with self._lock:
+            entry = self._cache.get(key)
+
+            if entry is None:
+                self._stats["misses"] += 1
+                return None
+
+            # Check TTL (Level 3)
+            if entry.is_expired():
+                self._remove_entry(key)
+                self._stats["misses"] += 1
+                self._stats["expirations"] += 1
+                return None
+
+            # Update for LRU (Level 2)
+            self._cache.move_to_end(key)
+            entry.last_accessed = datetime.now()
+            entry.access_count += 1
+
+            self._stats["hits"] += 1
+            return entry.value
+
+    def delete(self, key: str) -> bool:
+        """Remove an item from the cache."""
+        with self._lock:
+            if key in self._cache:
+                self._remove_entry(key)
+                return True
+            return False
+
+    def contains(self, key: str) -> bool:
+        """Check if key exists and is not expired."""
+        with self._lock:
+            entry = self._cache.get(key)
+            if entry is None:
+                return False
+            if entry.is_expired():
+                self._remove_entry(key)
+                return False
+            return True
+
+    def _remove_entry(self, key: str) -> None:
+        """Remove an entry and update size."""
+        if key in self._cache:
+            entry = self._cache.pop(key)
+            self._current_size -= entry.size_bytes
+
+    # -------------------- LEVEL 2: LRU Eviction --------------------
+
+    def _evict_one(self) -> bool:
+        """
+        Evict the least recently used item.
+
+        Returns True if an item was evicted.
+        """
+        if not self._cache:
+            return False
+
+        # First, try to evict expired items
+        for key in list(self._cache.keys()):
+            if self._cache[key].is_expired():
+                self._remove_entry(key)
+                self._stats["expirations"] += 1
+                return True
+
+        # Otherwise, evict LRU (first item in OrderedDict)
+        oldest_key = next(iter(self._cache))
+        self._remove_entry(oldest_key)
+        self._stats["evictions"] += 1
+        return True
+
+    def clear(self) -> None:
+        """Clear all cached items."""
+        with self._lock:
+            self._cache.clear()
+            self._current_size = 0
+
+    # -------------------- LEVEL 3: TTL Support --------------------
+
+    def cleanup_expired(self) -> int:
+        """
+        Remove all expired entries.
+
+        Returns the number of entries removed.
+        """
+        with self._lock:
+            expired_keys = [
+                key for key, entry in self._cache.items()
+                if entry.is_expired()
+            ]
+
+            for key in expired_keys:
+                self._remove_entry(key)
+                self._stats["expirations"] += 1
+
+            return len(expired_keys)
+
+    def get_or_load(self, key: str,
+                    loader: Callable[[], Any],
+                    size_bytes: int,
+                    ttl_seconds: Optional[int] = None) -> Any:
+        """
+        Get from cache or load using provided function.
+
+        This is the most common cache access pattern:
+        - Try to get from cache
+        - If miss, load from source and cache
+
+        Args:
+            key: Cache key
+            loader: Function to call on cache miss
+            size_bytes: Size of the loaded value
+            ttl_seconds: Optional TTL override
+        """
+        # Try cache first
+        value = self.get(key)
+        if value is not None:
+            return value
+
+        # Load from source
+        value = loader()
+
+        # Store in cache
+        self.put(key, value, size_bytes, ttl_seconds)
+
+        return value
+
+    def refresh_ttl(self, key: str, new_ttl: Optional[int] = None) -> bool:
+        """
+        Refresh the TTL of an existing entry.
+
+        Args:
+            key: The key to refresh
+            new_ttl: New TTL in seconds (None uses default)
+        """
+        with self._lock:
+            entry = self._cache.get(key)
+            if entry is None or entry.is_expired():
+                return False
+
+            entry.created_at = datetime.now()
+            entry.ttl_seconds = new_ttl if new_ttl is not None else self._default_ttl
+            return True
+
+    # -------------------- LEVEL 4: Statistics & Warming --------------------
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get cache statistics."""
+        with self._lock:
+            total_requests = self._stats["hits"] + self._stats["misses"]
+            hit_rate = (
+                self._stats["hits"] / total_requests * 100
+                if total_requests > 0 else 0
+            )
+
+            return {
+                "hits": self._stats["hits"],
+                "misses": self._stats["misses"],
+                "hit_rate_percent": round(hit_rate, 2),
+                "evictions": self._stats["evictions"],
+                "expirations": self._stats["expirations"],
+                "current_entries": len(self._cache),
+                "current_size_bytes": self._current_size,
+                "max_size_bytes": self._max_size,
+                "utilization_percent": round(
+                    self._current_size / self._max_size * 100, 2
+                )
+            }
+
+    def get_hot_keys(self, top_n: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get the most frequently accessed keys.
+
+        Useful for cache warming and analysis.
+        """
+        with self._lock:
+            entries = sorted(
+                self._cache.values(),
+                key=lambda e: e.access_count,
+                reverse=True
+            )[:top_n]
+
+            return [
+                {
+                    "key": e.key,
+                    "access_count": e.access_count,
+                    "size_bytes": e.size_bytes,
+                    "age_seconds": (datetime.now() - e.created_at).total_seconds()
+                }
+                for e in entries
+            ]
+
+    def warm_cache(self, keys: List[str],
+                   loader: Callable[[str], tuple]) -> Dict[str, bool]:
+        """
+        Pre-load multiple keys into cache.
+
+        Args:
+            keys: List of keys to load
+            loader: Function that takes key and returns (value, size_bytes)
+
+        Returns dict of key -> success status.
+        """
+        results = {}
+
+        for key in keys:
+            if self.contains(key):
+                results[key] = True  # Already cached
+                continue
+
+            try:
+                value, size_bytes = loader(key)
+                results[key] = self.put(key, value, size_bytes)
+            except Exception:
+                results[key] = False
+
+        return results
+
+    def resize(self, new_max_size: int) -> int:
+        """
+        Resize the cache.
+
+        If shrinking, evicts entries as needed.
+        Returns number of evictions.
+        """
+        with self._lock:
+            self._max_size = new_max_size
+            evictions = 0
+
+            while self._current_size > self._max_size:
+                if self._evict_one():
+                    evictions += 1
+                else:
+                    break
+
+            return evictions
+
+
+# ============================================================
+# Bonus: Cache with Write-Through/Write-Behind
+# ============================================================
+
+class WriteThroughCache(FileSystemCache):
+    """
+    Cache with write-through to backing store.
+
+    All writes go to both cache and backing store synchronously.
+    """
+
+    def __init__(self, max_size_bytes: int,
+                 write_fn: Callable[[str, Any], None],
+                 default_ttl: Optional[int] = None):
+        super().__init__(max_size_bytes, default_ttl)
+        self._write_fn = write_fn
+
+    def put(self, key: str, value: Any, size_bytes: int,
+            ttl_seconds: Optional[int] = None) -> bool:
+        # Write to backing store first
+        self._write_fn(key, value)
+        # Then cache
+        return super().put(key, value, size_bytes, ttl_seconds)
+
+
+# ============================================================
+# Example Usage
+# ============================================================
+
+if __name__ == "__main__":
+    # Create cache with 1KB limit and 60-second default TTL
+    cache = FileSystemCache(max_size_bytes=1024, default_ttl=60)
+
+    print("=== Level 1: Basic Operations ===")
+    cache.put("file1.txt", "Hello World", size_bytes=100)
+    cache.put("file2.txt", "Another file", size_bytes=200)
+    print(f"Get file1: {cache.get('file1.txt')}")
+    print(f"Contains file2: {cache.contains('file2.txt')}")
+
+    print("\n=== Level 2: LRU Eviction ===")
+    # Fill cache to trigger eviction
+    for i in range(10):
+        cache.put(f"large_{i}.txt", f"Large content {i}", size_bytes=150)
+
+    # file1 and file2 should be evicted
+    print(f"file1 still cached: {cache.contains('file1.txt')}")
+    print(f"Stats: {cache.get_stats()}")
+
+    print("\n=== Level 3: TTL ===")
+    cache.put("temp.txt", "Temporary", size_bytes=50, ttl_seconds=1)
+    print(f"temp.txt before expiry: {cache.get('temp.txt')}")
+    time.sleep(1.5)
+    print(f"temp.txt after expiry: {cache.get('temp.txt')}")
+
+    # Get-or-load pattern
+    def load_file(key):
+        return f"Loaded content for {key}"
+
+    result = cache.get_or_load("new_file.txt", lambda: load_file("new_file.txt"), 100)
+    print(f"Get or load result: {result}")
+
+    print("\n=== Level 4: Statistics & Warming ===")
+    # Access some keys multiple times
+    for _ in range(10):
+        cache.get("new_file.txt")
+
+    print(f"Hot keys: {cache.get_hot_keys(3)}")
+    print(f"Final stats: {cache.get_stats()}")</code></pre>
+            </div>
+        </div>
+
+        <!-- Full Problem 3 -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Practice Problem 3: Event Log Aggregator (All 4 Levels)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                    <h4>Problem Statement</h4>
+                    <p>Build an event log aggregation system for analytics.</p>
+                    <p><strong>Level 1:</strong> Record events and count by type</p>
+                    <p><strong>Level 2:</strong> Time-windowed aggregations</p>
+                    <p><strong>Level 3:</strong> Multi-dimensional grouping</p>
+                    <p><strong>Level 4:</strong> Anomaly detection and alerts</p>
+                </div>
+
+                <h4 class="mt-3">Complete Solution (Python)</h4>
+                <pre style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 8px; overflow-x: auto;"><code>from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Callable, Set, Tuple
+from enum import Enum
+import statistics
+import threading
+
+
+class EventType(Enum):
+    PAGE_VIEW = "page_view"
+    CLICK = "click"
+    PURCHASE = "purchase"
+    ERROR = "error"
+    LOGIN = "login"
+    LOGOUT = "logout"
+
+
+@dataclass
+class Event:
+    """Represents a single event."""
+    id: str
+    type: EventType
+    timestamp: datetime
+    user_id: str
+    metadata: Dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class AggregationResult:
+    """Result of an aggregation query."""
+    count: int
+    unique_users: int
+    time_range: Tuple[datetime, datetime]
+    breakdown: Dict[str, int] = field(default_factory=dict)
+
+
+class EventLogAggregator:
+    """
+    Event log aggregation system.
+
+    Level 1: Basic event recording and counting
+    Level 2: Time-windowed aggregations
+    Level 3: Multi-dimensional grouping
+    Level 4: Anomaly detection
+    """
+
+    def __init__(self):
+        self._events: List[Event] = []
+        self._next_id = 1
+        self._lock = threading.Lock()
+
+        # Level 1: Simple counters
+        self._type_counts: Dict[EventType, int] = defaultdict(int)
+
+        # Level 2: Time-bucketed counts (minute granularity)
+        self._minute_buckets: Dict[str, Dict[EventType, int]] = defaultdict(
+            lambda: defaultdict(int)
+        )
+
+        # Level 3: Multi-dimensional indices
+        self._user_events: Dict[str, List[int]] = defaultdict(list)
+        self._metadata_index: Dict[str, Dict[str, Set[int]]] = defaultdict(
+            lambda: defaultdict(set)
+        )
+
+        # Level 4: Baseline statistics for anomaly detection
+        self._hourly_baselines: Dict[Tuple[int, EventType], List[int]] = defaultdict(list)
+
+    # -------------------- LEVEL 1: Basic Operations --------------------
+
+    def record_event(self, event_type: EventType, user_id: str,
+                     metadata: Optional[Dict[str, str]] = None) -> Event:
+        """
+        Record a new event.
+
+        Returns the created event.
+        """
+        with self._lock:
+            event = Event(
+                id=f"evt_{self._next_id}",
+                type=event_type,
+                timestamp=datetime.now(),
+                user_id=user_id,
+                metadata=metadata or {}
+            )
+            self._next_id += 1
+
+            event_idx = len(self._events)
+            self._events.append(event)
+
+            # Update indices
+            self._type_counts[event_type] += 1
+            self._update_indices(event, event_idx)
+
+            return event
+
+    def _update_indices(self, event: Event, idx: int) -> None:
+        """Update all indices for a new event."""
+        # Time bucket (minute granularity)
+        bucket_key = event.timestamp.strftime("%Y-%m-%d-%H-%M")
+        self._minute_buckets[bucket_key][event.type] += 1
+
+        # User index
+        self._user_events[event.user_id].append(idx)
+
+        # Metadata index
+        for key, value in event.metadata.items():
+            self._metadata_index[key][value].add(idx)
+
+        # Hourly baseline (for anomaly detection)
+        hour = event.timestamp.hour
+        baseline_key = (hour, event.type)
+        self._hourly_baselines[baseline_key].append(1)
+
+    def get_count(self, event_type: EventType) -> int:
+        """Get total count for an event type."""
+        return self._type_counts.get(event_type, 0)
+
+    def get_all_counts(self) -> Dict[str, int]:
+        """Get counts for all event types."""
+        return {
+            event_type.value: count
+            for event_type, count in self._type_counts.items()
+        }
+
+    # -------------------- LEVEL 2: Time-Windowed Aggregations --------------------
+
+    def get_count_in_window(self, event_type: EventType,
+                            start: datetime, end: datetime) -> int:
+        """Get count of events in a time window."""
+        with self._lock:
+            return sum(
+                1 for event in self._events
+                if event.type == event_type
+                and start <= event.timestamp < end
+            )
+
+    def get_counts_by_minute(self, event_type: Optional[EventType] = None,
+                             last_n_minutes: int = 60) -> List[Dict]:
+        """
+        Get per-minute counts for the last N minutes.
+
+        Returns list of {minute: str, count: int} dicts.
+        """
+        now = datetime.now()
+        results = []
+
+        for i in range(last_n_minutes):
+            minute_time = now - timedelta(minutes=i)
+            bucket_key = minute_time.strftime("%Y-%m-%d-%H-%M")
+
+            bucket = self._minute_buckets.get(bucket_key, {})
+
+            if event_type:
+                count = bucket.get(event_type, 0)
+            else:
+                count = sum(bucket.values())
+
+            results.append({
+                "minute": bucket_key,
+                "count": count
+            })
+
+        return list(reversed(results))
+
+    def get_aggregation(self, event_type: Optional[EventType] = None,
+                        start: Optional[datetime] = None,
+                        end: Optional[datetime] = None) -> AggregationResult:
+        """
+        Get aggregated statistics for events.
+
+        Args:
+            event_type: Filter by type (None = all)
+            start: Start of time range (None = beginning)
+            end: End of time range (None = now)
+        """
+        with self._lock:
+            filtered = self._events
+
+            if event_type:
+                filtered = [e for e in filtered if e.type == event_type]
+
+            if start:
+                filtered = [e for e in filtered if e.timestamp >= start]
+
+            if end:
+                filtered = [e for e in filtered if e.timestamp < end]
+
+            if not filtered:
+                return AggregationResult(
+                    count=0,
+                    unique_users=0,
+                    time_range=(start or datetime.min, end or datetime.now())
+                )
+
+            unique_users = len(set(e.user_id for e in filtered))
+
+            # Breakdown by type
+            breakdown = defaultdict(int)
+            for event in filtered:
+                breakdown[event.type.value] += 1
+
+            actual_start = min(e.timestamp for e in filtered)
+            actual_end = max(e.timestamp for e in filtered)
+
+            return AggregationResult(
+                count=len(filtered),
+                unique_users=unique_users,
+                time_range=(actual_start, actual_end),
+                breakdown=dict(breakdown)
+            )
+
+    # -------------------- LEVEL 3: Multi-Dimensional Grouping --------------------
+
+    def get_events_by_user(self, user_id: str,
+                           limit: int = 100) -> List[Event]:
+        """Get recent events for a specific user."""
+        with self._lock:
+            indices = self._user_events.get(user_id, [])[-limit:]
+            return [self._events[i] for i in indices]
+
+    def get_events_by_metadata(self, key: str, value: str,
+                               limit: int = 100) -> List[Event]:
+        """Get events matching metadata criteria."""
+        with self._lock:
+            indices = list(self._metadata_index.get(key, {}).get(value, set()))
+            indices = sorted(indices)[-limit:]
+            return [self._events[i] for i in indices]
+
+    def group_by(self, group_key: str,
+                 event_type: Optional[EventType] = None,
+                 start: Optional[datetime] = None,
+                 end: Optional[datetime] = None) -> Dict[str, int]:
+        """
+        Group events by a dimension and count.
+
+        Args:
+            group_key: Dimension to group by ('user_id', 'type', or metadata key)
+            event_type: Filter by event type
+            start, end: Time range filters
+        """
+        with self._lock:
+            filtered = self._events
+
+            if event_type:
+                filtered = [e for e in filtered if e.type == event_type]
+            if start:
+                filtered = [e for e in filtered if e.timestamp >= start]
+            if end:
+                filtered = [e for e in filtered if e.timestamp < end]
+
+            groups = defaultdict(int)
+
+            for event in filtered:
+                if group_key == "user_id":
+                    groups[event.user_id] += 1
+                elif group_key == "type":
+                    groups[event.type.value] += 1
+                else:
+                    # Metadata key
+                    value = event.metadata.get(group_key, "unknown")
+                    groups[value] += 1
+
+            return dict(groups)
+
+    def get_funnel(self, steps: List[EventType], user_id: str,
+                   max_time_between: timedelta = timedelta(hours=1)) -> Dict[str, any]:
+        """
+        Analyze conversion funnel for a user.
+
+        Args:
+            steps: Ordered list of event types in the funnel
+            user_id: User to analyze
+            max_time_between: Maximum time between steps
+        """
+        events = self.get_events_by_user(user_id, limit=1000)
+        events = sorted(events, key=lambda e: e.timestamp)
+
+        completed_steps = []
+        last_step_time = None
+
+        step_idx = 0
+        for event in events:
+            if step_idx >= len(steps):
+                break
+
+            if event.type == steps[step_idx]:
+                if last_step_time is None or \
+                   event.timestamp - last_step_time <= max_time_between:
+                    completed_steps.append({
+                        "step": steps[step_idx].value,
+                        "timestamp": event.timestamp,
+                        "event_id": event.id
+                    })
+                    last_step_time = event.timestamp
+                    step_idx += 1
+
+        return {
+            "user_id": user_id,
+            "completed_steps": len(completed_steps),
+            "total_steps": len(steps),
+            "conversion_rate": len(completed_steps) / len(steps),
+            "steps": completed_steps
+        }
+
+    # -------------------- LEVEL 4: Anomaly Detection --------------------
+
+    def detect_anomalies(self, event_type: EventType,
+                         threshold_std: float = 2.0) -> List[Dict]:
+        """
+        Detect anomalies in event counts.
+
+        Uses historical hourly baselines to detect unusual activity.
+
+        Args:
+            event_type: Event type to analyze
+            threshold_std: Number of standard deviations for anomaly
+        """
+        anomalies = []
+        now = datetime.now()
+
+        # Check last 24 hours
+        for hours_ago in range(24):
+            check_time = now - timedelta(hours=hours_ago)
+            hour = check_time.hour
+
+            # Get baseline for this hour
+            baseline_key = (hour, event_type)
+            baseline_counts = self._hourly_baselines.get(baseline_key, [])
+
+            if len(baseline_counts) < 10:
+                continue  # Not enough data
+
+            mean = statistics.mean(baseline_counts)
+            std = statistics.stdev(baseline_counts) if len(baseline_counts) > 1 else 0
+
+            # Get actual count for this hour
+            hour_start = check_time.replace(minute=0, second=0, microsecond=0)
+            hour_end = hour_start + timedelta(hours=1)
+            actual_count = self.get_count_in_window(event_type, hour_start, hour_end)
+
+            # Check if anomalous
+            if std > 0:
+                z_score = (actual_count - mean) / std
+                if abs(z_score) > threshold_std:
+                    anomalies.append({
+                        "hour": hour_start.isoformat(),
+                        "event_type": event_type.value,
+                        "actual_count": actual_count,
+                        "expected_mean": round(mean, 2),
+                        "expected_std": round(std, 2),
+                        "z_score": round(z_score, 2),
+                        "direction": "high" if z_score > 0 else "low"
+                    })
+
+        return anomalies
+
+    def set_alert(self, event_type: EventType,
+                  threshold: int,
+                  window_minutes: int,
+                  callback: Callable[[Dict], None]) -> str:
+        """
+        Set up an alert for event thresholds.
+
+        Returns alert ID.
+        """
+        # In a real implementation, this would set up a background
+        # checker or integrate with a monitoring system
+        alert_id = f"alert_{event_type.value}_{threshold}"
+
+        # Check current state
+        start = datetime.now() - timedelta(minutes=window_minutes)
+        current_count = self.get_count_in_window(event_type, start, datetime.now())
+
+        if current_count >= threshold:
+            callback({
+                "alert_id": alert_id,
+                "event_type": event_type.value,
+                "count": current_count,
+                "threshold": threshold,
+                "window_minutes": window_minutes,
+                "triggered_at": datetime.now().isoformat()
+            })
+
+        return alert_id
+
+    def get_health_report(self) -> Dict:
+        """Generate a health report for the event system."""
+        now = datetime.now()
+        last_hour_start = now - timedelta(hours=1)
+
+        report = {
+            "generated_at": now.isoformat(),
+            "total_events": len(self._events),
+            "unique_users": len(self._user_events),
+            "last_hour": {
+                "total": self.get_count_in_window(None, last_hour_start, now) if self._events else 0,
+                "by_type": {}
+            },
+            "anomalies": []
+        }
+
+        for event_type in EventType:
+            count = self.get_count_in_window(event_type, last_hour_start, now)
+            report["last_hour"]["by_type"][event_type.value] = count
+
+            # Check for anomalies
+            anomalies = self.detect_anomalies(event_type)
+            report["anomalies"].extend(anomalies)
+
+        return report
+
+
+# ============================================================
+# Example Usage
+# ============================================================
+
+if __name__ == "__main__":
+    aggregator = EventLogAggregator()
+
+    print("=== Level 1: Basic Events ===")
+    aggregator.record_event(EventType.PAGE_VIEW, "user_1", {"page": "/home"})
+    aggregator.record_event(EventType.CLICK, "user_1", {"button": "signup"})
+    aggregator.record_event(EventType.PAGE_VIEW, "user_2", {"page": "/pricing"})
+    aggregator.record_event(EventType.PURCHASE, "user_1", {"amount": "99.99"})
+
+    print(f"All counts: {aggregator.get_all_counts()}")
+
+    print("\n=== Level 2: Time Windows ===")
+    now = datetime.now()
+    hour_ago = now - timedelta(hours=1)
+    count = aggregator.get_count_in_window(EventType.PAGE_VIEW, hour_ago, now)
+    print(f"Page views in last hour: {count}")
+
+    agg = aggregator.get_aggregation(start=hour_ago)
+    print(f"Aggregation: {agg.count} events, {agg.unique_users} users")
+
+    print("\n=== Level 3: Multi-Dimensional ===")
+    user_events = aggregator.get_events_by_user("user_1")
+    print(f"User 1 events: {[e.type.value for e in user_events]}")
+
+    by_page = aggregator.group_by("page", EventType.PAGE_VIEW)
+    print(f"Page views by page: {by_page}")
+
+    funnel = aggregator.get_funnel(
+        [EventType.PAGE_VIEW, EventType.CLICK, EventType.PURCHASE],
+        "user_1"
+    )
+    print(f"Funnel: {funnel['conversion_rate']*100}% conversion")
+
+    print("\n=== Level 4: Anomaly Detection ===")
+    # Generate some baseline data
+    for _ in range(50):
+        aggregator.record_event(EventType.ERROR, f"user_{_}", {})
+
+    anomalies = aggregator.detect_anomalies(EventType.ERROR)
+    print(f"Anomalies detected: {len(anomalies)}")
+
+    report = aggregator.get_health_report()
+    print(f"Health report: {report['total_events']} total events")</code></pre>
+            </div>
+        </div>
+
+        <h2 class="mt-4">System Design for Follow-Up Rounds</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Anthropic System Design Expectations</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>After passing the CodeSignal assessment, you'll face system design rounds. For Anthropic specifically:</p>
+
+                <h4>Common Topics</h4>
                 <ul>
-                    <li><strong>Correctness:</strong> Tests pass</li>
-                    <li><strong>Cleanliness:</strong> Formatting, naming</li>
-                    <li><strong>Modularity:</strong> Function decomposition</li>
-                    <li><strong>Efficiency:</strong> Reasonable complexity</li>
+                    <li><strong>ML Infrastructure:</strong> Training pipelines, model serving, inference optimization</li>
+                    <li><strong>Distributed Systems:</strong> Data processing at scale, consistency models, fault tolerance</li>
+                    <li><strong>API Design:</strong> Rate limiting, versioning, authentication for AI APIs</li>
+                    <li><strong>Safety Systems:</strong> Content filtering, prompt injection prevention, output monitoring</li>
+                </ul>
+
+                <h4>Example: Design Claude's API Rate Limiting System</h4>
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TB
+    subgraph Client
+        A[API Request]
+    end
+
+    subgraph Edge["Edge Layer"]
+        B[Load Balancer]
+        C[Rate Limiter<br>Token Bucket]
+    end
+
+    subgraph Backend["Backend Services"]
+        D[Auth Service]
+        E[Usage Tracking]
+        F[Model Router]
+    end
+
+    subgraph Storage["Storage Layer"]
+        G[(Redis<br>Rate State)]
+        H[(Postgres<br>Usage Logs)]
+    end
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    C <--> G
+    E --> H
+                    </div>
+                </div>
+
+                <h4>Staff Engineer Talking Points</h4>
+                <ul>
+                    <li>Discuss token bucket vs sliding window trade-offs</li>
+                    <li>Explain how to handle distributed rate limiting across regions</li>
+                    <li>Consider burst handling and grace periods</li>
+                    <li>Discuss monitoring and alerting for abuse detection</li>
+                    <li>Address the cold start problem for new users</li>
                 </ul>
             </div>
         </div>
 
-        <h2 class="mt-4">Sample Problem: Inventory System</h2>
+        <h2 class="mt-4">Practice Resources</h2>
 
-        <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
-            <pre style="white-space: pre-wrap; font-family: monospace;">
-Level 1-2: Basic CRUD
-- add_item(id, quantity)
-- remove_item(id, quantity)
-- get_quantity(id)
-- search_by_prefix(prefix)
-
-Level 3: Multi-user with capacity
-- reserve_for_user(user_id, item_id, qty)
-- set_capacity_limit(item_id, limit)
-
-Level 4: Duplicate handling
-- merge_duplicates()
-- resolve_over_capacity()
-            </pre>
-        </div>
-
-        <h2 class="mt-4">Time Management Strategy</h2>
-
-        <div class="card-grid">
-            <div class="card">
-                <h4>First Pass (Levels 1-2)</h4>
-                <p class="text-muted">Complete quickly, don't over-engineer. These are foundation points.</p>
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Recommended Practice Resources</span>
+                <span class="collapsible-icon">&#9660;</span>
             </div>
-            <div class="card">
-                <h4>Second Pass (Level 3)</h4>
-                <p class="text-muted">Build on existing code. Add new methods carefully.</p>
-            </div>
-            <div class="card">
-                <h4>Final Push (Level 4)</h4>
-                <p class="text-muted">Only if time allows. Don't break earlier levels.</p>
-            </div>
-            <div class="card">
-                <h4>Buffer Time</h4>
-                <p class="text-muted">Keep 5-10 min for testing and debugging.</p>
+            <div class="collapsible-content">
+                <div class="card-grid">
+                    <div class="card">
+                        <h4>CodeSignal Practice</h4>
+                        <ul>
+                            <li><a href="https://codesignal.com/developers/interview-practice/" target="_blank">CodeSignal Interview Practice</a></li>
+                            <li>Take the General Coding Assessment (GCA)</li>
+                            <li>Practice under timed conditions</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>LeetCode (for patterns)</h4>
+                        <ul>
+                            <li>Focus on Medium difficulty</li>
+                            <li>Practice class-based problems</li>
+                            <li>Topics: OOP, State Management, Caching</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>System Design (for follow-ups)</h4>
+                        <ul>
+                            <li><a href="https://www.hellointerview.com/" target="_blank">HelloInterview</a></li>
+                            <li>Focus on ML system design</li>
+                            <li>Study distributed systems basics</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Anthropic-Specific</h4>
+                        <ul>
+                            <li><a href="https://www.anthropic.com/research" target="_blank">Anthropic Research Blog</a></li>
+                            <li>Constitutional AI paper</li>
+                            <li>Claude API documentation</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mt-3" style="background: var(--success-bg);">
+                    <h4>Daily Practice Plan</h4>
+                    <table style="width: 100%;">
+                        <tr>
+                            <td><strong>Morning (1 hour)</strong></td>
+                            <td>Timed practice - 1 multi-level problem under exam conditions</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Afternoon (30 min)</strong></td>
+                            <td>Review solutions - analyze time spent, identify patterns</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Evening (30 min)</strong></td>
+                            <td>System design reading or Anthropic research</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -184,7 +1881,7 @@ Level 4: Duplicate handling
 
         <div class="flex flex-between mt-4">
             <a href="module-03.html" class="btn btn-secondary">&larr; Previous Module</a>
-            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+            <a href="module-05.html" class="btn btn-primary">Next Module &rarr;</a>
         </div>
         </main>
     </div>
@@ -201,9 +1898,27 @@ Level 4: Duplicate handling
                 },
                 {
                     question: "What's most important in CodeSignal assessments?",
-                    options: ["Perfect optimization", "Completion rate", "Algorithm complexity", "Code comments"],
+                    options: ["Perfect optimization", "Completion rate with clean code", "Algorithm complexity", "Code comments"],
                     correct: 1,
-                    explanation: "Completion rate is critical - complete more levels cleanly."
+                    explanation: "Completion rate with clean code is critical - complete more levels cleanly rather than rushing through all with bugs."
+                },
+                {
+                    question: "How much time should you spend on Level 1?",
+                    options: ["5 minutes", "10-12 minutes", "20 minutes", "30 minutes"],
+                    correct: 1,
+                    explanation: "Level 1 should take 10-12 minutes. If it's taking longer, you may be over-engineering."
+                },
+                {
+                    question: "What's different about staff-level expectations in follow-up rounds?",
+                    options: ["More algorithm questions", "Deep knowledge of ML infrastructure and scaling", "Longer interviews", "More behavioral questions"],
+                    correct: 1,
+                    explanation: "Staff engineers are expected to have deep expertise in ML infrastructure, scaling, and system design for AI applications."
+                },
+                {
+                    question: "What percentage of scoring comes from correctness?",
+                    options: ["40%", "50%", "60%", "80%"],
+                    correct: 2,
+                    explanation: "Correctness accounts for about 60% of the score, with cleanliness (15%), modularity (15%), and efficiency (10%) making up the rest."
                 }
             ];
             const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);

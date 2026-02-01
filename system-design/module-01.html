@@ -172,6 +172,124 @@ flowchart TD
                         <li><strong>L4 (Transport):</strong> TCP/UDP level, faster, less intelligent</li>
                         <li><strong>L7 (Application):</strong> HTTP level, can inspect content, more flexible</li>
                     </ul>
+
+                    <h4 class="mt-3">NGINX Load Balancer Configuration Example</h4>
+                    <div class="code-block">
+                        <code>
+# nginx.conf - Production-grade load balancing
+http {
+    # Define upstream servers with weights and health checks
+    upstream api_servers {
+        # Least connections algorithm - best for varying request times
+        least_conn;
+
+        # Server pool with weights (higher = more traffic)
+        server 10.0.1.10:8080 weight=5 max_fails=3 fail_timeout=30s;
+        server 10.0.1.11:8080 weight=5 max_fails=3 fail_timeout=30s;
+        server 10.0.1.12:8080 weight=3 max_fails=3 fail_timeout=30s;
+
+        # Backup server - only used when primary servers are down
+        server 10.0.1.20:8080 backup;
+
+        # Keep connections alive to reduce TCP handshake overhead
+        keepalive 32;
+    }
+
+    server {
+        listen 80;
+        listen 443 ssl http2;
+
+        location /api/ {
+            proxy_pass http://api_servers;
+
+            # Connection settings
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+
+            # Pass client info to backend
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+            # Timeouts
+            proxy_connect_timeout 5s;
+            proxy_read_timeout 60s;
+
+            # Retry on failure - only idempotent methods
+            proxy_next_upstream error timeout http_502 http_503;
+            proxy_next_upstream_tries 2;
+        }
+
+        # Health check endpoint (NGINX Plus feature, or use lua)
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+        }
+    }
+}
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">HAProxy Configuration (Alternative)</h4>
+                    <div class="code-block">
+                        <code>
+# haproxy.cfg - High-performance load balancing
+global
+    maxconn 50000
+    log stdout format raw local0
+
+defaults
+    mode http
+    timeout connect 5s
+    timeout client 30s
+    timeout server 30s
+    option httplog
+    option dontlognull
+
+frontend http_front
+    bind *:80
+    bind *:443 ssl crt /etc/ssl/certs/server.pem
+
+    # Route based on path
+    acl is_api path_beg /api
+    acl is_static path_beg /static
+
+    use_backend api_servers if is_api
+    use_backend static_servers if is_static
+    default_backend api_servers
+
+backend api_servers
+    balance roundrobin
+    option httpchk GET /health
+
+    # Server definitions with health checks
+    server api1 10.0.1.10:8080 check inter 5s fall 3 rise 2
+    server api2 10.0.1.11:8080 check inter 5s fall 3 rise 2
+    server api3 10.0.1.12:8080 check inter 5s fall 3 rise 2
+
+backend static_servers
+    balance leastconn
+    server static1 10.0.2.10:80 check
+    server static2 10.0.2.11:80 check
+
+# Stats page for monitoring
+listen stats
+    bind *:8404
+    stats enable
+    stats uri /stats
+    stats refresh 10s
+                        </code>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Production Tips:</strong>
+                        <ul>
+                            <li><strong>Health checks:</strong> Always configure active health checks, not just passive failure detection</li>
+                            <li><strong>Graceful degradation:</strong> Use backup servers and circuit breakers</li>
+                            <li><strong>Session persistence:</strong> Use sticky sessions only when necessary (adds complexity)</li>
+                            <li><strong>SSL termination:</strong> Terminate SSL at the load balancer to reduce backend CPU</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 

@@ -201,6 +201,443 @@ flowchart TD
             </div>
         </div>
 
+        <h2 class="mt-4">Influencing Upward: Persuading Executives and Senior Leaders</h2>
+
+        <div class="card mt-3">
+            <h4>Why This Is Critical at Staff Level</h4>
+            <p>Staff engineers frequently need to:</p>
+            <ul>
+                <li>Get investment in technical initiatives (infrastructure, debt reduction, platform work)</li>
+                <li>Change organizational direction or priorities</li>
+                <li>Push back on unrealistic timelines or scope</li>
+                <li>Advocate for technical standards and practices</li>
+            </ul>
+            <p>This requires different skills than influencing peers.</p>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Framework for Influencing Executives</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TD
+    A["<strong>1. UNDERSTAND THEIR WORLD</strong><br>What metrics do they own?<br>What pressures are they under?"] --> B["<strong>2. FRAME IN THEIR LANGUAGE</strong><br>Revenue, risk, velocity, customer impact<br>Not technical purity"]
+    B --> C["<strong>3. BRING OPTIONS, NOT PROBLEMS</strong><br>2-3 paths with trade-offs<br>Include your recommendation"]
+    C --> D["<strong>4. MAKE THE ASK CLEAR</strong><br>What decision do you need?<br>What resources? By when?"]
+    D --> E["<strong>5. FOLLOW UP WITH DATA</strong><br>Close the loop<br>Build credibility over time"]
+                    </div>
+                </div>
+
+                <h4>Understanding Executive Perspective</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">You Care About</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">They Care About</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Bridge</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Code quality</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Velocity and reliability</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Poor code quality is causing X bugs/month, costing Y hours"</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Technical debt</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Delivery speed and risk</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Debt is slowing new features by 30% and increasing incident frequency"</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Modern architecture</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Competitive advantage</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"This architecture enables features competitors can't match"</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Learning new tech</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Team retention and hiring</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Engineers want to work with modern tools - this affects retention"</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Worked Example: Getting Investment in Platform Work</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Scenario:</strong> You believe the company needs to invest a quarter in CI/CD improvements, but leadership wants all hands on feature work.</p>
+
+                <div style="background: var(--error-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <h5>Weak Approach</h5>
+                    <p>"Our CI/CD is outdated. We're using old versions of Jenkins, our test suite takes 45 minutes, and we don't have proper staging environments. The engineering team is frustrated and we need to modernize our tooling."</p>
+                    <p><em>Problem: Sounds like technical preference, not business case. No clear ask.</em></p>
+                </div>
+
+                <div style="background: var(--success-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <h5>Strong Approach</h5>
+                    <p><strong>Frame the problem in business terms:</strong> "Our deployment process is limiting how fast we can ship to customers. We deploy twice a week; competitors deploy daily. Each deployment requires 4 hours of engineer time for manual verification."</p>
+
+                    <p><strong>Quantify the impact:</strong></p>
+                    <ul>
+                        <li>"Engineering time: 8 hours/week = 400 hours/year on deployment overhead"</li>
+                        <li>"Feature velocity: We could ship bug fixes same-day instead of waiting for weekly deployment"</li>
+                        <li>"Incident recovery: Rollback currently takes 2 hours; could be 5 minutes"</li>
+                    </ul>
+
+                    <p><strong>Present options:</strong></p>
+                    <ul>
+                        <li><strong>Option A (Recommended):</strong> 2 engineers for 10 weeks. Full automation. ROI positive in 6 months.</li>
+                        <li><strong>Option B:</strong> 1 engineer for 16 weeks. Partial automation. Slower but less impact on feature work.</li>
+                        <li><strong>Option C:</strong> Continue current state. Cost: 400 engineer hours/year + competitive disadvantage.</li>
+                    </ul>
+
+                    <p><strong>Make the ask:</strong> "I'm asking for approval to pull 2 engineers from feature work for Q2. We'll deliver automated deployments by end of quarter and measure impact in Q3."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Influence Story: Changing Organizational Direction</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Question fit:</strong> "Tell me about a time you influenced a decision at the organizational level"</p>
+
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "Our company was planning to build a custom analytics platform. Leadership had already committed budget and timeline to the board."</p>
+
+                    <p><strong>Task:</strong> "I believed buying a solution would be faster and cheaper, but the decision seemed final. I needed to reopen the conversation without being seen as undermining leadership."</p>
+
+                    <p><strong>Action:</strong></p>
+                    <ul>
+                        <li>"First, I validated my assumptions by talking to 5 companies who had made both choices - build and buy"</li>
+                        <li>"Compiled data on total cost of ownership: vendor solutions vs. our estimate for custom build"</li>
+                        <li>"Found that our build estimate didn't include ongoing maintenance - added 40% to true cost"</li>
+                        <li>"Requested a 1:1 with the VP of Engineering to share findings. Framed as 'I want to help us succeed, and I'm concerned about some gaps in our analysis'"</li>
+                        <li>"Presented not as 'you're wrong' but as 'here's new information that might change the calculus'"</li>
+                        <li>"Offered to lead a formal evaluation process if leadership wanted to revisit the decision"</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "The VP appreciated the analysis and agreed to a 2-week evaluation. We ultimately chose a vendor solution that saved an estimated $1.2M over 3 years. I was asked to lead vendor evaluations for future build-vs-buy decisions."</p>
+                </div>
+
+                <h4>Key Techniques</h4>
+                <ul>
+                    <li><strong>Gathered external data:</strong> Not just internal opinion</li>
+                    <li><strong>Private channel first:</strong> Didn't embarrass leadership publicly</li>
+                    <li><strong>Framed as new information:</strong> Not "you're wrong"</li>
+                    <li><strong>Offered to help:</strong> Not just criticism</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Influence in Crisis Situations</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Leading Without Authority During Incidents</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Crises often require rapid influence across organizational boundaries. Formal authority disappears - whoever can lead effectively, leads.</p>
+
+                <h4>Crisis Influence Tactics</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Tactic</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">When to Use</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Take command explicitly</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">When no one is coordinating</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"I'll run incident command. Sarah, can you own customer comms? Mike, focus on database investigation."</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Create structure</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">When response is chaotic</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Let's do status updates every 15 minutes in this channel. I'll keep a running timeline doc."</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Summarize and focus</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">When discussion is scattered</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"So we have three hypotheses. Let's assign one person to each and reconvene in 10 minutes."</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Shield the team</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">When external pressure is distracting</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"I'll handle stakeholder questions. Everyone else focus on diagnosis."</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Make decisions fast</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">When analysis paralysis sets in</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"We don't have perfect information. Let's try rolling back the last deploy - we can always roll forward."</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Crisis Influence Story Example</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "At 11 PM, our payment system started rejecting all credit cards. Multiple teams were investigating simultaneously but nobody was coordinating. Customer support was overwhelmed."</p>
+
+                    <p><strong>Task:</strong> "I was the most senior engineer online but had no formal incident commander role. The actual on-call engineer was junior and clearly overwhelmed."</p>
+
+                    <p><strong>Action:</strong></p>
+                    <ul>
+                        <li>"Announced in the incident channel: 'I'm going to coordinate unless someone objects. Alex, continue your investigation. I'll handle everything else.'"</li>
+                        <li>"Created a shared doc with current status, hypotheses, and assigned owners"</li>
+                        <li>"Established 10-minute check-ins and a separate channel for stakeholder updates"</li>
+                        <li>"When we identified the cause (third-party API rate limiting), I made the call to switch to backup processor"</li>
+                        <li>"After resolution, debriefed with Alex about incident management and offered to mentor"</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "Payment processing restored in 35 minutes. Post-incident review praised the coordination. I was later asked to formalize our incident command process and train other senior engineers."</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">When and How to Escalate Appropriately</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>The Escalation Decision Framework</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Escalation is a tool, not a failure. Staff engineers need judgment about when to use it.</p>
+
+                <h4>Escalate When:</h4>
+                <ul>
+                    <li><strong>You've genuinely tried:</strong> Multiple attempts at direct resolution documented</li>
+                    <li><strong>Impact exceeds your scope:</strong> The decision affects areas beyond your authority</li>
+                    <li><strong>Time is critical:</strong> Delay would cause significant harm</li>
+                    <li><strong>Safety/compliance is at risk:</strong> Never delay on these</li>
+                    <li><strong>You need air cover:</strong> The decision needs organizational backing</li>
+                </ul>
+
+                <h4>Don't Escalate When:</h4>
+                <ul>
+                    <li><strong>It's just uncomfortable:</strong> Difficult conversations aren't escalation-worthy</li>
+                    <li><strong>You haven't tried direct resolution:</strong> Escalating first damages relationships</li>
+                    <li><strong>You want to "win":</strong> Escalation shouldn't be a weapon</li>
+                    <li><strong>The issue is trivial:</strong> Pick your battles</li>
+                </ul>
+
+                <h4>How to Escalate Effectively</h4>
+                <ol>
+                    <li><strong>Document attempts:</strong> "I've had 3 conversations over 2 weeks and we remain stuck on X"</li>
+                    <li><strong>Be fair to all parties:</strong> Represent the other perspective accurately</li>
+                    <li><strong>State impact clearly:</strong> "This is blocking Y, which puts Z at risk"</li>
+                    <li><strong>Propose solutions:</strong> "I see two paths forward: A or B"</li>
+                    <li><strong>Ask for specific help:</strong> "Can you help us reach alignment on the priority?"</li>
+                </ol>
+
+                <h4>Sample Escalation Message</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p>Subject: Need help aligning with Platform team on API migration timeline</p>
+                    <p>Hi [Manager],</p>
+                    <p>I need your help resolving a priority conflict with the Platform team.</p>
+                    <p><strong>Situation:</strong> We need their API migration complete by March 1 to meet our Q1 launch commitment. They've indicated they can't prioritize it until Q2.</p>
+                    <p><strong>What I've tried:</strong></p>
+                    <ul>
+                        <li>Met with their tech lead twice (Jan 5, Jan 12)</li>
+                        <li>Offered to loan an engineer to help</li>
+                        <li>Proposed reduced scope (they declined)</li>
+                    </ul>
+                    <p><strong>Impact:</strong> Without resolution, our Q1 launch slips to April, affecting $500K projected revenue.</p>
+                    <p><strong>Options:</strong></p>
+                    <ol>
+                        <li>Leadership aligns on Q1 priority for both teams</li>
+                        <li>We build a workaround (adds 3 weeks but removes dependency)</li>
+                        <li>We accept Q2 launch</li>
+                    </ol>
+                    <p><strong>My recommendation:</strong> Option 1 if achievable; Option 2 as fallback.</p>
+                    <p><strong>Ask:</strong> Can you discuss priority alignment with Platform's director?</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Building Influence Through Reputation and Mentorship</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Long-Term Influence Building</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Short-term influence tactics work for specific situations. Long-term influence comes from reputation. Staff engineers build influence through consistent patterns.</p>
+
+                <h4>Reputation Building Behaviors</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Behavior</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Why It Builds Influence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Follow through consistently</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">People trust those who do what they say they'll do</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Share credit generously</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Others want to work with you and support your initiatives</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Admit mistakes openly</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Builds trust - people believe you when you're confident</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Help others succeed</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Creates allies who reciprocate when you need support</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Communicate proactively</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">No one is surprised - builds confidence in your judgment</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Take on hard problems</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Demonstrates competence and commitment</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Stay calm under pressure</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">People look to you in crises</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Influence Through Mentorship</h4>
+                <p>Mentoring multiplies your influence. Engineers you've helped become advocates for your ideas and approaches.</p>
+
+                <ul>
+                    <li><strong>Direct mentorship:</strong> Your mentees spread your technical philosophy and practices</li>
+                    <li><strong>Teaching:</strong> Running workshops or writing docs establishes expertise</li>
+                    <li><strong>Code review patterns:</strong> Your feedback shapes how teams think about code</li>
+                    <li><strong>Design review participation:</strong> Regular input on designs spreads your architectural thinking</li>
+                </ul>
+
+                <h4>Interview Story: Building Influence Through Mentorship</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "I wanted to improve testing practices across the organization, but mandating standards through policy wasn't working - teams were resistant."</p>
+
+                    <p><strong>Task:</strong> "I needed to shift the engineering culture toward better testing without having authority over other teams."</p>
+
+                    <p><strong>Action:</strong></p>
+                    <ul>
+                        <li>"Started mentoring 3 mid-level engineers from different teams on testing practices"</li>
+                        <li>"Ran a monthly 'testing patterns' lunch-and-learn open to anyone"</li>
+                        <li>"Created example repositories showing testing approaches for common scenarios"</li>
+                        <li>"Offered to pair with anyone struggling with testing during code review"</li>
+                        <li>"Celebrated when teams improved their testing publicly in engineering all-hands"</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "Within a year, test coverage org-wide improved from 45% to 72%. More importantly, engineers started coming to me asking how to test things rather than asking if they could skip tests. Three of my mentees became testing advocates on their teams."</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Advanced Scenarios: Complex Influence Situations</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Multi-Year Initiative Influence</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Large initiatives require sustained influence over months or years. The techniques are different from one-time persuasion.</p>
+
+                <h4>Long-Term Influence Strategies</h4>
+                <ul>
+                    <li><strong>Create visible momentum:</strong> Small wins build credibility and attract supporters</li>
+                    <li><strong>Build a coalition gradually:</strong> Start with early adopters, use success to convince skeptics</li>
+                    <li><strong>Document and share progress:</strong> Regular updates keep stakeholders engaged</li>
+                    <li><strong>Adapt to feedback:</strong> Incorporate concerns to broaden support</li>
+                    <li><strong>Be patient but persistent:</strong> Some battles are won over quarters, not weeks</li>
+                </ul>
+
+                <h4>Sample Story: Driving Org-Wide Adoption</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "I believed our organization needed to adopt infrastructure-as-code, but there was significant resistance - 'we've always done it manually.'"</p>
+
+                    <p><strong>Year 1 - Prove value:</strong></p>
+                    <ul>
+                        <li>Implemented IaC for my team's infrastructure without asking permission</li>
+                        <li>Documented time savings: 4 hours to spin up environment vs. 2 days</li>
+                        <li>Invited curious engineers from other teams to our demos</li>
+                    </ul>
+
+                    <p><strong>Year 2 - Expand coalition:</strong></p>
+                    <ul>
+                        <li>Two other teams adopted our approach</li>
+                        <li>Created shared modules that made adoption easier</li>
+                        <li>Presented case study to engineering leadership</li>
+                    </ul>
+
+                    <p><strong>Year 3 - Organizational standard:</strong></p>
+                    <ul>
+                        <li>Leadership mandated IaC for new projects</li>
+                        <li>I led working group to create org-wide standards and training</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "Three years after I started, 100% of new infrastructure uses IaC. Provisioning time dropped 90%. I never had authority to mandate anything - I just made it so obviously better that adoption became inevitable."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Leading Through Organizational Change</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Reorgs, layoffs, and leadership changes create influence vacuums. Staff engineers who step up during these times build lasting credibility.</p>
+
+                <h4>Influence During Uncertainty</h4>
+                <ul>
+                    <li><strong>Be a source of stability:</strong> Consistent, calm presence helps teams navigate change</li>
+                    <li><strong>Fill communication gaps:</strong> When leadership is distracted, keep teams informed</li>
+                    <li><strong>Protect important work:</strong> Ensure critical projects don't fall through cracks</li>
+                    <li><strong>Avoid politics:</strong> Stay neutral during leadership transitions</li>
+                    <li><strong>Support new leaders:</strong> Help incoming managers succeed rather than testing them</li>
+                </ul>
+
+                <h4>Sample Story: Leading Through Reorg</h4>
+                <div style="background: var(--code-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <p><strong>Situation:</strong> "Our engineering org went through a major restructure. Teams were merged, managers changed, and there was a lot of uncertainty. Our critical Q4 launch was at risk."</p>
+
+                    <p><strong>Task:</strong> "I wasn't in leadership, but I was the most experienced engineer who understood all the systems involved. People were looking to me for direction."</p>
+
+                    <p><strong>Action:</strong></p>
+                    <ul>
+                        <li>"Created a 'launch readiness' doc listing all tasks and owners - maintained it as the single source of truth"</li>
+                        <li>"Ran daily standups for the launch team across the newly merged groups"</li>
+                        <li>"When people asked me political questions ('Who's really in charge?'), I redirected to technical work"</li>
+                        <li>"Proactively briefed the new director on project status and risks - helped them look informed"</li>
+                        <li>"Connected people across newly merged teams who needed to collaborate but didn't know each other"</li>
+                    </ul>
+
+                    <p><strong>Result:</strong> "We launched on time. The new director later told me that my steadiness during the transition was why she trusted me to lead future cross-team initiatives. Several team members thanked me for keeping things on track when everything else was chaotic."</p>
+                </div>
+
+                <div style="background: var(--warning-bg); padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+                    <h5>Interview Tip</h5>
+                    <p>When telling stories about organizational change, focus on your stabilizing influence, not complaints about the change itself. Never badmouth leadership - even past leadership at previous companies.</p>
+                </div>
+            </div>
+        </div>
+
         <h2 class="mt-4">Self-Check Quiz</h2>
         <div class="quiz-container" id="module-quiz"></div>
 

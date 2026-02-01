@@ -102,16 +102,514 @@
             </ul>
         </div>
 
-        <h2 class="mt-4">Practice Problems</h2>
+        <h2 class="mt-4">Full Mock Interview Walkthrough: URL Shortener</h2>
+
+        <div class="card mt-3" style="background: var(--success-bg);">
+            <strong>45-Minute Interview Simulation</strong><br>
+            This walkthrough shows exactly how a staff-level candidate should approach this problem, with timing guidance and interviewer expectations at each stage.
+        </div>
 
         <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Minutes 0-5: Requirements Clarification</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Candidate says:</strong> "Before I dive in, let me make sure I understand the requirements. Can I ask some clarifying questions?"</p>
+
+                <h4>Questions to Ask</h4>
+                <ul>
+                    <li><strong>Scale:</strong> "How many URLs per day are we shortening? What's the read:write ratio?"</li>
+                    <li><strong>URL format:</strong> "What's the desired length of shortened URLs? Custom aliases allowed?"</li>
+                    <li><strong>Features:</strong> "Do we need analytics? Expiration? User accounts?"</li>
+                    <li><strong>Availability:</strong> "What's our availability target? Can we tolerate eventual consistency?"</li>
+                </ul>
+
+                <div class="card mt-2">
+                    <strong>Interviewer Response (typical):</strong><br>
+                    - 100M new URLs/month, 100:1 read:write ratio<br>
+                    - 7 characters, custom aliases as stretch goal<br>
+                    - Basic analytics (click count), no expiration initially<br>
+                    - High availability, eventual consistency OK
+                </div>
+
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>What Makes This Great:</strong> The candidate establishes scope before designing. Staff engineers know that building the wrong thing is worse than building nothing.
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Minutes 5-10: Back-of-Envelope Estimation</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Candidate says:</strong> "Let me do some quick math to understand the scale we're dealing with."</p>
+
+                <div class="code-block">
+                    <code>
+<strong>Traffic:</strong><br>
+Write: 100M / (30 * 24 * 3600) = ~40 writes/sec<br>
+Read:  40 * 100 = 4,000 reads/sec<br>
+Peak:  ~3x average = 12,000 reads/sec<br>
+<br>
+<strong>Storage (5 years):</strong><br>
+URLs: 100M * 12 * 5 = 6B records<br>
+Per record: short_code(7) + long_url(500) + metadata(100) = ~600 bytes<br>
+Total: 6B * 600B = 3.6 TB<br>
+<br>
+<strong>URL Space:</strong><br>
+Base62 characters: a-z, A-Z, 0-9 = 62 chars<br>
+7 chars: 62^7 = 3.5 trillion combinations<br>
+Plenty of room for 6B URLs (0.2% utilization)
+                    </code>
+                </div>
+
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>What Makes This Great:</strong> Numbers guide design decisions. Knowing we have 4K reads/sec tells us we need caching. 3.6TB tells us a single machine could hold all data (though we wouldn't design it that way).
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Minutes 10-20: High-Level Design</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Candidate says:</strong> "Let me sketch the high-level architecture. We have two main flows: URL shortening and redirection."</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TB
+    subgraph "Clients"
+        W[Web/Mobile]
+    end
+
+    subgraph "Edge"
+        CDN[CDN - Cache redirects]
+        LB[Load Balancer]
+    end
+
+    subgraph "Application Tier"
+        API1[API Server]
+        API2[API Server]
+        API3[API Server]
+    end
+
+    subgraph "Caching"
+        Redis[(Redis Cluster)]
+    end
+
+    subgraph "Storage"
+        DB1[(Primary DB)]
+        DB2[(Replica)]
+        DB3[(Replica)]
+    end
+
+    subgraph "ID Generation"
+        IDGen[Distributed Counter<br>Zookeeper/Redis]
+    end
+
+    W --> CDN --> LB
+    LB --> API1 & API2 & API3
+    API1 & API2 & API3 --> Redis
+    API1 & API2 & API3 --> DB1
+    DB1 --> DB2 & DB3
+    API1 & API2 & API3 --> IDGen
+                    </div>
+                </div>
+
+                <h4>Key Design Decisions (Explain the WHY)</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <tr style="background: var(--border-color);">
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Component</th>
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Choice</th>
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Why</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Database</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">PostgreSQL or DynamoDB</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Simple key-value access pattern; either works at this scale</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cache</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Redis cluster</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">100:1 read ratio means caching is crucial; 80/20 rule applies</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">ID Generation</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Counter-based + Base62</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Guaranteed unique, no collision checking needed</td>
+                    </tr>
+                </table>
+
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>What Makes This Great:</strong> The candidate explains trade-offs, not just draws boxes. Every component choice has a reason tied back to requirements.
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Minutes 20-35: Deep Dive - ID Generation</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Candidate says:</strong> "The most interesting problem here is generating unique short codes at scale. Let me walk through the options and why I'd choose counter-based approach."</p>
+
+                <h4>Option 1: Random Hash (MD5/SHA) - Not Recommended</h4>
+                <div class="code-block">
+                    <code>
+# Python - Hash approach (problematic)
+import hashlib
+
+def generate_short_code(long_url: str) -> str:
+    hash_bytes = hashlib.md5(long_url.encode()).hexdigest()
+    return hash_bytes[:7]
+
+# Problems:
+# 1. Collisions: MD5 has birthday problem
+# 2. Same URL = same code (good or bad?)
+# 3. Need collision detection & retry loop
+                    </code>
+                </div>
+
+                <h4>Option 2: Counter-Based with Base62 - Recommended</h4>
+                <div class="code-block">
+                    <code>
+# Python - Counter-based approach
+import redis
+
+class URLShortener:
+    ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+    def __init__(self, redis_client: redis.Redis):
+        self.redis = redis_client
+
+    def encode_base62(self, num: int) -> str:
+        """Convert integer to base62 string."""
+        if num == 0:
+            return self.ALPHABET[0]
+
+        result = []
+        while num > 0:
+            result.append(self.ALPHABET[num % 62])
+            num //= 62
+        return ''.join(reversed(result))
+
+    def decode_base62(self, s: str) -> int:
+        """Convert base62 string back to integer."""
+        num = 0
+        for char in s:
+            num = num * 62 + self.ALPHABET.index(char)
+        return num
+
+    def shorten(self, long_url: str) -> str:
+        # Atomic increment - guaranteed unique
+        counter = self.redis.incr("url:counter")
+        short_code = self.encode_base62(counter)
+
+        # Pad to 7 characters for consistency
+        short_code = short_code.zfill(7)
+
+        # Store mapping
+        self.redis.hset("url:mappings", short_code, long_url)
+        return short_code
+
+    def resolve(self, short_code: str) -> str:
+        return self.redis.hget("url:mappings", short_code)
+                    </code>
+                </div>
+
+                <h4>Scaling the Counter: Range-Based Allocation</h4>
+                <p>"For true distributed scale, each API server pre-allocates a range of IDs:"</p>
+
+                <div class="code-block">
+                    <code>
+# Go - Distributed ID generation with ranges
+type IDGenerator struct {
+    zk          *zookeeper.Client
+    currentID   int64
+    maxID       int64
+    rangeSize   int64
+    mu          sync.Mutex
+}
+
+func NewIDGenerator(zk *zookeeper.Client) *IDGenerator {
+    return &IDGenerator{
+        zk:        zk,
+        rangeSize: 10000, // Each server gets 10K IDs at a time
+    }
+}
+
+func (g *IDGenerator) NextID() (int64, error) {
+    g.mu.Lock()
+    defer g.mu.Unlock()
+
+    // Need new range?
+    if g.currentID >= g.maxID {
+        if err := g.allocateRange(); err != nil {
+            return 0, err
+        }
+    }
+
+    id := g.currentID
+    g.currentID++
+    return id, nil
+}
+
+func (g *IDGenerator) allocateRange() error {
+    // Atomic increment in Zookeeper
+    newMax, err := g.zk.IncrBy("/url-shortener/counter", g.rangeSize)
+    if err != nil {
+        return err
+    }
+    g.maxID = newMax
+    g.currentID = newMax - g.rangeSize
+    return nil
+}
+                    </code>
+                </div>
+
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>What Makes This Great:</strong> The candidate doesn't just pick a solution - they compare alternatives, explain trade-offs, and provide working code. They also address the distributed case proactively.
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Minutes 35-40: Edge Cases and Failure Handling</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Candidate says:</strong> "Let me address some failure scenarios and edge cases."</p>
+
+                <h4>Failure Scenarios</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <tr style="background: var(--border-color);">
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Scenario</th>
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Impact</th>
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Mitigation</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Redis counter unavailable</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Can't generate new URLs</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Pre-allocate ranges; fallback to UUID-based</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Database write fails</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Lost URL mapping</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Counter ID is "burned" - OK, we have 3.5T IDs</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cache miss on read</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Higher latency</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Read from DB replica, populate cache</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hot URL (viral link)</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cache stampede</td>
+                        <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Request coalescing, CDN caching</td>
+                    </tr>
+                </table>
+
+                <h4>Hot URL Handling</h4>
+                <div class="code-block">
+                    <code>
+# Python - Request coalescing for hot URLs
+import asyncio
+from typing import Dict
+
+class URLResolver:
+    def __init__(self, cache, db):
+        self.cache = cache
+        self.db = db
+        self.pending: Dict[str, asyncio.Future] = {}
+        self.lock = asyncio.Lock()
+
+    async def resolve(self, short_code: str) -> str:
+        # Check cache first
+        url = await self.cache.get(short_code)
+        if url:
+            return url
+
+        # Request coalescing - only one DB query per short_code
+        async with self.lock:
+            if short_code in self.pending:
+                # Another request is already fetching this
+                return await self.pending[short_code]
+
+            # Create future for other waiters
+            future = asyncio.Future()
+            self.pending[short_code] = future
+
+        try:
+            # Fetch from DB
+            url = await self.db.get(short_code)
+
+            # Populate cache
+            await self.cache.set(short_code, url, ex=3600)
+
+            # Notify waiters
+            future.set_result(url)
+            return url
+        finally:
+            async with self.lock:
+                del self.pending[short_code]
+                    </code>
+                </div>
+
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>What Makes This Great:</strong> Staff engineers anticipate failures. This shows production-ready thinking, not just happy-path design.
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Minutes 40-45: Extensions and Wrap-up</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Candidate says:</strong> "If we have time, here are some extensions we could add..."</p>
+
+                <h4>Analytics Pipeline</h4>
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    Click[Click Event] --> Kafka[Kafka]
+    Kafka --> Flink[Flink/Spark]
+    Flink --> TS[(TimescaleDB)]
+    TS --> Dashboard[Analytics Dashboard]
+                    </div>
+                </div>
+
+                <h4>Custom Aliases</h4>
+                <ul>
+                    <li>Check alias availability before assignment</li>
+                    <li>Reserve premium aliases (brand protection)</li>
+                    <li>Rate limit alias creation per user</li>
+                </ul>
+
+                <h4>Geographic Distribution</h4>
+                <ul>
+                    <li>Multi-region deployment for latency</li>
+                    <li>Eventually consistent replication</li>
+                    <li>Route writes to primary region</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Evaluation Criteria: Good vs Great Answers</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Detailed Scoring Rubric</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Criteria</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Good (3/5)</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Great (5/5)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Requirements</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Asks basic questions about scale</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Proactively identifies functional/non-functional requirements, discusses trade-offs between features</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Estimation</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Calculates QPS and storage</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Uses numbers to drive design decisions ("4K QPS means we need caching")</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Design</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Draws reasonable architecture</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Explains WHY for each component, discusses alternatives considered</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Deep Dive</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Explains one component in detail</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Shows production-ready code, handles edge cases, discusses scaling challenges</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Trade-offs</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Mentions some pros/cons</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Systematically evaluates consistency, availability, cost, complexity for each decision</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Communication</strong></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Clear explanations</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Structured approach, checks in with interviewer, adapts based on feedback</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Common Anti-Patterns (With Examples)</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>What NOT to Do</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="card mb-3" style="background: var(--error-bg);">
+                    <h4>Anti-Pattern 1: Diving into Code Immediately</h4>
+                    <p><strong>Bad:</strong> "Let me write the shorten function first..."</p>
+                    <p><strong>Why it's wrong:</strong> You're solving without understanding the problem. You might build a single-server solution when you need distributed scale.</p>
+                    <p><strong>Better:</strong> "Before I design anything, let me understand the scale and requirements."</p>
+                </div>
+
+                <div class="card mb-3" style="background: var(--error-bg);">
+                    <h4>Anti-Pattern 2: Over-Engineering from the Start</h4>
+                    <p><strong>Bad:</strong> "We'll use Kubernetes with service mesh, deploy across 5 regions with active-active..."</p>
+                    <p><strong>Why it's wrong:</strong> At 40 writes/sec, you don't need this complexity. Start simple, scale when needed.</p>
+                    <p><strong>Better:</strong> "Let me start with the simplest design that meets requirements, then we can discuss scaling."</p>
+                </div>
+
+                <div class="card mb-3" style="background: var(--error-bg);">
+                    <h4>Anti-Pattern 3: No Trade-off Discussion</h4>
+                    <p><strong>Bad:</strong> "We'll use MongoDB because it's webscale."</p>
+                    <p><strong>Why it's wrong:</strong> Every choice has pros and cons. Interviewers want to see you can evaluate options.</p>
+                    <p><strong>Better:</strong> "We could use PostgreSQL for ACID guarantees or DynamoDB for managed scaling. Given our simple access pattern, either works. I'll go with PostgreSQL for familiarity, but we could revisit if we need automatic sharding."</p>
+                </div>
+
+                <div class="card mb-3" style="background: var(--error-bg);">
+                    <h4>Anti-Pattern 4: Ignoring Failure Cases</h4>
+                    <p><strong>Bad:</strong> Drawing happy-path architecture without discussing what happens when things fail.</p>
+                    <p><strong>Why it's wrong:</strong> Production systems fail. Staff engineers build for failure.</p>
+                    <p><strong>Better:</strong> "What happens if the counter service is down? We can pre-allocate ranges so servers continue working. What about database failures? We'll use read replicas and the cache will absorb most reads."</p>
+                </div>
+
+                <div class="card mb-3" style="background: var(--error-bg);">
+                    <h4>Anti-Pattern 5: Monologue Mode</h4>
+                    <p><strong>Bad:</strong> Talking for 15 minutes without checking in with the interviewer.</p>
+                    <p><strong>Why it's wrong:</strong> You might be going down the wrong path. Interviews are collaborative.</p>
+                    <p><strong>Better:</strong> "I'm thinking of using consistent hashing for database sharding. Does that align with what you had in mind, or should I explore other approaches?"</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Practice Problems</h2>
+
+        <div class="collapsible">
             <div class="collapsible-header">
                 <span>Classic Problems (Start Here)</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
                 <ul class="module-list">
-                    <li class="module-item">
+                    <li class="module-item" onclick="window.location.href='problems/url-shortener.html'" style="cursor: pointer;">
                         <div class="module-number">1</div>
                         <div class="module-info">
                             <div class="module-title">URL Shortener (TinyURL)</div>
@@ -132,7 +630,7 @@
                             <div class="module-desc">Politeness, URL frontier, distributed crawling</div>
                         </div>
                     </li>
-                    <li class="module-item">
+                    <li class="module-item" onclick="window.location.href='problems/chat-system.html'" style="cursor: pointer;">
                         <div class="module-number">4</div>
                         <div class="module-info">
                             <div class="module-title">Chat System (WhatsApp)</div>

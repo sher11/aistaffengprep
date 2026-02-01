@@ -223,8 +223,494 @@ sequenceDiagram
                     <li><strong>Safety:</strong> Committed entries are durable</li>
                 </ul>
 
+                <h4 class="mt-3">Raft Leader Election - Implementation</h4>
+                <div class="code-block">
+                    <code>
+# Python - Raft Leader Election State Machine
+
+import random
+import time
+from enum import Enum
+from dataclasses import dataclass
+from typing import List, Optional
+import asyncio
+
+class NodeState(Enum):
+    FOLLOWER = "follower"
+    CANDIDATE = "candidate"
+    LEADER = "leader"
+
+@dataclass
+class RaftNode:
+    node_id: str
+    state: NodeState = NodeState.FOLLOWER
+    current_term: int = 0
+    voted_for: Optional[str] = None
+    log: List[dict] = None
+    commit_index: int = 0
+
+    # Timing (in seconds)
+    election_timeout_min: float = 0.150
+    election_timeout_max: float = 0.300
+    heartbeat_interval: float = 0.050
+
+    def __post_init__(self):
+        self.log = self.log or []
+        self.reset_election_timer()
+
+    def reset_election_timer(self):
+        """Randomized timeout prevents split votes."""
+        self.election_deadline = time.time() + random.uniform(
+            self.election_timeout_min,
+            self.election_timeout_max
+        )
+
+    async def run(self, cluster: List['RaftNode']):
+        """Main event loop."""
+        while True:
+            if self.state == NodeState.FOLLOWER:
+                await self._run_follower()
+            elif self.state == NodeState.CANDIDATE:
+                await self._run_candidate(cluster)
+            elif self.state == NodeState.LEADER:
+                await self._run_leader(cluster)
+
+    async def _run_follower(self):
+        """Follower: Wait for heartbeats or timeout."""
+        if time.time() >= self.election_deadline:
+            print(f"[{self.node_id}] Election timeout - becoming candidate")
+            self.state = NodeState.CANDIDATE
+        await asyncio.sleep(0.010)
+
+    async def _run_candidate(self, cluster: List['RaftNode']):
+        """Candidate: Request votes from all nodes."""
+        self.current_term += 1
+        self.voted_for = self.node_id
+        votes_received = 1  # Vote for self
+
+        print(f"[{self.node_id}] Starting election for term {self.current_term}")
+
+        # Request votes from all other nodes
+        for node in cluster:
+            if node.node_id != self.node_id:
+                vote_granted = await self._request_vote(node)
+                if vote_granted:
+                    votes_received += 1
+
+        # Check if we won
+        majority = len(cluster) // 2 + 1
+        if votes_received >= majority:
+            print(f"[{self.node_id}] Won election with {votes_received} votes")
+            self.state = NodeState.LEADER
+        else:
+            print(f"[{self.node_id}] Lost election, reverting to follower")
+            self.state = NodeState.FOLLOWER
+            self.reset_election_timer()
+
+    async def _request_vote(self, target: 'RaftNode') -> bool:
+        """
+        RequestVote RPC
+        Returns True if vote granted
+        """
+        # If target has higher term, we're stale
+        if target.current_term > self.current_term:
+            self.current_term = target.current_term
+            self.state = NodeState.FOLLOWER
+            return False
+
+        # Grant vote if:
+        # 1. Target hasn't voted this term, OR voted for us
+        # 2. Our log is at least as up-to-date
+        if target.current_term < self.current_term:
+            target.current_term = self.current_term
+            target.voted_for = None
+
+        if target.voted_for is None or target.voted_for == self.node_id:
+            # Log completeness check
+            if self._is_log_up_to_date(target):
+                target.voted_for = self.node_id
+                target.reset_election_timer()
+                return True
+
+        return False
+
+    def _is_log_up_to_date(self, other: 'RaftNode') -> bool:
+        """Check if our log is at least as complete as theirs."""
+        our_last_term = self.log[-1]['term'] if self.log else 0
+        our_last_index = len(self.log)
+        their_last_term = other.log[-1]['term'] if other.log else 0
+        their_last_index = len(other.log)
+
+        if our_last_term != their_last_term:
+            return our_last_term > their_last_term
+        return our_last_index >= their_last_index
+
+    async def _run_leader(self, cluster: List['RaftNode']):
+        """Leader: Send heartbeats to maintain authority."""
+        for node in cluster:
+            if node.node_id != self.node_id:
+                await self._send_heartbeat(node)
+
+        await asyncio.sleep(self.heartbeat_interval)
+
+    async def _send_heartbeat(self, target: 'RaftNode'):
+        """AppendEntries RPC with empty entries = heartbeat."""
+        if target.current_term > self.current_term:
+            # Step down - there's a newer leader
+            self.state = NodeState.FOLLOWER
+            self.current_term = target.current_term
+            return
+
+        # Reset follower's election timer
+        target.reset_election_timer()
+        target.state = NodeState.FOLLOWER
+
+
+# Usage Example
+async def simulate_raft():
+    nodes = [RaftNode(f"node-{i}") for i in range(5)]
+
+    # Simulate network partition - node 0 and 1 can't reach others
+    # This would cause a new election among nodes 2, 3, 4
+    pass
+                    </code>
+                </div>
+
                 <div class="card mt-2">
                     <strong>Used in:</strong> etcd, Consul, CockroachDB, TiDB
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Failure Scenarios in Distributed Systems</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Network Partitions</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TB
+    subgraph "Partition A"
+        N1[Node 1<br>Leader]
+        N2[Node 2]
+    end
+
+    subgraph "Partition B"
+        N3[Node 3]
+        N4[Node 4]
+        N5[Node 5<br>New Leader]
+    end
+
+    N1 -.->|"X Blocked X"| N3
+    N2 -.->|"X Blocked X"| N4
+
+    style N1 fill:#fee2e2
+    style N5 fill:#d1fae5
+                    </div>
+                </div>
+
+                <h4>What Happens During a Partition</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">System Type</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Behavior</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">CP System</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Minority partition becomes unavailable; majority continues</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zookeeper, etcd, Consul</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">AP System</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Both partitions accept writes; conflicts resolved later</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cassandra, DynamoDB</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Split-Brain Prevention</h4>
+                <div class="code-block">
+                    <code>
+# Go - Quorum-based writes to prevent split-brain
+
+type QuorumWriter struct {
+    nodes      []string
+    quorumSize int  // Usually: (n/2) + 1
+}
+
+func (qw *QuorumWriter) Write(key string, value []byte) error {
+    successCount := 0
+    errors := make([]error, 0)
+
+    // Fan out writes to all nodes
+    for _, node := range qw.nodes {
+        err := qw.writeToNode(node, key, value)
+        if err != nil {
+            errors = append(errors, err)
+        } else {
+            successCount++
+        }
+    }
+
+    // Require quorum for success
+    if successCount >= qw.quorumSize {
+        return nil  // Success - majority agreed
+    }
+
+    return fmt.Errorf("quorum not reached: %d/%d succeeded, errors: %v",
+        successCount, qw.quorumSize, errors)
+}
+
+// During partition:
+// - 5-node cluster splits 2-3
+// - Quorum = 3
+// - Partition with 3 nodes can write
+// - Partition with 2 nodes CANNOT write (prevents split-brain)
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Cascading Failures</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>One failure triggers a chain reaction across the system.</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+sequenceDiagram
+    participant LB as Load Balancer
+    participant S1 as Server 1
+    participant S2 as Server 2
+    participant S3 as Server 3
+    participant DB as Database
+
+    Note over S1: Server 1 fails
+    LB->>S2: Redirect traffic
+    LB->>S3: Redirect traffic
+    Note over S2,S3: Load increases 50%
+    S2->>DB: More queries
+    S3->>DB: More queries
+    Note over DB: Connection pool exhausted
+    DB--xS2: Connection refused
+    DB--xS3: Connection refused
+    Note over S2,S3: Servers start failing
+    Note over LB,DB: Complete outage
+                    </div>
+                </div>
+
+                <h4>Prevention Strategies</h4>
+                <div class="code-block">
+                    <code>
+# Python - Circuit Breaker Pattern
+
+import time
+from enum import Enum
+from dataclasses import dataclass
+from typing import Callable, Any
+
+class CircuitState(Enum):
+    CLOSED = "closed"      # Normal operation
+    OPEN = "open"          # Failing - reject requests
+    HALF_OPEN = "half_open"  # Testing recovery
+
+@dataclass
+class CircuitBreaker:
+    failure_threshold: int = 5
+    recovery_timeout: float = 30.0
+    half_open_max_calls: int = 3
+
+    def __post_init__(self):
+        self.state = CircuitState.CLOSED
+        self.failure_count = 0
+        self.last_failure_time = 0
+        self.half_open_calls = 0
+
+    def call(self, func: Callable, *args, **kwargs) -> Any:
+        if self.state == CircuitState.OPEN:
+            if time.time() - self.last_failure_time > self.recovery_timeout:
+                self.state = CircuitState.HALF_OPEN
+                self.half_open_calls = 0
+            else:
+                raise CircuitBreakerOpen("Circuit breaker is open")
+
+        try:
+            result = func(*args, **kwargs)
+            self._on_success()
+            return result
+        except Exception as e:
+            self._on_failure()
+            raise
+
+    def _on_success(self):
+        if self.state == CircuitState.HALF_OPEN:
+            self.half_open_calls += 1
+            if self.half_open_calls >= self.half_open_max_calls:
+                # Recovered!
+                self.state = CircuitState.CLOSED
+                self.failure_count = 0
+        elif self.state == CircuitState.CLOSED:
+            self.failure_count = 0
+
+    def _on_failure(self):
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+
+        if self.state == CircuitState.HALF_OPEN:
+            # Recovery failed
+            self.state = CircuitState.OPEN
+        elif self.failure_count >= self.failure_threshold:
+            # Too many failures
+            self.state = CircuitState.OPEN
+            print(f"Circuit breaker OPEN after {self.failure_count} failures")
+
+
+# Usage
+db_circuit = CircuitBreaker(failure_threshold=5, recovery_timeout=30)
+
+def query_database(sql):
+    return db_circuit.call(actual_db_query, sql)
+                    </code>
+                </div>
+
+                <h4>Additional Mitigation Techniques</h4>
+                <ul>
+                    <li><strong>Bulkheads:</strong> Isolate components so failure in one doesn't affect others</li>
+                    <li><strong>Rate limiting:</strong> Prevent any single source from overwhelming the system</li>
+                    <li><strong>Graceful degradation:</strong> Return cached/stale data instead of errors</li>
+                    <li><strong>Load shedding:</strong> Reject low-priority requests during overload</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Recovery Strategies</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>Exponential Backoff with Jitter</h4>
+                <div class="code-block">
+                    <code>
+# Python - Production-grade retry with backoff
+
+import random
+import time
+from functools import wraps
+from typing import Callable, Tuple, Type
+
+def retry_with_backoff(
+    max_retries: int = 5,
+    base_delay: float = 1.0,
+    max_delay: float = 60.0,
+    exponential_base: float = 2.0,
+    jitter: bool = True,
+    retryable_exceptions: Tuple[Type[Exception], ...] = (Exception,)
+):
+    """
+    Decorator for retrying with exponential backoff.
+
+    Args:
+        max_retries: Maximum number of retry attempts
+        base_delay: Initial delay in seconds
+        max_delay: Maximum delay cap
+        exponential_base: Multiplier for each retry
+        jitter: Add randomness to prevent thundering herd
+        retryable_exceptions: Tuple of exceptions to retry on
+    """
+    def decorator(func: Callable):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exception = None
+
+            for attempt in range(max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except retryable_exceptions as e:
+                    last_exception = e
+
+                    if attempt == max_retries:
+                        break
+
+                    # Calculate delay with exponential backoff
+                    delay = min(
+                        base_delay * (exponential_base ** attempt),
+                        max_delay
+                    )
+
+                    # Add jitter (0.5x to 1.5x)
+                    if jitter:
+                        delay *= (0.5 + random.random())
+
+                    print(f"Attempt {attempt + 1} failed: {e}. "
+                          f"Retrying in {delay:.2f}s...")
+                    time.sleep(delay)
+
+            raise last_exception
+
+        return wrapper
+    return decorator
+
+
+# Usage
+@retry_with_backoff(
+    max_retries=5,
+    base_delay=1.0,
+    retryable_exceptions=(ConnectionError, TimeoutError)
+)
+def call_external_service(data):
+    response = requests.post("https://api.service.com", json=data)
+    response.raise_for_status()
+    return response.json()
+                    </code>
+                </div>
+
+                <h4>Graceful Degradation Pattern</h4>
+                <div class="code-block">
+                    <code>
+# Python - Fallback chain for resilient services
+
+class ResilientService:
+    def __init__(self, primary_db, cache, static_fallback):
+        self.primary_db = primary_db
+        self.cache = cache
+        self.static_fallback = static_fallback
+
+    async def get_user_profile(self, user_id: str) -> dict:
+        # Try primary source
+        try:
+            profile = await self.primary_db.get_user(user_id)
+            # Update cache for next time
+            await self.cache.set(f"user:{user_id}", profile, ttl=300)
+            return profile
+        except DatabaseError:
+            pass  # Fall through to cache
+
+        # Try cache (might be stale)
+        try:
+            cached = await self.cache.get(f"user:{user_id}")
+            if cached:
+                return {**cached, "_stale": True}
+        except CacheError:
+            pass  # Fall through to static
+
+        # Return static/default response
+        return {
+            "user_id": user_id,
+            "name": "Unknown User",
+            "_degraded": True
+        }
+                    </code>
                 </div>
             </div>
         </div>
