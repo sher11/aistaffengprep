@@ -341,9 +341,12 @@ mindmap
                 </div>
             `).join('');
 
-            // Reinitialize collapsibles
+            // Reinitialize collapsibles for dynamically created elements
             document.querySelectorAll('#story-bank .collapsible-header').forEach(header => {
-                header.addEventListener('click', () => {
+                if (header.dataset.collapsibleInit) return;
+                header.dataset.collapsibleInit = 'true';
+                header.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     header.parentElement.classList.toggle('open');
                 });
             });
