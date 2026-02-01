@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 2: Creational Patterns - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">LLD</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="../generative-ai/index.html">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Design Principles
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">2</span>UML & Class Diagrams
+                    </a>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">3</span>Interview Framework
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Design Patterns</div>
+                    <a href="module-02.html" class="sidebar-link active" data-module="2">
+                        <span class="sidebar-link-number">4</span>Creational Patterns
+                    </a>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">5</span>Structural Patterns
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">6</span>Behavioral Patterns
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced Topics</div>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Concurrency Patterns
+                    </a>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>Code Quality
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Practice Problems</div>
+                    <a href="problems/parking-lot.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P1</span>Parking Lot
+                    </a>
+                    <a href="problems/elevator-system.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P2</span>Elevator System
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 2: Creational Design Patterns</h1>
+
+            <div class="card mt-3">
+                <h3>Learning Objectives</h3>
+                <ul>
+                    <li>Understand when and why to use each creational pattern</li>
+                    <li>Implement Factory, Abstract Factory, Builder, Singleton, and Prototype in Java</li>
+                    <li>Know the trade-offs and anti-patterns for each</li>
+                    <li>Apply creational patterns in LLD interview problems</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Why Creational Patterns Matter</h2>
+
+            <p>Creational patterns abstract the instantiation process. They help make a system independent of how its objects are created, composed, and represented. At staff level, you need to know not just HOW to implement these patterns, but WHEN to use them and WHAT trade-offs they involve.</p>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart TD
+    subgraph "Creational Patterns"
+        S[Singleton] --> |"One instance"| USE1[Global access point]
+        F[Factory Method] --> |"Defer to subclass"| USE2[Object creation]
+        AF[Abstract Factory] --> |"Family of objects"| USE3[Related products]
+        B[Builder] --> |"Step by step"| USE4[Complex objects]
+        P[Prototype] --> |"Clone"| USE5[Copy existing]
+    end
+                </div>
+            </div>
+
+            <!-- Singleton Pattern -->
+            <h2 class="mt-4">1. Singleton Pattern</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Singleton - Ensuring Single Instance</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Ensure a class has only one instance, and provide a global point of access to it.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>Exactly one instance is needed (database connection pool, configuration manager)</li>
+                        <li>Controlled access to a shared resource</li>
+                        <li>Need lazy initialization of expensive resources</li>
+                    </ul>
+
+                    <h4>Thread-Safe Implementation (Double-Checked Locking)</h4>
+                    <pre><code class="language-java">public class DatabaseConnectionPool {
+    // volatile prevents instruction reordering issues
+    private static volatile DatabaseConnectionPool instance;
+    private static final Object lock = new Object();
+
+    private final List&lt;Connection&gt; connectionPool;
+    private final int poolSize;
+
+    private DatabaseConnectionPool(int poolSize) {
+        this.poolSize = poolSize;
+        this.connectionPool = new ArrayList&lt;&gt;(poolSize);
+        initializePool();
+    }
+
+    public static DatabaseConnectionPool getInstance() {
+        // First check (no locking)
+        if (instance == null) {
+            synchronized (lock) {
+                // Second check (with locking)
+                if (instance == null) {
+                    instance = new DatabaseConnectionPool(10);
+                }
+            }
+        }
+        return instance;
+    }
+
+    private void initializePool() {
+        for (int i = 0; i < poolSize; i++) {
+            connectionPool.add(createConnection());
+        }
+    }
+
+    private Connection createConnection() {
+        // Create actual database connection
+        return DriverManager.getConnection(/* ... */);
+    }
+
+    public synchronized Connection getConnection() {
+        if (connectionPool.isEmpty()) {
+            throw new RuntimeException("No available connections");
+        }
+        return connectionPool.remove(connectionPool.size() - 1);
+    }
+
+    public synchronized void releaseConnection(Connection conn) {
+        connectionPool.add(conn);
+    }
+}</code></pre>
+
+                    <h4>Enum Singleton (Preferred for Simplicity)</h4>
+                    <pre><code class="language-java">// Joshua Bloch's recommended approach - handles serialization automatically
+public enum ConfigurationManager {
+    INSTANCE;
+
+    private final Properties properties;
+
+    ConfigurationManager() {
+        properties = new Properties();
+        loadProperties();
+    }
+
+    private void loadProperties() {
+        try (InputStream input = getClass().getResourceAsStream("/config.properties")) {
+            properties.load(input);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load configuration", e);
+        }
+    }
+
+    public String getProperty(String key) {
+        return properties.getProperty(key);
+    }
+
+    public String getProperty(String key, String defaultValue) {
+        return properties.getProperty(key, defaultValue);
+    }
+}
+
+// Usage
+String dbUrl = ConfigurationManager.INSTANCE.getProperty("db.url");</code></pre>
+
+                    <div class="card" style="background: var(--warning-bg);">
+                        <strong>Singleton Anti-Patterns:</strong>
+                        <ul>
+                            <li><strong>Hidden dependencies:</strong> Classes that use singletons have implicit dependencies that aren't visible in their API</li>
+                            <li><strong>Testing difficulties:</strong> Hard to mock singletons in unit tests</li>
+                            <li><strong>Global state:</strong> Can lead to unexpected side effects across the application</li>
+                        </ul>
+                        <p><strong>Better Alternative:</strong> Use dependency injection frameworks (Spring, Guice) to manage single instances.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Factory Method Pattern -->
+            <h2 class="mt-4">2. Factory Method Pattern</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Factory Method - Delegating Object Creation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Define an interface for creating an object, but let subclasses decide which class to instantiate.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>A class can't anticipate the class of objects it must create</li>
+                        <li>A class wants its subclasses to specify the objects it creates</li>
+                        <li>You want to localize the knowledge of which class gets created</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+classDiagram
+    class DocumentCreator {
+        &lt;&lt;abstract&gt;&gt;
+        +createDocument()* Document
+        +openDocument()
+    }
+
+    class Document {
+        &lt;&lt;interface&gt;&gt;
+        +open()
+        +save()
+        +close()
+    }
+
+    class PDFCreator {
+        +createDocument() Document
+    }
+
+    class WordCreator {
+        +createDocument() Document
+    }
+
+    class PDFDocument {
+        +open()
+        +save()
+        +close()
+    }
+
+    class WordDocument {
+        +open()
+        +save()
+        +close()
+    }
+
+    DocumentCreator <|-- PDFCreator
+    DocumentCreator <|-- WordCreator
+    Document <|.. PDFDocument
+    Document <|.. WordDocument
+    PDFCreator ..> PDFDocument : creates
+    WordCreator ..> WordDocument : creates
+                        </div>
+                    </div>
+
+                    <h4>Java Implementation</h4>
+                    <pre><code class="language-java">// Product interface
+public interface Notification {
+    void send(String recipient, String message);
+}
+
+// Concrete products
+public class EmailNotification implements Notification {
+    @Override
+    public void send(String recipient, String message) {
+        System.out.println("Sending email to " + recipient + ": " + message);
+        // Email sending logic via SMTP
+    }
+}
+
+public class SMSNotification implements Notification {
+    @Override
+    public void send(String recipient, String message) {
+        System.out.println("Sending SMS to " + recipient + ": " + message);
+        // SMS sending logic via Twilio/etc.
+    }
+}
+
+public class PushNotification implements Notification {
+    @Override
+    public void send(String recipient, String message) {
+        System.out.println("Sending push to " + recipient + ": " + message);
+        // Push notification logic via Firebase/APNS
+    }
+}
+
+// Creator abstract class
+public abstract class NotificationCreator {
+    // Factory method - subclasses implement this
+    public abstract Notification createNotification();
+
+    // Template method that uses the factory method
+    public void notifyUser(String recipient, String message) {
+        Notification notification = createNotification();
+        notification.send(recipient, message);
+    }
+}
+
+// Concrete creators
+public class EmailNotificationCreator extends NotificationCreator {
+    @Override
+    public Notification createNotification() {
+        return new EmailNotification();
+    }
+}
+
+public class SMSNotificationCreator extends NotificationCreator {
+    @Override
+    public Notification createNotification() {
+        return new SMSNotification();
+    }
+}
+
+public class PushNotificationCreator extends NotificationCreator {
+    @Override
+    public Notification createNotification() {
+        return new PushNotification();
+    }
+}
+
+// Usage
+public class NotificationService {
+    private final Map&lt;String, NotificationCreator&gt; creators = Map.of(
+        "email", new EmailNotificationCreator(),
+        "sms", new SMSNotificationCreator(),
+        "push", new PushNotificationCreator()
+    );
+
+    public void sendNotification(String type, String recipient, String message) {
+        NotificationCreator creator = creators.get(type);
+        if (creator == null) {
+            throw new IllegalArgumentException("Unknown notification type: " + type);
+        }
+        creator.notifyUser(recipient, message);
+    }
+}</code></pre>
+
+                    <h4>Simple Factory (Not a GoF Pattern but Common)</h4>
+                    <pre><code class="language-java">// Simple factory - static method approach
+public class NotificationFactory {
+    public static Notification create(String type) {
+        return switch (type.toLowerCase()) {
+            case "email" -> new EmailNotification();
+            case "sms" -> new SMSNotification();
+            case "push" -> new PushNotification();
+            default -> throw new IllegalArgumentException("Unknown type: " + type);
+        };
+    }
+}
+
+// Usage
+Notification notification = NotificationFactory.create("email");
+notification.send("user@example.com", "Hello!");</code></pre>
+
+                    <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                        <strong>Interview Tip:</strong> Know the difference between Factory Method (uses inheritance, subclasses decide) and Simple Factory (uses a single class with conditional logic). Factory Method is more flexible but adds more classes.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Abstract Factory Pattern -->
+            <h2 class="mt-4">3. Abstract Factory Pattern</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Abstract Factory - Families of Related Objects</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Provide an interface for creating families of related or dependent objects without specifying their concrete classes.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>A system should be independent of how its products are created</li>
+                        <li>A system should be configured with one of multiple families of products</li>
+                        <li>A family of related product objects must be used together</li>
+                    </ul>
+
+                    <h4>Real-World Example: UI Component Factory</h4>
+                    <pre><code class="language-java">// Abstract products
+public interface Button {
+    void render();
+    void onClick(Runnable handler);
+}
+
+public interface TextField {
+    void render();
+    String getValue();
+    void setValue(String value);
+}
+
+public interface Checkbox {
+    void render();
+    boolean isChecked();
+    void setChecked(boolean checked);
+}
+
+// Abstract factory
+public interface UIComponentFactory {
+    Button createButton(String label);
+    TextField createTextField(String placeholder);
+    Checkbox createCheckbox(String label);
+}
+
+// Material Design family
+public class MaterialButton implements Button {
+    private final String label;
+
+    public MaterialButton(String label) {
+        this.label = label;
+    }
+
+    @Override
+    public void render() {
+        System.out.println("[Material Button: " + label + "]");
+    }
+
+    @Override
+    public void onClick(Runnable handler) {
+        handler.run();
+    }
+}
+
+public class MaterialTextField implements TextField {
+    private String value = "";
+
+    @Override
+    public void render() {
+        System.out.println("[Material TextField: " + value + "]");
+    }
+
+    @Override
+    public String getValue() { return value; }
+
+    @Override
+    public void setValue(String value) { this.value = value; }
+}
+
+public class MaterialUIFactory implements UIComponentFactory {
+    @Override
+    public Button createButton(String label) {
+        return new MaterialButton(label);
+    }
+
+    @Override
+    public TextField createTextField(String placeholder) {
+        return new MaterialTextField();
+    }
+
+    @Override
+    public Checkbox createCheckbox(String label) {
+        return new MaterialCheckbox(label);
+    }
+}
+
+// iOS family (similar implementations)
+public class IOSButton implements Button { /* ... */ }
+public class IOSTextField implements TextField { /* ... */ }
+public class IOSCheckbox implements Checkbox { /* ... */ }
+
+public class IOSUIFactory implements UIComponentFactory {
+    @Override
+    public Button createButton(String label) {
+        return new IOSButton(label);
+    }
+
+    @Override
+    public TextField createTextField(String placeholder) {
+        return new IOSTextField();
+    }
+
+    @Override
+    public Checkbox createCheckbox(String label) {
+        return new IOSCheckbox(label);
+    }
+}
+
+// Client code - works with any UI family
+public class LoginForm {
+    private final Button loginButton;
+    private final TextField usernameField;
+    private final TextField passwordField;
+    private final Checkbox rememberMeCheckbox;
+
+    public LoginForm(UIComponentFactory factory) {
+        this.usernameField = factory.createTextField("Username");
+        this.passwordField = factory.createTextField("Password");
+        this.loginButton = factory.createButton("Login");
+        this.rememberMeCheckbox = factory.createCheckbox("Remember me");
+    }
+
+    public void render() {
+        usernameField.render();
+        passwordField.render();
+        rememberMeCheckbox.render();
+        loginButton.render();
+    }
+}
+
+// Usage - easily switch entire UI family
+UIComponentFactory factory = isMobile() ? new IOSUIFactory() : new MaterialUIFactory();
+LoginForm form = new LoginForm(factory);
+form.render();</code></pre>
+
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Abstract Factory at Google:</strong> Android's UI system uses abstract factories extensively. The <code>LayoutInflater</code> acts as a factory for creating View objects, and custom factories can be set to intercept and customize view creation.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Builder Pattern -->
+            <h2 class="mt-4">4. Builder Pattern</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Builder - Constructing Complex Objects Step by Step</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Separate the construction of a complex object from its representation so that the same construction process can create different representations.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>Object has many optional parameters (telescoping constructor anti-pattern)</li>
+                        <li>Object requires multiple steps to construct</li>
+                        <li>Object should be immutable after construction</li>
+                        <li>Same construction process should create different representations</li>
+                    </ul>
+
+                    <h4>Classic Builder with Fluent Interface</h4>
+                    <pre><code class="language-java">public class HttpRequest {
+    // Required parameters
+    private final String url;
+    private final HttpMethod method;
+
+    // Optional parameters with defaults
+    private final Map&lt;String, String&gt; headers;
+    private final Map&lt;String, String&gt; queryParams;
+    private final String body;
+    private final int timeoutMs;
+    private final int retries;
+    private final boolean followRedirects;
+
+    private HttpRequest(Builder builder) {
+        this.url = builder.url;
+        this.method = builder.method;
+        this.headers = Map.copyOf(builder.headers);
+        this.queryParams = Map.copyOf(builder.queryParams);
+        this.body = builder.body;
+        this.timeoutMs = builder.timeoutMs;
+        this.retries = builder.retries;
+        this.followRedirects = builder.followRedirects;
+    }
+
+    // Getters only - immutable object
+    public String getUrl() { return url; }
+    public HttpMethod getMethod() { return method; }
+    public Map&lt;String, String&gt; getHeaders() { return headers; }
+    // ... other getters
+
+    public static Builder builder(String url, HttpMethod method) {
+        return new Builder(url, method);
+    }
+
+    public static class Builder {
+        // Required
+        private final String url;
+        private final HttpMethod method;
+
+        // Optional with defaults
+        private Map&lt;String, String&gt; headers = new HashMap&lt;&gt;();
+        private Map&lt;String, String&gt; queryParams = new HashMap&lt;&gt;();
+        private String body = null;
+        private int timeoutMs = 30000;
+        private int retries = 3;
+        private boolean followRedirects = true;
+
+        private Builder(String url, HttpMethod method) {
+            this.url = Objects.requireNonNull(url, "URL cannot be null");
+            this.method = Objects.requireNonNull(method, "Method cannot be null");
+        }
+
+        public Builder header(String name, String value) {
+            this.headers.put(name, value);
+            return this;
+        }
+
+        public Builder headers(Map&lt;String, String&gt; headers) {
+            this.headers.putAll(headers);
+            return this;
+        }
+
+        public Builder queryParam(String name, String value) {
+            this.queryParams.put(name, value);
+            return this;
+        }
+
+        public Builder body(String body) {
+            this.body = body;
+            return this;
+        }
+
+        public Builder jsonBody(Object obj) {
+            this.body = JsonSerializer.toJson(obj);
+            this.headers.put("Content-Type", "application/json");
+            return this;
+        }
+
+        public Builder timeout(int timeoutMs) {
+            if (timeoutMs <= 0) {
+                throw new IllegalArgumentException("Timeout must be positive");
+            }
+            this.timeoutMs = timeoutMs;
+            return this;
+        }
+
+        public Builder retries(int retries) {
+            if (retries < 0) {
+                throw new IllegalArgumentException("Retries cannot be negative");
+            }
+            this.retries = retries;
+            return this;
+        }
+
+        public Builder followRedirects(boolean follow) {
+            this.followRedirects = follow;
+            return this;
+        }
+
+        public HttpRequest build() {
+            validate();
+            return new HttpRequest(this);
+        }
+
+        private void validate() {
+            if (method == HttpMethod.POST || method == HttpMethod.PUT) {
+                // POST/PUT typically need a body (warning, not error)
+                if (body == null) {
+                    System.err.println("Warning: POST/PUT without body");
+                }
+            }
+        }
+    }
+}
+
+// Usage - clear and readable
+HttpRequest request = HttpRequest.builder("https://api.example.com/users", HttpMethod.POST)
+    .header("Authorization", "Bearer " + token)
+    .header("Accept", "application/json")
+    .jsonBody(new User("John", "john@example.com"))
+    .timeout(5000)
+    .retries(2)
+    .build();</code></pre>
+
+                    <h4>Director Pattern (Optional)</h4>
+                    <pre><code class="language-java">// Director encapsulates common building sequences
+public class HttpRequestDirector {
+    public HttpRequest createAuthenticatedGet(String url, String token) {
+        return HttpRequest.builder(url, HttpMethod.GET)
+            .header("Authorization", "Bearer " + token)
+            .header("Accept", "application/json")
+            .timeout(10000)
+            .build();
+    }
+
+    public HttpRequest createJsonPost(String url, Object body, String token) {
+        return HttpRequest.builder(url, HttpMethod.POST)
+            .header("Authorization", "Bearer " + token)
+            .jsonBody(body)
+            .timeout(30000)
+            .retries(3)
+            .build();
+    }
+}
+
+// Usage
+HttpRequestDirector director = new HttpRequestDirector();
+HttpRequest request = director.createAuthenticatedGet("/api/users", token);</code></pre>
+
+                    <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                        <strong>Builder vs Constructor:</strong>
+                        <ul>
+                            <li><strong>Use Constructor</strong> when you have few (1-3) required parameters with no optionals</li>
+                            <li><strong>Use Builder</strong> when you have many parameters, especially optional ones</li>
+                            <li><strong>Lombok @Builder</strong> can generate builder code automatically</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prototype Pattern -->
+            <h2 class="mt-4">5. Prototype Pattern</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Prototype - Cloning Objects</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Specify the kinds of objects to create using a prototypical instance, and create new objects by copying this prototype.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>Creating an object is expensive (database fetch, complex computation)</li>
+                        <li>You need many similar objects with slight variations</li>
+                        <li>Classes to instantiate are specified at runtime</li>
+                        <li>Avoiding subclass proliferation</li>
+                    </ul>
+
+                    <h4>Java Implementation with Deep Copy</h4>
+                    <pre><code class="language-java">// Prototype interface
+public interface Prototype&lt;T&gt; {
+    T clone();
+}
+
+// Document with complex state
+public class Document implements Prototype&lt;Document&gt; {
+    private String title;
+    private String content;
+    private List&lt;String&gt; authors;
+    private Map&lt;String, Object&gt; metadata;
+    private LocalDateTime createdAt;
+
+    public Document(String title) {
+        this.title = title;
+        this.content = "";
+        this.authors = new ArrayList&lt;&gt;();
+        this.metadata = new HashMap&lt;&gt;();
+        this.createdAt = LocalDateTime.now();
+    }
+
+    // Private constructor for cloning
+    private Document(Document source) {
+        this.title = source.title;
+        this.content = source.content;
+        // Deep copy mutable collections
+        this.authors = new ArrayList&lt;&gt;(source.authors);
+        this.metadata = new HashMap&lt;&gt;(source.metadata);
+        this.createdAt = LocalDateTime.now(); // New creation time for clone
+    }
+
+    @Override
+    public Document clone() {
+        return new Document(this);
+    }
+
+    // Builder-style setters for fluent modification
+    public Document withTitle(String title) {
+        Document copy = this.clone();
+        copy.title = title;
+        return copy;
+    }
+
+    public Document withContent(String content) {
+        Document copy = this.clone();
+        copy.content = content;
+        return copy;
+    }
+
+    public Document addAuthor(String author) {
+        Document copy = this.clone();
+        copy.authors.add(author);
+        return copy;
+    }
+
+    // Getters
+    public String getTitle() { return title; }
+    public String getContent() { return content; }
+    public List&lt;String&gt; getAuthors() { return Collections.unmodifiableList(authors); }
+}
+
+// Prototype Registry
+public class DocumentTemplateRegistry {
+    private final Map&lt;String, Document&gt; templates = new HashMap&lt;&gt;();
+
+    public void registerTemplate(String name, Document template) {
+        templates.put(name, template);
+    }
+
+    public Document createFromTemplate(String templateName) {
+        Document template = templates.get(templateName);
+        if (template == null) {
+            throw new IllegalArgumentException("Unknown template: " + templateName);
+        }
+        return template.clone();
+    }
+}
+
+// Usage
+public class DocumentService {
+    private final DocumentTemplateRegistry registry;
+
+    public DocumentService() {
+        this.registry = new DocumentTemplateRegistry();
+        initializeTemplates();
+    }
+
+    private void initializeTemplates() {
+        // Create reusable templates
+        Document reportTemplate = new Document("Quarterly Report")
+            .withContent("## Executive Summary\n\n## Key Metrics\n\n## Recommendations");
+
+        Document contractTemplate = new Document("Service Agreement")
+            .withContent("## Parties\n\n## Terms\n\n## Signatures");
+
+        registry.registerTemplate("report", reportTemplate);
+        registry.registerTemplate("contract", contractTemplate);
+    }
+
+    public Document createReport(String title, String author) {
+        return registry.createFromTemplate("report")
+            .withTitle(title)
+            .addAuthor(author);
+    }
+}
+
+// Usage
+DocumentService service = new DocumentService();
+Document q1Report = service.createReport("Q1 2024 Report", "John Smith");
+Document q2Report = service.createReport("Q2 2024 Report", "Jane Doe");</code></pre>
+
+                    <div class="card" style="background: var(--warning-bg);">
+                        <strong>Shallow vs Deep Copy:</strong>
+                        <ul>
+                            <li><strong>Shallow copy:</strong> Copies primitive values and references (both objects share mutable state)</li>
+                            <li><strong>Deep copy:</strong> Recursively copies all nested objects (completely independent)</li>
+                            <li>Java's <code>Object.clone()</code> does shallow copy by default - you must implement deep copy manually</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Pattern Comparison</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>When to Use Which Pattern</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pattern</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Use When</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Real-World Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Singleton</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Exactly one instance needed globally</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Logger, Configuration, Connection Pool</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Factory Method</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Subclasses should decide what to create</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Document parsers, Notification channels</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Abstract Factory</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Families of related objects</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">UI themes, Database drivers, OS-specific components</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Builder</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complex objects with many parameters</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">HTTP requests, SQL queries, Test data</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Prototype</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cloning is cheaper than creating</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Document templates, Game objects, Cached entities</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Self-Check Quiz</h2>
+            <div class="quiz-container" id="module-quiz"></div>
+
+            <div class="flex flex-between mt-4">
+                <a href="module-01.html" class="btn btn-secondary">&larr; Previous: Design Principles</a>
+                <a href="module-03.html" class="btn btn-primary">Next: Structural Patterns &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            const quizQuestions = [
+                {
+                    question: "Which pattern ensures only one instance of a class exists?",
+                    options: ["Factory Method", "Singleton", "Prototype", "Builder"],
+                    correct: 1,
+                    explanation: "Singleton pattern ensures a class has only one instance and provides a global point of access to it."
+                },
+                {
+                    question: "When should you use the Builder pattern over a constructor?",
+                    options: ["When you have 1-2 parameters", "When creating families of objects", "When you have many optional parameters", "When you need to clone objects"],
+                    correct: 2,
+                    explanation: "Builder is ideal when an object has many parameters, especially optional ones, avoiding the telescoping constructor anti-pattern."
+                },
+                {
+                    question: "What is the main difference between Factory Method and Abstract Factory?",
+                    options: ["Factory Method is faster", "Abstract Factory creates families of related objects", "Factory Method is thread-safe", "Abstract Factory uses cloning"],
+                    correct: 1,
+                    explanation: "Abstract Factory creates families of related objects that are designed to work together, while Factory Method creates one product type."
+                },
+                {
+                    question: "Which pattern is best when object creation is expensive and cloning is cheaper?",
+                    options: ["Singleton", "Builder", "Prototype", "Factory Method"],
+                    correct: 2,
+                    explanation: "Prototype pattern creates new objects by cloning an existing instance, which is efficient when object creation is expensive."
+                }
+            ];
+
+            if (typeof StaffEngPrep !== 'undefined' && StaffEngPrep.Quiz) {
+                const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+                quiz.render();
+            }
+        });
+    </script>
+</body>
+</html>
