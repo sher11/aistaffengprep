@@ -511,6 +511,7 @@ body {
     height: calc(100vh - 60px);
     overflow-y: auto;
     flex-shrink: 0;
+    align-self: flex-start;
 }
 
 .sidebar-nav {
