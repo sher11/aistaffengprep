@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 1: Foundations - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="index.html" style="color: var(--primary-color);">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;">
+            <a href="index.html">&larr; Back to Coding Rounds</a>
+        </nav>
+
+        <h1>Module 1: Foundations & Complexity Analysis</h1>
+
+        <!-- Learning Objectives -->
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Analyze time and space complexity using Big-O notation</li>
+                <li>Choose appropriate data structures based on operation requirements</li>
+                <li>Implement and use fundamental data structures confidently</li>
+                <li>Recognize when to apply amortized analysis</li>
+            </ul>
+        </div>
+
+        <!-- Big-O Section -->
+        <h2 class="mt-4">Big-O Notation</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Understanding Complexity</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Big-O describes the upper bound of algorithm growth rate as input size increases.</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph TD
+    subgraph "Common Complexities"
+        A["O(1) - Constant"]
+        B["O(log n) - Logarithmic"]
+        C["O(n) - Linear"]
+        D["O(n log n) - Linearithmic"]
+        E["O(n²) - Quadratic"]
+        F["O(2ⁿ) - Exponential"]
+    end
+
+    A --> B --> C --> D --> E --> F
+                    </div>
+                </div>
+
+                <h4>Key Rules</h4>
+                <ul>
+                    <li><strong>Drop constants:</strong> O(2n) → O(n)</li>
+                    <li><strong>Drop lower-order terms:</strong> O(n² + n) → O(n²)</li>
+                    <li><strong>Different inputs use different variables:</strong> O(a + b), not O(n)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Data Structures Section -->
+        <h2 class="mt-4">Core Data Structures</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Arrays vs Linked Lists</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; text-align: left; border: 1px solid var(--border-color);">Operation</th>
+                            <th style="padding: 0.75rem; text-align: left; border: 1px solid var(--border-color);">Array</th>
+                            <th style="padding: 0.75rem; text-align: left; border: 1px solid var(--border-color);">Linked List</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Access</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(1)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Search</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Insert (beginning)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(1)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Insert (end)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(1)*</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(1)**</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Delete</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(1)***</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-muted">* Amortized. ** With tail pointer. *** With reference to node.</p>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Hash Tables</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Hash tables provide O(1) average-case operations through key-to-index mapping.</p>
+
+                <div class="code-block">
+                    <pre><code class="language-python"># Hash table operations (average case)
+d = {}
+d[key] = value    # O(1) insert
+d[key]            # O(1) lookup
+del d[key]        # O(1) delete
+key in d          # O(1) membership
+
+# Common pattern: Two Sum
+def two_sum(nums, target):
+    seen = {}
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    return []</code></pre>
+                </div>
+
+                <h4>Collision Handling</h4>
+                <ul>
+                    <li><strong>Chaining:</strong> Each bucket contains a linked list</li>
+                    <li><strong>Open Addressing:</strong> Find next available slot</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Stacks & Queues</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    subgraph "Stack (LIFO)"
+        S1[Push] --> S2[Top]
+        S2 --> S3[Pop]
+    end
+
+    subgraph "Queue (FIFO)"
+        Q1[Enqueue] --> Q2["..."] --> Q3[Dequeue]
+    end
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <pre><code class="language-python"># Stack: Valid Parentheses
+def is_valid(s):
+    stack = []
+    mapping = {')': '(', '}': '{', ']': '['}
+
+    for char in s:
+        if char in mapping:
+            if not stack or stack.pop() != mapping[char]:
+                return False
+        else:
+            stack.append(char)
+
+    return len(stack) == 0
+
+# Queue with deque
+from collections import deque
+queue = deque()
+queue.append(1)     # enqueue
+queue.popleft()     # dequeue</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decision Tree -->
+        <h2 class="mt-4">Data Structure Selection</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart TD
+    A[Need to store data] --> B{Need key-value pairs?}
+    B -->|Yes| C[Hash Table]
+    B -->|No| D{Need ordering?}
+    D -->|Yes| E{By value?}
+    D -->|No| F{LIFO or FIFO?}
+    E -->|Yes| G[BST/TreeMap]
+    E -->|No, insertion order| H[LinkedHashMap]
+    F -->|LIFO| I[Stack]
+    F -->|FIFO| J[Queue]
+    F -->|Neither| K{Fast random access?}
+    K -->|Yes| L[Array]
+    K -->|No| M[Linked List]
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <h2 class="mt-4">Self-Check Quiz</h2>
+
+        <div class="quiz-container" id="module-quiz">
+            <!-- Quiz loaded by JavaScript -->
+        </div>
+
+        <!-- Practice Problems -->
+        <h2 class="mt-4">Practice Problems</h2>
+
+        <div class="card">
+            <h4>Easy</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/valid-parentheses/" target="_blank">Valid Parentheses (LeetCode #20)</a></li>
+                <li><a href="https://leetcode.com/problems/two-sum/" target="_blank">Two Sum (LeetCode #1)</a></li>
+                <li><a href="https://leetcode.com/problems/reverse-linked-list/" target="_blank">Reverse Linked List (LeetCode #206)</a></li>
+            </ul>
+
+            <h4 class="mt-3">Medium</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/lru-cache/" target="_blank">LRU Cache (LeetCode #146)</a></li>
+                <li><a href="https://leetcode.com/problems/group-anagrams/" target="_blank">Group Anagrams (LeetCode #49)</a></li>
+            </ul>
+        </div>
+
+        <!-- Review Concepts -->
+        <h2 class="mt-4">Spaced Repetition</h2>
+
+        <div class="review-schedule" id="module-review">
+            <!-- Review schedule loaded by JavaScript -->
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex flex-between mt-4">
+            <a href="index.html" class="btn btn-secondary">&larr; Back to Overview</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize quiz
+            const quizQuestions = [
+                {
+                    question: "What is the time complexity of accessing an element in an array by index?",
+                    options: ["O(n)", "O(log n)", "O(1)", "O(n²)"],
+                    correct: 2,
+                    explanation: "Array access by index is O(1) because arrays provide direct memory access."
+                },
+                {
+                    question: "What is the worst-case time complexity for hash table lookup?",
+                    options: ["O(1)", "O(log n)", "O(n)", "O(n²)"],
+                    correct: 2,
+                    explanation: "When all keys hash to the same bucket (worst case), lookup becomes O(n)."
+                },
+                {
+                    question: "An algorithm has two nested loops, each iterating n times. What is the time complexity?",
+                    options: ["O(n)", "O(2n)", "O(n²)", "O(n log n)"],
+                    correct: 2,
+                    explanation: "Nested loops multiply: n × n = O(n²)"
+                },
+                {
+                    question: "Which data structure gives O(1) insertion at the beginning?",
+                    options: ["Array", "Linked List", "Hash Table", "BST"],
+                    correct: 1,
+                    explanation: "Linked list can insert at head in O(1) by updating pointers. Arrays require shifting all elements."
+                }
+            ];
+
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+
+            // Initialize review schedule
+            const concepts = [
+                { id: 'big-o-rules', name: 'Big-O Rules' },
+                { id: 'array-vs-linkedlist', name: 'Array vs Linked List' },
+                { id: 'hash-table-operations', name: 'Hash Table Operations' },
+                { id: 'stack-queue-usage', name: 'Stack & Queue Usage' }
+            ];
+            StaffEngPrep.renderReviewSchedule('module-review', concepts);
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('coding', 1);
+            alert('Module 1 marked as complete!');
+            window.location.href = 'module-02.html';
+        }
+    </script>
+</body>
+</html>

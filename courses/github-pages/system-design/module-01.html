@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 1: Scalability - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to System Design</a></nav>
+
+        <h1>Module 1: Scalability Fundamentals</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Understand vertical vs horizontal scaling trade-offs</li>
+                <li>Learn load balancing strategies and algorithms</li>
+                <li>Master caching patterns and eviction policies</li>
+                <li>Apply CDN and edge computing concepts</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Scaling Strategies</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Vertical vs Horizontal Scaling</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    subgraph "Vertical (Scale Up)"
+        V1[Small Server] --> V2[Bigger Server]
+        V2 --> V3[Biggest Server]
+    end
+
+    subgraph "Horizontal (Scale Out)"
+        H1[Server] --> H2[+ Server]
+        H2 --> H3[+ Server]
+        H3 --> H4[+ Server]
+    end
+                    </div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Aspect</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Vertical</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Horizontal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complexity</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Simple</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complex (distributed)</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Limits</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hardware ceiling</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Theoretically unlimited</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Downtime</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Required for upgrade</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zero downtime possible</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fault Tolerance</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">SPOF risk</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Built-in redundancy</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Load Balancing</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Algorithms & Strategies</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TD
+    C[Clients] --> LB[Load Balancer]
+    LB --> S1[Server 1]
+    LB --> S2[Server 2]
+    LB --> S3[Server 3]
+                    </div>
+                </div>
+
+                <h4>Common Algorithms</h4>
+                <ul>
+                    <li><strong>Round Robin:</strong> Rotate through servers sequentially</li>
+                    <li><strong>Weighted Round Robin:</strong> Based on server capacity</li>
+                    <li><strong>Least Connections:</strong> Route to least busy server</li>
+                    <li><strong>IP Hash:</strong> Consistent routing for same client</li>
+                    <li><strong>Consistent Hashing:</strong> Minimize remapping on changes</li>
+                </ul>
+
+                <h4>L4 vs L7 Load Balancers</h4>
+                <ul>
+                    <li><strong>L4 (Transport):</strong> TCP/UDP level, faster, less intelligent</li>
+                    <li><strong>L7 (Application):</strong> HTTP level, can inspect content, more flexible</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Caching</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Caching Strategies</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    subgraph "Cache-Aside"
+        A1[App] -->|1. Check| C1[Cache]
+        C1 -->|2. Miss| A1
+        A1 -->|3. Fetch| D1[DB]
+        A1 -->|4. Update| C1
+    end
+                    </div>
+                </div>
+
+                <h4>Cache Patterns</h4>
+                <ul>
+                    <li><strong>Cache-Aside:</strong> App manages cache (most common)</li>
+                    <li><strong>Read-Through:</strong> Cache fetches from DB on miss</li>
+                    <li><strong>Write-Through:</strong> Write to cache, cache writes to DB</li>
+                    <li><strong>Write-Behind:</strong> Async write to DB</li>
+                </ul>
+
+                <h4>Eviction Policies</h4>
+                <ul>
+                    <li><strong>LRU:</strong> Least Recently Used</li>
+                    <li><strong>LFU:</strong> Least Frequently Used</li>
+                    <li><strong>TTL:</strong> Time To Live expiration</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="index.html" class="btn btn-secondary">&larr; Back to Overview</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What is the main advantage of horizontal scaling?",
+                    options: ["Simpler architecture", "Theoretically unlimited scaling", "Lower cost", "Faster single requests"],
+                    correct: 1,
+                    explanation: "Horizontal scaling allows adding more machines, enabling theoretically unlimited growth."
+                },
+                {
+                    question: "Which caching pattern is most commonly used?",
+                    options: ["Write-Through", "Write-Behind", "Cache-Aside", "Read-Through"],
+                    correct: 2,
+                    explanation: "Cache-Aside (lazy loading) is most common because the application controls caching logic."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 1);
+            alert('Module 1 marked as complete!');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

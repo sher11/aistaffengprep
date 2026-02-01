@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 8: Non-LeetCode Problems - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="index.html" style="color: var(--primary-color);">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Coding Rounds</a></nav>
+
+        <h1>Module 8: Non-LeetCode Practical Problems</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Design and implement production-quality data structures</li>
+                <li>Build systems with clean APIs and proper abstractions</li>
+                <li>Write comprehensive tests for your implementations</li>
+                <li>Handle concurrency and thread-safety requirements</li>
+            </ul>
+        </div>
+
+        <div class="card mt-3" style="background: #fef3c7; border-color: #f59e0b;">
+            <h4>Why Non-LeetCode Matters at Staff Level</h4>
+            <p>Companies like Netflix, Stripe, OpenAI, and Anthropic use practical coding problems that mirror real work:</p>
+            <ul>
+                <li>Code quality and readability are evaluated</li>
+                <li>API design and abstractions matter</li>
+                <li>Testing is expected</li>
+                <li>Multi-part questions test throughput</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">LRU Cache</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Design & Implementation</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Requirements:</strong> O(1) get and put operations, evict least recently used when at capacity.</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    subgraph "HashMap"
+        H["key → Node ref"]
+    end
+
+    subgraph "Doubly Linked List"
+        HEAD((Head)) --> N1[MRU] --> N2[...] --> N3[LRU] --> TAIL((Tail))
+    end
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <pre><code>class Node:
+    def __init__(self, key=0, val=0):
+        self.key = key
+        self.val = val
+        self.prev = None
+        self.next = None
+
+class LRUCache:
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.cache = {}  # key -> Node
+
+        # Dummy head and tail for easier manipulation
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _add_to_head(self, node):
+        node.prev = self.head
+        node.next = self.head.next
+        self.head.next.prev = node
+        self.head.next = node
+
+    def _remove(self, node):
+        node.prev.next = node.next
+        node.next.prev = node.prev
+
+    def get(self, key: int) -> int:
+        if key not in self.cache:
+            return -1
+        node = self.cache[key]
+        self._remove(node)
+        self._add_to_head(node)
+        return node.val
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.cache:
+            self._remove(self.cache[key])
+
+        node = Node(key, value)
+        self.cache[key] = node
+        self._add_to_head(node)
+
+        if len(self.cache) > self.capacity:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.cache[lru.key]</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Rate Limiter</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Sliding Window Implementation</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>import time
+from collections import deque
+
+class RateLimiter:
+    """
+    Rate limiter: allow 'limit' requests per 'window' seconds.
+    """
+    def __init__(self, limit: int, window_seconds: int):
+        self.limit = limit
+        self.window = window_seconds
+        self.requests = {}  # user_id -> deque of timestamps
+
+    def is_allowed(self, user_id: str) -> bool:
+        now = time.time()
+        window_start = now - self.window
+
+        if user_id not in self.requests:
+            self.requests[user_id] = deque()
+
+        # Remove old requests outside window
+        while self.requests[user_id] and self.requests[user_id][0] < window_start:
+            self.requests[user_id].popleft()
+
+        # Check limit
+        if len(self.requests[user_id]) >= self.limit:
+            return False
+
+        # Record request
+        self.requests[user_id].append(now)
+        return True</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Log Parser</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Thread-Safe Implementation</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>import threading
+import re
+from collections import defaultdict
+from datetime import datetime
+
+class LogParser:
+    LOG_PATTERN = re.compile(
+        r'^\[(?P<timestamp>[\d\-T:.]+)\]\s+'
+        r'(?P<level>\w+)\s+'
+        r'(?P<service>\w+):\s+'
+        r'(?P<message>.*)'
+    )
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._service_counts = defaultdict(int)
+        self._error_counts = defaultdict(int)
+
+    def ingest(self, line: str) -> bool:
+        match = self.LOG_PATTERN.match(line.strip())
+        if not match:
+            return False
+
+        with self._lock:
+            service = match.group('service')
+            level = match.group('level')
+            self._service_counts[service] += 1
+            if level == 'ERROR':
+                self._error_counts[service] += 1
+
+        return True
+
+    def get_error_rate(self, service: str) -> float:
+        with self._lock:
+            total = self._service_counts.get(service, 0)
+            errors = self._error_counts.get(service, 0)
+            return errors / total if total > 0 else 0.0</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Code Quality Checklist</h2>
+
+        <div class="card">
+            <h4>Before Submitting</h4>
+            <div class="review-schedule">
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Meaningful variable and function names</span></div>
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Functions have single responsibility</span></div>
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Edge cases handled (empty input, capacity 1)</span></div>
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Thread safety if required</span></div>
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Tests written for key scenarios</span></div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <h2 class="mt-4">Practice Problems</h2>
+        <div class="card">
+            <h4>Implement from Scratch</h4>
+            <ul>
+                <li>LRU Cache (without using OrderedDict)</li>
+                <li>LFU Cache (Least Frequently Used)</li>
+                <li>Rate Limiter (Token Bucket variant)</li>
+                <li>In-Memory Key-Value Store with TTL</li>
+                <li>Log Parser with percentile queries</li>
+                <li>Task Scheduler with priorities</li>
+            </ul>
+        </div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-07.html" class="btn btn-secondary">&larr; Module 7</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "Why use a doubly linked list in LRU Cache?",
+                    options: ["Less memory", "O(1) removal requires prev pointer", "Faster iteration", "Simpler code"],
+                    correct: 1,
+                    explanation: "Removing a node in O(1) requires updating both prev and next pointers."
+                },
+                {
+                    question: "What makes non-LeetCode interviews different?",
+                    options: ["Easier problems", "Code quality and testing matter more", "No time limit", "Multiple choice answers"],
+                    correct: 1,
+                    explanation: "Staff-level interviews evaluate production-quality code, not just correctness."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('coding', 8);
+            alert('Module 8 marked as complete!');
+            window.location.href = 'module-09.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 2: Arrays & Two Pointers - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="index.html" style="color: var(--primary-color);">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;">
+            <a href="index.html">&larr; Back to Coding Rounds</a>
+        </nav>
+
+        <h1>Module 2: Arrays, Strings & Two Pointers</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Master two-pointer techniques for array problems</li>
+                <li>Understand and apply sliding window pattern</li>
+                <li>Use prefix sum for efficient range queries</li>
+                <li>Handle string manipulation efficiently</li>
+            </ul>
+        </div>
+
+        <!-- Two Pointers Section -->
+        <h2 class="mt-4">Two Pointer Technique</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Pattern Overview</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Two pointers technique uses two indices to traverse data, often reducing O(n²) to O(n).</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    subgraph "Opposite Ends"
+        A["[1, 2, 3, 4, 5]"]
+        L1((L)) -.-> A
+        R1((R)) -.-> A
+    end
+
+    subgraph "Same Direction"
+        B["[1, 2, 3, 4, 5]"]
+        S((Slow)) -.-> B
+        F((Fast)) -.-> B
+    end
+                    </div>
+                </div>
+
+                <h4>When to Use</h4>
+                <ul>
+                    <li><strong>Opposite ends:</strong> Sorted array pairs, palindromes, container problems</li>
+                    <li><strong>Same direction:</strong> Fast/slow for cycles, removing duplicates</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Two Sum (Sorted Array)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>def two_sum_sorted(arr, target):
+    """Find two numbers that sum to target in sorted array.
+    Time: O(n), Space: O(1)
+    """
+    left, right = 0, len(arr) - 1
+
+    while left < right:
+        current_sum = arr[left] + arr[right]
+
+        if current_sum == target:
+            return [left, right]
+        elif current_sum < target:
+            left += 1  # Need larger sum
+        else:
+            right -= 1  # Need smaller sum
+
+    return []  # No solution found</code></pre>
+                </div>
+
+                <h4>Key Insight</h4>
+                <p>Since array is sorted, moving left pointer increases sum, moving right decreases it.</p>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Container With Most Water</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>def max_area(heights):
+    """Find max water container between two lines.
+    Time: O(n), Space: O(1)
+    """
+    left, right = 0, len(heights) - 1
+    max_water = 0
+
+    while left < right:
+        # Area = width * min(height)
+        width = right - left
+        height = min(heights[left], heights[right])
+        max_water = max(max_water, width * height)
+
+        # Move the shorter line (it limits the area)
+        if heights[left] < heights[right]:
+            left += 1
+        else:
+            right -= 1
+
+    return max_water</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sliding Window Section -->
+        <h2 class="mt-4">Sliding Window Pattern</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Pattern Overview</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Sliding window maintains a "window" of elements that expands/contracts based on conditions.</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    subgraph "Fixed Window"
+        A1["[a, b, c] d, e, f"]
+        A2["a, [b, c, d] e, f"]
+        A3["a, b, [c, d, e] f"]
+    end
+
+    subgraph "Variable Window"
+        B1["[a, b] c, d, e"]
+        B2["[a, b, c, d] e"]
+        B3["a, [b, c] d, e"]
+    end
+                    </div>
+                </div>
+
+                <h4>Template</h4>
+                <div class="code-block">
+                    <pre><code>def sliding_window(arr):
+    left = 0
+    result = initial_value
+    window_state = {}  # Track window contents
+
+    for right in range(len(arr)):
+        # Expand: add arr[right] to window
+        update_window(window_state, arr[right])
+
+        # Contract: shrink while invalid
+        while not valid(window_state):
+            remove_from_window(window_state, arr[left])
+            left += 1
+
+        # Update result
+        result = update_result(result, window_state)
+
+    return result</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Longest Substring Without Repeating Characters</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>def length_of_longest_substring(s):
+    """Find longest substring without repeating characters.
+    Time: O(n), Space: O(min(n, alphabet_size))
+    """
+    char_index = {}  # Last index of each character
+    left = 0
+    max_length = 0
+
+    for right, char in enumerate(s):
+        # If char in window, move left past its last occurrence
+        if char in char_index and char_index[char] >= left:
+            left = char_index[char] + 1
+
+        char_index[char] = right
+        max_length = max(max_length, right - left + 1)
+
+    return max_length
+
+# Example: "abcabcbb" -> 3 ("abc")</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Minimum Window Substring</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>from collections import Counter
+
+def min_window(s, t):
+    """Find minimum window containing all characters of t.
+    Time: O(n), Space: O(m) where m = len(t)
+    """
+    if not t or not s:
+        return ""
+
+    target_count = Counter(t)
+    required = len(target_count)
+
+    left = 0
+    formed = 0
+    window_counts = {}
+    result = (float('inf'), 0, 0)  # (length, left, right)
+
+    for right, char in enumerate(s):
+        # Add character to window
+        window_counts[char] = window_counts.get(char, 0) + 1
+
+        # Check if frequency matches target
+        if char in target_count and window_counts[char] == target_count[char]:
+            formed += 1
+
+        # Contract window while valid
+        while formed == required:
+            # Update result if smaller
+            if right - left + 1 < result[0]:
+                result = (right - left + 1, left, right)
+
+            # Remove left character
+            left_char = s[left]
+            window_counts[left_char] -= 1
+            if left_char in target_count and window_counts[left_char] < target_count[left_char]:
+                formed -= 1
+            left += 1
+
+    return "" if result[0] == float('inf') else s[result[1]:result[2]+1]</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prefix Sum Section -->
+        <h2 class="mt-4">Prefix Sum</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Pattern Overview</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Prefix sum precomputes cumulative sums for O(1) range queries.</p>
+
+                <div class="code-block">
+                    <pre><code># Build prefix sum array
+# prefix[i] = sum of arr[0:i]
+def build_prefix(arr):
+    prefix = [0] * (len(arr) + 1)
+    for i in range(len(arr)):
+        prefix[i + 1] = prefix[i] + arr[i]
+    return prefix
+
+# Sum of range [left, right] inclusive
+def range_sum(prefix, left, right):
+    return prefix[right + 1] - prefix[left]
+
+# Example
+arr = [1, 2, 3, 4, 5]
+prefix = [0, 1, 3, 6, 10, 15]
+# Sum of arr[1:3] = prefix[4] - prefix[1] = 10 - 1 = 9</code></pre>
+                </div>
+
+                <h4>Use Cases</h4>
+                <ul>
+                    <li>Range sum queries</li>
+                    <li>Subarray sum equals K</li>
+                    <li>Product of array except self</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <!-- Practice Problems -->
+        <h2 class="mt-4">Practice Problems</h2>
+        <div class="card">
+            <h4>Easy</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/" target="_blank">Two Sum II (LeetCode #167)</a></li>
+                <li><a href="https://leetcode.com/problems/valid-palindrome/" target="_blank">Valid Palindrome (LeetCode #125)</a></li>
+                <li><a href="https://leetcode.com/problems/remove-duplicates-from-sorted-array/" target="_blank">Remove Duplicates (LeetCode #26)</a></li>
+            </ul>
+
+            <h4 class="mt-3">Medium</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/3sum/" target="_blank">3Sum (LeetCode #15)</a></li>
+                <li><a href="https://leetcode.com/problems/container-with-most-water/" target="_blank">Container With Most Water (LeetCode #11)</a></li>
+                <li><a href="https://leetcode.com/problems/longest-substring-without-repeating-characters/" target="_blank">Longest Substring Without Repeating (LeetCode #3)</a></li>
+            </ul>
+
+            <h4 class="mt-3">Hard</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/minimum-window-substring/" target="_blank">Minimum Window Substring (LeetCode #76)</a></li>
+                <li><a href="https://leetcode.com/problems/trapping-rain-water/" target="_blank">Trapping Rain Water (LeetCode #42)</a></li>
+            </ul>
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex flex-between mt-4">
+            <a href="module-01.html" class="btn btn-secondary">&larr; Module 1</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "When should you use two pointers from opposite ends?",
+                    options: ["Unsorted arrays", "Finding cycles", "Sorted array pairs", "Counting elements"],
+                    correct: 2,
+                    explanation: "Opposite-end two pointers work best on sorted arrays for finding pairs."
+                },
+                {
+                    question: "What's the time complexity of sliding window for longest substring without repeating?",
+                    options: ["O(n²)", "O(n log n)", "O(n)", "O(1)"],
+                    correct: 2,
+                    explanation: "Each character is visited at most twice (once by right, once by left), so O(n)."
+                },
+                {
+                    question: "What does prefix sum allow you to compute in O(1)?",
+                    options: ["Maximum element", "Range sum", "Sorted order", "Unique elements"],
+                    correct: 1,
+                    explanation: "prefix[right+1] - prefix[left] gives sum of range [left, right] in O(1)."
+                }
+            ];
+
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('coding', 2);
+            alert('Module 2 marked as complete!');
+            window.location.href = 'module-03.html';
+        }
+    </script>
+</body>
+</html>

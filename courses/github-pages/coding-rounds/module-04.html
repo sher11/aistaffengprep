@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 4: Graphs - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="index.html" style="color: var(--primary-color);">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;">
+            <a href="index.html">&larr; Back to Coding Rounds</a>
+        </nav>
+
+        <h1>Module 4: Graphs & Advanced Traversal</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Represent graphs using adjacency list and matrix</li>
+                <li>Implement DFS and BFS for graph problems</li>
+                <li>Apply topological sort for dependency ordering</li>
+                <li>Use Union-Find for connected components</li>
+            </ul>
+        </div>
+
+        <!-- Graph Representations -->
+        <h2 class="mt-4">Graph Representations</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Adjacency List vs Matrix</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph LR
+    0((0)) --- 1((1))
+    0 --- 2((2))
+    1 --- 3((3))
+    2 --- 3
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <pre><code># Adjacency List (most common)
+graph = {
+    0: [1, 2],
+    1: [0, 3],
+    2: [0, 3],
+    3: [1, 2]
+}
+
+# Adjacency Matrix
+matrix = [
+    [0, 1, 1, 0],  # Node 0
+    [1, 0, 0, 1],  # Node 1
+    [1, 0, 0, 1],  # Node 2
+    [0, 1, 1, 0]   # Node 3
+]
+
+# Building from edges
+def build_graph(edges, directed=False):
+    graph = defaultdict(list)
+    for u, v in edges:
+        graph[u].append(v)
+        if not directed:
+            graph[v].append(u)
+    return graph</code></pre>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Operation</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Adjacency List</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Adjacency Matrix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Space</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(V + E)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(V²)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Check edge exists</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(degree)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(1)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Get neighbors</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(1)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(V)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- DFS Section -->
+        <h2 class="mt-4">Depth-First Search (DFS)</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>DFS Implementation</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code># Recursive DFS
+def dfs_recursive(graph, node, visited=None):
+    if visited is None:
+        visited = set()
+
+    visited.add(node)
+    print(node)  # Process node
+
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            dfs_recursive(graph, neighbor, visited)
+
+# Iterative DFS (with stack)
+def dfs_iterative(graph, start):
+    visited = set()
+    stack = [start]
+
+    while stack:
+        node = stack.pop()
+        if node in visited:
+            continue
+
+        visited.add(node)
+        print(node)  # Process node
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                stack.append(neighbor)
+
+# Number of Islands (classic DFS problem)
+def num_islands(grid):
+    if not grid:
+        return 0
+
+    rows, cols = len(grid), len(grid[0])
+    count = 0
+
+    def dfs(r, c):
+        if r < 0 or r >= rows or c < 0 or c >= cols or grid[r][c] != '1':
+            return
+        grid[r][c] = '0'  # Mark visited
+        dfs(r+1, c)
+        dfs(r-1, c)
+        dfs(r, c+1)
+        dfs(r, c-1)
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == '1':
+                dfs(r, c)
+                count += 1
+
+    return count</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- BFS Section -->
+        <h2 class="mt-4">Breadth-First Search (BFS)</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>BFS for Shortest Path</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>from collections import deque
+
+def bfs(graph, start):
+    visited = {start}
+    queue = deque([start])
+
+    while queue:
+        node = queue.popleft()
+        print(node)  # Process node
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+
+# Shortest path in unweighted graph
+def shortest_path(graph, start, end):
+    if start == end:
+        return [start]
+
+    visited = {start}
+    queue = deque([(start, [start])])
+
+    while queue:
+        node, path = queue.popleft()
+
+        for neighbor in graph[node]:
+            if neighbor == end:
+                return path + [neighbor]
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, path + [neighbor]))
+
+    return []  # No path found</code></pre>
+                </div>
+
+                <h4>When to Use</h4>
+                <ul>
+                    <li><strong>DFS:</strong> Path finding, cycle detection, topological sort, exhaustive search</li>
+                    <li><strong>BFS:</strong> Shortest path (unweighted), level-order, nearest neighbor</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Topological Sort -->
+        <h2 class="mt-4">Topological Sort</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Kahn's Algorithm (BFS-based)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>from collections import deque
+
+def topological_sort(num_nodes, edges):
+    """
+    Returns topological ordering or empty list if cycle exists.
+    Used for: Course scheduling, build systems, dependency resolution
+    """
+    # Build graph and count in-degrees
+    graph = defaultdict(list)
+    in_degree = [0] * num_nodes
+
+    for u, v in edges:  # u -> v (u must come before v)
+        graph[u].append(v)
+        in_degree[v] += 1
+
+    # Start with nodes that have no prerequisites
+    queue = deque([i for i in range(num_nodes) if in_degree[i] == 0])
+    result = []
+
+    while queue:
+        node = queue.popleft()
+        result.append(node)
+
+        for neighbor in graph[node]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    # If result doesn't contain all nodes, there's a cycle
+    return result if len(result) == num_nodes else []
+
+# Course Schedule: Can finish all courses?
+def can_finish(num_courses, prerequisites):
+    return len(topological_sort(num_courses, prerequisites)) == num_courses</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Union-Find -->
+        <h2 class="mt-4">Union-Find (Disjoint Set)</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Implementation with Optimizations</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>class UnionFind:
+    """
+    Union-Find with path compression and union by rank.
+    Time: O(α(n)) ≈ O(1) per operation
+    """
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.rank = [0] * n
+        self.components = n
+
+    def find(self, x):
+        """Find root with path compression."""
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x, y):
+        """Union by rank. Returns True if merged, False if already connected."""
+        px, py = self.find(x), self.find(y)
+
+        if px == py:
+            return False
+
+        # Attach smaller tree to larger tree
+        if self.rank[px] < self.rank[py]:
+            px, py = py, px
+        self.parent[py] = px
+
+        if self.rank[px] == self.rank[py]:
+            self.rank[px] += 1
+
+        self.components -= 1
+        return True
+
+    def connected(self, x, y):
+        return self.find(x) == self.find(y)
+
+# Number of Connected Components
+def count_components(n, edges):
+    uf = UnionFind(n)
+    for u, v in edges:
+        uf.union(u, v)
+    return uf.components</code></pre>
+                </div>
+
+                <h4>Use Cases</h4>
+                <ul>
+                    <li>Connected components in undirected graph</li>
+                    <li>Cycle detection</li>
+                    <li>Kruskal's MST algorithm</li>
+                    <li>Network connectivity</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <!-- Practice Problems -->
+        <h2 class="mt-4">Practice Problems</h2>
+        <div class="card">
+            <h4>Medium</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/number-of-islands/" target="_blank">Number of Islands (LeetCode #200)</a></li>
+                <li><a href="https://leetcode.com/problems/course-schedule/" target="_blank">Course Schedule (LeetCode #207)</a></li>
+                <li><a href="https://leetcode.com/problems/clone-graph/" target="_blank">Clone Graph (LeetCode #133)</a></li>
+                <li><a href="https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/" target="_blank">Connected Components (LeetCode #323)</a></li>
+            </ul>
+
+            <h4 class="mt-3">Hard</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/word-ladder/" target="_blank">Word Ladder (LeetCode #127)</a></li>
+                <li><a href="https://leetcode.com/problems/alien-dictionary/" target="_blank">Alien Dictionary (LeetCode #269)</a></li>
+            </ul>
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex flex-between mt-4">
+            <a href="module-03.html" class="btn btn-secondary">&larr; Module 3</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "Which algorithm finds shortest path in an unweighted graph?",
+                    options: ["DFS", "BFS", "Topological Sort", "Union-Find"],
+                    correct: 1,
+                    explanation: "BFS explores nodes level by level, guaranteeing shortest path in unweighted graphs."
+                },
+                {
+                    question: "What does topological sort require?",
+                    options: ["Weighted edges", "Directed Acyclic Graph (DAG)", "Connected graph", "Undirected graph"],
+                    correct: 1,
+                    explanation: "Topological sort only works on DAGs - cycles make ordering impossible."
+                },
+                {
+                    question: "What's the time complexity of Union-Find operations with optimizations?",
+                    options: ["O(n)", "O(log n)", "O(1) amortized", "O(n²)"],
+                    correct: 2,
+                    explanation: "With path compression and union by rank, operations are nearly O(1) - technically O(α(n))."
+                }
+            ];
+
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('coding', 4);
+            alert('Module 4 marked as complete!');
+            window.location.href = 'module-05.html';
+        }
+    </script>
+</body>
+</html>

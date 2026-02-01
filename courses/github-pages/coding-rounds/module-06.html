@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 6: Backtracking - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="index.html" style="color: var(--primary-color);">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Coding Rounds</a></nav>
+
+        <h1>Module 6: Backtracking & Recursion</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Understand the backtracking paradigm</li>
+                <li>Generate permutations and combinations</li>
+                <li>Solve constraint satisfaction problems</li>
+                <li>Apply pruning to optimize solutions</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Backtracking Template</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Core Pattern</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TD
+    A[Start] --> B{Base case?}
+    B -->|Yes| C[Add to result]
+    B -->|No| D[For each choice]
+    D --> E{Valid choice?}
+    E -->|Yes| F[Make choice]
+    F --> G[Recurse]
+    G --> H[Undo choice]
+    H --> D
+    E -->|No| D
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <pre><code>def backtrack(state, choices, result):
+    # Base case: found a solution
+    if is_solution(state):
+        result.append(state.copy())
+        return
+
+    # Try each choice
+    for choice in choices:
+        if is_valid(choice, state):
+            # Make choice
+            state.append(choice)
+
+            # Recurse
+            backtrack(state, remaining_choices, result)
+
+            # Undo choice (backtrack)
+            state.pop()</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Permutations & Combinations</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Permutations</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>def permutations(nums):
+    """Generate all permutations of nums."""
+    result = []
+
+    def backtrack(path, remaining):
+        if not remaining:
+            result.append(path[:])
+            return
+
+        for i in range(len(remaining)):
+            path.append(remaining[i])
+            backtrack(path, remaining[:i] + remaining[i+1:])
+            path.pop()
+
+    backtrack([], nums)
+    return result
+
+# Example: [1,2,3] -> [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Combinations & Subsets</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code># All subsets
+def subsets(nums):
+    result = []
+
+    def backtrack(start, path):
+        result.append(path[:])  # Add current subset
+
+        for i in range(start, len(nums)):
+            path.append(nums[i])
+            backtrack(i + 1, path)  # Move forward to avoid duplicates
+            path.pop()
+
+    backtrack(0, [])
+    return result
+
+# Combinations of size k
+def combinations(n, k):
+    result = []
+
+    def backtrack(start, path):
+        if len(path) == k:
+            result.append(path[:])
+            return
+
+        for i in range(start, n + 1):
+            path.append(i)
+            backtrack(i + 1, path)
+            path.pop()
+
+    backtrack(1, [])
+    return result</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>N-Queens</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>def solve_n_queens(n):
+    """Place n queens on n×n board so no two attack each other."""
+    result = []
+    board = [['.'] * n for _ in range(n)]
+
+    # Track which columns and diagonals are under attack
+    cols = set()
+    diag1 = set()  # row - col
+    diag2 = set()  # row + col
+
+    def backtrack(row):
+        if row == n:
+            result.append([''.join(r) for r in board])
+            return
+
+        for col in range(n):
+            if col in cols or (row - col) in diag1 or (row + col) in diag2:
+                continue
+
+            # Place queen
+            board[row][col] = 'Q'
+            cols.add(col)
+            diag1.add(row - col)
+            diag2.add(row + col)
+
+            backtrack(row + 1)
+
+            # Remove queen
+            board[row][col] = '.'
+            cols.remove(col)
+            diag1.remove(row - col)
+            diag2.remove(row + col)
+
+    backtrack(0)
+    return result</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <h2 class="mt-4">Practice Problems</h2>
+        <div class="card">
+            <h4>Medium</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/subsets/" target="_blank">Subsets (LeetCode #78)</a></li>
+                <li><a href="https://leetcode.com/problems/permutations/" target="_blank">Permutations (LeetCode #46)</a></li>
+                <li><a href="https://leetcode.com/problems/combination-sum/" target="_blank">Combination Sum (LeetCode #39)</a></li>
+                <li><a href="https://leetcode.com/problems/word-search/" target="_blank">Word Search (LeetCode #79)</a></li>
+            </ul>
+            <h4 class="mt-3">Hard</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/n-queens/" target="_blank">N-Queens (LeetCode #51)</a></li>
+                <li><a href="https://leetcode.com/problems/sudoku-solver/" target="_blank">Sudoku Solver (LeetCode #37)</a></li>
+            </ul>
+        </div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-05.html" class="btn btn-secondary">&larr; Module 5</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What is the key difference between permutations and combinations?",
+                    options: ["Size of output", "Order matters in permutations", "Time complexity", "Input type"],
+                    correct: 1,
+                    explanation: "Permutations consider order (ABC ≠ CBA), combinations don't ({A,B,C} = {C,B,A})."
+                },
+                {
+                    question: "Why do we 'undo the choice' in backtracking?",
+                    options: ["To save memory", "To explore other branches", "Required by Python", "For efficiency"],
+                    correct: 1,
+                    explanation: "Undoing allows us to try other choices from the same position, exploring the full solution space."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('coding', 6);
+            alert('Module 6 marked as complete!');
+            window.location.href = 'module-07.html';
+        }
+    </script>
+</body>
+</html>

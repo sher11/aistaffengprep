@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Engineer Interview Prep</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="coding-rounds/index.html">Coding</a></li>
+                <li><a href="system-design/index.html">System Design</a></li>
+                <li><a href="company-specific/index.html">Companies</a></li>
+                <li><a href="behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>Staff Engineer Interview Preparation</h1>
+            <p>Interactive learning platform to help you ace your staff-level engineering interviews</p>
+        </div>
+
+        <!-- Overall Progress -->
+        <div class="progress-container" id="overall-progress">
+            <div class="progress-header">
+                <span><strong>Overall Progress</strong></span>
+                <span class="progress-label">0% Complete</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Learning Path Overview -->
+        <h2 class="mb-3">Learning Path</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart LR
+    subgraph "Phase 1"
+        A[Coding Rounds]
+        B[System Design]
+    end
+
+    subgraph "Phase 2"
+        C[Company-Specific]
+        D[Behavioral]
+    end
+
+    subgraph "Phase 3"
+        E[Mock Interviews]
+        F[Review & Practice]
+    end
+
+    A --> C
+    B --> C
+    C --> E
+    D --> E
+    E --> F
+            </div>
+        </div>
+
+        <!-- Topic Cards -->
+        <h2 class="mt-4 mb-3">Topics</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h3>Coding Rounds</h3>
+                <p>Master algorithms, data structures, and non-LeetCode style problems for staff-level interviews.</p>
+                <div class="progress-bar mb-2" id="coding-progress">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+                <a href="coding-rounds/index.html" class="card-link">Start Learning &rarr;</a>
+            </div>
+
+            <div class="card">
+                <h3>System Design</h3>
+                <p>Learn to design scalable distributed systems and nail the system design interview.</p>
+                <div class="progress-bar mb-2" id="systemDesign-progress">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+                <a href="system-design/index.html" class="card-link">Start Learning &rarr;</a>
+            </div>
+
+            <div class="card">
+                <h3>Company-Specific</h3>
+                <p>Targeted preparation for top companies: Stripe, Netflix, OpenAI, Anthropic, and more.</p>
+                <div class="progress-bar mb-2" id="companySpecific-progress">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+                <a href="company-specific/index.html" class="card-link">Start Learning &rarr;</a>
+            </div>
+
+            <div class="card">
+                <h3>Behavioral Rounds</h3>
+                <p>Prepare compelling stories and master the STAR method for staff-level behavioral questions.</p>
+                <div class="progress-bar mb-2" id="behavioral-progress">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+                <a href="behavioral/index.html" class="card-link">Start Learning &rarr;</a>
+            </div>
+        </div>
+
+        <!-- Key Stats -->
+        <h2 class="mt-4 mb-3">What You'll Learn</h2>
+
+        <div class="card-grid">
+            <div class="card text-center">
+                <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem;">9</h3>
+                <p>Coding Modules</p>
+            </div>
+            <div class="card text-center">
+                <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem;">8</h3>
+                <p>System Design Topics</p>
+            </div>
+            <div class="card text-center">
+                <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem;">6</h3>
+                <p>Company Profiles</p>
+            </div>
+            <div class="card text-center">
+                <h3 style="font-size: 2.5rem; margin-bottom: 0.5rem;">50+</h3>
+                <p>Practice Questions</p>
+            </div>
+        </div>
+
+        <!-- Quick Start Guide -->
+        <h2 class="mt-4 mb-3">Quick Start Guide</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Week 1-4: Build Foundations</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li>Complete Coding Modules 1-4 (Foundations, Arrays, Trees, Graphs)</li>
+                    <li>Start System Design Module 1-2 (Scalability, Databases)</li>
+                    <li>Practice 3-5 coding problems daily</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Week 5-8: Deepen Understanding</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li>Complete Coding Modules 5-7 (DP, Backtracking, Heaps)</li>
+                    <li>System Design Modules 3-5 (Distributed Systems, Papers)</li>
+                    <li>Begin Company-Specific research</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Week 9-12: Interview Preparation</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li>Complete Coding Module 8-9 (Non-LeetCode, Interview Simulation)</li>
+                    <li>System Design Modules 6-8 (Common Problems, Framework, Mocks)</li>
+                    <li>Behavioral preparation and story practice</li>
+                    <li>Schedule mock interviews</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Spaced Repetition Preview -->
+        <h2 class="mt-4 mb-3">Today's Review</h2>
+
+        <div class="review-schedule" id="review-schedule">
+            <p class="text-muted">Complete some modules to start building your review schedule.</p>
+        </div>
+
+    </div>
+
+    <script src="assets/js/app.js"></script>
+    <script>
+        // Initialize review schedule with sample concepts once progress is made
+        document.addEventListener('DOMContentLoaded', function() {
+            const progress = StaffEngPrep.ProgressTracker.getProgress();
+            const dueReviews = StaffEngPrep.ProgressTracker.getDueReviews();
+
+            if (dueReviews.length > 0) {
+                const concepts = dueReviews.map(r => ({
+                    id: r.conceptId,
+                    name: r.conceptId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                }));
+                StaffEngPrep.renderReviewSchedule('review-schedule', concepts);
+            }
+        });
+    </script>
+</body>
+</html>

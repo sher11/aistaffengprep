@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 6: Common Design Problems - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to System Design</a></nav>
+
+        <h1>Module 6: Common Design Problems</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Design URL shortener from scratch</li>
+                <li>Build rate limiter with multiple algorithms</li>
+                <li>Design chat/messaging system</li>
+                <li>Understand news feed/timeline design</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">URL Shortener</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Design Overview</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>Requirements</h4>
+                <ul>
+                    <li>Shorten long URLs to ~7 characters</li>
+                    <li>Redirect shortened URLs to original</li>
+                    <li>Scale: 500M new URLs/month, 100:1 read/write ratio</li>
+                </ul>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    C[Client] --> LB[Load Balancer]
+    LB --> API[API Servers]
+    API --> Cache[Redis Cache]
+    API --> DB[(Database)]
+    API --> Counter[ID Generator]
+                    </div>
+                </div>
+
+                <h4>Key Decisions</h4>
+                <ul>
+                    <li><strong>ID Generation:</strong> Base62 encoding of counter or UUID</li>
+                    <li><strong>Database:</strong> NoSQL (simple key-value access)</li>
+                    <li><strong>Caching:</strong> Cache popular URLs (80/20 rule)</li>
+                </ul>
+
+                <h4>Estimation</h4>
+                <pre style="background: var(--border-color); padding: 1rem; border-radius: 0.5rem;">
+Write QPS: 500M / (30 * 24 * 3600) ≈ 200/s
+Read QPS: 200 * 100 = 20,000/s
+Storage (5 years): 500M * 12 * 5 * 500B ≈ 15TB
+                </pre>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Rate Limiter</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Algorithms</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TD
+    subgraph "Token Bucket"
+        TB["Tokens refill at rate R<br>Bucket holds max B tokens<br>Request consumes 1 token"]
+    end
+
+    subgraph "Sliding Window"
+        SW["Count requests in window<br>Window slides with time"]
+    end
+
+    subgraph "Fixed Window"
+        FW["Reset count each window<br>Simpler but bursty edges"]
+    end
+                    </div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Algorithm</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pros</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Cons</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Token Bucket</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Allows bursting</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">More complex</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Sliding Window</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Accurate</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Higher memory</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fixed Window</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Simple</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Edge bursts</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Chat System</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Architecture</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TB
+    subgraph "Clients"
+        C1[User A]
+        C2[User B]
+    end
+
+    subgraph "Gateway"
+        WS1[WebSocket Server]
+        WS2[WebSocket Server]
+    end
+
+    subgraph "Services"
+        MS[Message Service]
+        PS[Presence Service]
+    end
+
+    subgraph "Data"
+        MQ[Message Queue]
+        DB[(Message Store)]
+        Cache[Redis<br>Presence]
+    end
+
+    C1 <-->|WebSocket| WS1
+    C2 <-->|WebSocket| WS2
+    WS1 & WS2 --> MS
+    MS --> MQ --> WS1 & WS2
+    MS --> DB
+    WS1 & WS2 --> Cache
+                    </div>
+                </div>
+
+                <h4>Key Components</h4>
+                <ul>
+                    <li><strong>WebSocket:</strong> Real-time bidirectional communication</li>
+                    <li><strong>Message Queue:</strong> Decouple sending from delivery</li>
+                    <li><strong>Presence Service:</strong> Track online/offline status</li>
+                    <li><strong>Message Store:</strong> Cassandra or similar for chat history</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <h2 class="mt-4">Practice Problems</h2>
+        <div class="card">
+            <ul>
+                <li>Design Twitter/X timeline</li>
+                <li>Design Instagram photo sharing</li>
+                <li>Design Uber ride matching</li>
+                <li>Design Google Docs collaboration</li>
+                <li>Design YouTube video streaming</li>
+            </ul>
+        </div>
+
+        <div class="flex flex-between mt-4">
+            <a href="index.html" class="btn btn-secondary">&larr; Back to Overview</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What encoding is commonly used for URL shortener IDs?",
+                    options: ["Base64", "Base62", "Hexadecimal", "Binary"],
+                    correct: 1,
+                    explanation: "Base62 (a-z, A-Z, 0-9) is URL-safe and provides 62^7 ≈ 3.5 trillion combinations."
+                },
+                {
+                    question: "Why use WebSocket for chat instead of HTTP?",
+                    options: ["Lower latency", "Bidirectional real-time communication", "Better security", "Simpler implementation"],
+                    correct: 1,
+                    explanation: "WebSocket provides persistent bidirectional connection for real-time messaging."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 6);
+            alert('Module 6 marked as complete!');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
