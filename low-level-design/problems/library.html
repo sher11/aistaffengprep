@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System | LLD Practice Problems</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="../../index.html" class="logo">Staff Eng Prep</a>
+            <div class="nav-links">
+                <a href="../../coding-rounds/index.html">Coding</a>
+                <a href="../../system-design/index.html">System Design</a>
+                <a href="../index.html" class="active">LLD/OOD</a>
+                <a href="../../behavioral/index.html">Behavioral</a>
+                <a href="../../generative-ai/index.html">Gen AI</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>LLD/OOD Course</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="../module-01.html" class="sidebar-link">Design Principles</a>
+                    <a href="../module-02.html" class="sidebar-link">Creational Patterns</a>
+                    <a href="../module-03.html" class="sidebar-link">Structural Patterns</a>
+                    <a href="../module-04.html" class="sidebar-link">Behavioral Patterns</a>
+                    <a href="../module-05.html" class="sidebar-link">UML & Class Diagrams</a>
+                    <a href="../module-06.html" class="sidebar-link">Interview Framework</a>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Practice Problems</div>
+                    <a href="parking-lot.html" class="sidebar-link">Parking Lot System</a>
+                    <a href="elevator.html" class="sidebar-link">Elevator System</a>
+                    <a href="vending-machine.html" class="sidebar-link">Vending Machine</a>
+                    <a href="library.html" class="sidebar-link active">Library Management</a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <h1 style="margin: 0;">Library Management System</h1>
+                <span class="badge badge-success">Medium</span>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h3>Problem Statement</h3>
+                <p>Design a library management system that allows members to borrow and return books, search the catalog, reserve books, and handles fines for late returns. The system should support different membership tiers and multiple copies of books.</p>
+            </div>
+
+            <h2>1. Requirements Clarification</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Questions to Ask Your Interviewer</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Functional Requirements</h4>
+                    <ul>
+                        <li><strong>Items:</strong> Just books or other media (DVDs, magazines)?</li>
+                        <li><strong>Search:</strong> By title, author, ISBN, subject?</li>
+                        <li><strong>Borrowing:</strong> Maximum items? Borrowing period?</li>
+                        <li><strong>Reservations:</strong> Can members reserve books that are checked out?</li>
+                        <li><strong>Membership tiers:</strong> Different limits for different members?</li>
+                        <li><strong>Fines:</strong> Late fees? How calculated?</li>
+                    </ul>
+
+                    <h4>Non-Functional Requirements</h4>
+                    <ul>
+                        <li><strong>Scale:</strong> How many books? How many members?</li>
+                        <li><strong>Notifications:</strong> Email/SMS for due dates, available reservations?</li>
+                        <li><strong>Reporting:</strong> Popular books, overdue items, member activity?</li>
+                    </ul>
+
+                    <h4>Our Assumptions</h4>
+                    <div class="card">
+                        <ul>
+                            <li>Support books initially (extensible to other media)</li>
+                            <li>Search by title, author, ISBN, and subject</li>
+                            <li>Multiple copies of each book (BookItem vs Book)</li>
+                            <li>Reservation queue for checked-out books</li>
+                            <li>Three membership tiers: Basic (5 books), Premium (10 books), Student (3 books)</li>
+                            <li>14-day borrowing period with $0.50/day late fee</li>
+                            <li>Librarians can add/remove books, manage members</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2>2. Use Cases</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Core Use Cases</span>
+                </div>
+                <div class="collapsible-content">
+                    <table>
+                        <tr>
+                            <th>Use Case</th>
+                            <th>Actor</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>Search Catalog</td>
+                            <td>Member/Librarian</td>
+                            <td>Search for books by various criteria</td>
+                        </tr>
+                        <tr>
+                            <td>Checkout Book</td>
+                            <td>Member</td>
+                            <td>Borrow a book from the library</td>
+                        </tr>
+                        <tr>
+                            <td>Return Book</td>
+                            <td>Member</td>
+                            <td>Return a borrowed book</td>
+                        </tr>
+                        <tr>
+                            <td>Reserve Book</td>
+                            <td>Member</td>
+                            <td>Reserve a book that's currently checked out</td>
+                        </tr>
+                        <tr>
+                            <td>Pay Fine</td>
+                            <td>Member</td>
+                            <td>Pay accumulated fines for late returns</td>
+                        </tr>
+                        <tr>
+                            <td>Add Book</td>
+                            <td>Librarian</td>
+                            <td>Add new book to the catalog</td>
+                        </tr>
+                        <tr>
+                            <td>Register Member</td>
+                            <td>Librarian</td>
+                            <td>Create new library membership</td>
+                        </tr>
+                        <tr>
+                            <td>Renew Book</td>
+                            <td>Member</td>
+                            <td>Extend borrowing period if no reservations</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <h2>3. Class Diagram</h2>
+
+            <div class="diagram-container">
+                <pre class="mermaid">
+classDiagram
+    class Library {
+        -String name
+        -Catalog catalog
+        -Map~String, Member~ members
+        +searchBooks(query)
+        +checkoutBook(memberId, bookItemId)
+        +returnBook(bookItemId)
+        +reserveBook(memberId, isbn)
+    }
+
+    class Catalog {
+        -Map~String, Book~ booksByISBN
+        -Map~String, List~ booksByTitle
+        -Map~String, List~ booksByAuthor
+        +search(SearchCriteria)
+        +addBook(book)
+        +getBookByISBN(isbn)
+    }
+
+    class Book {
+        -String isbn
+        -String title
+        -List~Author~ authors
+        -String publisher
+        -int publicationYear
+        -List~Subject~ subjects
+        -List~BookItem~ copies
+        +addCopy(bookItem)
+        +getAvailableCopy()
+    }
+
+    class BookItem {
+        -String barcode
+        -Book book
+        -BookStatus status
+        -LocalDate dueDate
+        -Rack location
+        -BookLoan currentLoan
+        +checkout(member)
+        +returnItem()
+        +isOverdue()
+    }
+
+    class Member {
+        -String memberId
+        -String name
+        -MembershipType type
+        -List~BookLoan~ activeLoans
+        -List~Reservation~ reservations
+        -double fineAmount
+        +canBorrow()
+        +checkout(bookItem)
+        +returnBook(bookItem)
+        +payFine(amount)
+    }
+
+    class MembershipType {
+        <<enumeration>>
+        BASIC
+        PREMIUM
+        STUDENT
+        +getMaxBooks()
+        +getLoanPeriodDays()
+    }
+
+    class BookLoan {
+        -String loanId
+        -BookItem bookItem
+        -Member member
+        -LocalDate checkoutDate
+        -LocalDate dueDate
+        -LocalDate returnDate
+        -double fine
+        +calculateFine()
+        +renew()
+    }
+
+    class Reservation {
+        -String reservationId
+        -Book book
+        -Member member
+        -LocalDateTime createdAt
+        -ReservationStatus status
+    }
+
+    class BookStatus {
+        <<enumeration>>
+        AVAILABLE
+        CHECKED_OUT
+        RESERVED
+        LOST
+        DAMAGED
+    }
+
+    class Librarian {
+        -String employeeId
+        +addBook(book)
+        +removeBook(isbn)
+        +registerMember(member)
+        +collectFine(memberId)
+    }
+
+    class FineCalculator {
+        <<interface>>
+        +calculateFine(dueDate, returnDate)
+    }
+
+    class DailyFineCalculator {
+        -double dailyRate
+        +calculateFine(dueDate, returnDate)
+    }
+
+    Library "1" --> "1" Catalog : contains
+    Library "1" --> "*" Member : has
+    Catalog "1" --> "*" Book : contains
+    Book "1" --> "*" BookItem : has copies
+    BookItem --> BookStatus : has
+    BookItem --> BookLoan : current
+    Member --> MembershipType : has
+    Member "1" --> "*" BookLoan : has
+    Member "1" --> "*" Reservation : has
+    BookLoan --> BookItem : for
+    BookLoan --> Member : by
+    Reservation --> Book : for
+    Library --> FineCalculator : uses
+    FineCalculator <|.. DailyFineCalculator
+                </pre>
+            </div>
+
+            <h2>4. Design Patterns Used</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Key Patterns and Rationale</span>
+                </div>
+                <div class="collapsible-content">
+                    <table>
+                        <tr>
+                            <th>Pattern</th>
+                            <th>Usage</th>
+                            <th>Why</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Singleton</strong></td>
+                            <td>Library</td>
+                            <td>Single library instance manages all operations</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Strategy</strong></td>
+                            <td>Fine calculation</td>
+                            <td>Different fine policies (daily, weekly, tiered) can be swapped</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Observer</strong></td>
+                            <td>Notifications</td>
+                            <td>Notify members when reserved book becomes available</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Factory</strong></td>
+                            <td>Member creation</td>
+                            <td>Create different membership types with appropriate limits</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Repository</strong></td>
+                            <td>Catalog</td>
+                            <td>Abstracts book storage and search operations</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <h2>5. Core Implementation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Enums and Basic Classes</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public enum BookStatus {
+    AVAILABLE,
+    CHECKED_OUT,
+    RESERVED,
+    LOST,
+    DAMAGED,
+    UNDER_REPAIR
+}
+
+public enum MembershipType {
+    BASIC(5, 14, 0.50),
+    PREMIUM(10, 21, 0.25),
+    STUDENT(3, 14, 0.25);
+
+    private final int maxBooks;
+    private final int loanPeriodDays;
+    private final double dailyFineRate;
+
+    MembershipType(int maxBooks, int loanPeriodDays, double dailyFineRate) {
+        this.maxBooks = maxBooks;
+        this.loanPeriodDays = loanPeriodDays;
+        this.dailyFineRate = dailyFineRate;
+    }
+
+    public int getMaxBooks() { return maxBooks; }
+    public int getLoanPeriodDays() { return loanPeriodDays; }
+    public double getDailyFineRate() { return dailyFineRate; }
+}
+
+public enum ReservationStatus {
+    WAITING,
+    PENDING_PICKUP,  // Book available, waiting for member
+    COMPLETED,
+    CANCELLED,
+    EXPIRED
+}
+
+public class Author {
+    private final String id;
+    private final String name;
+    private final String biography;
+
+    public Author(String id, String name, String biography) {
+        this.id = id;
+        this.name = name;
+        this.biography = biography;
+    }
+
+    // Getters
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public String getBiography() { return biography; }
+}
+
+public class Subject {
+    private final String code;
+    private final String name;
+
+    public Subject(String code, String name) {
+        this.code = code;
+        this.name = name;
+    }
+
+    public String getCode() { return code; }
+    public String getName() { return name; }
+}
+
+public class Rack {
+    private final String rackId;
+    private final String section;
+    private final int shelf;
+
+    public Rack(String rackId, String section, int shelf) {
+        this.rackId = rackId;
+        this.section = section;
+        this.shelf = shelf;
+    }
+
+    public String getLocation() {
+        return section + "-" + rackId + "-" + shelf;
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Book and BookItem Classes</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class Book {
+    private final String isbn;
+    private final String title;
+    private final List&lt;Author&gt; authors;
+    private final String publisher;
+    private final int publicationYear;
+    private final List&lt;Subject&gt; subjects;
+    private final List&lt;BookItem&gt; copies;
+    private final Queue&lt;Reservation&gt; reservationQueue;
+
+    public Book(String isbn, String title, List&lt;Author&gt; authors,
+            String publisher, int publicationYear) {
+        this.isbn = isbn;
+        this.title = title;
+        this.authors = new ArrayList&lt;&gt;(authors);
+        this.publisher = publisher;
+        this.publicationYear = publicationYear;
+        this.subjects = new ArrayList&lt;&gt;();
+        this.copies = new ArrayList&lt;&gt;();
+        this.reservationQueue = new LinkedList&lt;&gt;();
+    }
+
+    public void addCopy(BookItem copy) {
+        copies.add(copy);
+    }
+
+    public void removeCopy(BookItem copy) {
+        copies.remove(copy);
+    }
+
+    public BookItem getAvailableCopy() {
+        return copies.stream()
+            .filter(item -> item.getStatus() == BookStatus.AVAILABLE)
+            .findFirst()
+            .orElse(null);
+    }
+
+    public int getAvailableCopiesCount() {
+        return (int) copies.stream()
+            .filter(item -> item.getStatus() == BookStatus.AVAILABLE)
+            .count();
+    }
+
+    public int getTotalCopies() {
+        return copies.size();
+    }
+
+    public void addReservation(Reservation reservation) {
+        reservationQueue.offer(reservation);
+    }
+
+    public Reservation getNextReservation() {
+        return reservationQueue.poll();
+    }
+
+    public boolean hasReservations() {
+        return !reservationQueue.isEmpty();
+    }
+
+    public void addSubject(Subject subject) {
+        subjects.add(subject);
+    }
+
+    // Getters
+    public String getIsbn() { return isbn; }
+    public String getTitle() { return title; }
+    public List&lt;Author&gt; getAuthors() { return Collections.unmodifiableList(authors); }
+    public String getPublisher() { return publisher; }
+    public int getPublicationYear() { return publicationYear; }
+    public List&lt;Subject&gt; getSubjects() { return Collections.unmodifiableList(subjects); }
+    public List&lt;BookItem&gt; getCopies() { return Collections.unmodifiableList(copies); }
+
+    public String getAuthorsAsString() {
+        return authors.stream()
+            .map(Author::getName)
+            .collect(Collectors.joining(", "));
+    }
+
+    @Override
+    public String toString() {
+        return String.format("\"%s\" by %s (ISBN: %s)",
+            title, getAuthorsAsString(), isbn);
+    }
+}
+
+public class BookItem {
+    private final String barcode;
+    private final Book book;
+    private BookStatus status;
+    private LocalDate dueDate;
+    private Rack location;
+    private BookLoan currentLoan;
+    private final ReentrantLock lock = new ReentrantLock();
+
+    public BookItem(String barcode, Book book, Rack location) {
+        this.barcode = barcode;
+        this.book = book;
+        this.location = location;
+        this.status = BookStatus.AVAILABLE;
+    }
+
+    public BookLoan checkout(Member member) {
+        lock.lock();
+        try {
+            if (status != BookStatus.AVAILABLE) {
+                throw new BookNotAvailableException(
+                    "Book is not available: " + status);
+            }
+
+            LocalDate today = LocalDate.now();
+            int loanDays = member.getMembershipType().getLoanPeriodDays();
+            this.dueDate = today.plusDays(loanDays);
+            this.status = BookStatus.CHECKED_OUT;
+
+            BookLoan loan = new BookLoan(
+                UUID.randomUUID().toString(),
+                this,
+                member,
+                today,
+                dueDate
+            );
+            this.currentLoan = loan;
+
+            return loan;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public double returnItem() {
+        lock.lock();
+        try {
+            double fine = 0;
+
+            if (currentLoan != null) {
+                fine = currentLoan.calculateFine();
+                currentLoan.setReturnDate(LocalDate.now());
+                currentLoan = null;
+            }
+
+            this.dueDate = null;
+
+            // Check if there are reservations
+            if (book.hasReservations()) {
+                this.status = BookStatus.RESERVED;
+                // Notify first person in reservation queue
+                Reservation next = book.getNextReservation();
+                if (next != null) {
+                    notifyReservationReady(next);
+                }
+            } else {
+                this.status = BookStatus.AVAILABLE;
+            }
+
+            return fine;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private void notifyReservationReady(Reservation reservation) {
+        reservation.setStatus(ReservationStatus.PENDING_PICKUP);
+        // In real system: send email/SMS notification
+        System.out.println("Notifying member " + reservation.getMember().getName() +
+            " that \"" + book.getTitle() + "\" is available for pickup");
+    }
+
+    public boolean isOverdue() {
+        if (dueDate == null) return false;
+        return LocalDate.now().isAfter(dueDate);
+    }
+
+    public void markAsLost() {
+        lock.lock();
+        try {
+            this.status = BookStatus.LOST;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void markAsDamaged() {
+        lock.lock();
+        try {
+            this.status = BookStatus.DAMAGED;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    // Getters
+    public String getBarcode() { return barcode; }
+    public Book getBook() { return book; }
+    public BookStatus getStatus() { return status; }
+    public LocalDate getDueDate() { return dueDate; }
+    public Rack getLocation() { return location; }
+    public BookLoan getCurrentLoan() { return currentLoan; }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Member Class</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class Member {
+    private final String memberId;
+    private String name;
+    private String email;
+    private String phone;
+    private MembershipType membershipType;
+    private LocalDate memberSince;
+    private LocalDate membershipExpiry;
+
+    private final List&lt;BookLoan&gt; activeLoans;
+    private final List&lt;BookLoan&gt; loanHistory;
+    private final List&lt;Reservation&gt; reservations;
+    private double fineAmount;
+
+    public Member(String memberId, String name, String email,
+            MembershipType type) {
+        this.memberId = memberId;
+        this.name = name;
+        this.email = email;
+        this.membershipType = type;
+        this.memberSince = LocalDate.now();
+        this.membershipExpiry = memberSince.plusYears(1);
+
+        this.activeLoans = new ArrayList&lt;&gt;();
+        this.loanHistory = new ArrayList&lt;&gt;();
+        this.reservations = new ArrayList&lt;&gt;();
+        this.fineAmount = 0;
+    }
+
+    public boolean canBorrow() {
+        // Check if membership is valid
+        if (LocalDate.now().isAfter(membershipExpiry)) {
+            return false;
+        }
+
+        // Check outstanding fines
+        if (fineAmount > 10.0) {  // Max fine threshold
+            return false;
+        }
+
+        // Check if under book limit
+        return activeLoans.size() < membershipType.getMaxBooks();
+    }
+
+    public BookLoan checkout(BookItem bookItem) {
+        if (!canBorrow()) {
+            throw new BorrowingNotAllowedException(
+                "Member cannot borrow: " + getBorrowingBlockReason());
+        }
+
+        BookLoan loan = bookItem.checkout(this);
+        activeLoans.add(loan);
+        return loan;
+    }
+
+    public double returnBook(BookItem bookItem) {
+        BookLoan loan = activeLoans.stream()
+            .filter(l -> l.getBookItem().equals(bookItem))
+            .findFirst()
+            .orElseThrow(() -> new LoanNotFoundException(
+                "No active loan found for this book"));
+
+        double fine = bookItem.returnItem();
+
+        activeLoans.remove(loan);
+        loanHistory.add(loan);
+
+        if (fine > 0) {
+            this.fineAmount += fine;
+        }
+
+        return fine;
+    }
+
+    public void addReservation(Reservation reservation) {
+        // Check reservation limit (usually same as book limit)
+        int maxReservations = membershipType.getMaxBooks();
+        if (reservations.size() >= maxReservations) {
+            throw new ReservationLimitException(
+                "Maximum " + maxReservations + " reservations allowed");
+        }
+        reservations.add(reservation);
+    }
+
+    public void removeReservation(Reservation reservation) {
+        reservations.remove(reservation);
+    }
+
+    public double payFine(double amount) {
+        double paid = Math.min(amount, fineAmount);
+        fineAmount -= paid;
+        return paid;
+    }
+
+    public void renewMembership() {
+        this.membershipExpiry = LocalDate.now().plusYears(1);
+    }
+
+    private String getBorrowingBlockReason() {
+        if (LocalDate.now().isAfter(membershipExpiry)) {
+            return "Membership expired";
+        }
+        if (fineAmount > 10.0) {
+            return "Outstanding fines exceed $10.00";
+        }
+        if (activeLoans.size() >= membershipType.getMaxBooks()) {
+            return "Maximum books already borrowed";
+        }
+        return "Unknown reason";
+    }
+
+    public List&lt;BookItem&gt; getOverdueBooks() {
+        return activeLoans.stream()
+            .filter(loan -> loan.getBookItem().isOverdue())
+            .map(BookLoan::getBookItem)
+            .collect(Collectors.toList());
+    }
+
+    // Getters
+    public String getMemberId() { return memberId; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+    public MembershipType getMembershipType() { return membershipType; }
+    public List&lt;BookLoan&gt; getActiveLoans() {
+        return Collections.unmodifiableList(activeLoans);
+    }
+    public double getFineAmount() { return fineAmount; }
+    public int getBooksRemaining() {
+        return membershipType.getMaxBooks() - activeLoans.size();
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>BookLoan and Reservation Classes</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class BookLoan {
+    private final String loanId;
+    private final BookItem bookItem;
+    private final Member member;
+    private final LocalDate checkoutDate;
+    private LocalDate dueDate;
+    private LocalDate returnDate;
+
+    public BookLoan(String loanId, BookItem bookItem, Member member,
+            LocalDate checkoutDate, LocalDate dueDate) {
+        this.loanId = loanId;
+        this.bookItem = bookItem;
+        this.member = member;
+        this.checkoutDate = checkoutDate;
+        this.dueDate = dueDate;
+    }
+
+    public double calculateFine() {
+        LocalDate effectiveReturnDate = returnDate != null ?
+            returnDate : LocalDate.now();
+
+        if (!effectiveReturnDate.isAfter(dueDate)) {
+            return 0;  // Not overdue
+        }
+
+        long daysOverdue = ChronoUnit.DAYS.between(dueDate, effectiveReturnDate);
+        double dailyRate = member.getMembershipType().getDailyFineRate();
+
+        return daysOverdue * dailyRate;
+    }
+
+    public boolean renew() {
+        // Cannot renew if book has reservations
+        if (bookItem.getBook().hasReservations()) {
+            return false;
+        }
+
+        // Cannot renew if already overdue
+        if (bookItem.isOverdue()) {
+            return false;
+        }
+
+        // Extend due date
+        int extensionDays = member.getMembershipType().getLoanPeriodDays();
+        this.dueDate = dueDate.plusDays(extensionDays);
+        bookItem.setDueDate(dueDate);
+
+        return true;
+    }
+
+    // Getters and setters
+    public String getLoanId() { return loanId; }
+    public BookItem getBookItem() { return bookItem; }
+    public Member getMember() { return member; }
+    public LocalDate getCheckoutDate() { return checkoutDate; }
+    public LocalDate getDueDate() { return dueDate; }
+    public LocalDate getReturnDate() { return returnDate; }
+    public void setReturnDate(LocalDate date) { this.returnDate = date; }
+
+    public boolean isReturned() {
+        return returnDate != null;
+    }
+}
+
+public class Reservation {
+    private final String reservationId;
+    private final Book book;
+    private final Member member;
+    private final LocalDateTime createdAt;
+    private ReservationStatus status;
+    private LocalDateTime expiresAt;
+
+    private static final int PICKUP_WINDOW_DAYS = 3;
+
+    public Reservation(String reservationId, Book book, Member member) {
+        this.reservationId = reservationId;
+        this.book = book;
+        this.member = member;
+        this.createdAt = LocalDateTime.now();
+        this.status = ReservationStatus.WAITING;
+    }
+
+    public void setStatus(ReservationStatus status) {
+        this.status = status;
+
+        if (status == ReservationStatus.PENDING_PICKUP) {
+            this.expiresAt = LocalDateTime.now().plusDays(PICKUP_WINDOW_DAYS);
+        }
+    }
+
+    public boolean isExpired() {
+        if (status != ReservationStatus.PENDING_PICKUP) {
+            return false;
+        }
+        return LocalDateTime.now().isAfter(expiresAt);
+    }
+
+    public void cancel() {
+        this.status = ReservationStatus.CANCELLED;
+        member.removeReservation(this);
+    }
+
+    // Getters
+    public String getReservationId() { return reservationId; }
+    public Book getBook() { return book; }
+    public Member getMember() { return member; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public ReservationStatus getStatus() { return status; }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Catalog and Search</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class SearchCriteria {
+    private String title;
+    private String author;
+    private String isbn;
+    private String subject;
+    private Integer publicationYear;
+
+    // Builder pattern for flexible search construction
+    public static class Builder {
+        private SearchCriteria criteria = new SearchCriteria();
+
+        public Builder withTitle(String title) {
+            criteria.title = title;
+            return this;
+        }
+
+        public Builder withAuthor(String author) {
+            criteria.author = author;
+            return this;
+        }
+
+        public Builder withISBN(String isbn) {
+            criteria.isbn = isbn;
+            return this;
+        }
+
+        public Builder withSubject(String subject) {
+            criteria.subject = subject;
+            return this;
+        }
+
+        public Builder withPublicationYear(int year) {
+            criteria.publicationYear = year;
+            return this;
+        }
+
+        public SearchCriteria build() {
+            return criteria;
+        }
+    }
+
+    // Getters
+    public String getTitle() { return title; }
+    public String getAuthor() { return author; }
+    public String getIsbn() { return isbn; }
+    public String getSubject() { return subject; }
+    public Integer getPublicationYear() { return publicationYear; }
+}
+
+public class Catalog {
+    private final Map&lt;String, Book&gt; booksByISBN;
+    private final Map&lt;String, List&lt;Book&gt;&gt; booksByTitle;  // Lowercase title -> books
+    private final Map&lt;String, List&lt;Book&gt;&gt; booksByAuthor; // Lowercase author name -> books
+    private final Map&lt;String, List&lt;Book&gt;&gt; booksBySubject;
+
+    public Catalog() {
+        this.booksByISBN = new ConcurrentHashMap&lt;&gt;();
+        this.booksByTitle = new ConcurrentHashMap&lt;&gt;();
+        this.booksByAuthor = new ConcurrentHashMap&lt;&gt;();
+        this.booksBySubject = new ConcurrentHashMap&lt;&gt;();
+    }
+
+    public void addBook(Book book) {
+        // Index by ISBN
+        booksByISBN.put(book.getIsbn(), book);
+
+        // Index by title (lowercase for case-insensitive search)
+        String titleKey = book.getTitle().toLowerCase();
+        booksByTitle.computeIfAbsent(titleKey, k -> new ArrayList&lt;&gt;()).add(book);
+
+        // Index by each author
+        for (Author author : book.getAuthors()) {
+            String authorKey = author.getName().toLowerCase();
+            booksByAuthor.computeIfAbsent(authorKey, k -> new ArrayList&lt;&gt;())
+                .add(book);
+        }
+
+        // Index by subject
+        for (Subject subject : book.getSubjects()) {
+            String subjectKey = subject.getName().toLowerCase();
+            booksBySubject.computeIfAbsent(subjectKey, k -> new ArrayList&lt;&gt;())
+                .add(book);
+        }
+    }
+
+    public void removeBook(String isbn) {
+        Book book = booksByISBN.remove(isbn);
+        if (book != null) {
+            // Remove from all indexes
+            String titleKey = book.getTitle().toLowerCase();
+            List&lt;Book&gt; titleBooks = booksByTitle.get(titleKey);
+            if (titleBooks != null) titleBooks.remove(book);
+
+            for (Author author : book.getAuthors()) {
+                String authorKey = author.getName().toLowerCase();
+                List&lt;Book&gt; authorBooks = booksByAuthor.get(authorKey);
+                if (authorBooks != null) authorBooks.remove(book);
+            }
+        }
+    }
+
+    public List&lt;Book&gt; search(SearchCriteria criteria) {
+        Set&lt;Book&gt; results = null;
+
+        // Search by ISBN (exact match)
+        if (criteria.getIsbn() != null) {
+            Book book = booksByISBN.get(criteria.getIsbn());
+            return book != null ? List.of(book) : List.of();
+        }
+
+        // Search by title (contains)
+        if (criteria.getTitle() != null) {
+            Set&lt;Book&gt; titleResults = searchByTitle(criteria.getTitle());
+            results = intersect(results, titleResults);
+        }
+
+        // Search by author (contains)
+        if (criteria.getAuthor() != null) {
+            Set&lt;Book&gt; authorResults = searchByAuthor(criteria.getAuthor());
+            results = intersect(results, authorResults);
+        }
+
+        // Search by subject
+        if (criteria.getSubject() != null) {
+            Set&lt;Book&gt; subjectResults = searchBySubject(criteria.getSubject());
+            results = intersect(results, subjectResults);
+        }
+
+        // Filter by publication year
+        if (criteria.getPublicationYear() != null && results != null) {
+            int year = criteria.getPublicationYear();
+            results = results.stream()
+                .filter(b -> b.getPublicationYear() == year)
+                .collect(Collectors.toSet());
+        }
+
+        return results != null ? new ArrayList&lt;&gt;(results) : List.of();
+    }
+
+    private Set&lt;Book&gt; searchByTitle(String query) {
+        String queryLower = query.toLowerCase();
+        Set&lt;Book&gt; results = new HashSet&lt;&gt;();
+
+        for (Map.Entry&lt;String, List&lt;Book&gt;&gt; entry : booksByTitle.entrySet()) {
+            if (entry.getKey().contains(queryLower)) {
+                results.addAll(entry.getValue());
+            }
+        }
+        return results;
+    }
+
+    private Set&lt;Book&gt; searchByAuthor(String query) {
+        String queryLower = query.toLowerCase();
+        Set&lt;Book&gt; results = new HashSet&lt;&gt;();
+
+        for (Map.Entry&lt;String, List&lt;Book&gt;&gt; entry : booksByAuthor.entrySet()) {
+            if (entry.getKey().contains(queryLower)) {
+                results.addAll(entry.getValue());
+            }
+        }
+        return results;
+    }
+
+    private Set&lt;Book&gt; searchBySubject(String query) {
+        String queryLower = query.toLowerCase();
+        Set&lt;Book&gt; results = new HashSet&lt;&gt;();
+
+        for (Map.Entry&lt;String, List&lt;Book&gt;&gt; entry : booksBySubject.entrySet()) {
+            if (entry.getKey().contains(queryLower)) {
+                results.addAll(entry.getValue());
+            }
+        }
+        return results;
+    }
+
+    private Set&lt;Book&gt; intersect(Set&lt;Book&gt; existing, Set&lt;Book&gt; newResults) {
+        if (existing == null) return newResults;
+        existing.retainAll(newResults);
+        return existing;
+    }
+
+    public Book getBookByISBN(String isbn) {
+        return booksByISBN.get(isbn);
+    }
+
+    public int getTotalBooks() {
+        return booksByISBN.size();
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Library Class (Main Controller)</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class Library {
+    private static volatile Library instance;
+
+    private final String name;
+    private final Catalog catalog;
+    private final Map&lt;String, Member&gt; members;
+    private final Map&lt;String, BookItem&gt; bookItemsByBarcode;
+    private final FineCalculator fineCalculator;
+
+    private Library(String name) {
+        this.name = name;
+        this.catalog = new Catalog();
+        this.members = new ConcurrentHashMap&lt;&gt;();
+        this.bookItemsByBarcode = new ConcurrentHashMap&lt;&gt;();
+        this.fineCalculator = new DailyFineCalculator(0.50);
+    }
+
+    public static Library getInstance(String name) {
+        if (instance == null) {
+            synchronized (Library.class) {
+                if (instance == null) {
+                    instance = new Library(name);
+                }
+            }
+        }
+        return instance;
+    }
+
+    // ============ Search Operations ============
+
+    public List&lt;Book&gt; searchBooks(SearchCriteria criteria) {
+        return catalog.search(criteria);
+    }
+
+    public List&lt;Book&gt; searchByTitle(String title) {
+        return catalog.search(new SearchCriteria.Builder()
+            .withTitle(title)
+            .build());
+    }
+
+    public List&lt;Book&gt; searchByAuthor(String author) {
+        return catalog.search(new SearchCriteria.Builder()
+            .withAuthor(author)
+            .build());
+    }
+
+    public Book getBookByISBN(String isbn) {
+        return catalog.getBookByISBN(isbn);
+    }
+
+    // ============ Checkout Operations ============
+
+    public BookLoan checkoutBook(String memberId, String barcode) {
+        Member member = getMemberOrThrow(memberId);
+        BookItem bookItem = getBookItemOrThrow(barcode);
+
+        if (!member.canBorrow()) {
+            throw new BorrowingNotAllowedException(
+                "Member " + memberId + " cannot borrow books");
+        }
+
+        if (bookItem.getStatus() != BookStatus.AVAILABLE) {
+            throw new BookNotAvailableException(
+                "Book is not available: " + bookItem.getStatus());
+        }
+
+        BookLoan loan = member.checkout(bookItem);
+        System.out.printf("%s checked out \"%s\" - Due: %s%n",
+            member.getName(),
+            bookItem.getBook().getTitle(),
+            loan.getDueDate());
+
+        return loan;
+    }
+
+    public double returnBook(String barcode) {
+        BookItem bookItem = getBookItemOrThrow(barcode);
+        BookLoan loan = bookItem.getCurrentLoan();
+
+        if (loan == null) {
+            throw new LoanNotFoundException("Book is not checked out");
+        }
+
+        Member member = loan.getMember();
+        double fine = member.returnBook(bookItem);
+
+        System.out.printf("%s returned \"%s\"",
+            member.getName(), bookItem.getBook().getTitle());
+
+        if (fine > 0) {
+            System.out.printf(" - Fine: $%.2f", fine);
+        }
+        System.out.println();
+
+        return fine;
+    }
+
+    public boolean renewBook(String barcode) {
+        BookItem bookItem = getBookItemOrThrow(barcode);
+        BookLoan loan = bookItem.getCurrentLoan();
+
+        if (loan == null) {
+            throw new LoanNotFoundException("Book is not checked out");
+        }
+
+        boolean renewed = loan.renew();
+        if (renewed) {
+            System.out.printf("Book renewed. New due date: %s%n",
+                loan.getDueDate());
+        } else {
+            System.out.println("Cannot renew: book has reservations or is overdue");
+        }
+
+        return renewed;
+    }
+
+    // ============ Reservation Operations ============
+
+    public Reservation reserveBook(String memberId, String isbn) {
+        Member member = getMemberOrThrow(memberId);
+        Book book = catalog.getBookByISBN(isbn);
+
+        if (book == null) {
+            throw new BookNotFoundException("Book not found: " + isbn);
+        }
+
+        // Check if book is available (no need to reserve)
+        if (book.getAvailableCopiesCount() > 0) {
+            throw new ReservationNotNeededException(
+                "Book is available. Please check it out instead.");
+        }
+
+        Reservation reservation = new Reservation(
+            UUID.randomUUID().toString(),
+            book,
+            member
+        );
+
+        member.addReservation(reservation);
+        book.addReservation(reservation);
+
+        System.out.printf("%s reserved \"%s\" - Position in queue: %d%n",
+            member.getName(), book.getTitle(),
+            member.getReservations().size());
+
+        return reservation;
+    }
+
+    public void cancelReservation(String reservationId) {
+        // Find and cancel reservation
+        // In real system, would have a reservations map for O(1) lookup
+    }
+
+    // ============ Member Operations ============
+
+    public void registerMember(Member member) {
+        if (members.containsKey(member.getMemberId())) {
+            throw new DuplicateMemberException(
+                "Member already exists: " + member.getMemberId());
+        }
+        members.put(member.getMemberId(), member);
+        System.out.println("Registered member: " + member.getName());
+    }
+
+    public double payFine(String memberId, double amount) {
+        Member member = getMemberOrThrow(memberId);
+        double paid = member.payFine(amount);
+        System.out.printf("%s paid $%.2f in fines. Remaining: $%.2f%n",
+            member.getName(), paid, member.getFineAmount());
+        return paid;
+    }
+
+    // ============ Librarian Operations ============
+
+    public void addBook(Book book) {
+        catalog.addBook(book);
+    }
+
+    public void addBookItem(BookItem bookItem) {
+        bookItem.getBook().addCopy(bookItem);
+        bookItemsByBarcode.put(bookItem.getBarcode(), bookItem);
+    }
+
+    public void removeBook(String isbn) {
+        catalog.removeBook(isbn);
+    }
+
+    // ============ Helper Methods ============
+
+    private Member getMemberOrThrow(String memberId) {
+        Member member = members.get(memberId);
+        if (member == null) {
+            throw new MemberNotFoundException("Member not found: " + memberId);
+        }
+        return member;
+    }
+
+    private BookItem getBookItemOrThrow(String barcode) {
+        BookItem bookItem = bookItemsByBarcode.get(barcode);
+        if (bookItem == null) {
+            throw new BookNotFoundException("Book item not found: " + barcode);
+        }
+        return bookItem;
+    }
+
+    // ============ Reporting ============
+
+    public List&lt;BookItem&gt; getOverdueBooks() {
+        return bookItemsByBarcode.values().stream()
+            .filter(BookItem::isOverdue)
+            .collect(Collectors.toList());
+    }
+
+    public List&lt;Member&gt; getMembersWithFines() {
+        return members.values().stream()
+            .filter(m -> m.getFineAmount() > 0)
+            .collect(Collectors.toList());
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <h2>6. Sequence Diagram</h2>
+
+            <div class="diagram-container">
+                <pre class="mermaid">
+sequenceDiagram
+    participant M as Member
+    participant L as Library
+    participant C as Catalog
+    participant B as Book
+    participant BI as BookItem
+    participant Loan as BookLoan
+
+    M->>L: searchByTitle("Design Patterns")
+    L->>C: search(criteria)
+    C-->>L: List&lt;Book&gt;
+    L-->>M: Display results
+
+    M->>L: checkoutBook(memberId, barcode)
+    L->>L: getMemberOrThrow()
+    L->>L: getBookItemOrThrow()
+    L->>M: member.canBorrow()
+    M-->>L: true
+    L->>M: member.checkout(bookItem)
+    M->>BI: bookItem.checkout(member)
+    BI->>Loan: new BookLoan(...)
+    BI-->>M: BookLoan
+    M-->>L: BookLoan
+    L-->>M: Success - Due date: X
+
+    Note over M,Loan: 2 weeks later...
+
+    M->>L: returnBook(barcode)
+    L->>BI: getBookItemOrThrow()
+    L->>BI: getCurrentLoan()
+    BI-->>L: BookLoan
+    L->>M: member.returnBook(bookItem)
+    M->>BI: bookItem.returnItem()
+    BI->>Loan: calculateFine()
+    Loan-->>BI: $2.50
+    BI-->>M: $2.50 fine
+    M-->>L: $2.50 fine
+    L-->>M: Returned with $2.50 fine
+                </pre>
+            </div>
+
+            <h2>7. Interview Tips</h2>
+
+            <div class="card">
+                <h3>Key Points to Emphasize</h3>
+                <ul>
+                    <li><strong>Book vs BookItem distinction:</strong> "A Book is metadata (title, ISBN), BookItem is a physical copy. This allows tracking multiple copies, each with its own status and location."</li>
+                    <li><strong>Search indexing:</strong> "We maintain multiple indexes (by title, author, subject) for efficient search. Trade-off is extra memory for O(1) lookup vs linear scan."</li>
+                    <li><strong>Reservation queue:</strong> "FIFO queue ensures fairness. When book is returned, first person in queue is notified."</li>
+                    <li><strong>Membership tiers:</strong> "Different limits and fine rates per tier. Easy to add new tiers without changing core logic."</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Common Follow-up Questions</h3>
+                <ol>
+                    <li><strong>How would you add e-books?</strong> Create EBook extending abstract LibraryItem. No physical copy tracking needed.</li>
+                    <li><strong>How to handle multi-branch libraries?</strong> Add Branch entity, BookItem belongs to a Branch. Inter-library loans need transfer logic.</li>
+                    <li><strong>How to implement full-text search?</strong> Integrate Elasticsearch/Lucene. Current design is title/author matching only.</li>
+                    <li><strong>How to handle high traffic?</strong> Separate read replicas for search, cache popular books, event-driven notifications.</li>
+                </ol>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="vending-machine.html" class="btn btn-secondary">← Vending Machine</a>
+                <a href="../index.html" class="btn btn-primary">Back to Course →</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+</body>
+</html>

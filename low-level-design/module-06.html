@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 6: Interview Delivery Framework | Low-Level Design</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="../index.html" class="logo">Staff Eng Prep</a>
+            <div class="nav-links">
+                <a href="../coding-rounds/index.html">Coding</a>
+                <a href="../system-design/index.html">System Design</a>
+                <a href="index.html" class="active">LLD/OOD</a>
+                <a href="../behavioral/index.html">Behavioral</a>
+                <a href="../generative-ai/index.html">Gen AI</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>LLD/OOD Course</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link">Design Principles</a>
+                    <a href="module-02.html" class="sidebar-link">Creational Patterns</a>
+                    <a href="module-03.html" class="sidebar-link">Structural Patterns</a>
+                    <a href="module-04.html" class="sidebar-link">Behavioral Patterns</a>
+                    <a href="module-05.html" class="sidebar-link">UML & Class Diagrams</a>
+                    <a href="module-06.html" class="sidebar-link active">Interview Framework</a>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Practice Problems</div>
+                    <a href="problems/parking-lot.html" class="sidebar-link">Parking Lot System</a>
+                    <a href="problems/elevator.html" class="sidebar-link">Elevator System</a>
+                    <a href="problems/vending-machine.html" class="sidebar-link">Vending Machine</a>
+                    <a href="problems/library.html" class="sidebar-link">Library Management</a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <h1>Module 6: Interview Delivery Framework</h1>
+
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>The structured approach to LLD interviews</li>
+                    <li>Time management across the 45-minute interview</li>
+                    <li>How to handle ambiguity and drive clarifications</li>
+                    <li>Staff-level communication and trade-off discussions</li>
+                    <li>Common pitfalls and how to avoid them</li>
+                </ul>
+            </div>
+
+            <h2>The LLD Interview Framework</h2>
+
+            <p>Unlike system design which focuses on distributed systems and scale, LLD interviews assess your ability to design clean, extensible, and maintainable object-oriented systems. At the staff level, you're expected to demonstrate not just knowledge of patterns, but <strong>judgment about when to apply them</strong>.</p>
+
+            <div class="diagram-container">
+                <pre class="mermaid">
+flowchart LR
+    subgraph Phase1["Phase 1: Clarify (5-7 min)"]
+        A[Understand Scope] --> B[Identify Actors]
+        B --> C[Define Use Cases]
+        C --> D[Establish Constraints]
+    end
+
+    subgraph Phase2["Phase 2: Design (25-30 min)"]
+        E[Identify Classes] --> F[Define Relationships]
+        F --> G[Apply Patterns]
+        G --> H[Handle Edge Cases]
+    end
+
+    subgraph Phase3["Phase 3: Implement (10-15 min)"]
+        I[Core Classes] --> J[Key Methods]
+        J --> K[Thread Safety]
+    end
+
+    Phase1 --> Phase2 --> Phase3
+                </pre>
+            </div>
+
+            <h2>Phase 1: Requirements Clarification (5-7 minutes)</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Why Clarification Matters at Staff Level</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>At staff level, you're being evaluated on <strong>how you handle ambiguity</strong>. Junior candidates often dive straight into coding. Staff engineers recognize that understanding the problem deeply prevents costly rework.</p>
+
+                    <h4>The FURPS+ Framework for Requirements</h4>
+                    <table>
+                        <tr>
+                            <th>Category</th>
+                            <th>Questions to Ask</th>
+                            <th>Example (Parking Lot)</th>
+                        </tr>
+                        <tr>
+                            <td><strong>F</strong>unctionality</td>
+                            <td>What are the core features?</td>
+                            <td>"Should we support reservations or just walk-in parking?"</td>
+                        </tr>
+                        <tr>
+                            <td><strong>U</strong>sability</td>
+                            <td>Who are the users? How do they interact?</td>
+                            <td>"Are there different interfaces for customers vs attendants?"</td>
+                        </tr>
+                        <tr>
+                            <td><strong>R</strong>eliability</td>
+                            <td>What happens when things fail?</td>
+                            <td>"How should we handle payment system failures?"</td>
+                        </tr>
+                        <tr>
+                            <td><strong>P</strong>erformance</td>
+                            <td>What are the scale requirements?</td>
+                            <td>"How many vehicles per hour? Concurrent entry/exit?"</td>
+                        </tr>
+                        <tr>
+                            <td><strong>S</strong>upportability</td>
+                            <td>How will this be maintained?</td>
+                            <td>"Should pricing be configurable without code changes?"</td>
+                        </tr>
+                    </table>
+
+                    <h4>Scoping Strategically</h4>
+                    <div class="card">
+                        <h4>Staff Engineer Tip</h4>
+                        <p>Don't ask "Should I include feature X?" Instead, state your assumption and get confirmation:</p>
+                        <p><em>"I'll assume we need multiple vehicle types (car, motorcycle, truck) with different spot sizes. For the scope of this interview, I'll focus on the core parking flow and mention how we'd extend for electric vehicle charging. Does that align with what you'd like to see?"</em></p>
+                    </div>
+
+                    <h4>Sample Clarifying Questions by Problem Type</h4>
+
+                    <pre><code class="language-java">// Parking Lot
+"Is this a single lot or multi-location?"
+"Do we need real-time availability display?"
+"Should we optimize for finding nearest spot or first available?"
+"Are there special spots (handicapped, EV charging)?"
+
+// Elevator System
+"How many elevators? How many floors?"
+"Should we optimize for wait time or energy?"
+"Are there express elevators or freight elevators?"
+"Do we need access control for certain floors?"
+
+// Library System
+"What's the typical book/member count?"
+"Do we need reservation queues for popular books?"
+"Should we handle different media types (books, DVDs, magazines)?"
+"Are there different borrowing limits by membership tier?"</code></pre>
+                </div>
+            </div>
+
+            <h2>Phase 2: Object-Oriented Design (25-30 minutes)</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>The SOLID Design Process</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Step 1: Identify Core Entities</h4>
+                    <p>Start by listing nouns from your requirements. These become candidate classes.</p>
+
+                    <pre><code class="language-java">// From requirements: "A parking lot has multiple floors, each with
+// different types of spots for vehicles"
+
+// Nouns identified:
+// - ParkingLot (the system)
+// - ParkingFloor (container)
+// - ParkingSpot (resource)
+// - Vehicle (actor/resource)
+// - Ticket (artifact)
+// - Payment (transaction)</code></pre>
+
+                    <h4>Step 2: Define Relationships</h4>
+                    <p>For each pair of entities, determine the relationship type:</p>
+
+                    <div class="diagram-container">
+                        <pre class="mermaid">
+classDiagram
+    class ParkingLot {
+        -List~ParkingFloor~ floors
+        -EntrancePanel[] entrances
+        -ExitPanel[] exits
+    }
+
+    class ParkingFloor {
+        -int floorNumber
+        -Map~SpotType, List~ spots
+    }
+
+    class ParkingSpot {
+        -String spotId
+        -SpotType type
+        -boolean isOccupied
+    }
+
+    class Vehicle {
+        -String licensePlate
+        -VehicleType type
+    }
+
+    ParkingLot "1" *-- "many" ParkingFloor : composition
+    ParkingFloor "1" *-- "many" ParkingSpot : composition
+    ParkingSpot "1" o-- "0..1" Vehicle : aggregation
+                        </pre>
+                    </div>
+
+                    <h4>Step 3: Apply Design Patterns Judiciously</h4>
+
+                    <table>
+                        <tr>
+                            <th>Problem Domain</th>
+                            <th>Common Patterns</th>
+                            <th>When to Apply</th>
+                        </tr>
+                        <tr>
+                            <td>Single resource manager</td>
+                            <td>Singleton</td>
+                            <td>ParkingLot, ElevatorController - single point of coordination</td>
+                        </tr>
+                        <tr>
+                            <td>Multiple object types</td>
+                            <td>Factory</td>
+                            <td>Creating Vehicle/Spot/Payment subtypes</td>
+                        </tr>
+                        <tr>
+                            <td>Algorithm variation</td>
+                            <td>Strategy</td>
+                            <td>Pricing rules, spot allocation, elevator scheduling</td>
+                        </tr>
+                        <tr>
+                            <td>State transitions</td>
+                            <td>State</td>
+                            <td>Elevator states, Vending machine states</td>
+                        </tr>
+                        <tr>
+                            <td>Event notification</td>
+                            <td>Observer</td>
+                            <td>Display boards, availability updates</td>
+                        </tr>
+                        <tr>
+                            <td>Request handling chain</td>
+                            <td>Chain of Responsibility</td>
+                            <td>Payment processing, validation chains</td>
+                        </tr>
+                    </table>
+
+                    <div class="card" style="border-left: 4px solid #f59e0b;">
+                        <h4>Staff-Level Judgment</h4>
+                        <p><strong>Don't force patterns.</strong> If asked "Why did you use Strategy here?", you should have a concrete reason:</p>
+                        <ul>
+                            <li>"We need different pricing during peak hours, weekends, and holidays - Strategy lets us swap algorithms at runtime"</li>
+                            <li>"Different spot allocation strategies (nearest to entrance, nearest to exit, load balancing) - the lot manager shouldn't know the algorithm details"</li>
+                        </ul>
+                        <p>If you can't articulate why, you probably don't need the pattern.</p>
+                    </div>
+
+                    <h4>Step 4: Handle Edge Cases</h4>
+                    <p>Proactively address edge cases before being asked:</p>
+
+                    <pre><code class="language-java">// Edge cases to consider for any LLD problem:
+
+// 1. Concurrency
+"Multiple vehicles entering simultaneously - we need thread-safe
+spot allocation with proper locking"
+
+// 2. Failure scenarios
+"What if payment fails after the vehicle is parked?
+We could allow exit with manual payment or barrier remains closed"
+
+// 3. Boundary conditions
+"What if all spots are full? We show 'FULL' on display and
+reject new entries at the entrance panel"
+
+// 4. Consistency
+"A spot should never show as available while occupied -
+we use transactions to update spot status atomically"</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Communicating Your Design</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>The "Think Aloud" Protocol</h4>
+                    <p>Staff engineers are expected to communicate their thought process clearly. Use this template:</p>
+
+                    <pre><code class="language-plaintext">1. STATE the problem you're solving
+   "We need to allocate spots efficiently..."
+
+2. LIST options
+   "We could use a simple list, priority queue, or hash map..."
+
+3. EVALUATE trade-offs
+   "A priority queue gives O(log n) allocation but O(n) removal..."
+
+4. DECIDE with justification
+   "I'll use a hash map of available spots by type for O(1) lookup..."
+
+5. ACKNOWLEDGE limitations
+   "This uses more memory but interview time is limited..."</code></pre>
+
+                    <h4>Whiteboard/Diagram Tips</h4>
+                    <ul>
+                        <li><strong>Start with a high-level class diagram</strong> - show major classes and relationships</li>
+                        <li><strong>Add detail progressively</strong> - don't fill in all methods upfront</li>
+                        <li><strong>Use consistent notation</strong> - UML-like symbols that the interviewer understands</li>
+                        <li><strong>Leave space</strong> - you'll add more as you discuss</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2>Phase 3: Implementation (10-15 minutes)</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>What to Implement</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>You won't have time to implement everything. Focus on:</p>
+
+                    <h4>Priority 1: Core Domain Classes</h4>
+                    <pre><code class="language-java">// Implement the main entities with their key attributes
+public class ParkingSpot {
+    private final String spotId;
+    private final SpotType type;
+    private Vehicle currentVehicle;
+    private final ReentrantLock lock = new ReentrantLock();
+
+    public ParkingSpot(String spotId, SpotType type) {
+        this.spotId = spotId;
+        this.type = type;
+    }
+
+    public boolean canFitVehicle(Vehicle vehicle) {
+        return this.type.canAccommodate(vehicle.getType());
+    }
+
+    public boolean occupy(Vehicle vehicle) {
+        lock.lock();
+        try {
+            if (currentVehicle != null) return false;
+            currentVehicle = vehicle;
+            return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public Vehicle vacate() {
+        lock.lock();
+        try {
+            Vehicle v = currentVehicle;
+            currentVehicle = null;
+            return v;
+        } finally {
+            lock.unlock();
+        }
+    }
+}</code></pre>
+
+                    <h4>Priority 2: Key Business Logic</h4>
+                    <pre><code class="language-java">// The main operations that demonstrate your design
+public class ParkingLot {
+    private static volatile ParkingLot instance;
+    private final List&lt;ParkingFloor&gt; floors;
+    private final SpotAllocationStrategy allocationStrategy;
+
+    public ParkingTicket parkVehicle(Vehicle vehicle) {
+        // 1. Find available spot using strategy
+        ParkingSpot spot = allocationStrategy.findSpot(vehicle, floors);
+
+        if (spot == null) {
+            throw new ParkingFullException("No spot available for " +
+                vehicle.getType());
+        }
+
+        // 2. Occupy the spot (thread-safe)
+        if (!spot.occupy(vehicle)) {
+            // Race condition - retry
+            return parkVehicle(vehicle);
+        }
+
+        // 3. Generate ticket
+        return new ParkingTicket(
+            UUID.randomUUID().toString(),
+            vehicle,
+            spot,
+            LocalDateTime.now()
+        );
+    }
+}</code></pre>
+
+                    <h4>Priority 3: One Complete Flow</h4>
+                    <pre><code class="language-java">// Show end-to-end: entry -> parking -> exit -> payment
+public class ParkingSystem {
+    private final ParkingLot lot;
+    private final PaymentProcessor paymentProcessor;
+    private final TicketRepository ticketRepo;
+
+    public ParkingTicket vehicleEntry(Vehicle vehicle) {
+        ParkingTicket ticket = lot.parkVehicle(vehicle);
+        ticketRepo.save(ticket);
+        displayTicket(ticket);
+        openEntryBarrier();
+        return ticket;
+    }
+
+    public Receipt vehicleExit(String ticketId, PaymentMethod method) {
+        ParkingTicket ticket = ticketRepo.find(ticketId);
+
+        // Calculate charges
+        Duration duration = Duration.between(
+            ticket.getEntryTime(),
+            LocalDateTime.now()
+        );
+        Money amount = lot.getPricingStrategy()
+            .calculateFee(ticket.getSpot().getType(), duration);
+
+        // Process payment
+        Receipt receipt = paymentProcessor.process(amount, method);
+
+        // Free spot
+        ticket.getSpot().vacate();
+
+        openExitBarrier();
+        return receipt;
+    }
+}</code></pre>
+
+                    <h4>What NOT to Implement</h4>
+                    <ul>
+                        <li><strong>Getters/Setters</strong> - "I'll add standard accessors, skipping for time"</li>
+                        <li><strong>Constructors</strong> - "Assume standard constructor with validation"</li>
+                        <li><strong>toString/equals/hashCode</strong> - Mention if relevant, don't write</li>
+                        <li><strong>Exception details</strong> - "CustomException extends RuntimeException"</li>
+                        <li><strong>Logging/Metrics</strong> - "In production, I'd add logging here"</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2>Staff-Level Differentiators</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>What Sets Staff Engineers Apart</span>
+                </div>
+                <div class="collapsible-content">
+                    <table>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>Senior Engineer</th>
+                            <th>Staff Engineer</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Requirements</strong></td>
+                            <td>Asks what to build</td>
+                            <td>Proposes scope based on time constraints</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Patterns</strong></td>
+                            <td>Applies patterns they know</td>
+                            <td>Selects patterns based on specific needs</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Trade-offs</strong></td>
+                            <td>Mentions trade-offs when asked</td>
+                            <td>Proactively discusses alternatives</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Extensibility</strong></td>
+                            <td>Builds for current requirements</td>
+                            <td>Identifies extension points for likely changes</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Thread Safety</strong></td>
+                            <td>Adds synchronized when needed</td>
+                            <td>Designs for concurrency from the start</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Testing</strong></td>
+                            <td>Mentions testing exists</td>
+                            <td>Designs for testability (DI, interfaces)</td>
+                        </tr>
+                    </table>
+
+                    <h4>Demonstrating Technical Judgment</h4>
+                    <pre><code class="language-java">// Instead of just using Singleton, explain WHY:
+
+// "I'm using Singleton for ParkingLot because:
+// 1. There's genuinely only one lot in our system
+// 2. Multiple instances would cause spot allocation conflicts
+// 3. It simplifies access from EntryPanel and ExitPanel
+//
+// But I'm using enum-based or holder pattern for thread-safety,
+// not double-checked locking which has subtle issues on some JVMs"
+
+public enum ParkingLot {
+    INSTANCE;
+
+    private final List&lt;ParkingFloor&gt; floors = new ArrayList&lt;&gt;();
+    private final SpotAllocationStrategy strategy;
+
+    ParkingLot() {
+        this.strategy = new NearestSpotStrategy();
+    }
+
+    public ParkingTicket park(Vehicle vehicle) {
+        // Implementation
+    }
+}</code></pre>
+
+                    <h4>Discussing Extensibility</h4>
+                    <pre><code class="language-java">// Proactively mention future extensions:
+
+"I've designed this with several extension points:
+
+1. SpotAllocationStrategy interface - allows different algorithms:
+   - NearestToEntrance for customer convenience
+   - NearestToExit for quick departure
+   - LoadBalanced to distribute wear evenly
+
+2. VehicleType enum can be extended for electric vehicles,
+   which would need a new ChargingSpot subclass
+
+3. PricingStrategy can handle:
+   - Time-based pricing (current)
+   - Dynamic pricing based on occupancy
+   - Membership discounts
+
+4. PaymentMethod uses Strategy pattern - easy to add
+   Apple Pay, Google Pay, cryptocurrency without changing core"</code></pre>
+                </div>
+            </div>
+
+            <h2>Common Pitfalls and How to Avoid Them</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Mistakes That Hurt Your Evaluation</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Pitfall 1: Over-Engineering</h4>
+                    <div class="card" style="border-left: 4px solid #ef4444;">
+                        <h4>Anti-Pattern</h4>
+                        <pre><code class="language-java">// Don't create abstraction layers for everything
+public interface IVehicleFactory {
+    IVehicle createVehicle(IVehicleConfig config);
+}
+
+public interface IVehicle {
+    IVehicleType getType();
+}
+
+public interface IVehicleType {
+    ISpotRequirement getSpotRequirement();
+}
+
+// This is excessive for an interview</code></pre>
+                    </div>
+
+                    <div class="card" style="border-left: 4px solid #22c55e;">
+                        <h4>Better Approach</h4>
+                        <pre><code class="language-java">// Simple, clear, extensible
+public abstract class Vehicle {
+    protected String licensePlate;
+    protected VehicleType type;
+
+    public abstract SpotType getRequiredSpotType();
+}
+
+public class Car extends Vehicle {
+    public SpotType getRequiredSpotType() {
+        return SpotType.COMPACT;
+    }
+}</code></pre>
+                    </div>
+
+                    <h4>Pitfall 2: Ignoring Concurrency</h4>
+                    <div class="card" style="border-left: 4px solid #ef4444;">
+                        <h4>Anti-Pattern</h4>
+                        <pre><code class="language-java">// Race condition: two vehicles could get same spot
+public ParkingSpot findAvailableSpot() {
+    for (ParkingSpot spot : spots) {
+        if (spot.isAvailable()) {  // Check
+            spot.setAvailable(false);  // Set - TOCTOU bug!
+            return spot;
+        }
+    }
+    return null;
+}</code></pre>
+                    </div>
+
+                    <div class="card" style="border-left: 4px solid #22c55e;">
+                        <h4>Better Approach</h4>
+                        <pre><code class="language-java">// Atomic check-and-set with proper locking
+public ParkingSpot findAndOccupySpot(Vehicle vehicle) {
+    for (ParkingSpot spot : spots) {
+        if (spot.tryOccupy(vehicle)) {  // Atomic operation
+            return spot;
+        }
+    }
+    return null;
+}
+
+// In ParkingSpot class:
+public boolean tryOccupy(Vehicle vehicle) {
+    lock.lock();
+    try {
+        if (this.vehicle != null) return false;
+        this.vehicle = vehicle;
+        return true;
+    } finally {
+        lock.unlock();
+    }
+}</code></pre>
+                    </div>
+
+                    <h4>Pitfall 3: Not Validating Inputs</h4>
+                    <pre><code class="language-java">// Always validate at system boundaries
+public ParkingTicket parkVehicle(Vehicle vehicle) {
+    Objects.requireNonNull(vehicle, "Vehicle cannot be null");
+
+    if (vehicle.getLicensePlate() == null ||
+        vehicle.getLicensePlate().isBlank()) {
+        throw new IllegalArgumentException("Invalid license plate");
+    }
+
+    // Now proceed with parking logic
+}</code></pre>
+
+                    <h4>Pitfall 4: Tight Coupling</h4>
+                    <div class="card" style="border-left: 4px solid #ef4444;">
+                        <h4>Anti-Pattern</h4>
+                        <pre><code class="language-java">public class ParkingLot {
+    // Hard dependency on concrete implementations
+    private MySQLDatabase database = new MySQLDatabase();
+    private StripePayment payment = new StripePayment();
+    private EmailService email = new EmailService();
+}</code></pre>
+                    </div>
+
+                    <div class="card" style="border-left: 4px solid #22c55e;">
+                        <h4>Better Approach</h4>
+                        <pre><code class="language-java">public class ParkingLot {
+    // Depend on abstractions - inject implementations
+    private final TicketRepository ticketRepo;
+    private final PaymentProcessor paymentProcessor;
+    private final NotificationService notificationService;
+
+    public ParkingLot(
+            TicketRepository ticketRepo,
+            PaymentProcessor paymentProcessor,
+            NotificationService notificationService) {
+        this.ticketRepo = ticketRepo;
+        this.paymentProcessor = paymentProcessor;
+        this.notificationService = notificationService;
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Time Management Template</h2>
+
+            <div class="card">
+                <h3>45-Minute Interview Breakdown</h3>
+                <table>
+                    <tr>
+                        <th>Phase</th>
+                        <th>Time</th>
+                        <th>Activities</th>
+                        <th>Deliverables</th>
+                    </tr>
+                    <tr>
+                        <td>Clarify</td>
+                        <td>5-7 min</td>
+                        <td>Ask questions, define scope, list use cases</td>
+                        <td>Written list of requirements and assumptions</td>
+                    </tr>
+                    <tr>
+                        <td>Design</td>
+                        <td>15-20 min</td>
+                        <td>Identify classes, define relationships, apply patterns</td>
+                        <td>Class diagram with relationships</td>
+                    </tr>
+                    <tr>
+                        <td>Implement</td>
+                        <td>15-20 min</td>
+                        <td>Write core classes and key methods</td>
+                        <td>Working code for main flow</td>
+                    </tr>
+                    <tr>
+                        <td>Discuss</td>
+                        <td>5 min</td>
+                        <td>Trade-offs, extensions, questions</td>
+                        <td>Demonstrate depth and judgment</td>
+                    </tr>
+                </table>
+            </div>
+
+            <h2>Quick Reference: Design Pattern Selection</h2>
+
+            <div class="card">
+                <h3>When to Use Which Pattern</h3>
+                <pre><code class="language-plaintext">Need single instance?          → Singleton (enum-based)
+Creating family of objects?    → Abstract Factory
+Building complex object?       → Builder
+Multiple algorithms?           → Strategy
+Object state changes behavior? → State
+Notify multiple observers?     → Observer
+Undo/redo operations?          → Command
+Request passes through chain?  → Chain of Responsibility
+Convert interface?             → Adapter
+Add behavior dynamically?      → Decorator
+Hide complexity?               → Facade
+Control access?                → Proxy
+Tree structure?                → Composite</code></pre>
+            </div>
+
+            <h2>Interview Checklist</h2>
+
+            <div class="card">
+                <h3>Before Submitting Your Design</h3>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li>☐ All core use cases are handled</li>
+                    <li>☐ Class relationships are clearly defined</li>
+                    <li>☐ Thread safety is addressed where needed</li>
+                    <li>☐ Input validation exists at boundaries</li>
+                    <li>☐ Design is testable (DI, interfaces)</li>
+                    <li>☐ Extension points are identified</li>
+                    <li>☐ Trade-offs are acknowledged</li>
+                    <li>☐ Code compiles (syntactically correct)</li>
+                </ul>
+            </div>
+
+            <h2>Practice Questions</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Self-Assessment Quiz</span>
+                </div>
+                <div class="collapsible-content">
+                    <ol>
+                        <li>What's the difference between Aggregation and Composition? Give an example from a Parking Lot system.</li>
+                        <li>When would you use Strategy pattern vs State pattern? How would you explain the difference to an interviewer?</li>
+                        <li>How would you make a Singleton thread-safe in Java? What are the trade-offs between different approaches?</li>
+                        <li>What SOLID principle does dependency injection support? Why is this important for testing?</li>
+                        <li>How do you handle the case where two vehicles try to park in the same spot simultaneously?</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="module-05.html" class="btn btn-secondary">← Previous: UML & Class Diagrams</a>
+                <a href="problems/parking-lot.html" class="btn btn-primary">Practice: Parking Lot →</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+</body>
+</html>

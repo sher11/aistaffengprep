@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vending Machine | LLD Practice Problems</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="../../index.html" class="logo">Staff Eng Prep</a>
+            <div class="nav-links">
+                <a href="../../coding-rounds/index.html">Coding</a>
+                <a href="../../system-design/index.html">System Design</a>
+                <a href="../index.html" class="active">LLD/OOD</a>
+                <a href="../../behavioral/index.html">Behavioral</a>
+                <a href="../../generative-ai/index.html">Gen AI</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>LLD/OOD Course</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="../module-01.html" class="sidebar-link">Design Principles</a>
+                    <a href="../module-02.html" class="sidebar-link">Creational Patterns</a>
+                    <a href="../module-03.html" class="sidebar-link">Structural Patterns</a>
+                    <a href="../module-04.html" class="sidebar-link">Behavioral Patterns</a>
+                    <a href="../module-05.html" class="sidebar-link">UML & Class Diagrams</a>
+                    <a href="../module-06.html" class="sidebar-link">Interview Framework</a>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Practice Problems</div>
+                    <a href="parking-lot.html" class="sidebar-link">Parking Lot System</a>
+                    <a href="elevator.html" class="sidebar-link">Elevator System</a>
+                    <a href="vending-machine.html" class="sidebar-link active">Vending Machine</a>
+                    <a href="library.html" class="sidebar-link">Library Management</a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <h1 style="margin: 0;">Vending Machine</h1>
+                <span class="badge badge-success">Medium</span>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h3>Problem Statement</h3>
+                <p>Design a vending machine that sells products. The machine should accept coins/cash, dispense products, return change, and handle various edge cases like insufficient funds or out-of-stock items.</p>
+            </div>
+
+            <h2>1. Requirements Clarification</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Questions to Ask Your Interviewer</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Functional Requirements</h4>
+                    <ul>
+                        <li><strong>Products:</strong> Single type or multiple products? Different prices?</li>
+                        <li><strong>Payment:</strong> Coins only? Cash? Card payments?</li>
+                        <li><strong>Change:</strong> Should machine return change?</li>
+                        <li><strong>Inventory:</strong> Multiple items per slot? Limited capacity?</li>
+                        <li><strong>Display:</strong> Show product info, prices, current balance?</li>
+                    </ul>
+
+                    <h4>Non-Functional Requirements</h4>
+                    <ul>
+                        <li><strong>Reliability:</strong> How to handle hardware failures?</li>
+                        <li><strong>Concurrency:</strong> Can multiple users interact simultaneously? (Usually no for single machine)</li>
+                        <li><strong>Maintenance:</strong> Restocking, collecting money, updating prices?</li>
+                    </ul>
+
+                    <h4>Our Assumptions</h4>
+                    <div class="card">
+                        <ul>
+                            <li>Multiple products with different prices</li>
+                            <li>Accept coins (quarters, dimes, nickels) and bills ($1, $5)</li>
+                            <li>Return change in coins</li>
+                            <li>Grid-based product layout (A1, A2, B1, B2, etc.)</li>
+                            <li>Display current balance and product info</li>
+                            <li>Admin operations for restocking and collecting money</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2>2. Use Cases</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Core Use Cases</span>
+                </div>
+                <div class="collapsible-content">
+                    <table>
+                        <tr>
+                            <th>Use Case</th>
+                            <th>Actor</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>Insert Money</td>
+                            <td>Customer</td>
+                            <td>Insert coins or bills to add balance</td>
+                        </tr>
+                        <tr>
+                            <td>Select Product</td>
+                            <td>Customer</td>
+                            <td>Choose product by code (e.g., A1)</td>
+                        </tr>
+                        <tr>
+                            <td>Dispense Product</td>
+                            <td>System</td>
+                            <td>Release product if payment sufficient</td>
+                        </tr>
+                        <tr>
+                            <td>Return Change</td>
+                            <td>System</td>
+                            <td>Return excess money to customer</td>
+                        </tr>
+                        <tr>
+                            <td>Cancel Transaction</td>
+                            <td>Customer</td>
+                            <td>Request refund of inserted money</td>
+                        </tr>
+                        <tr>
+                            <td>Restock Products</td>
+                            <td>Admin</td>
+                            <td>Add products to inventory</td>
+                        </tr>
+                        <tr>
+                            <td>Collect Money</td>
+                            <td>Admin</td>
+                            <td>Empty money from machine</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <h2>3. Class Diagram</h2>
+
+            <div class="diagram-container">
+                <pre class="mermaid">
+classDiagram
+    class VendingMachine {
+        -Inventory inventory
+        -CoinDispenser coinDispenser
+        -VendingMachineState currentState
+        -int currentBalance
+        +insertMoney(money)
+        +selectProduct(code)
+        +dispenseProduct()
+        +returnChange()
+        +cancelTransaction()
+    }
+
+    class VendingMachineState {
+        <<interface>>
+        +insertMoney(machine, money)
+        +selectProduct(machine, code)
+        +dispense(machine)
+        +cancel(machine)
+    }
+
+    class IdleState {
+        +insertMoney(machine, money)
+        +selectProduct(machine, code)
+    }
+
+    class HasMoneyState {
+        +insertMoney(machine, money)
+        +selectProduct(machine, code)
+        +cancel(machine)
+    }
+
+    class DispensingState {
+        +dispense(machine)
+    }
+
+    class Product {
+        -String code
+        -String name
+        -int price
+        -ProductType type
+    }
+
+    class Slot {
+        -String code
+        -Product product
+        -int quantity
+        -int maxCapacity
+        +dispense()
+        +restock(quantity)
+        +isEmpty()
+    }
+
+    class Inventory {
+        -Map~String, Slot~ slots
+        +getSlot(code)
+        +addSlot(slot)
+        +isAvailable(code)
+    }
+
+    class Money {
+        <<interface>>
+        +getValue()
+    }
+
+    class Coin {
+        <<enumeration>>
+        QUARTER
+        DIME
+        NICKEL
+        PENNY
+    }
+
+    class Bill {
+        <<enumeration>>
+        ONE
+        FIVE
+        TEN
+        TWENTY
+    }
+
+    class CoinDispenser {
+        -Map~Coin, Integer~ coinInventory
+        +dispenseChange(amount)
+        +addCoins(coin, quantity)
+        +canMakeChange(amount)
+    }
+
+    VendingMachine --> VendingMachineState : has state
+    VendingMachine "1" --> "1" Inventory : contains
+    VendingMachine "1" --> "1" CoinDispenser : has
+    VendingMachineState <|.. IdleState
+    VendingMachineState <|.. HasMoneyState
+    VendingMachineState <|.. DispensingState
+    Inventory "1" --> "*" Slot : contains
+    Slot --> Product : holds
+    Money <|.. Coin
+    Money <|.. Bill
+                </pre>
+            </div>
+
+            <h2>4. Design Patterns Used</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Key Patterns and Rationale</span>
+                </div>
+                <div class="collapsible-content">
+                    <table>
+                        <tr>
+                            <th>Pattern</th>
+                            <th>Usage</th>
+                            <th>Why</th>
+                        </tr>
+                        <tr>
+                            <td><strong>State</strong></td>
+                            <td>Machine behavior</td>
+                            <td>Behavior changes dramatically based on state (idle, has money, dispensing)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Singleton</strong></td>
+                            <td>VendingMachine</td>
+                            <td>Physical machine is a single resource</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Strategy</strong></td>
+                            <td>Change calculation</td>
+                            <td>Different algorithms (greedy, minimize coins) for making change</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Factory</strong></td>
+                            <td>Product creation</td>
+                            <td>Create different product types (snack, drink, etc.)</td>
+                        </tr>
+                    </table>
+
+                    <h4>State Transition Diagram</h4>
+                    <div class="diagram-container">
+                        <pre class="mermaid">
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> HasMoney : insertMoney()
+    HasMoney --> HasMoney : insertMoney()
+    HasMoney --> Idle : cancel()
+    HasMoney --> Dispensing : selectProduct() [sufficient funds]
+    HasMoney --> HasMoney : selectProduct() [insufficient funds]
+    Dispensing --> Idle : dispense() [no change]
+    Dispensing --> ReturningChange : dispense() [has change]
+    ReturningChange --> Idle : returnChange()
+                        </pre>
+                    </div>
+                </div>
+            </div>
+
+            <h2>5. Core Implementation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Money Classes</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public interface Money {
+    int getValue();  // Value in cents
+    String getName();
+}
+
+public enum Coin implements Money {
+    QUARTER(25, "Quarter"),
+    DIME(10, "Dime"),
+    NICKEL(5, "Nickel"),
+    PENNY(1, "Penny");
+
+    private final int value;
+    private final String name;
+
+    Coin(int value, String name) {
+        this.value = value;
+        this.name = name;
+    }
+
+    @Override
+    public int getValue() { return value; }
+
+    @Override
+    public String getName() { return name; }
+}
+
+public enum Bill implements Money {
+    ONE(100, "$1"),
+    FIVE(500, "$5"),
+    TEN(1000, "$10"),
+    TWENTY(2000, "$20");
+
+    private final int value;
+    private final String name;
+
+    Bill(int value, String name) {
+        this.value = value;
+        this.name = name;
+    }
+
+    @Override
+    public int getValue() { return value; }
+
+    @Override
+    public String getName() { return name; }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Product and Slot Classes</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public enum ProductType {
+    SNACK, DRINK, CANDY, OTHER
+}
+
+public class Product {
+    private final String code;
+    private final String name;
+    private final int price;  // Price in cents
+    private final ProductType type;
+
+    public Product(String code, String name, int price, ProductType type) {
+        this.code = code;
+        this.name = name;
+        this.price = price;
+        this.type = type;
+    }
+
+    // Getters
+    public String getCode() { return code; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public ProductType getType() { return type; }
+
+    @Override
+    public String toString() {
+        return String.format("%s - %s ($%.2f)", code, name, price / 100.0);
+    }
+}
+
+public class Slot {
+    private final String code;  // e.g., "A1", "B2"
+    private Product product;
+    private int quantity;
+    private final int maxCapacity;
+
+    public Slot(String code, int maxCapacity) {
+        this.code = code;
+        this.maxCapacity = maxCapacity;
+        this.quantity = 0;
+    }
+
+    public Slot(String code, Product product, int quantity, int maxCapacity) {
+        this.code = code;
+        this.product = product;
+        this.quantity = Math.min(quantity, maxCapacity);
+        this.maxCapacity = maxCapacity;
+    }
+
+    public synchronized Product dispense() {
+        if (isEmpty()) {
+            throw new OutOfStockException("Slot " + code + " is empty");
+        }
+        quantity--;
+        return product;
+    }
+
+    public synchronized void restock(Product product, int qty) {
+        this.product = product;
+        this.quantity = Math.min(quantity + qty, maxCapacity);
+    }
+
+    public boolean isEmpty() {
+        return quantity <= 0;
+    }
+
+    public boolean hasProduct() {
+        return product != null && quantity > 0;
+    }
+
+    // Getters
+    public String getCode() { return code; }
+    public Product getProduct() { return product; }
+    public int getQuantity() { return quantity; }
+    public int getMaxCapacity() { return maxCapacity; }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Inventory Class</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class Inventory {
+    private final Map&lt;String, Slot&gt; slots;
+    private final int rows;
+    private final int columns;
+
+    public Inventory(int rows, int columns, int slotCapacity) {
+        this.rows = rows;
+        this.columns = columns;
+        this.slots = new HashMap&lt;&gt;();
+
+        // Initialize slots (A1, A2, ..., B1, B2, ...)
+        for (int r = 0; r < rows; r++) {
+            char row = (char) ('A' + r);
+            for (int c = 1; c <= columns; c++) {
+                String code = "" + row + c;
+                slots.put(code, new Slot(code, slotCapacity));
+            }
+        }
+    }
+
+    public Slot getSlot(String code) {
+        Slot slot = slots.get(code.toUpperCase());
+        if (slot == null) {
+            throw new InvalidSlotException("Invalid slot code: " + code);
+        }
+        return slot;
+    }
+
+    public boolean isAvailable(String code) {
+        Slot slot = slots.get(code.toUpperCase());
+        return slot != null && slot.hasProduct();
+    }
+
+    public void restock(String code, Product product, int quantity) {
+        Slot slot = getSlot(code);
+        slot.restock(product, quantity);
+    }
+
+    public List&lt;Slot&gt; getAllSlots() {
+        return new ArrayList&lt;&gt;(slots.values());
+    }
+
+    public List&lt;Slot&gt; getAvailableSlots() {
+        return slots.values().stream()
+            .filter(Slot::hasProduct)
+            .collect(Collectors.toList());
+    }
+
+    public void displayInventory() {
+        System.out.println("\n=== Vending Machine Products ===");
+        for (int r = 0; r < rows; r++) {
+            char row = (char) ('A' + r);
+            for (int c = 1; c <= columns; c++) {
+                String code = "" + row + c;
+                Slot slot = slots.get(code);
+                if (slot.hasProduct()) {
+                    Product p = slot.getProduct();
+                    System.out.printf("[%s] %s $%.2f (%d left)%n",
+                        code, p.getName(), p.getPrice() / 100.0, slot.getQuantity());
+                } else {
+                    System.out.printf("[%s] EMPTY%n", code);
+                }
+            }
+        }
+        System.out.println();
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>State Pattern - Vending Machine States</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public interface VendingMachineState {
+    void insertMoney(VendingMachine machine, Money money);
+    void selectProduct(VendingMachine machine, String code);
+    void dispense(VendingMachine machine);
+    void cancel(VendingMachine machine);
+    String getStateName();
+}
+
+public class IdleState implements VendingMachineState {
+
+    @Override
+    public void insertMoney(VendingMachine machine, Money money) {
+        machine.addBalance(money.getValue());
+        System.out.println("Inserted: " + money.getName() +
+            ". Current balance: $" + machine.getBalanceFormatted());
+        machine.setState(new HasMoneyState());
+    }
+
+    @Override
+    public void selectProduct(VendingMachine machine, String code) {
+        System.out.println("Please insert money first");
+    }
+
+    @Override
+    public void dispense(VendingMachine machine) {
+        System.out.println("Please insert money and select a product");
+    }
+
+    @Override
+    public void cancel(VendingMachine machine) {
+        System.out.println("No transaction to cancel");
+    }
+
+    @Override
+    public String getStateName() { return "IDLE"; }
+}
+
+public class HasMoneyState implements VendingMachineState {
+
+    @Override
+    public void insertMoney(VendingMachine machine, Money money) {
+        machine.addBalance(money.getValue());
+        System.out.println("Inserted: " + money.getName() +
+            ". Current balance: $" + machine.getBalanceFormatted());
+    }
+
+    @Override
+    public void selectProduct(VendingMachine machine, String code) {
+        try {
+            Slot slot = machine.getInventory().getSlot(code);
+
+            if (!slot.hasProduct()) {
+                System.out.println("Product not available. Please select another.");
+                return;
+            }
+
+            Product product = slot.getProduct();
+            if (machine.getCurrentBalance() < product.getPrice()) {
+                int needed = product.getPrice() - machine.getCurrentBalance();
+                System.out.printf("Insufficient funds. Need $%.2f more%n",
+                    needed / 100.0);
+                return;
+            }
+
+            // Sufficient funds - proceed to dispense
+            machine.setSelectedSlot(slot);
+            machine.setState(new DispensingState());
+            machine.dispense();
+
+        } catch (InvalidSlotException e) {
+            System.out.println("Invalid product code: " + code);
+        }
+    }
+
+    @Override
+    public void dispense(VendingMachine machine) {
+        System.out.println("Please select a product first");
+    }
+
+    @Override
+    public void cancel(VendingMachine machine) {
+        int refund = machine.getCurrentBalance();
+        System.out.printf("Transaction cancelled. Refunding $%.2f%n",
+            refund / 100.0);
+        machine.returnChange(refund);
+        machine.resetTransaction();
+        machine.setState(new IdleState());
+    }
+
+    @Override
+    public String getStateName() { return "HAS_MONEY"; }
+}
+
+public class DispensingState implements VendingMachineState {
+
+    @Override
+    public void insertMoney(VendingMachine machine, Money money) {
+        System.out.println("Please wait, dispensing product...");
+    }
+
+    @Override
+    public void selectProduct(VendingMachine machine, String code) {
+        System.out.println("Please wait, dispensing product...");
+    }
+
+    @Override
+    public void dispense(VendingMachine machine) {
+        Slot slot = machine.getSelectedSlot();
+        Product product = slot.getProduct();
+
+        // Dispense product
+        slot.dispense();
+        System.out.println("\n*** Dispensing: " + product.getName() + " ***");
+
+        // Calculate change
+        int change = machine.getCurrentBalance() - product.getPrice();
+
+        // Collect payment
+        machine.collectPayment(product.getPrice());
+
+        // Return change if any
+        if (change > 0) {
+            machine.returnChange(change);
+        }
+
+        // Reset and return to idle
+        machine.resetTransaction();
+        machine.setState(new IdleState());
+        System.out.println("Thank you for your purchase!\n");
+    }
+
+    @Override
+    public void cancel(VendingMachine machine) {
+        System.out.println("Cannot cancel during dispensing");
+    }
+
+    @Override
+    public String getStateName() { return "DISPENSING"; }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>CoinDispenser with Change Algorithm</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class CoinDispenser {
+    private final Map&lt;Coin, Integer&gt; coinInventory;
+
+    public CoinDispenser() {
+        this.coinInventory = new EnumMap&lt;&gt;(Coin.class);
+        // Initialize with some coins
+        for (Coin coin : Coin.values()) {
+            coinInventory.put(coin, 0);
+        }
+    }
+
+    public void addCoins(Coin coin, int quantity) {
+        coinInventory.merge(coin, quantity, Integer::sum);
+    }
+
+    public void removeCoins(Coin coin, int quantity) {
+        int current = coinInventory.getOrDefault(coin, 0);
+        coinInventory.put(coin, Math.max(0, current - quantity));
+    }
+
+    /**
+     * Check if we can make exact change for the given amount
+     */
+    public boolean canMakeChange(int amount) {
+        return calculateChange(amount) != null;
+    }
+
+    /**
+     * Dispense change using greedy algorithm
+     * Returns map of coins dispensed, or null if cannot make exact change
+     */
+    public Map&lt;Coin, Integer&gt; dispenseChange(int amount) {
+        Map&lt;Coin, Integer&gt; change = calculateChange(amount);
+
+        if (change == null) {
+            throw new InsufficientChangeException(
+                "Cannot make exact change for $" + amount / 100.0);
+        }
+
+        // Actually dispense the coins
+        for (Map.Entry&lt;Coin, Integer&gt; entry : change.entrySet()) {
+            removeCoins(entry.getKey(), entry.getValue());
+        }
+
+        return change;
+    }
+
+    /**
+     * Greedy algorithm to calculate change
+     * Uses largest coins first (Quarter > Dime > Nickel > Penny)
+     */
+    private Map&lt;Coin, Integer&gt; calculateChange(int amount) {
+        Map&lt;Coin, Integer&gt; result = new EnumMap&lt;&gt;(Coin.class);
+        int remaining = amount;
+
+        // Sort coins by value (descending)
+        List&lt;Coin&gt; sortedCoins = Arrays.stream(Coin.values())
+            .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+            .collect(Collectors.toList());
+
+        for (Coin coin : sortedCoins) {
+            int available = coinInventory.getOrDefault(coin, 0);
+            int needed = remaining / coin.getValue();
+            int toUse = Math.min(needed, available);
+
+            if (toUse > 0) {
+                result.put(coin, toUse);
+                remaining -= toUse * coin.getValue();
+            }
+        }
+
+        // Check if we made exact change
+        if (remaining == 0) {
+            return result;
+        }
+
+        return null;  // Cannot make exact change
+    }
+
+    public void displayInventory() {
+        System.out.println("Coin Inventory:");
+        for (Coin coin : Coin.values()) {
+            System.out.printf("  %s: %d%n", coin.getName(),
+                coinInventory.getOrDefault(coin, 0));
+        }
+    }
+
+    public int getTotalValue() {
+        return coinInventory.entrySet().stream()
+            .mapToInt(e -> e.getKey().getValue() * e.getValue())
+            .sum();
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>VendingMachine Class</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class VendingMachine {
+    private static volatile VendingMachine instance;
+
+    private final Inventory inventory;
+    private final CoinDispenser coinDispenser;
+    private VendingMachineState currentState;
+
+    // Transaction state
+    private int currentBalance;
+    private Slot selectedSlot;
+    private int totalCollected;  // Total money collected
+
+    private VendingMachine(int rows, int columns, int slotCapacity) {
+        this.inventory = new Inventory(rows, columns, slotCapacity);
+        this.coinDispenser = new CoinDispenser();
+        this.currentState = new IdleState();
+        this.currentBalance = 0;
+        this.totalCollected = 0;
+
+        // Initialize coin dispenser with starting change
+        initializeCoinDispenser();
+    }
+
+    public static VendingMachine getInstance() {
+        if (instance == null) {
+            synchronized (VendingMachine.class) {
+                if (instance == null) {
+                    instance = new VendingMachine(4, 4, 10);
+                }
+            }
+        }
+        return instance;
+    }
+
+    // For testing
+    public static void resetInstance() {
+        instance = null;
+    }
+
+    private void initializeCoinDispenser() {
+        coinDispenser.addCoins(Coin.QUARTER, 20);
+        coinDispenser.addCoins(Coin.DIME, 20);
+        coinDispenser.addCoins(Coin.NICKEL, 20);
+        coinDispenser.addCoins(Coin.PENNY, 50);
+    }
+
+    // ============ Public API ============
+
+    public void insertMoney(Money money) {
+        currentState.insertMoney(this, money);
+    }
+
+    public void selectProduct(String code) {
+        currentState.selectProduct(this, code);
+    }
+
+    public void dispense() {
+        currentState.dispense(this);
+    }
+
+    public void cancel() {
+        currentState.cancel(this);
+    }
+
+    // ============ State Management ============
+
+    public void setState(VendingMachineState state) {
+        this.currentState = state;
+    }
+
+    public VendingMachineState getState() {
+        return currentState;
+    }
+
+    // ============ Balance Management ============
+
+    public void addBalance(int amount) {
+        this.currentBalance += amount;
+    }
+
+    public int getCurrentBalance() {
+        return currentBalance;
+    }
+
+    public String getBalanceFormatted() {
+        return String.format("%.2f", currentBalance / 100.0);
+    }
+
+    public void collectPayment(int amount) {
+        totalCollected += amount;
+        // Add bills as coins to dispenser (simplified)
+        coinDispenser.addCoins(Coin.QUARTER, amount / 25);
+    }
+
+    public void returnChange(int amount) {
+        if (amount <= 0) return;
+
+        try {
+            Map&lt;Coin, Integer&gt; change = coinDispenser.dispenseChange(amount);
+            System.out.printf("Change returned: $%.2f%n", amount / 100.0);
+            for (Map.Entry&lt;Coin, Integer&gt; entry : change.entrySet()) {
+                if (entry.getValue() > 0) {
+                    System.out.printf("  %d x %s%n",
+                        entry.getValue(), entry.getKey().getName());
+                }
+            }
+        } catch (InsufficientChangeException e) {
+            System.out.println("ERROR: Cannot make exact change. Please contact support.");
+            // In real system: alert maintenance, provide voucher, etc.
+        }
+    }
+
+    public void resetTransaction() {
+        currentBalance = 0;
+        selectedSlot = null;
+    }
+
+    // ============ Inventory Access ============
+
+    public Inventory getInventory() {
+        return inventory;
+    }
+
+    public void setSelectedSlot(Slot slot) {
+        this.selectedSlot = slot;
+    }
+
+    public Slot getSelectedSlot() {
+        return selectedSlot;
+    }
+
+    // ============ Admin Operations ============
+
+    public void restockProduct(String code, Product product, int quantity) {
+        inventory.restock(code, product, quantity);
+        System.out.printf("Restocked %s with %d x %s%n",
+            code, quantity, product.getName());
+    }
+
+    public int collectMoney() {
+        int collected = totalCollected;
+        totalCollected = 0;
+        System.out.printf("Collected: $%.2f%n", collected / 100.0);
+        return collected;
+    }
+
+    public void refillCoins(Coin coin, int quantity) {
+        coinDispenser.addCoins(coin, quantity);
+    }
+
+    public void displayStatus() {
+        System.out.println("\n=== Vending Machine Status ===");
+        System.out.println("State: " + currentState.getStateName());
+        System.out.printf("Current Balance: $%.2f%n", currentBalance / 100.0);
+        System.out.printf("Total Collected: $%.2f%n", totalCollected / 100.0);
+        coinDispenser.displayInventory();
+        inventory.displayInventory();
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <h2>6. Complete Example Usage</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Demo Application</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class VendingMachineDemo {
+
+    public static void main(String[] args) {
+        VendingMachine machine = VendingMachine.getInstance();
+
+        // Admin: Stock the machine
+        stockMachine(machine);
+        machine.displayStatus();
+
+        // Customer scenario 1: Successful purchase
+        System.out.println("\n=== Customer 1: Buying a Coke ===");
+        machine.insertMoney(Bill.ONE);           // $1.00
+        machine.insertMoney(Coin.QUARTER);       // $0.25
+        machine.insertMoney(Coin.QUARTER);       // $0.25
+        machine.selectProduct("A1");             // Coke @ $1.50
+
+        // Customer scenario 2: Insufficient funds
+        System.out.println("\n=== Customer 2: Insufficient Funds ===");
+        machine.insertMoney(Coin.QUARTER);
+        machine.selectProduct("A1");             // Needs more money
+        machine.insertMoney(Bill.ONE);
+        machine.insertMoney(Coin.QUARTER);
+        machine.selectProduct("A1");             // Now enough
+
+        // Customer scenario 3: Cancel transaction
+        System.out.println("\n=== Customer 3: Cancel ===");
+        machine.insertMoney(Bill.FIVE);
+        machine.cancel();                        // Get refund
+
+        // Customer scenario 4: Out of stock
+        System.out.println("\n=== Customer 4: Empty Slot ===");
+        machine.insertMoney(Bill.ONE);
+        machine.selectProduct("D4");             // Empty slot
+        machine.cancel();
+
+        // Admin: Collect money
+        System.out.println("\n=== Admin: Collecting Money ===");
+        machine.collectMoney();
+
+        machine.displayStatus();
+    }
+
+    private static void stockMachine(VendingMachine machine) {
+        // Row A: Drinks
+        machine.restockProduct("A1",
+            new Product("A1", "Coke", 150, ProductType.DRINK), 5);
+        machine.restockProduct("A2",
+            new Product("A2", "Pepsi", 150, ProductType.DRINK), 5);
+        machine.restockProduct("A3",
+            new Product("A3", "Water", 100, ProductType.DRINK), 8);
+        machine.restockProduct("A4",
+            new Product("A4", "Orange Juice", 200, ProductType.DRINK), 4);
+
+        // Row B: Snacks
+        machine.restockProduct("B1",
+            new Product("B1", "Chips", 125, ProductType.SNACK), 6);
+        machine.restockProduct("B2",
+            new Product("B2", "Pretzels", 125, ProductType.SNACK), 6);
+        machine.restockProduct("B3",
+            new Product("B3", "Cookies", 150, ProductType.SNACK), 5);
+        machine.restockProduct("B4",
+            new Product("B4", "Crackers", 100, ProductType.SNACK), 8);
+
+        // Row C: Candy
+        machine.restockProduct("C1",
+            new Product("C1", "M&Ms", 100, ProductType.CANDY), 10);
+        machine.restockProduct("C2",
+            new Product("C2", "Snickers", 125, ProductType.CANDY), 8);
+        machine.restockProduct("C3",
+            new Product("C3", "Twix", 125, ProductType.CANDY), 8);
+        machine.restockProduct("C4",
+            new Product("C4", "Skittles", 100, ProductType.CANDY), 10);
+
+        // Row D: Leave some empty
+        machine.restockProduct("D1",
+            new Product("D1", "Gum", 75, ProductType.OTHER), 15);
+        // D2, D3, D4 left empty
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <h2>7. Handling Edge Cases</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Edge Case Implementations</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">// Custom Exceptions
+public class OutOfStockException extends RuntimeException {
+    public OutOfStockException(String message) { super(message); }
+}
+
+public class InvalidSlotException extends RuntimeException {
+    public InvalidSlotException(String message) { super(message); }
+}
+
+public class InsufficientChangeException extends RuntimeException {
+    public InsufficientChangeException(String message) { super(message); }
+}
+
+public class InsufficientFundsException extends RuntimeException {
+    public InsufficientFundsException(String message) { super(message); }
+}
+
+/**
+ * Edge Case 1: Cannot make exact change
+ * Solution: Check before completing transaction
+ */
+public class HasMoneyState implements VendingMachineState {
+    @Override
+    public void selectProduct(VendingMachine machine, String code) {
+        // ... validation ...
+
+        int change = machine.getCurrentBalance() - product.getPrice();
+
+        // Check if we can make change BEFORE dispensing
+        if (change > 0 && !machine.getCoinDispenser().canMakeChange(change)) {
+            System.out.println("Sorry, cannot make exact change.");
+            System.out.println("Please use exact amount or choose different product.");
+            return;
+        }
+
+        // Proceed with dispensing
+        machine.setSelectedSlot(slot);
+        machine.setState(new DispensingState());
+        machine.dispense();
+    }
+}
+
+/**
+ * Edge Case 2: Product stuck (hardware failure)
+ * Solution: Retry mechanism with refund
+ */
+public void dispenseWithRetry(VendingMachine machine, int maxRetries) {
+    Slot slot = machine.getSelectedSlot();
+
+    for (int attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            // Attempt to dispense
+            slot.dispense();
+            return;  // Success
+        } catch (DispenseFailureException e) {
+            System.out.println("Dispense attempt " + (attempt + 1) + " failed");
+            Thread.sleep(500);  // Wait before retry
+        }
+    }
+
+    // All retries failed - refund customer
+    System.out.println("Product stuck. Refunding your money.");
+    machine.returnChange(machine.getCurrentBalance());
+    machine.resetTransaction();
+    machine.setState(new IdleState());
+
+    // Alert maintenance
+    alertMaintenance(slot.getCode());
+}
+
+/**
+ * Edge Case 3: Concurrent access (multi-threaded scenario)
+ * Solution: Synchronize critical operations
+ */
+public class Slot {
+    private final ReentrantLock lock = new ReentrantLock();
+
+    public Product dispense() {
+        lock.lock();
+        try {
+            if (isEmpty()) {
+                throw new OutOfStockException("Slot is empty");
+            }
+            quantity--;
+            return product;
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+
+/**
+ * Edge Case 4: Power failure mid-transaction
+ * Solution: Persist transaction state
+ */
+public class TransactionLogger {
+    private final Path logFile = Paths.get("transaction.log");
+
+    public void logTransactionStart(int balance) {
+        write("START:" + balance + ":" + System.currentTimeMillis());
+    }
+
+    public void logTransactionComplete(String productCode, int paid) {
+        write("COMPLETE:" + productCode + ":" + paid);
+    }
+
+    public void logTransactionCancel(int refunded) {
+        write("CANCEL:" + refunded);
+    }
+
+    // On startup, check for incomplete transactions and refund
+    public void recoverIncomplete() {
+        // Read last transaction
+        // If START without COMPLETE or CANCEL, issue refund
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <h2>8. Sequence Diagram</h2>
+
+            <div class="diagram-container">
+                <pre class="mermaid">
+sequenceDiagram
+    participant C as Customer
+    participant VM as VendingMachine
+    participant S as State
+    participant I as Inventory
+    participant CD as CoinDispenser
+
+    C->>VM: insertMoney($1)
+    VM->>S: insertMoney(machine, $1)
+    S->>VM: addBalance(100)
+    S->>VM: setState(HasMoneyState)
+    VM-->>C: Display: Balance $1.00
+
+    C->>VM: insertMoney(Quarter)
+    VM->>S: insertMoney(machine, Quarter)
+    S->>VM: addBalance(25)
+    VM-->>C: Display: Balance $1.25
+
+    C->>VM: selectProduct("A1")
+    VM->>S: selectProduct(machine, "A1")
+    S->>I: getSlot("A1")
+    I-->>S: Slot (Coke, $1.50)
+    S-->>C: Insufficient funds ($0.25 more needed)
+
+    C->>VM: insertMoney(Quarter)
+    VM->>S: insertMoney(machine, Quarter)
+    S->>VM: addBalance(25)
+
+    C->>VM: selectProduct("A1")
+    VM->>S: selectProduct(machine, "A1")
+    S->>I: getSlot("A1")
+    I-->>S: Slot (Coke, $1.50)
+    S->>VM: setState(DispensingState)
+    S->>VM: dispense()
+
+    VM->>I: slot.dispense()
+    I-->>VM: Product dispensed
+    VM->>VM: collectPayment(150)
+    VM->>CD: dispenseChange(0)
+    VM->>VM: setState(IdleState)
+    VM-->>C: Coke dispensed!
+                </pre>
+            </div>
+
+            <h2>9. Interview Tips</h2>
+
+            <div class="card">
+                <h3>Key Points to Emphasize</h3>
+                <ul>
+                    <li><strong>State Pattern:</strong> "Machine behavior varies dramatically by state - idle machine shouldn't dispense, dispensing machine shouldn't accept more money"</li>
+                    <li><strong>Clean separation:</strong> "CoinDispenser handles change logic independently - can be tested and modified without touching VendingMachine"</li>
+                    <li><strong>Greedy algorithm for change:</strong> "Works for US coinage but would need dynamic programming for arbitrary denominations"</li>
+                    <li><strong>Thread safety:</strong> "Critical sections in Slot.dispense() prevent overselling same product"</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Common Follow-up Questions</h3>
+                <ol>
+                    <li><strong>How would you add card payment?</strong> Add CardPaymentProcessor implementing PaymentStrategy</li>
+                    <li><strong>How to handle product expiry?</strong> Add expiryDate to Product, check before dispensing</li>
+                    <li><strong>How to support different currencies?</strong> Add Currency enum, use conversion rates</li>
+                    <li><strong>How to add dynamic pricing?</strong> PricingStrategy interface with time-based or demand-based implementations</li>
+                </ol>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="elevator.html" class="btn btn-secondary">← Elevator System</a>
+                <a href="library.html" class="btn btn-primary">Library Management →</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+</body>
+</html>

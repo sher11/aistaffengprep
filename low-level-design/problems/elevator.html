@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elevator System | LLD Practice Problems</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="../../index.html" class="logo">Staff Eng Prep</a>
+            <div class="nav-links">
+                <a href="../../coding-rounds/index.html">Coding</a>
+                <a href="../../system-design/index.html">System Design</a>
+                <a href="../index.html" class="active">LLD/OOD</a>
+                <a href="../../behavioral/index.html">Behavioral</a>
+                <a href="../../generative-ai/index.html">Gen AI</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>LLD/OOD Course</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="../module-01.html" class="sidebar-link">Design Principles</a>
+                    <a href="../module-02.html" class="sidebar-link">Creational Patterns</a>
+                    <a href="../module-03.html" class="sidebar-link">Structural Patterns</a>
+                    <a href="../module-04.html" class="sidebar-link">Behavioral Patterns</a>
+                    <a href="../module-05.html" class="sidebar-link">UML & Class Diagrams</a>
+                    <a href="../module-06.html" class="sidebar-link">Interview Framework</a>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Practice Problems</div>
+                    <a href="parking-lot.html" class="sidebar-link">Parking Lot System</a>
+                    <a href="elevator.html" class="sidebar-link active">Elevator System</a>
+                    <a href="vending-machine.html" class="sidebar-link">Vending Machine</a>
+                    <a href="library.html" class="sidebar-link">Library Management</a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <h1 style="margin: 0;">Elevator System</h1>
+                <span class="badge badge-warning">Medium-Hard</span>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h3>Problem Statement</h3>
+                <p>Design an elevator system for a building with multiple elevators. The system should efficiently handle requests from passengers on different floors, optimize elevator movement, and handle edge cases like overloading.</p>
+            </div>
+
+            <h2>1. Requirements Clarification</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Questions to Ask Your Interviewer</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Functional Requirements</h4>
+                    <ul>
+                        <li><strong>Building configuration:</strong> How many floors? How many elevators?</li>
+                        <li><strong>Request types:</strong> External (floor buttons) and internal (elevator panel)?</li>
+                        <li><strong>Direction indicators:</strong> Should we show up/down direction?</li>
+                        <li><strong>Display:</strong> Show current floor on each elevator?</li>
+                        <li><strong>Elevator types:</strong> All elevators serve all floors, or express elevators?</li>
+                    </ul>
+
+                    <h4>Non-Functional Requirements</h4>
+                    <ul>
+                        <li><strong>Optimization goal:</strong> Minimize wait time? Minimize travel time? Energy efficiency?</li>
+                        <li><strong>Capacity:</strong> Maximum weight/passengers per elevator?</li>
+                        <li><strong>Emergency:</strong> Fire mode, power failure handling?</li>
+                        <li><strong>Maintenance:</strong> Taking elevators out of service?</li>
+                    </ul>
+
+                    <h4>Our Assumptions</h4>
+                    <div class="card">
+                        <ul>
+                            <li>10-floor building with 3 elevators</li>
+                            <li>All elevators serve all floors</li>
+                            <li>Optimize for minimum wait time</li>
+                            <li>Support external (hall) and internal (cabin) requests</li>
+                            <li>Maximum 10 passengers or 1000kg per elevator</li>
+                            <li>Handle maintenance mode and emergencies</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2>2. Use Cases</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Core Use Cases</span>
+                </div>
+                <div class="collapsible-content">
+                    <table>
+                        <tr>
+                            <th>Use Case</th>
+                            <th>Actor</th>
+                            <th>Description</th>
+                        </tr>
+                        <tr>
+                            <td>Request Elevator (External)</td>
+                            <td>Passenger</td>
+                            <td>Press up/down button on floor to call elevator</td>
+                        </tr>
+                        <tr>
+                            <td>Select Floor (Internal)</td>
+                            <td>Passenger</td>
+                            <td>Press destination floor button inside elevator</td>
+                        </tr>
+                        <tr>
+                            <td>Open/Close Doors</td>
+                            <td>System/Passenger</td>
+                            <td>Automatic or manual door operation</td>
+                        </tr>
+                        <tr>
+                            <td>Move Elevator</td>
+                            <td>System</td>
+                            <td>Move elevator to requested floor</td>
+                        </tr>
+                        <tr>
+                            <td>Emergency Stop</td>
+                            <td>Passenger</td>
+                            <td>Stop elevator in case of emergency</td>
+                        </tr>
+                        <tr>
+                            <td>Maintenance Mode</td>
+                            <td>Technician</td>
+                            <td>Take elevator out of service</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <h2>3. Class Diagram</h2>
+
+            <div class="diagram-container">
+                <pre class="mermaid">
+classDiagram
+    class ElevatorController {
+        -List~Elevator~ elevators
+        -ElevatorSelectionStrategy strategy
+        +requestElevator(floor, direction)
+        +selectFloor(elevatorId, floor)
+        +setStrategy(strategy)
+    }
+
+    class Elevator {
+        -int id
+        -int currentFloor
+        -Direction direction
+        -ElevatorState state
+        -Set~Integer~ destinations
+        -Door door
+        -int capacity
+        +addDestination(floor)
+        +move()
+        +openDoor()
+        +closeDoor()
+    }
+
+    class ElevatorState {
+        <<interface>>
+        +handleRequest(elevator, floor)
+        +move(elevator)
+        +openDoor(elevator)
+        +closeDoor(elevator)
+    }
+
+    class IdleState {
+        +handleRequest(elevator, floor)
+        +move(elevator)
+    }
+
+    class MovingState {
+        +handleRequest(elevator, floor)
+        +move(elevator)
+    }
+
+    class DoorOpenState {
+        +handleRequest(elevator, floor)
+        +closeDoor(elevator)
+    }
+
+    class MaintenanceState {
+        +handleRequest(elevator, floor)
+    }
+
+    class Door {
+        -DoorState state
+        +open()
+        +close()
+        +isOpen()
+    }
+
+    class ElevatorSelectionStrategy {
+        <<interface>>
+        +selectElevator(elevators, floor, direction)
+    }
+
+    class NearestElevatorStrategy {
+        +selectElevator(elevators, floor, direction)
+    }
+
+    class LookStrategy {
+        +selectElevator(elevators, floor, direction)
+    }
+
+    class Floor {
+        -int floorNumber
+        -ExternalPanel upButton
+        -ExternalPanel downButton
+        -Display display
+    }
+
+    class InternalPanel {
+        -Elevator elevator
+        -Button[] floorButtons
+        -Button openDoorButton
+        -Button closeDoorButton
+        -Button emergencyButton
+        +pressButton(buttonType)
+    }
+
+    class Display {
+        -int currentFloor
+        -Direction direction
+        +update(floor, direction)
+    }
+
+    class Direction {
+        <<enumeration>>
+        UP
+        DOWN
+        IDLE
+    }
+
+    ElevatorController "1" --> "*" Elevator : manages
+    ElevatorController --> ElevatorSelectionStrategy : uses
+    Elevator --> ElevatorState : has state
+    Elevator "1" --> "1" Door : has
+    Elevator "1" --> "1" InternalPanel : has
+    ElevatorState <|.. IdleState
+    ElevatorState <|.. MovingState
+    ElevatorState <|.. DoorOpenState
+    ElevatorState <|.. MaintenanceState
+    ElevatorSelectionStrategy <|.. NearestElevatorStrategy
+    ElevatorSelectionStrategy <|.. LookStrategy
+    Floor --> Display : has
+                </pre>
+            </div>
+
+            <h2>4. Design Patterns Used</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Key Patterns and Rationale</span>
+                </div>
+                <div class="collapsible-content">
+                    <table>
+                        <tr>
+                            <th>Pattern</th>
+                            <th>Usage</th>
+                            <th>Why</th>
+                        </tr>
+                        <tr>
+                            <td><strong>State</strong></td>
+                            <td>Elevator behavior</td>
+                            <td>Elevator behavior changes based on state (idle, moving, door open, maintenance)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Strategy</strong></td>
+                            <td>Elevator selection</td>
+                            <td>Different algorithms (nearest, LOOK, SCAN) can be swapped at runtime</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Singleton</strong></td>
+                            <td>ElevatorController</td>
+                            <td>Single point of coordination for all elevator requests</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Observer</strong></td>
+                            <td>Display updates</td>
+                            <td>Displays need to update when elevator position changes</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <h2>5. Core Implementation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Direction and Request Classes</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public enum Direction {
+    UP, DOWN, IDLE
+}
+
+public class Request {
+    private final int floor;
+    private final Direction direction;
+    private final RequestType type;
+    private final long timestamp;
+
+    public Request(int floor, Direction direction, RequestType type) {
+        this.floor = floor;
+        this.direction = direction;
+        this.type = type;
+        this.timestamp = System.currentTimeMillis();
+    }
+
+    // Getters
+    public int getFloor() { return floor; }
+    public Direction getDirection() { return direction; }
+    public RequestType getType() { return type; }
+    public long getTimestamp() { return timestamp; }
+}
+
+public enum RequestType {
+    EXTERNAL,  // From floor hall button
+    INTERNAL   // From inside elevator
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>State Pattern - Elevator States</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public interface ElevatorState {
+    void handleRequest(Elevator elevator, int floor);
+    void move(Elevator elevator);
+    void openDoor(Elevator elevator);
+    void closeDoor(Elevator elevator);
+    String getStateName();
+}
+
+public class IdleState implements ElevatorState {
+    @Override
+    public void handleRequest(Elevator elevator, int floor) {
+        elevator.addDestination(floor);
+
+        if (floor > elevator.getCurrentFloor()) {
+            elevator.setDirection(Direction.UP);
+        } else if (floor < elevator.getCurrentFloor()) {
+            elevator.setDirection(Direction.DOWN);
+        } else {
+            // Same floor - just open door
+            elevator.setState(new DoorOpenState());
+            elevator.openDoor();
+            return;
+        }
+
+        elevator.setState(new MovingState());
+        elevator.move();
+    }
+
+    @Override
+    public void move(Elevator elevator) {
+        // No movement in idle state
+        System.out.println("Elevator " + elevator.getId() + " is idle");
+    }
+
+    @Override
+    public void openDoor(Elevator elevator) {
+        elevator.getDoor().open();
+        elevator.setState(new DoorOpenState());
+    }
+
+    @Override
+    public void closeDoor(Elevator elevator) {
+        // Door already closed in idle state
+    }
+
+    @Override
+    public String getStateName() { return "IDLE"; }
+}
+
+public class MovingState implements ElevatorState {
+    @Override
+    public void handleRequest(Elevator elevator, int floor) {
+        // Add to destinations if on the way
+        if (isOnTheWay(elevator, floor)) {
+            elevator.addDestination(floor);
+        } else {
+            // Queue for later
+            elevator.queueRequest(floor);
+        }
+    }
+
+    private boolean isOnTheWay(Elevator elevator, int floor) {
+        int current = elevator.getCurrentFloor();
+        Direction dir = elevator.getDirection();
+
+        if (dir == Direction.UP) {
+            return floor > current;
+        } else if (dir == Direction.DOWN) {
+            return floor < current;
+        }
+        return true;
+    }
+
+    @Override
+    public void move(Elevator elevator) {
+        Direction dir = elevator.getDirection();
+        int nextFloor = elevator.getCurrentFloor() +
+            (dir == Direction.UP ? 1 : -1);
+
+        elevator.setCurrentFloor(nextFloor);
+        elevator.notifyObservers();
+
+        // Check if this floor is a destination
+        if (elevator.hasDestination(nextFloor)) {
+            elevator.removeDestination(nextFloor);
+            elevator.setState(new DoorOpenState());
+            elevator.openDoor();
+        } else if (elevator.hasMoreDestinations()) {
+            // Continue moving - schedule next move
+            elevator.scheduleMove();
+        } else {
+            // No more destinations
+            elevator.setDirection(Direction.IDLE);
+            elevator.setState(new IdleState());
+        }
+    }
+
+    @Override
+    public void openDoor(Elevator elevator) {
+        // Cannot open door while moving
+        throw new IllegalStateException("Cannot open door while moving");
+    }
+
+    @Override
+    public void closeDoor(Elevator elevator) {
+        // Door should be closed while moving
+    }
+
+    @Override
+    public String getStateName() { return "MOVING"; }
+}
+
+public class DoorOpenState implements ElevatorState {
+    private static final long DOOR_OPEN_DURATION_MS = 3000;
+
+    @Override
+    public void handleRequest(Elevator elevator, int floor) {
+        elevator.addDestination(floor);
+    }
+
+    @Override
+    public void move(Elevator elevator) {
+        throw new IllegalStateException("Cannot move with door open");
+    }
+
+    @Override
+    public void openDoor(Elevator elevator) {
+        // Reset door timer
+        elevator.getDoor().resetTimer();
+    }
+
+    @Override
+    public void closeDoor(Elevator elevator) {
+        elevator.getDoor().close();
+
+        if (elevator.hasMoreDestinations()) {
+            elevator.setState(new MovingState());
+            elevator.move();
+        } else {
+            elevator.setDirection(Direction.IDLE);
+            elevator.setState(new IdleState());
+        }
+    }
+
+    @Override
+    public String getStateName() { return "DOOR_OPEN"; }
+}
+
+public class MaintenanceState implements ElevatorState {
+    @Override
+    public void handleRequest(Elevator elevator, int floor) {
+        throw new IllegalStateException("Elevator is under maintenance");
+    }
+
+    @Override
+    public void move(Elevator elevator) {
+        // Special maintenance movement - controlled by technician
+    }
+
+    @Override
+    public void openDoor(Elevator elevator) {
+        elevator.getDoor().open();
+    }
+
+    @Override
+    public void closeDoor(Elevator elevator) {
+        elevator.getDoor().close();
+    }
+
+    @Override
+    public String getStateName() { return "MAINTENANCE"; }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Elevator Class</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">import java.util.*;
+import java.util.concurrent.*;
+
+public class Elevator {
+    private final int id;
+    private int currentFloor;
+    private Direction direction;
+    private ElevatorState state;
+    private final Door door;
+    private final int maxCapacity;
+    private int currentLoad;
+
+    // Thread-safe destination management
+    private final TreeSet&lt;Integer&gt; upDestinations;
+    private final TreeSet&lt;Integer&gt; downDestinations;
+    private final Queue&lt;Integer&gt; pendingRequests;
+    private final ReentrantLock lock;
+
+    // Observers for display updates
+    private final List&lt;ElevatorObserver&gt; observers;
+
+    // Scheduler for movement
+    private final ScheduledExecutorService scheduler;
+    private static final long FLOOR_TRAVEL_TIME_MS = 2000;
+
+    public Elevator(int id, int maxCapacity) {
+        this.id = id;
+        this.currentFloor = 1;  // Start at ground floor
+        this.direction = Direction.IDLE;
+        this.state = new IdleState();
+        this.door = new Door();
+        this.maxCapacity = maxCapacity;
+        this.currentLoad = 0;
+
+        this.upDestinations = new TreeSet&lt;&gt;();
+        this.downDestinations = new TreeSet&lt;&gt;(Collections.reverseOrder());
+        this.pendingRequests = new ConcurrentLinkedQueue&lt;&gt;();
+        this.lock = new ReentrantLock();
+        this.observers = new CopyOnWriteArrayList&lt;&gt;();
+        this.scheduler = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    public void addDestination(int floor) {
+        lock.lock();
+        try {
+            if (floor > currentFloor) {
+                upDestinations.add(floor);
+            } else if (floor < currentFloor) {
+                downDestinations.add(floor);
+            }
+            // If floor == currentFloor, handled by state
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void removeDestination(int floor) {
+        lock.lock();
+        try {
+            upDestinations.remove(floor);
+            downDestinations.remove(floor);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public boolean hasDestination(int floor) {
+        lock.lock();
+        try {
+            return upDestinations.contains(floor) ||
+                   downDestinations.contains(floor);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public boolean hasMoreDestinations() {
+        lock.lock();
+        try {
+            return !upDestinations.isEmpty() ||
+                   !downDestinations.isEmpty() ||
+                   !pendingRequests.isEmpty();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public Integer getNextDestination() {
+        lock.lock();
+        try {
+            if (direction == Direction.UP && !upDestinations.isEmpty()) {
+                return upDestinations.first();
+            } else if (direction == Direction.DOWN && !downDestinations.isEmpty()) {
+                return downDestinations.first();
+            } else if (!upDestinations.isEmpty()) {
+                direction = Direction.UP;
+                return upDestinations.first();
+            } else if (!downDestinations.isEmpty()) {
+                direction = Direction.DOWN;
+                return downDestinations.first();
+            }
+            return null;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void queueRequest(int floor) {
+        pendingRequests.offer(floor);
+    }
+
+    public void move() {
+        state.move(this);
+    }
+
+    public void scheduleMove() {
+        scheduler.schedule(this::move, FLOOR_TRAVEL_TIME_MS,
+            TimeUnit.MILLISECONDS);
+    }
+
+    public void openDoor() {
+        state.openDoor(this);
+    }
+
+    public void closeDoor() {
+        state.closeDoor(this);
+    }
+
+    public void handleRequest(int floor) {
+        state.handleRequest(this, floor);
+    }
+
+    public void setMaintenanceMode(boolean enabled) {
+        lock.lock();
+        try {
+            if (enabled) {
+                state = new MaintenanceState();
+            } else {
+                state = new IdleState();
+                direction = Direction.IDLE;
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    // Observer pattern for displays
+    public void addObserver(ElevatorObserver observer) {
+        observers.add(observer);
+    }
+
+    public void notifyObservers() {
+        for (ElevatorObserver observer : observers) {
+            observer.onFloorChanged(this, currentFloor, direction);
+        }
+    }
+
+    // Calculate distance to a floor (used by strategies)
+    public int distanceTo(int floor) {
+        return Math.abs(currentFloor - floor);
+    }
+
+    // Check if elevator can accept the request efficiently
+    public boolean canServeEfficiently(int floor, Direction requestDir) {
+        if (state instanceof MaintenanceState) {
+            return false;
+        }
+
+        if (direction == Direction.IDLE) {
+            return true;
+        }
+
+        // Check if request is on the way
+        if (direction == Direction.UP && requestDir == Direction.UP) {
+            return floor >= currentFloor;
+        } else if (direction == Direction.DOWN && requestDir == Direction.DOWN) {
+            return floor <= currentFloor;
+        }
+
+        return false;
+    }
+
+    public boolean isOverloaded() {
+        return currentLoad >= maxCapacity;
+    }
+
+    // Getters and setters
+    public int getId() { return id; }
+    public int getCurrentFloor() { return currentFloor; }
+    public void setCurrentFloor(int floor) { this.currentFloor = floor; }
+    public Direction getDirection() { return direction; }
+    public void setDirection(Direction direction) { this.direction = direction; }
+    public ElevatorState getState() { return state; }
+    public void setState(ElevatorState state) { this.state = state; }
+    public Door getDoor() { return door; }
+    public int getMaxCapacity() { return maxCapacity; }
+    public int getCurrentLoad() { return currentLoad; }
+    public void setCurrentLoad(int load) { this.currentLoad = load; }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Strategy Pattern - Elevator Selection</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public interface ElevatorSelectionStrategy {
+    Elevator selectElevator(List&lt;Elevator&gt; elevators, int floor,
+        Direction direction);
+}
+
+/**
+ * Nearest Elevator Strategy
+ * Simple: Select the closest elevator that can serve the request
+ */
+public class NearestElevatorStrategy implements ElevatorSelectionStrategy {
+
+    @Override
+    public Elevator selectElevator(List&lt;Elevator&gt; elevators,
+            int floor, Direction direction) {
+
+        Elevator best = null;
+        int minDistance = Integer.MAX_VALUE;
+
+        for (Elevator elevator : elevators) {
+            if (elevator.getState() instanceof MaintenanceState) {
+                continue;  // Skip elevators in maintenance
+            }
+
+            if (elevator.isOverloaded()) {
+                continue;  // Skip overloaded elevators
+            }
+
+            int distance = calculateEffectiveDistance(elevator, floor, direction);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                best = elevator;
+            }
+        }
+
+        return best;
+    }
+
+    private int calculateEffectiveDistance(Elevator elevator,
+            int floor, Direction requestDirection) {
+
+        int current = elevator.getCurrentFloor();
+        Direction elevatorDir = elevator.getDirection();
+
+        // Idle elevator - simple distance
+        if (elevatorDir == Direction.IDLE) {
+            return Math.abs(floor - current);
+        }
+
+        // Moving in same direction and floor is on the way
+        if (elevatorDir == requestDirection) {
+            if ((elevatorDir == Direction.UP && floor >= current) ||
+                (elevatorDir == Direction.DOWN && floor <= current)) {
+                return Math.abs(floor - current);
+            }
+        }
+
+        // Elevator needs to reverse - penalize
+        return Math.abs(floor - current) + 1000;
+    }
+}
+
+/**
+ * LOOK Algorithm Strategy
+ * More sophisticated: Considers elevator's current path and pending requests
+ * Similar to disk scheduling - elevator services all requests in one direction
+ * before reversing
+ */
+public class LookStrategy implements ElevatorSelectionStrategy {
+
+    @Override
+    public Elevator selectElevator(List&lt;Elevator&gt; elevators,
+            int floor, Direction direction) {
+
+        Elevator best = null;
+        int minCost = Integer.MAX_VALUE;
+
+        for (Elevator elevator : elevators) {
+            if (!isEligible(elevator)) {
+                continue;
+            }
+
+            int cost = calculateCost(elevator, floor, direction);
+
+            if (cost < minCost) {
+                minCost = cost;
+                best = elevator;
+            }
+        }
+
+        return best;
+    }
+
+    private boolean isEligible(Elevator elevator) {
+        return !(elevator.getState() instanceof MaintenanceState) &&
+               !elevator.isOverloaded();
+    }
+
+    private int calculateCost(Elevator elevator, int floor,
+            Direction requestDirection) {
+
+        int current = elevator.getCurrentFloor();
+        Direction elevatorDir = elevator.getDirection();
+
+        // Case 1: Idle elevator
+        if (elevatorDir == Direction.IDLE) {
+            return Math.abs(floor - current);
+        }
+
+        // Case 2: Same direction and on the way
+        if (elevatorDir == requestDirection) {
+            if (elevatorDir == Direction.UP && floor >= current) {
+                return floor - current;
+            } else if (elevatorDir == Direction.DOWN && floor <= current) {
+                return current - floor;
+            }
+        }
+
+        // Case 3: Opposite direction or passed the floor
+        // Elevator must complete current direction, then come back
+        Integer farthestDest = elevator.getNextDestination();
+        if (farthestDest == null) {
+            return Math.abs(floor - current);
+        }
+
+        // Distance to farthest point + distance back to request
+        return Math.abs(farthestDest - current) + Math.abs(farthestDest - floor);
+    }
+}
+
+/**
+ * Zone-Based Strategy
+ * For large buildings: Assign elevators to specific floor ranges
+ */
+public class ZoneBasedStrategy implements ElevatorSelectionStrategy {
+    private final Map&lt;Integer, List&lt;Integer&gt;&gt; elevatorZones;
+    private final ElevatorSelectionStrategy fallback;
+
+    public ZoneBasedStrategy(int numElevators, int numFloors) {
+        this.elevatorZones = new HashMap&lt;&gt;();
+        this.fallback = new NearestElevatorStrategy();
+
+        // Divide floors into zones
+        int floorsPerZone = numFloors / numElevators;
+        for (int i = 0; i < numElevators; i++) {
+            int start = i * floorsPerZone + 1;
+            int end = (i == numElevators - 1) ? numFloors : (i + 1) * floorsPerZone;
+            elevatorZones.put(i, List.of(start, end));
+        }
+    }
+
+    @Override
+    public Elevator selectElevator(List&lt;Elevator&gt; elevators,
+            int floor, Direction direction) {
+
+        // Find elevator assigned to this zone
+        for (Elevator elevator : elevators) {
+            List&lt;Integer&gt; zone = elevatorZones.get(elevator.getId());
+            if (zone != null && floor >= zone.get(0) && floor <= zone.get(1)) {
+                if (!(elevator.getState() instanceof MaintenanceState)) {
+                    return elevator;
+                }
+            }
+        }
+
+        // Fallback to nearest if zone elevator unavailable
+        return fallback.selectElevator(elevators, floor, direction);
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Elevator Controller (Singleton)</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class ElevatorController {
+    private static volatile ElevatorController instance;
+
+    private final List&lt;Elevator&gt; elevators;
+    private ElevatorSelectionStrategy strategy;
+    private final int numFloors;
+    private final ReentrantLock lock;
+
+    // External request queues per floor
+    private final Map&lt;Integer, Queue&lt;Request&gt;&gt; pendingUpRequests;
+    private final Map&lt;Integer, Queue&lt;Request&gt;&gt; pendingDownRequests;
+
+    private ElevatorController(int numElevators, int numFloors,
+            int elevatorCapacity) {
+        this.elevators = new ArrayList&lt;&gt;();
+        this.numFloors = numFloors;
+        this.lock = new ReentrantLock();
+        this.strategy = new LookStrategy();  // Default strategy
+
+        this.pendingUpRequests = new ConcurrentHashMap&lt;&gt;();
+        this.pendingDownRequests = new ConcurrentHashMap&lt;&gt;();
+
+        // Initialize elevators
+        for (int i = 0; i < numElevators; i++) {
+            elevators.add(new Elevator(i, elevatorCapacity));
+        }
+
+        // Initialize request queues
+        for (int floor = 1; floor <= numFloors; floor++) {
+            pendingUpRequests.put(floor, new ConcurrentLinkedQueue&lt;&gt;());
+            pendingDownRequests.put(floor, new ConcurrentLinkedQueue&lt;&gt;());
+        }
+    }
+
+    public static ElevatorController getInstance(int numElevators,
+            int numFloors, int capacity) {
+        if (instance == null) {
+            synchronized (ElevatorController.class) {
+                if (instance == null) {
+                    instance = new ElevatorController(numElevators,
+                        numFloors, capacity);
+                }
+            }
+        }
+        return instance;
+    }
+
+    // For testing - reset singleton
+    public static void resetInstance() {
+        instance = null;
+    }
+
+    /**
+     * Handle external request (from floor hall button)
+     */
+    public void requestElevator(int floor, Direction direction) {
+        validateFloor(floor);
+
+        lock.lock();
+        try {
+            // Select best elevator
+            Elevator selected = strategy.selectElevator(
+                elevators, floor, direction);
+
+            if (selected == null) {
+                // All elevators busy or in maintenance
+                queueExternalRequest(floor, direction);
+                return;
+            }
+
+            // Dispatch elevator
+            selected.handleRequest(floor);
+            System.out.println("Elevator " + selected.getId() +
+                " dispatched to floor " + floor);
+
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Handle internal request (from inside elevator)
+     */
+    public void selectFloor(int elevatorId, int floor) {
+        validateFloor(floor);
+        validateElevatorId(elevatorId);
+
+        Elevator elevator = elevators.get(elevatorId);
+        elevator.addDestination(floor);
+
+        // Start moving if idle
+        if (elevator.getDirection() == Direction.IDLE) {
+            if (floor > elevator.getCurrentFloor()) {
+                elevator.setDirection(Direction.UP);
+            } else if (floor < elevator.getCurrentFloor()) {
+                elevator.setDirection(Direction.DOWN);
+            }
+            elevator.setState(new MovingState());
+            elevator.move();
+        }
+    }
+
+    private void queueExternalRequest(int floor, Direction direction) {
+        Request request = new Request(floor, direction, RequestType.EXTERNAL);
+        if (direction == Direction.UP) {
+            pendingUpRequests.get(floor).offer(request);
+        } else {
+            pendingDownRequests.get(floor).offer(request);
+        }
+    }
+
+    /**
+     * Process pending requests when elevator becomes available
+     */
+    public void processNextPendingRequest(Elevator elevator) {
+        lock.lock();
+        try {
+            // Check pending requests for idle elevator
+            for (int floor = 1; floor <= numFloors; floor++) {
+                Queue&lt;Request&gt; upQueue = pendingUpRequests.get(floor);
+                Queue&lt;Request&gt; downQueue = pendingDownRequests.get(floor);
+
+                if (!upQueue.isEmpty()) {
+                    Request req = upQueue.poll();
+                    elevator.handleRequest(req.getFloor());
+                    return;
+                }
+
+                if (!downQueue.isEmpty()) {
+                    Request req = downQueue.poll();
+                    elevator.handleRequest(req.getFloor());
+                    return;
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void setStrategy(ElevatorSelectionStrategy strategy) {
+        this.strategy = strategy;
+    }
+
+    public void setElevatorMaintenance(int elevatorId, boolean enabled) {
+        validateElevatorId(elevatorId);
+        elevators.get(elevatorId).setMaintenanceMode(enabled);
+    }
+
+    public List&lt;Elevator&gt; getElevators() {
+        return Collections.unmodifiableList(elevators);
+    }
+
+    public Elevator getElevator(int id) {
+        validateElevatorId(id);
+        return elevators.get(id);
+    }
+
+    private void validateFloor(int floor) {
+        if (floor < 1 || floor > numFloors) {
+            throw new IllegalArgumentException(
+                "Invalid floor: " + floor + ". Valid range: 1-" + numFloors);
+        }
+    }
+
+    private void validateElevatorId(int id) {
+        if (id < 0 || id >= elevators.size()) {
+            throw new IllegalArgumentException("Invalid elevator ID: " + id);
+        }
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Supporting Classes</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">public class Door {
+    private boolean isOpen;
+    private final ScheduledExecutorService scheduler;
+    private ScheduledFuture&lt;?&gt; autoCloseTask;
+    private static final long AUTO_CLOSE_DELAY_MS = 3000;
+
+    public Door() {
+        this.isOpen = false;
+        this.scheduler = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    public synchronized void open() {
+        isOpen = true;
+        scheduleAutoClose();
+    }
+
+    public synchronized void close() {
+        cancelAutoClose();
+        isOpen = false;
+    }
+
+    public synchronized void resetTimer() {
+        if (isOpen) {
+            cancelAutoClose();
+            scheduleAutoClose();
+        }
+    }
+
+    private void scheduleAutoClose() {
+        cancelAutoClose();
+        autoCloseTask = scheduler.schedule(() -> {
+            // Door auto-close would trigger elevator state change
+            close();
+        }, AUTO_CLOSE_DELAY_MS, TimeUnit.MILLISECONDS);
+    }
+
+    private void cancelAutoClose() {
+        if (autoCloseTask != null && !autoCloseTask.isDone()) {
+            autoCloseTask.cancel(false);
+        }
+    }
+
+    public boolean isOpen() {
+        return isOpen;
+    }
+}
+
+public interface ElevatorObserver {
+    void onFloorChanged(Elevator elevator, int floor, Direction direction);
+}
+
+public class FloorDisplay implements ElevatorObserver {
+    private final int floorNumber;
+    private final Map&lt;Integer, Integer&gt; elevatorPositions;
+    private final Map&lt;Integer, Direction&gt; elevatorDirections;
+
+    public FloorDisplay(int floorNumber) {
+        this.floorNumber = floorNumber;
+        this.elevatorPositions = new ConcurrentHashMap&lt;&gt;();
+        this.elevatorDirections = new ConcurrentHashMap&lt;&gt;();
+    }
+
+    @Override
+    public void onFloorChanged(Elevator elevator, int floor,
+            Direction direction) {
+        elevatorPositions.put(elevator.getId(), floor);
+        elevatorDirections.put(elevator.getId(), direction);
+        render();
+    }
+
+    private void render() {
+        StringBuilder display = new StringBuilder();
+        display.append("Floor ").append(floorNumber).append(" Display: ");
+
+        for (Map.Entry&lt;Integer, Integer&gt; entry : elevatorPositions.entrySet()) {
+            int elevatorId = entry.getKey();
+            int position = entry.getValue();
+            Direction dir = elevatorDirections.get(elevatorId);
+
+            String arrow = dir == Direction.UP ? "^" :
+                          (dir == Direction.DOWN ? "v" : "-");
+            display.append("[E").append(elevatorId).append(": ")
+                   .append(position).append(arrow).append("] ");
+        }
+
+        System.out.println(display);
+    }
+}
+
+public class InternalPanel {
+    private final Elevator elevator;
+    private final int numFloors;
+
+    public InternalPanel(Elevator elevator, int numFloors) {
+        this.elevator = elevator;
+        this.numFloors = numFloors;
+    }
+
+    public void pressFloorButton(int floor) {
+        if (floor < 1 || floor > numFloors) {
+            throw new IllegalArgumentException("Invalid floor");
+        }
+
+        ElevatorController.getInstance(0, 0, 0)
+            .selectFloor(elevator.getId(), floor);
+    }
+
+    public void pressOpenDoorButton() {
+        elevator.openDoor();
+    }
+
+    public void pressCloseDoorButton() {
+        elevator.closeDoor();
+    }
+
+    public void pressEmergencyButton() {
+        // Trigger emergency protocol
+        System.out.println("EMERGENCY: Elevator " + elevator.getId());
+        elevator.setMaintenanceMode(true);
+        // Alert building management, fire department, etc.
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <h2>6. Sequence Diagram</h2>
+
+            <div class="diagram-container">
+                <pre class="mermaid">
+sequenceDiagram
+    participant P as Passenger
+    participant FP as FloorPanel
+    participant EC as ElevatorController
+    participant E as Elevator
+    participant D as Door
+    participant IP as InternalPanel
+    participant Disp as Display
+
+    P->>FP: Press UP button (Floor 3)
+    FP->>EC: requestElevator(3, UP)
+    EC->>EC: selectElevator() using Strategy
+    EC->>E: handleRequest(3)
+    E->>E: addDestination(3)
+    E->>E: setState(MovingState)
+
+    loop Moving to floor
+        E->>E: move()
+        E->>Disp: notifyObservers()
+        Disp->>Disp: update display
+    end
+
+    E->>E: arrivedAt(3)
+    E->>E: setState(DoorOpenState)
+    E->>D: open()
+
+    P->>IP: Enter elevator
+    P->>IP: pressFloorButton(7)
+    IP->>EC: selectFloor(elevatorId, 7)
+    EC->>E: addDestination(7)
+
+    D->>D: autoClose after timeout
+    D->>E: closeDoor()
+    E->>E: setState(MovingState)
+
+    loop Moving to floor
+        E->>E: move()
+        E->>Disp: notifyObservers()
+    end
+
+    E->>E: arrivedAt(7)
+    E->>D: open()
+    P->>IP: Exit elevator
+                </pre>
+            </div>
+
+            <h2>7. Handling Edge Cases</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Edge Case Implementations</span>
+                </div>
+                <div class="collapsible-content">
+                    <pre><code class="language-java">/**
+ * Edge Case 1: All elevators busy
+ * Solution: Queue requests and process when elevator becomes available
+ */
+public void onElevatorIdle(Elevator elevator) {
+    processNextPendingRequest(elevator);
+}
+
+/**
+ * Edge Case 2: Elevator overloaded
+ * Solution: Check weight before allowing entry
+ */
+public class WeightSensor {
+    private final int maxWeight;
+    private int currentWeight;
+
+    public boolean canAcceptMore() {
+        return currentWeight < maxWeight;
+    }
+
+    public void onWeightChanged(int newWeight) {
+        this.currentWeight = newWeight;
+        if (currentWeight > maxWeight) {
+            // Play overload alarm
+            // Keep door open until weight reduced
+            throw new OverloadException("Elevator overloaded");
+        }
+    }
+}
+
+/**
+ * Edge Case 3: Door obstruction
+ * Solution: Retry door close with safety mechanism
+ */
+public void closeDoorWithRetry(Elevator elevator, int maxRetries) {
+    int attempts = 0;
+    while (attempts < maxRetries) {
+        try {
+            elevator.closeDoor();
+            return;  // Success
+        } catch (DoorObstructedException e) {
+            attempts++;
+            // Wait and retry
+            Thread.sleep(1000);
+            // Play warning sound
+        }
+    }
+    // After max retries, alert maintenance
+    alertMaintenance(elevator.getId(), "Door obstruction");
+}
+
+/**
+ * Edge Case 4: Emergency mode (fire alarm)
+ * Solution: Send all elevators to ground floor
+ */
+public void activateFireMode() {
+    for (Elevator elevator : elevators) {
+        // Clear all destinations
+        elevator.clearAllDestinations();
+
+        // Go to ground floor (or designated evacuation floor)
+        elevator.addDestination(1);
+
+        // Open doors and disable further requests
+        elevator.setDirection(Direction.DOWN);
+        elevator.setState(new EmergencyState());
+    }
+}
+
+/**
+ * Edge Case 5: Power failure
+ * Solution: Move to nearest floor on backup power
+ */
+public void handlePowerFailure(Elevator elevator) {
+    // Stop at nearest floor
+    int nearest = findNearestFloor(elevator);
+    elevator.setEmergencyDestination(nearest);
+
+    // Open doors for evacuation
+    elevator.openDoor();
+
+    // Disable elevator until power restored
+    elevator.setMaintenanceMode(true);
+}</code></pre>
+                </div>
+            </div>
+
+            <h2>8. Interview Tips</h2>
+
+            <div class="card">
+                <h3>Key Points to Emphasize</h3>
+                <ul>
+                    <li><strong>State Pattern justification:</strong> "Elevator behavior depends entirely on its current state - an idle elevator can accept any request, a moving elevator adds to queue, a door-open elevator resets timer"</li>
+                    <li><strong>Strategy Pattern:</strong> "Different buildings have different optimization goals - LOOK algorithm for efficiency, zone-based for predictability, nearest for simplicity"</li>
+                    <li><strong>Thread safety:</strong> "Multiple passengers pressing buttons simultaneously requires thread-safe destination management"</li>
+                    <li><strong>Extensibility:</strong> "Adding express elevators just requires a new strategy that considers floor restrictions"</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>Common Follow-up Questions</h3>
+                <ol>
+                    <li><strong>How would you handle VIP elevators?</strong> Add priority queue and VIP authentication</li>
+                    <li><strong>How would you add access control?</strong> Add Floor authorization service, check before allowing destination</li>
+                    <li><strong>How would you optimize for energy?</strong> Strategy that prefers idle elevators, implements sleep mode</li>
+                    <li><strong>How would you handle a 100-floor building?</strong> Zone-based elevators, sky lobbies, express elevators</li>
+                </ol>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="parking-lot.html" class="btn btn-secondary">← Parking Lot</a>
+                <a href="vending-machine.html" class="btn btn-primary">Vending Machine →</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+</body>
+</html>
