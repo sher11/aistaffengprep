@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 3: Structural Patterns - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">LLD</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="../generative-ai/index.html">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Design Principles
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Design Patterns</div>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Creational Patterns
+                    </a>
+                    <a href="module-03.html" class="sidebar-link active" data-module="3">
+                        <span class="sidebar-link-number">3</span>Structural Patterns
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Behavioral Patterns
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Practice Problems</div>
+                    <a href="problems/parking-lot.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P1</span>Parking Lot
+                    </a>
+                    <a href="problems/elevator-system.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P2</span>Elevator System
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 3: Structural Design Patterns</h1>
+
+            <div class="card mt-3">
+                <h3>Learning Objectives</h3>
+                <ul>
+                    <li>Understand how structural patterns compose classes and objects</li>
+                    <li>Implement Adapter, Decorator, Facade, Proxy, and Composite patterns</li>
+                    <li>Know when to use each pattern and their trade-offs</li>
+                    <li>Apply structural patterns in real-world scenarios</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">What Are Structural Patterns?</h2>
+
+            <p>Structural patterns explain how to assemble objects and classes into larger structures while keeping these structures flexible and efficient. They use inheritance to compose interfaces or implementations.</p>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart LR
+    subgraph "Structural Patterns"
+        AD[Adapter] --> |"Convert interface"| R1[Integration]
+        DE[Decorator] --> |"Add behavior"| R2[Extension]
+        FA[Facade] --> |"Simplify"| R3[Subsystem access]
+        PR[Proxy] --> |"Control access"| R4[Indirection]
+        CO[Composite] --> |"Tree structure"| R5[Hierarchy]
+    end
+                </div>
+            </div>
+
+            <!-- Adapter Pattern -->
+            <h2 class="mt-4">1. Adapter Pattern</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Adapter - Converting Interfaces</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Convert the interface of a class into another interface clients expect. Adapter lets classes work together that couldn't otherwise because of incompatible interfaces.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>You want to use an existing class, but its interface doesn't match what you need</li>
+                        <li>You want to create a reusable class that cooperates with unrelated classes</li>
+                        <li>You need to integrate legacy code with new code</li>
+                    </ul>
+
+                    <h4>Real-World Example: Payment Gateway Adapter</h4>
+                    <pre><code class="language-java">// Target interface - what our system expects
+public interface PaymentProcessor {
+    PaymentResult processPayment(String customerId, Money amount);
+    PaymentResult refund(String transactionId, Money amount);
+    PaymentStatus getStatus(String transactionId);
+}
+
+// Adaptee - third-party Stripe SDK with different interface
+public class StripeClient {
+    public StripeCharge createCharge(String stripeCustomerId, long amountInCents, String currency) {
+        // Stripe-specific implementation
+        return new StripeCharge(/* ... */);
+    }
+
+    public StripeRefund createRefund(String chargeId, long amountInCents) {
+        // Stripe-specific implementation
+        return new StripeRefund(/* ... */);
+    }
+
+    public StripeCharge retrieveCharge(String chargeId) {
+        return new StripeCharge(/* ... */);
+    }
+}
+
+// Adapter - makes Stripe work with our PaymentProcessor interface
+public class StripePaymentAdapter implements PaymentProcessor {
+    private final StripeClient stripeClient;
+    private final CustomerIdMapper customerMapper;
+
+    public StripePaymentAdapter(StripeClient stripeClient, CustomerIdMapper customerMapper) {
+        this.stripeClient = stripeClient;
+        this.customerMapper = customerMapper;
+    }
+
+    @Override
+    public PaymentResult processPayment(String customerId, Money amount) {
+        try {
+            // Convert our customer ID to Stripe customer ID
+            String stripeCustomerId = customerMapper.toStripeId(customerId);
+
+            // Convert Money to cents (Stripe uses smallest currency unit)
+            long amountInCents = amount.toCents();
+
+            // Call Stripe
+            StripeCharge charge = stripeClient.createCharge(
+                stripeCustomerId,
+                amountInCents,
+                amount.getCurrency()
+            );
+
+            // Convert Stripe response to our domain model
+            return new PaymentResult(
+                charge.getId(),
+                mapStripeStatus(charge.getStatus()),
+                amount
+            );
+        } catch (StripeException e) {
+            return PaymentResult.failed(e.getMessage());
+        }
+    }
+
+    @Override
+    public PaymentResult refund(String transactionId, Money amount) {
+        try {
+            StripeRefund refund = stripeClient.createRefund(transactionId, amount.toCents());
+            return new PaymentResult(
+                refund.getId(),
+                PaymentStatus.REFUNDED,
+                amount
+            );
+        } catch (StripeException e) {
+            return PaymentResult.failed(e.getMessage());
+        }
+    }
+
+    @Override
+    public PaymentStatus getStatus(String transactionId) {
+        StripeCharge charge = stripeClient.retrieveCharge(transactionId);
+        return mapStripeStatus(charge.getStatus());
+    }
+
+    private PaymentStatus mapStripeStatus(String stripeStatus) {
+        return switch (stripeStatus) {
+            case "succeeded" -> PaymentStatus.COMPLETED;
+            case "pending" -> PaymentStatus.PENDING;
+            case "failed" -> PaymentStatus.FAILED;
+            default -> PaymentStatus.UNKNOWN;
+        };
+    }
+}
+
+// Now we can easily add another payment provider
+public class PayPalPaymentAdapter implements PaymentProcessor {
+    private final PayPalSDK paypalSdk;
+
+    @Override
+    public PaymentResult processPayment(String customerId, Money amount) {
+        // Adapt PayPal's different API to our interface
+        PayPalPayment payment = paypalSdk.execute(/* PayPal-specific params */);
+        return convertToPaymentResult(payment);
+    }
+    // ... other methods
+}
+
+// Usage - clients don't care about underlying provider
+public class CheckoutService {
+    private final PaymentProcessor paymentProcessor;
+
+    public CheckoutService(PaymentProcessor paymentProcessor) {
+        this.paymentProcessor = paymentProcessor;
+    }
+
+    public Order checkout(Cart cart, String customerId) {
+        PaymentResult result = paymentProcessor.processPayment(
+            customerId,
+            cart.getTotal()
+        );
+
+        if (result.isSuccessful()) {
+            return createOrder(cart, result);
+        }
+        throw new PaymentFailedException(result.getErrorMessage());
+    }
+}</code></pre>
+
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Adapter at Netflix:</strong> Netflix uses adapters extensively to integrate with different streaming protocols and device capabilities. The same content delivery logic works across iOS, Android, smart TVs, and browsers through device-specific adapters.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decorator Pattern -->
+            <h2 class="mt-4">2. Decorator Pattern</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Decorator - Adding Behavior Dynamically</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Attach additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>Add responsibilities to objects dynamically and transparently</li>
+                        <li>Responsibilities can be withdrawn</li>
+                        <li>Extension by subclassing is impractical (too many combinations)</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+classDiagram
+    class DataSource {
+        &lt;&lt;interface&gt;&gt;
+        +writeData(data)
+        +readData() String
+    }
+
+    class FileDataSource {
+        +writeData(data)
+        +readData() String
+    }
+
+    class DataSourceDecorator {
+        &lt;&lt;abstract&gt;&gt;
+        -wrappee: DataSource
+        +writeData(data)
+        +readData() String
+    }
+
+    class EncryptionDecorator {
+        +writeData(data)
+        +readData() String
+    }
+
+    class CompressionDecorator {
+        +writeData(data)
+        +readData() String
+    }
+
+    DataSource <|.. FileDataSource
+    DataSource <|.. DataSourceDecorator
+    DataSourceDecorator <|-- EncryptionDecorator
+    DataSourceDecorator <|-- CompressionDecorator
+    DataSourceDecorator o-- DataSource
+                        </div>
+                    </div>
+
+                    <h4>Java Implementation: I/O Streams</h4>
+                    <pre><code class="language-java">// Component interface
+public interface DataSource {
+    void writeData(String data);
+    String readData();
+}
+
+// Concrete component
+public class FileDataSource implements DataSource {
+    private final String filename;
+
+    public FileDataSource(String filename) {
+        this.filename = filename;
+    }
+
+    @Override
+    public void writeData(String data) {
+        try (FileWriter writer = new FileWriter(filename)) {
+            writer.write(data);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to write file", e);
+        }
+    }
+
+    @Override
+    public String readData() {
+        try {
+            return Files.readString(Path.of(filename));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read file", e);
+        }
+    }
+}
+
+// Base decorator
+public abstract class DataSourceDecorator implements DataSource {
+    protected final DataSource wrappee;
+
+    protected DataSourceDecorator(DataSource source) {
+        this.wrappee = source;
+    }
+
+    @Override
+    public void writeData(String data) {
+        wrappee.writeData(data);
+    }
+
+    @Override
+    public String readData() {
+        return wrappee.readData();
+    }
+}
+
+// Concrete decorator - Encryption
+public class EncryptionDecorator extends DataSourceDecorator {
+    private final String secretKey;
+
+    public EncryptionDecorator(DataSource source, String secretKey) {
+        super(source);
+        this.secretKey = secretKey;
+    }
+
+    @Override
+    public void writeData(String data) {
+        String encrypted = encrypt(data);
+        super.writeData(encrypted);
+    }
+
+    @Override
+    public String readData() {
+        String data = super.readData();
+        return decrypt(data);
+    }
+
+    private String encrypt(String data) {
+        // AES encryption logic
+        return Base64.getEncoder().encodeToString(
+            encryptAES(data.getBytes(), secretKey)
+        );
+    }
+
+    private String decrypt(String data) {
+        byte[] decoded = Base64.getDecoder().decode(data);
+        return new String(decryptAES(decoded, secretKey));
+    }
+}
+
+// Concrete decorator - Compression
+public class CompressionDecorator extends DataSourceDecorator {
+    private final int compressionLevel;
+
+    public CompressionDecorator(DataSource source, int level) {
+        super(source);
+        this.compressionLevel = level;
+    }
+
+    @Override
+    public void writeData(String data) {
+        String compressed = compress(data);
+        super.writeData(compressed);
+    }
+
+    @Override
+    public String readData() {
+        String data = super.readData();
+        return decompress(data);
+    }
+
+    private String compress(String data) {
+        // GZIP compression
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (GZIPOutputStream gzip = new GZIPOutputStream(baos)) {
+            gzip.write(data.getBytes(StandardCharsets.UTF_8));
+        }
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
+    }
+
+    private String decompress(String data) {
+        byte[] compressed = Base64.getDecoder().decode(data);
+        ByteArrayInputStream bais = new ByteArrayInputStream(compressed);
+        try (GZIPInputStream gzip = new GZIPInputStream(bais)) {
+            return new String(gzip.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+}
+
+// Concrete decorator - Logging
+public class LoggingDecorator extends DataSourceDecorator {
+    private final Logger logger;
+
+    public LoggingDecorator(DataSource source, Logger logger) {
+        super(source);
+        this.logger = logger;
+    }
+
+    @Override
+    public void writeData(String data) {
+        logger.info("Writing {} bytes", data.length());
+        long start = System.currentTimeMillis();
+        super.writeData(data);
+        logger.info("Write completed in {}ms", System.currentTimeMillis() - start);
+    }
+
+    @Override
+    public String readData() {
+        logger.info("Reading data...");
+        long start = System.currentTimeMillis();
+        String data = super.readData();
+        logger.info("Read {} bytes in {}ms", data.length(), System.currentTimeMillis() - start);
+        return data;
+    }
+}
+
+// Usage - decorators can be stacked in any order
+public class Application {
+    public static void main(String[] args) {
+        // Plain file
+        DataSource source = new FileDataSource("data.txt");
+
+        // With encryption
+        source = new EncryptionDecorator(source, "my-secret-key");
+
+        // With compression
+        source = new CompressionDecorator(source, 9);
+
+        // With logging
+        source = new LoggingDecorator(source, LoggerFactory.getLogger("DataSource"));
+
+        // Write: data -> compress -> encrypt -> log -> file
+        source.writeData("Sensitive business data");
+
+        // Read: file -> log -> decrypt -> decompress -> data
+        String data = source.readData();
+    }
+}</code></pre>
+
+                    <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                        <strong>Java I/O is Built on Decorator:</strong>
+                        <pre><code class="language-java">// Classic Java I/O decorator chain
+InputStream in = new BufferedInputStream(
+    new GZIPInputStream(
+        new FileInputStream("data.gz")
+    )
+);</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Facade Pattern -->
+            <h2 class="mt-4">3. Facade Pattern</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Facade - Simplifying Complex Subsystems</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Provide a unified interface to a set of interfaces in a subsystem. Facade defines a higher-level interface that makes the subsystem easier to use.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>You want to provide a simple interface to a complex subsystem</li>
+                        <li>There are many dependencies between clients and implementation classes</li>
+                        <li>You want to layer your subsystems</li>
+                    </ul>
+
+                    <h4>Real-World Example: Video Conversion</h4>
+                    <pre><code class="language-java">// Complex subsystem classes
+public class VideoFile {
+    private final String filename;
+    private final String codecType;
+
+    public VideoFile(String filename) {
+        this.filename = filename;
+        this.codecType = detectCodec(filename);
+    }
+    // ...
+}
+
+public class CodecFactory {
+    public Codec extract(VideoFile file) {
+        return switch (file.getCodecType()) {
+            case "mp4" -> new MPEG4Codec();
+            case "ogg" -> new OggCodec();
+            default -> throw new UnsupportedCodecException(file.getCodecType());
+        };
+    }
+}
+
+public class BitrateReader {
+    public VideoBuffer read(VideoFile file, Codec codec) {
+        // Complex bit reading logic
+    }
+
+    public VideoBuffer convert(VideoBuffer buffer, Codec codec) {
+        // Complex conversion logic
+    }
+}
+
+public class AudioMixer {
+    public AudioBuffer fix(VideoBuffer result) {
+        // Complex audio processing
+    }
+}
+
+// Facade - simple interface to complex video conversion
+public class VideoConversionFacade {
+    private final CodecFactory codecFactory;
+    private final BitrateReader bitrateReader;
+    private final AudioMixer audioMixer;
+
+    public VideoConversionFacade() {
+        this.codecFactory = new CodecFactory();
+        this.bitrateReader = new BitrateReader();
+        this.audioMixer = new AudioMixer();
+    }
+
+    /**
+     * Converts video to specified format.
+     * Hides all complexity of codec detection, bitrate reading, and audio mixing.
+     */
+    public File convertVideo(String filename, String targetFormat) {
+        System.out.println("Starting conversion: " + filename + " -> " + targetFormat);
+
+        VideoFile file = new VideoFile(filename);
+        Codec sourceCodec = codecFactory.extract(file);
+
+        Codec targetCodec = switch (targetFormat) {
+            case "mp4" -> new MPEG4Codec();
+            case "ogg" -> new OggCodec();
+            default -> throw new IllegalArgumentException("Unknown format: " + targetFormat);
+        };
+
+        VideoBuffer buffer = bitrateReader.read(file, sourceCodec);
+        VideoBuffer result = bitrateReader.convert(buffer, targetCodec);
+        AudioBuffer audio = audioMixer.fix(result);
+
+        return new File(result, audio, targetFormat);
+    }
+}
+
+// Client code - blissfully unaware of complexity
+public class Application {
+    public static void main(String[] args) {
+        VideoConversionFacade converter = new VideoConversionFacade();
+
+        // One simple call instead of coordinating 5+ subsystem classes
+        File mp4 = converter.convertVideo("birthday.ogg", "mp4");
+        File ogg = converter.convertVideo("meeting.mp4", "ogg");
+    }
+}</code></pre>
+
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Facade vs Adapter:</strong>
+                        <ul>
+                            <li><strong>Adapter:</strong> Makes one interface compatible with another (1:1 mapping)</li>
+                            <li><strong>Facade:</strong> Provides simplified interface to complex subsystem (1:many)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proxy Pattern -->
+            <h2 class="mt-4">4. Proxy Pattern</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Proxy - Controlling Access to Objects</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Provide a surrogate or placeholder for another object to control access to it.</p>
+
+                    <p><strong>Types of Proxies:</strong></p>
+                    <ul>
+                        <li><strong>Virtual Proxy:</strong> Lazy initialization of expensive objects</li>
+                        <li><strong>Protection Proxy:</strong> Access control based on permissions</li>
+                        <li><strong>Remote Proxy:</strong> Local representative for remote object</li>
+                        <li><strong>Caching Proxy:</strong> Stores results of expensive operations</li>
+                        <li><strong>Logging Proxy:</strong> Adds logging around method calls</li>
+                    </ul>
+
+                    <h4>Caching Proxy Example</h4>
+                    <pre><code class="language-java">// Subject interface
+public interface DatabaseService {
+    User findUserById(long id);
+    List&lt;User&gt; findUsersByRole(String role);
+    void updateUser(User user);
+}
+
+// Real subject
+public class DatabaseServiceImpl implements DatabaseService {
+    private final DataSource dataSource;
+
+    @Override
+    public User findUserById(long id) {
+        // Expensive database query
+        try (Connection conn = dataSource.getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(
+                "SELECT * FROM users WHERE id = ?"
+            );
+            stmt.setLong(1, id);
+            ResultSet rs = stmt.executeQuery();
+            return mapToUser(rs);
+        }
+    }
+
+    @Override
+    public List&lt;User&gt; findUsersByRole(String role) {
+        // Another expensive query
+    }
+
+    @Override
+    public void updateUser(User user) {
+        // Update logic
+    }
+}
+
+// Caching Proxy
+public class CachingDatabaseProxy implements DatabaseService {
+    private final DatabaseService realService;
+    private final Cache&lt;Long, User&gt; userCache;
+    private final Cache&lt;String, List&lt;User&gt;&gt; roleCache;
+
+    public CachingDatabaseProxy(DatabaseService realService) {
+        this.realService = realService;
+        this.userCache = Caffeine.newBuilder()
+            .maximumSize(10_000)
+            .expireAfterWrite(Duration.ofMinutes(5))
+            .build();
+        this.roleCache = Caffeine.newBuilder()
+            .maximumSize(100)
+            .expireAfterWrite(Duration.ofMinutes(1))
+            .build();
+    }
+
+    @Override
+    public User findUserById(long id) {
+        // Check cache first
+        User cached = userCache.getIfPresent(id);
+        if (cached != null) {
+            return cached;
+        }
+
+        // Cache miss - fetch from DB and cache
+        User user = realService.findUserById(id);
+        if (user != null) {
+            userCache.put(id, user);
+        }
+        return user;
+    }
+
+    @Override
+    public List&lt;User&gt; findUsersByRole(String role) {
+        return roleCache.get(role, key -> realService.findUsersByRole(key));
+    }
+
+    @Override
+    public void updateUser(User user) {
+        // Invalidate cache on write
+        userCache.invalidate(user.getId());
+        // Invalidate role cache since user's role might have changed
+        roleCache.invalidateAll();
+
+        realService.updateUser(user);
+    }
+}
+
+// Protection Proxy Example
+public class SecureDatabaseProxy implements DatabaseService {
+    private final DatabaseService realService;
+    private final SecurityContext securityContext;
+
+    public SecureDatabaseProxy(DatabaseService realService, SecurityContext securityContext) {
+        this.realService = realService;
+        this.securityContext = securityContext;
+    }
+
+    @Override
+    public User findUserById(long id) {
+        // Check if current user can read user data
+        if (!securityContext.hasPermission("users:read")) {
+            throw new AccessDeniedException("No permission to read users");
+        }
+        return realService.findUserById(id);
+    }
+
+    @Override
+    public void updateUser(User user) {
+        // Check if current user can update
+        if (!securityContext.hasPermission("users:write")) {
+            throw new AccessDeniedException("No permission to update users");
+        }
+
+        // Additional check: can only update own profile unless admin
+        if (!securityContext.isAdmin() &&
+            !securityContext.getCurrentUserId().equals(user.getId())) {
+            throw new AccessDeniedException("Can only update own profile");
+        }
+
+        realService.updateUser(user);
+    }
+}
+
+// Usage - stack proxies for multiple concerns
+DatabaseService db = new DatabaseServiceImpl(dataSource);
+db = new CachingDatabaseProxy(db);           // Add caching
+db = new SecureDatabaseProxy(db, security);  // Add security
+db = new LoggingProxy(db, logger);           // Add logging</code></pre>
+
+                    <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                        <strong>Spring AOP uses Proxies:</strong> Spring creates dynamic proxies around your beans to implement @Transactional, @Cacheable, @Async, and security annotations.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Composite Pattern -->
+            <h2 class="mt-4">5. Composite Pattern</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Composite - Tree Structures</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>You want to represent part-whole hierarchies of objects</li>
+                        <li>You want clients to be able to ignore the difference between compositions and individual objects</li>
+                    </ul>
+
+                    <h4>File System Example</h4>
+                    <pre><code class="language-java">// Component
+public interface FileSystemItem {
+    String getName();
+    long getSize();
+    void print(String indent);
+    void delete();
+}
+
+// Leaf
+public class File implements FileSystemItem {
+    private final String name;
+    private final long size;
+
+    public File(String name, long size) {
+        this.name = name;
+        this.size = size;
+    }
+
+    @Override
+    public String getName() { return name; }
+
+    @Override
+    public long getSize() { return size; }
+
+    @Override
+    public void print(String indent) {
+        System.out.println(indent + "File: " + name + " (" + size + " bytes)");
+    }
+
+    @Override
+    public void delete() {
+        System.out.println("Deleting file: " + name);
+    }
+}
+
+// Composite
+public class Directory implements FileSystemItem {
+    private final String name;
+    private final List&lt;FileSystemItem&gt; children = new ArrayList&lt;&gt;();
+
+    public Directory(String name) {
+        this.name = name;
+    }
+
+    public void add(FileSystemItem item) {
+        children.add(item);
+    }
+
+    public void remove(FileSystemItem item) {
+        children.remove(item);
+    }
+
+    public List&lt;FileSystemItem&gt; getChildren() {
+        return Collections.unmodifiableList(children);
+    }
+
+    @Override
+    public String getName() { return name; }
+
+    @Override
+    public long getSize() {
+        // Sum of all children sizes
+        return children.stream()
+            .mapToLong(FileSystemItem::getSize)
+            .sum();
+    }
+
+    @Override
+    public void print(String indent) {
+        System.out.println(indent + "Directory: " + name + " (" + getSize() + " bytes)");
+        for (FileSystemItem child : children) {
+            child.print(indent + "  ");
+        }
+    }
+
+    @Override
+    public void delete() {
+        // Delete all children first
+        for (FileSystemItem child : new ArrayList&lt;&gt;(children)) {
+            child.delete();
+        }
+        children.clear();
+        System.out.println("Deleting directory: " + name);
+    }
+}
+
+// Usage
+public class Application {
+    public static void main(String[] args) {
+        // Build tree structure
+        Directory root = new Directory("root");
+
+        Directory documents = new Directory("documents");
+        documents.add(new File("resume.pdf", 102400));
+        documents.add(new File("cover_letter.docx", 51200));
+
+        Directory photos = new Directory("photos");
+        Directory vacation = new Directory("vacation");
+        vacation.add(new File("beach.jpg", 2048000));
+        vacation.add(new File("sunset.jpg", 1536000));
+        photos.add(vacation);
+        photos.add(new File("profile.png", 512000));
+
+        root.add(documents);
+        root.add(photos);
+        root.add(new File("notes.txt", 1024));
+
+        // Treat leaf and composite uniformly
+        System.out.println("Total size: " + root.getSize() + " bytes");
+        root.print("");
+
+        // Output:
+        // Total size: 4250624 bytes
+        // Directory: root (4250624 bytes)
+        //   Directory: documents (153600 bytes)
+        //     File: resume.pdf (102400 bytes)
+        //     File: cover_letter.docx (51200 bytes)
+        //   Directory: photos (4096000 bytes)
+        //     Directory: vacation (3584000 bytes)
+        //       File: beach.jpg (2048000 bytes)
+        //       File: sunset.jpg (1536000 bytes)
+        //     File: profile.png (512000 bytes)
+        //   File: notes.txt (1024 bytes)
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Pattern Comparison</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Choosing the Right Structural Pattern</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pattern</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Problem Solved</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Key Distinction</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Adapter</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Incompatible interfaces</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Converts interface A to interface B</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Decorator</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Adding behavior dynamically</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Wraps and enhances same interface</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Facade</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complex subsystem access</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Simplifies many interfaces into one</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Proxy</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Controlled access</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Same interface, different behavior</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Composite</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Tree hierarchies</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Uniform treatment of parts and wholes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Self-Check Quiz</h2>
+            <div class="quiz-container" id="module-quiz"></div>
+
+            <div class="flex flex-between mt-4">
+                <a href="module-02.html" class="btn btn-secondary">&larr; Previous: Creational Patterns</a>
+                <a href="module-04.html" class="btn btn-primary">Next: Behavioral Patterns &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            const quizQuestions = [
+                {
+                    question: "Which pattern converts one interface to another?",
+                    options: ["Decorator", "Facade", "Adapter", "Proxy"],
+                    correct: 2,
+                    explanation: "Adapter converts the interface of a class into another interface that clients expect."
+                },
+                {
+                    question: "Which pattern is best for adding logging, caching, or security to an existing class?",
+                    options: ["Adapter", "Decorator or Proxy", "Composite", "Facade"],
+                    correct: 1,
+                    explanation: "Both Decorator and Proxy can add behavior. Decorator for enhancing functionality, Proxy for controlling access."
+                },
+                {
+                    question: "Which pattern represents part-whole hierarchies?",
+                    options: ["Decorator", "Composite", "Facade", "Adapter"],
+                    correct: 1,
+                    explanation: "Composite composes objects into tree structures, allowing uniform treatment of parts and wholes."
+                }
+            ];
+
+            if (typeof StaffEngPrep !== 'undefined' && StaffEngPrep.Quiz) {
+                const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+                quiz.render();
+            }
+        });
+    </script>
+</body>
+</html>
