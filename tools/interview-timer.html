@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Practice Timer - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
+    <style>
+        .timer-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .timer-display {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #764ba2 100%);
+            color: white;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .timer-time {
+            font-size: 5rem;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .timer-phase {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .timer-phase-time {
+            font-size: 1rem;
+            opacity: 0.7;
+        }
+
+        .timer-progress {
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            margin-top: 1.5rem;
+            overflow: hidden;
+        }
+
+        .timer-progress-fill {
+            height: 100%;
+            background: white;
+            transition: width 0.5s ease;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .timer-btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .timer-btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .timer-btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .timer-btn-secondary {
+            background: var(--border-color);
+            color: var(--text-color);
+        }
+
+        .timer-btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .timer-btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .phase-list {
+            margin-top: 2rem;
+        }
+
+        .phase-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .phase-item.active {
+            border-color: var(--primary-color);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .phase-item.completed {
+            border-color: var(--secondary-color);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .phase-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .phase-item.active .phase-number {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .phase-item.completed .phase-number {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .phase-item.completed .phase-number::after {
+            content: "✓";
+        }
+
+        .phase-info {
+            flex: 1;
+        }
+
+        .phase-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .phase-duration {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .preset-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 2rem;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        .preset-btn.active {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tips-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .tips-panel h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .tips-panel ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .tips-panel li {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .sound-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .sound-toggle input {
+            width: 18px;
+            height: 18px;
+        }
+
+        @media (max-width: 600px) {
+            .timer-time {
+                font-size: 3.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content-wide" style="padding-top: 2rem;">
+        <div class="timer-container">
+            <h1>Interview Practice Timer</h1>
+            <p class="text-muted mb-3">Practice with realistic time constraints. Get audio alerts when phases change.</p>
+
+            <div class="sound-toggle">
+                <input type="checkbox" id="sound-enabled" checked>
+                <label for="sound-enabled">Enable sound alerts</label>
+            </div>
+
+            <div class="preset-selector">
+                <button class="preset-btn active" data-preset="system-design">System Design (45 min)</button>
+                <button class="preset-btn" data-preset="coding">Coding (45 min)</button>
+                <button class="preset-btn" data-preset="behavioral">Behavioral (30 min)</button>
+                <button class="preset-btn" data-preset="quick">Quick Practice (15 min)</button>
+            </div>
+
+            <div class="timer-display">
+                <div class="timer-phase" id="current-phase">Requirements & Clarification</div>
+                <div class="timer-time" id="timer-display">05:00</div>
+                <div class="timer-phase-time" id="phase-remaining">5 min remaining in this phase</div>
+                <div class="timer-progress">
+                    <div class="timer-progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="timer-controls">
+                <button class="timer-btn timer-btn-primary" id="start-btn">Start</button>
+                <button class="timer-btn timer-btn-secondary" id="pause-btn" style="display: none;">Pause</button>
+                <button class="timer-btn timer-btn-secondary" id="skip-btn" style="display: none;">Skip Phase</button>
+                <button class="timer-btn timer-btn-danger" id="reset-btn" style="display: none;">Reset</button>
+            </div>
+
+            <div class="phase-list" id="phase-list">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <div class="tips-panel" id="tips-panel">
+                <h4>Tips for This Phase</h4>
+                <ul id="phase-tips">
+                    <li>Ask clarifying questions about scope and scale</li>
+                    <li>Define functional and non-functional requirements</li>
+                    <li>Estimate scale: users, data, requests per second</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        const presets = {
+            'system-design': {
+                name: 'System Design Interview',
+                phases: [
+                    { name: 'Requirements & Clarification', duration: 5, tips: [
+                        'Ask clarifying questions about scope and scale',
+                        'Define functional and non-functional requirements',
+                        'Estimate scale: users, data, requests per second'
+                    ]},
+                    { name: 'High-Level Design', duration: 10, tips: [
+                        'Draw the main components and their interactions',
+                        'Explain data flow from client to database',
+                        'Identify the core APIs needed'
+                    ]},
+                    { name: 'Deep Dive', duration: 15, tips: [
+                        'Focus on the most critical or interesting component',
+                        'Discuss database schema and data model',
+                        'Address scalability and bottlenecks'
+                    ]},
+                    { name: 'Trade-offs & Alternatives', duration: 10, tips: [
+                        'Discuss what you would do differently at 10x scale',
+                        'Mention technologies you considered and rejected',
+                        'Address failure scenarios and recovery'
+                    ]},
+                    { name: 'Wrap-up & Questions', duration: 5, tips: [
+                        'Summarize your design briefly',
+                        'Mention what you would improve with more time',
+                        'Ask thoughtful questions about the role/team'
+                    ]}
+                ]
+            },
+            'coding': {
+                name: 'Coding Interview',
+                phases: [
+                    { name: 'Understand the Problem', duration: 5, tips: [
+                        'Repeat the problem in your own words',
+                        'Ask about edge cases and constraints',
+                        'Clarify input/output format'
+                    ]},
+                    { name: 'Discuss Approach', duration: 5, tips: [
+                        'Think out loud about possible approaches',
+                        'Discuss time and space complexity',
+                        'Get interviewer buy-in before coding'
+                    ]},
+                    { name: 'Code Solution', duration: 25, tips: [
+                        'Write clean, well-structured code',
+                        'Use meaningful variable names',
+                        'Narrate as you code'
+                    ]},
+                    { name: 'Test & Debug', duration: 5, tips: [
+                        'Walk through with a simple example',
+                        'Test edge cases',
+                        'Fix any bugs you find'
+                    ]},
+                    { name: 'Optimization & Follow-up', duration: 5, tips: [
+                        'Discuss potential optimizations',
+                        'Be ready for follow-up variations',
+                        'Analyze final complexity'
+                    ]}
+                ]
+            },
+            'behavioral': {
+                name: 'Behavioral Interview',
+                phases: [
+                    { name: 'Introduction', duration: 3, tips: [
+                        'Brief overview of your background',
+                        'Highlight relevant experience',
+                        'Show enthusiasm for the role'
+                    ]},
+                    { name: 'Story 1 (STAR)', duration: 8, tips: [
+                        'Situation: 15% - Set context briefly',
+                        'Task: 15% - Your specific responsibility',
+                        'Action: 50% - What YOU did, not the team',
+                        'Result: 20% - Quantified outcomes & learnings'
+                    ]},
+                    { name: 'Story 2 (STAR)', duration: 8, tips: [
+                        'Pick a story that demonstrates different skills',
+                        'Focus on staff-level impact',
+                        'Include technical depth where relevant'
+                    ]},
+                    { name: 'Story 3 (STAR)', duration: 8, tips: [
+                        'Consider: conflict, failure, leadership',
+                        'Show growth and self-awareness',
+                        'End with actionable learnings'
+                    ]},
+                    { name: 'Your Questions', duration: 3, tips: [
+                        'Ask about team challenges and goals',
+                        'Inquire about career growth paths',
+                        'Show genuine interest in the company'
+                    ]}
+                ]
+            },
+            'quick': {
+                name: 'Quick Practice',
+                phases: [
+                    { name: 'Problem Understanding', duration: 3, tips: [
+                        'Read problem carefully',
+                        'Identify key constraints',
+                        'Plan your approach'
+                    ]},
+                    { name: 'Solution', duration: 10, tips: [
+                        'Focus on correctness first',
+                        'Keep it simple',
+                        'Think about edge cases'
+                    ]},
+                    { name: 'Review', duration: 2, tips: [
+                        'Test your solution',
+                        'Consider improvements',
+                        'Check for bugs'
+                    ]}
+                ]
+            }
+        };
+
+        let currentPreset = 'system-design';
+        let currentPhaseIndex = 0;
+        let phaseTimeRemaining = 0;
+        let totalTimeRemaining = 0;
+        let totalTime = 0;
+        let isRunning = false;
+        let timerInterval = null;
+        let soundEnabled = true;
+
+        const timerDisplay = document.getElementById('timer-display');
+        const currentPhaseDisplay = document.getElementById('current-phase');
+        const phaseRemainingDisplay = document.getElementById('phase-remaining');
+        const progressFill = document.getElementById('progress-fill');
+        const phaseList = document.getElementById('phase-list');
+        const phaseTips = document.getElementById('phase-tips');
+        const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const soundCheckbox = document.getElementById('sound-enabled');
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (type === 'phase') {
+                oscillator.frequency.value = 880;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } else if (type === 'end') {
+                oscillator.frequency.value = 440;
+                oscillator.type = 'square';
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 1);
+            } else if (type === 'warning') {
+                oscillator.frequency.value = 660;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            }
+        }
+
+        function loadPreset(presetName) {
+            currentPreset = presetName;
+            const preset = presets[presetName];
+
+            // Update preset buttons
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.preset === presetName);
+            });
+
+            // Calculate total time
+            totalTime = preset.phases.reduce((sum, p) => sum + p.duration * 60, 0);
+            totalTimeRemaining = totalTime;
+
+            // Reset state
+            currentPhaseIndex = 0;
+            phaseTimeRemaining = preset.phases[0].duration * 60;
+
+            renderPhaseList();
+            updateDisplay();
+        }
+
+        function renderPhaseList() {
+            const preset = presets[currentPreset];
+            phaseList.innerHTML = preset.phases.map((phase, i) => `
+                <div class="phase-item ${i === currentPhaseIndex ? 'active' : ''} ${i < currentPhaseIndex ? 'completed' : ''}" data-index="${i}">
+                    <div class="phase-number">${i < currentPhaseIndex ? '' : i + 1}</div>
+                    <div class="phase-info">
+                        <div class="phase-name">${phase.name}</div>
+                        <div class="phase-duration">${phase.duration} minutes</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update tips
+            const currentPhase = preset.phases[currentPhaseIndex];
+            if (currentPhase) {
+                phaseTips.innerHTML = currentPhase.tips.map(tip => `<li>${tip}</li>`).join('');
+            }
+        }
+
+        function updateDisplay() {
+            timerDisplay.textContent = formatTime(phaseTimeRemaining);
+
+            const preset = presets[currentPreset];
+            const currentPhase = preset.phases[currentPhaseIndex];
+
+            if (currentPhase) {
+                currentPhaseDisplay.textContent = currentPhase.name;
+                const phaseTotal = currentPhase.duration * 60;
+                const phaseMins = Math.ceil(phaseTimeRemaining / 60);
+                phaseRemainingDisplay.textContent = `${phaseMins} min remaining in this phase`;
+            }
+
+            // Update progress
+            const progress = ((totalTime - totalTimeRemaining) / totalTime) * 100;
+            progressFill.style.width = `${progress}%`;
+
+            // Update phase list
+            renderPhaseList();
+        }
+
+        function tick() {
+            if (phaseTimeRemaining > 0) {
+                phaseTimeRemaining--;
+                totalTimeRemaining--;
+
+                // Warning at 1 minute left in phase
+                if (phaseTimeRemaining === 60) {
+                    playSound('warning');
+                }
+
+                updateDisplay();
+            } else {
+                // Move to next phase
+                const preset = presets[currentPreset];
+                if (currentPhaseIndex < preset.phases.length - 1) {
+                    currentPhaseIndex++;
+                    phaseTimeRemaining = preset.phases[currentPhaseIndex].duration * 60;
+                    playSound('phase');
+                    updateDisplay();
+                } else {
+                    // Interview complete
+                    stop();
+                    playSound('end');
+                    currentPhaseDisplay.textContent = 'Interview Complete!';
+                    timerDisplay.textContent = '00:00';
+                }
+            }
+        }
+
+        function start() {
+            if (isRunning) return;
+            isRunning = true;
+
+            startBtn.style.display = 'none';
+            pauseBtn.style.display = 'inline-block';
+            skipBtn.style.display = 'inline-block';
+            resetBtn.style.display = 'inline-block';
+
+            timerInterval = setInterval(tick, 1000);
+        }
+
+        function pause() {
+            if (!isRunning) return;
+            isRunning = false;
+
+            clearInterval(timerInterval);
+            pauseBtn.textContent = 'Resume';
+            pauseBtn.onclick = resume;
+        }
+
+        function resume() {
+            isRunning = true;
+            timerInterval = setInterval(tick, 1000);
+            pauseBtn.textContent = 'Pause';
+            pauseBtn.onclick = pause;
+        }
+
+        function skip() {
+            const preset = presets[currentPreset];
+            if (currentPhaseIndex < preset.phases.length - 1) {
+                totalTimeRemaining -= phaseTimeRemaining;
+                currentPhaseIndex++;
+                phaseTimeRemaining = preset.phases[currentPhaseIndex].duration * 60;
+                playSound('phase');
+                updateDisplay();
+            }
+        }
+
+        function stop() {
+            isRunning = false;
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            startBtn.style.display = 'inline-block';
+            pauseBtn.style.display = 'none';
+            skipBtn.style.display = 'none';
+            resetBtn.style.display = 'none';
+        }
+
+        function reset() {
+            stop();
+            loadPreset(currentPreset);
+        }
+
+        // Event listeners
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (isRunning) {
+                    if (confirm('Reset timer to change preset?')) {
+                        stop();
+                        loadPreset(btn.dataset.preset);
+                    }
+                } else {
+                    loadPreset(btn.dataset.preset);
+                }
+            });
+        });
+
+        startBtn.addEventListener('click', start);
+        pauseBtn.addEventListener('click', pause);
+        skipBtn.addEventListener('click', skip);
+        resetBtn.addEventListener('click', reset);
+        soundCheckbox.addEventListener('change', (e) => {
+            soundEnabled = e.target.checked;
+        });
+
+        // Initialize
+        loadPreset('system-design');
+    </script>
+</body>
+</html>
