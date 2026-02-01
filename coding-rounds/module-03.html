@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 3: Trees & Binary Search - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
@@ -146,7 +147,7 @@ graph TD
                 </table>
 
                 <div class="code-block">
-                    <pre><code># Recursive Traversals
+                    <pre><code class="language-python"># Recursive Traversals
 def preorder(root):
     if not root: return []
     return [root.val] + preorder(root.left) + preorder(root.right)
@@ -215,7 +216,7 @@ flowchart LR
                 </div>
 
                 <div class="code-block">
-                    <pre><code>def binary_search(arr, target):
+                    <pre><code class="language-python">def binary_search(arr, target):
     """Standard binary search for exact match.
     Time: O(log n), Space: O(1)
     """
@@ -243,7 +244,7 @@ flowchart LR
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code># Find leftmost (first) position of target
+                    <pre><code class="language-python"># Find leftmost (first) position of target
 def find_left_boundary(arr, target):
     left, right = 0, len(arr)
 
@@ -291,7 +292,7 @@ def search_range(arr, target):
                 <p>When the answer itself has a monotonic property, binary search on the answer space.</p>
 
                 <div class="code-block">
-                    <pre><code># Example: Koko Eating Bananas
+                    <pre><code class="language-python"># Example: Koko Eating Bananas
 # Find minimum eating speed to finish within h hours
 
 def min_eating_speed(piles, h):
@@ -325,7 +326,7 @@ def min_eating_speed(piles, h):
                 <p><strong>BST Property:</strong> For every node, all values in left subtree &lt; node value &lt; all values in right subtree.</p>
 
                 <div class="code-block">
-                    <pre><code>def is_valid_bst(root, min_val=float('-inf'), max_val=float('inf')):
+                    <pre><code class="language-python">def is_valid_bst(root, min_val=float('-inf'), max_val=float('inf')):
     """Validate BST using range checking.
     Time: O(n), Space: O(h) for recursion stack
     """
@@ -367,7 +368,7 @@ def is_valid_bst_inorder(root):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>def max_depth(root):
+                    <pre><code class="language-python">def max_depth(root):
     if not root:
         return 0
     return 1 + max(max_depth(root.left), max_depth(root.right))
@@ -397,7 +398,7 @@ def diameter(root):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>def lowest_common_ancestor(root, p, q):
+                    <pre><code class="language-python">def lowest_common_ancestor(root, p, q):
     """Find LCA of nodes p and q."""
     if not root or root == p or root == q:
         return root
@@ -431,7 +432,7 @@ def diameter(root):
                 </ul>
 
                 <div class="code-block">
-                    <pre><code># B-Tree vs BST: Disk reads for 1 billion keys
+                    <pre><code class="language-python"># B-Tree vs BST: Disk reads for 1 billion keys
 import math
 
 def disk_reads_bst(n):
@@ -467,7 +468,7 @@ print(f"B-tree: {disk_reads_btree(n)} disk reads")  # ~4
 
                 <h4>Compound Index Example</h4>
                 <div class="code-block">
-                    <pre><code># MongoDB index on (user_id, timestamp)
+                    <pre><code class="language-python"># MongoDB index on (user_id, timestamp)
 # Internally: B+ tree where each node is sorted by user_id, then timestamp
 
 # This query uses the index efficiently:
@@ -507,7 +508,7 @@ db.events.find({timestamp: {"$gt": last_week}})
                 </ul>
 
                 <div class="code-block">
-                    <pre><code># Git's tree comparison is essentially this:
+                    <pre><code class="language-python"># Git's tree comparison is essentially this:
 def trees_differ(tree1, tree2):
     """
     O(number of differences) comparison.

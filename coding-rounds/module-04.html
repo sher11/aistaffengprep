@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 4: Graphs - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
@@ -112,7 +113,7 @@ graph LR
                 </div>
 
                 <div class="code-block">
-                    <pre><code># Adjacency List (most common)
+                    <pre><code class="language-python"># Adjacency List (most common)
 graph = {
     0: [1, 2],
     1: [0, 3],
@@ -212,7 +213,7 @@ def build_graph(edges, directed=False):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code># Recursive DFS
+                    <pre><code class="language-python"># Recursive DFS
 def dfs_recursive(graph, node, visited=None):
     if visited is None:
         visited = set()
@@ -279,7 +280,7 @@ def num_islands(grid):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>from collections import deque
+                    <pre><code class="language-python">from collections import deque
 
 def bfs(graph, start):
     visited = {start}
@@ -333,7 +334,7 @@ def shortest_path(graph, start, end):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>from collections import deque
+                    <pre><code class="language-python">from collections import deque
 
 def topological_sort(num_nodes, edges):
     """
@@ -381,7 +382,7 @@ def can_finish(num_courses, prerequisites):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>class UnionFind:
+                    <pre><code class="language-python">class UnionFind:
     """
     Union-Find with path compression and union by rank.
     Time: O(α(n)) ≈ O(1) per operation
@@ -455,7 +456,7 @@ def count_components(n, edges):
                 </ul>
 
                 <div class="code-block">
-                    <pre><code># LinkedIn-style "People You May Know" simplified
+                    <pre><code class="language-python"># LinkedIn-style "People You May Know" simplified
 from collections import defaultdict
 
 class SocialGraph:
@@ -530,7 +531,7 @@ class SocialGraph:
                 </ul>
 
                 <div class="code-block">
-                    <pre><code># Simplified Contraction Hierarchies (used by Google Maps, OSRM)
+                    <pre><code class="language-python"># Simplified Contraction Hierarchies (used by Google Maps, OSRM)
 import heapq
 
 class ContractionHierarchies:
@@ -619,7 +620,7 @@ class ContractionHierarchies:
                 </ul>
 
                 <div class="code-block">
-                    <pre><code># Simplified graph partitioning (real version uses METIS, Pregel)
+                    <pre><code class="language-python"># Simplified graph partitioning (real version uses METIS, Pregel)
 class GraphPartitioner:
     """
     Assign users to servers to minimize cross-server edges.

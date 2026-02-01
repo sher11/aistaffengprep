@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 7: Heaps & Sorting - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
@@ -117,7 +118,7 @@
                 </table>
 
                 <div class="code-block">
-                    <pre><code>import heapq
+                    <pre><code class="language-python">import heapq
 
 # Python heapq is a MIN heap
 nums = [3, 1, 4, 1, 5, 9]
@@ -143,7 +144,7 @@ largest = -heapq.heappop(max_heap)</code></pre>
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>import heapq
+                    <pre><code class="language-python">import heapq
 
 def find_kth_largest(nums, k):
     """
@@ -188,7 +189,7 @@ def find_kth_largest_quickselect(nums, k):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>import heapq
+                    <pre><code class="language-python">import heapq
 
 def merge_k_lists(lists):
     """
@@ -289,6 +290,407 @@ def merge_k_lists(lists):
         <!-- Real-World Scale Examples -->
         <h2 class="mt-4">Real-World Scale Examples</h2>
 
+        <div class="card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; margin-bottom: 1.5rem;">
+            <h3 style="color: white;">Heaps & Sorting Power Critical Infrastructure</h3>
+            <p>From ranking 8.5B Google searches daily to Kafka processing 2 trillion messages, these data structures handle the world's data at scale. Understanding them is essential for staff-level engineering.</p>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Kafka: Log Compaction & Message Ordering (2T+ Messages/Day)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Scale:</strong> Apache Kafka handles 2+ trillion messages per day at LinkedIn alone. Netflix processes 8+ million events per second through Kafka.</p>
+
+                <h4>Why Heaps in Kafka?</h4>
+                <p>Kafka uses heaps for:</p>
+                <ul>
+                    <li><strong>Log compaction:</strong> Keep only latest value per key (min-heap by timestamp)</li>
+                    <li><strong>Delayed message delivery:</strong> Priority queue for scheduled messages</li>
+                    <li><strong>Consumer rebalancing:</strong> Assign partitions to minimize lag (heap-based load balancing)</li>
+                </ul>
+
+                <div class="code-block">
+                    <pre><code class="language-python"># Kafka-style log compaction using heap
+# Keeps only latest value per key to reduce storage
+
+import heapq
+from collections import defaultdict
+
+class LogCompactor:
+    """
+    Kafka log compaction: retain only latest value per key.
+    Scale: Kafka compacts billions of records to save 70%+ storage.
+
+    Uses heap to process records in timestamp order,
+    keeping only the most recent per key.
+    """
+
+    def compact(self, log_segments):
+        """
+        Input: Multiple log segments, each with [(key, value, timestamp), ...]
+        Output: Compacted log with only latest value per key
+
+        Algorithm: Merge segments using heap, track latest per key
+        Time: O(N log K) where N = total records, K = segments
+        """
+        # Track latest value per key
+        key_values = {}  # key -> (value, timestamp)
+
+        # Min-heap for k-way merge: (timestamp, segment_idx, record, iterator)
+        heap = []
+        iterators = []
+
+        # Initialize heap with first record from each segment
+        for seg_idx, segment in enumerate(log_segments):
+            it = iter(sorted(segment, key=lambda x: x[2]))  # Sort by timestamp
+            iterators.append(it)
+            try:
+                record = next(it)
+                heapq.heappush(heap, (record[2], seg_idx, record))
+            except StopIteration:
+                pass
+
+        # Process all records in timestamp order
+        while heap:
+            timestamp, seg_idx, record = heapq.heappop(heap)
+            key, value, ts = record
+
+            # Update if this is newer (timestamp ordering ensures it is)
+            if value is not None:  # None = tombstone (delete marker)
+                key_values[key] = (value, ts)
+            elif key in key_values:
+                del key_values[key]  # Key deleted
+
+            # Get next record from same segment
+            try:
+                next_record = next(iterators[seg_idx])
+                heapq.heappush(heap, (next_record[2], seg_idx, next_record))
+            except StopIteration:
+                pass
+
+        # Return compacted log
+        return [(k, v, ts) for k, (v, ts) in key_values.items()]
+
+
+class DelayedMessageQueue:
+    """
+    Kafka delayed delivery: schedule messages for future timestamps.
+    Used for: retry after backoff, scheduled notifications, rate limiting.
+
+    Priority queue (min-heap) by delivery timestamp.
+    """
+
+    def __init__(self):
+        self.heap = []  # (delivery_time, sequence, message)
+        self.sequence = 0  # Tie-breaker for same timestamp
+
+    def schedule(self, message, deliver_at):
+        """Add message to be delivered at specific time."""
+        heapq.heappush(self.heap, (deliver_at, self.sequence, message))
+        self.sequence += 1
+
+    def get_ready_messages(self, current_time):
+        """Get all messages ready for delivery."""
+        ready = []
+        while self.heap and self.heap[0][0] <= current_time:
+            _, _, message = heapq.heappop(self.heap)
+            ready.append(message)
+        return ready
+
+    def next_delivery_time(self):
+        """When is the next message due?"""
+        return self.heap[0][0] if self.heap else None
+
+
+# Real optimization: Kafka uses time-wheel for O(1) scheduling
+# instead of heap for better performance at very high throughput</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>High-Frequency Trading: Real-Time Order Book (Microsecond Latency)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Scale:</strong> NYSE processes 6+ billion messages per day. HFT systems must maintain sorted order books and find best prices in nanoseconds.</p>
+
+                <h4>Order Book = Two Heaps</h4>
+                <p>An order book tracks all buy and sell orders. Matching engine needs instant access to best bid (max-heap) and best ask (min-heap).</p>
+
+                <div class="code-block">
+                    <pre><code class="language-python"># HFT Order Book using heaps
+# Real systems use custom data structures for nanosecond performance
+
+import heapq
+from collections import defaultdict
+from dataclasses import dataclass
+from typing import List, Optional
+import time
+
+@dataclass
+class Order:
+    order_id: str
+    price: float      # Price in cents to avoid float issues
+    quantity: int
+    timestamp: float  # Nanosecond precision in real systems
+    side: str         # 'BUY' or 'SELL'
+
+class OrderBook:
+    """
+    Matching engine order book using heaps.
+    Scale: NASDAQ processes 1M+ orders/second with <10μs latency.
+
+    Buy side: Max-heap (best bid = highest price)
+    Sell side: Min-heap (best ask = lowest price)
+    """
+
+    def __init__(self, symbol: str):
+        self.symbol = symbol
+        self.buy_heap = []   # Max-heap: (-price, timestamp, order)
+        self.sell_heap = []  # Min-heap: (price, timestamp, order)
+        self.orders = {}     # order_id -> order (for cancellation)
+
+    def add_order(self, order: Order) -> List[dict]:
+        """
+        Add order and attempt to match.
+        Returns list of executed trades.
+
+        Time: O(log n) for add, O(m log n) for m matches
+        """
+        trades = []
+
+        if order.side == 'BUY':
+            # Try to match with sell orders
+            while (order.quantity > 0 and
+                   self.sell_heap and
+                   self.sell_heap[0][0] <= order.price):
+
+                sell_price, _, sell_order = self.sell_heap[0]
+
+                # Execute trade at sell price (price-time priority)
+                trade_qty = min(order.quantity, sell_order.quantity)
+                trades.append({
+                    'price': sell_price,
+                    'quantity': trade_qty,
+                    'buyer': order.order_id,
+                    'seller': sell_order.order_id,
+                    'timestamp': time.time_ns()
+                })
+
+                order.quantity -= trade_qty
+                sell_order.quantity -= trade_qty
+
+                if sell_order.quantity == 0:
+                    heapq.heappop(self.sell_heap)
+                    del self.orders[sell_order.order_id]
+
+            # Add remaining to book
+            if order.quantity > 0:
+                heapq.heappush(self.buy_heap,
+                    (-order.price, order.timestamp, order))
+                self.orders[order.order_id] = order
+
+        else:  # SELL
+            # Try to match with buy orders
+            while (order.quantity > 0 and
+                   self.buy_heap and
+                   -self.buy_heap[0][0] >= order.price):
+
+                neg_buy_price, _, buy_order = self.buy_heap[0]
+                buy_price = -neg_buy_price
+
+                trade_qty = min(order.quantity, buy_order.quantity)
+                trades.append({
+                    'price': buy_price,  # Execute at buy price
+                    'quantity': trade_qty,
+                    'buyer': buy_order.order_id,
+                    'seller': order.order_id,
+                    'timestamp': time.time_ns()
+                })
+
+                order.quantity -= trade_qty
+                buy_order.quantity -= trade_qty
+
+                if buy_order.quantity == 0:
+                    heapq.heappop(self.buy_heap)
+                    del self.orders[buy_order.order_id]
+
+            if order.quantity > 0:
+                heapq.heappush(self.sell_heap,
+                    (order.price, order.timestamp, order))
+                self.orders[order.order_id] = order
+
+        return trades
+
+    def get_best_bid(self) -> Optional[float]:
+        """Best buy price - O(1)."""
+        while self.buy_heap and self.buy_heap[0][2].quantity == 0:
+            heapq.heappop(self.buy_heap)
+        return -self.buy_heap[0][0] if self.buy_heap else None
+
+    def get_best_ask(self) -> Optional[float]:
+        """Best sell price - O(1)."""
+        while self.sell_heap and self.sell_heap[0][2].quantity == 0:
+            heapq.heappop(self.sell_heap)
+        return self.sell_heap[0][0] if self.sell_heap else None
+
+    def get_spread(self) -> Optional[float]:
+        """Bid-ask spread - key market metric."""
+        bid, ask = self.get_best_bid(), self.get_best_ask()
+        return (ask - bid) if bid and ask else None
+
+
+# Real HFT optimization: Use price-level aggregation + skip lists
+# for O(1) best price access instead of heap</code></pre>
+                </div>
+
+                <h4>Why This Matters in Interviews</h4>
+                <p>Order book design is a common system design question. Key insights:</p>
+                <ul>
+                    <li>Two heaps give O(1) best bid/ask and O(log n) order add/cancel</li>
+                    <li>Price-time priority: same price orders fill in timestamp order</li>
+                    <li>Real systems use skip lists or price-level maps for better cache performance</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Uber Surge Pricing: Real-Time Demand Aggregation</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Scale:</strong> Uber processes 17+ million trips daily across 10,000+ cities. Surge pricing updates every few minutes based on supply/demand in each area.</p>
+
+                <h4>The Problem: Aggregate Demand in Grid Cells</h4>
+                <p>Uber divides cities into hexagonal cells (H3 grid). Each cell needs real-time demand metrics to calculate surge. This is a streaming Top-K problem.</p>
+
+                <div class="code-block">
+                    <pre><code class="language-python"># Uber-style surge pricing using heap for top demand areas
+# Simplied version of their H3-based geospatial system
+
+import heapq
+from collections import defaultdict
+from dataclasses import dataclass
+import time
+
+@dataclass
+class RideRequest:
+    cell_id: str      # H3 hexagon ID
+    timestamp: float
+    rider_id: str
+
+class SurgePricingEngine:
+    """
+    Real-time demand aggregation for surge pricing.
+    Scale: Uber aggregates millions of events per minute.
+
+    Uses sliding window + heap to find top demand areas.
+    """
+
+    def __init__(self, window_seconds=300, top_k=100):
+        self.window = window_seconds  # 5-minute window
+        self.top_k = top_k
+        self.cell_requests = defaultdict(list)  # cell -> [timestamps]
+        self.supply = defaultdict(int)  # cell -> available drivers
+
+    def record_request(self, request: RideRequest):
+        """Record ride request - O(1)."""
+        self.cell_requests[request.cell_id].append(request.timestamp)
+
+    def get_surge_areas(self) -> list:
+        """
+        Get top-K highest demand areas.
+        Uses min-heap to efficiently track top demand cells.
+
+        Time: O(C log K) where C = number of cells
+        """
+        current_time = time.time()
+        cutoff = current_time - self.window
+
+        # Calculate demand for each cell (requests in window)
+        demand_scores = []
+        for cell_id, timestamps in self.cell_requests.items():
+            # Remove old requests (sliding window)
+            self.cell_requests[cell_id] = [
+                ts for ts in timestamps if ts > cutoff
+            ]
+
+            recent_requests = len(self.cell_requests[cell_id])
+            drivers = self.supply.get(cell_id, 1)
+
+            # Demand score = requests / supply
+            # High score = need surge pricing
+            score = recent_requests / max(drivers, 1)
+            demand_scores.append((cell_id, score, recent_requests))
+
+        # Use min-heap of size K to find top-K
+        # More efficient than full sort: O(n log k) vs O(n log n)
+        top_cells = heapq.nlargest(
+            self.top_k,
+            demand_scores,
+            key=lambda x: x[1]
+        )
+
+        # Calculate surge multiplier
+        result = []
+        for cell_id, score, requests in top_cells:
+            # Surge multiplier based on demand/supply ratio
+            # Real Uber uses ML models with many more factors
+            surge = min(1 + (score - 1) * 0.5, 3.0)  # Cap at 3x
+            surge = max(surge, 1.0)  # Min 1x
+
+            result.append({
+                'cell_id': cell_id,
+                'demand_score': score,
+                'surge_multiplier': round(surge, 2),
+                'requests_in_window': requests
+            })
+
+        return result
+
+    def update_supply(self, cell_id: str, drivers: int):
+        """Update available drivers in cell."""
+        self.supply[cell_id] = drivers
+
+
+class StreamingTopK:
+    """
+    More efficient: Maintain streaming top-K with heap.
+    Updates in O(log K) instead of recalculating.
+    """
+
+    def __init__(self, k: int):
+        self.k = k
+        self.heap = []  # Min-heap of (score, id)
+        self.scores = {}  # id -> current score
+
+    def update(self, item_id: str, score: float):
+        """
+        Update item's score. Maintains top-K efficiently.
+        Time: O(log K) amortized
+        """
+        old_score = self.scores.get(item_id)
+        self.scores[item_id] = score
+
+        if len(self.heap) < self.k:
+            heapq.heappush(self.heap, (score, item_id))
+        elif score > self.heap[0][0]:
+            # New item better than current minimum in top-K
+            if old_score is None or old_score <= self.heap[0][0]:
+                heapq.heapreplace(self.heap, (score, item_id))
+
+    def get_top_k(self):
+        """Return current top-K. O(K log K)."""
+        return sorted(self.heap, reverse=True)</code></pre>
+                </div>
+            </div>
+        </div>
+
         <div class="collapsible">
             <div class="collapsible-header">
                 <span>Google Search: Sorting Billions of Results</span>
@@ -306,7 +708,7 @@ def merge_k_lists(lists):
                 </ul>
 
                 <div class="code-block">
-                    <pre><code># Google-style distributed top-K search results
+                    <pre><code class="language-python"># Google-style distributed top-K search results
 import heapq
 
 class DistributedSearchRanker:
@@ -381,7 +783,7 @@ class DistributedSearchRanker:
 
                 <h4>Fan-out on Read vs Write</h4>
                 <div class="code-block">
-                    <pre><code># Twitter-style timeline generation
+                    <pre><code class="language-python"># Twitter-style timeline generation
 import heapq
 from collections import defaultdict
 
@@ -463,7 +865,7 @@ class TimelineService:
 
                 <h4>External Sort Algorithm</h4>
                 <div class="code-block">
-                    <pre><code># External merge sort (basis of Spark's shuffle)
+                    <pre><code class="language-python"># External merge sort (basis of Spark's shuffle)
 import heapq
 import tempfile
 import os

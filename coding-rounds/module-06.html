@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 6: Backtracking - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
@@ -116,7 +117,7 @@ flowchart TD
                 </div>
 
                 <div class="code-block">
-                    <pre><code>def backtrack(state, choices, result):
+                    <pre><code class="language-python">def backtrack(state, choices, result):
     # Base case: found a solution
     if is_solution(state):
         result.append(state.copy())
@@ -146,7 +147,7 @@ flowchart TD
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>def permutations(nums):
+                    <pre><code class="language-python">def permutations(nums):
     """Generate all permutations of nums."""
     result = []
 
@@ -175,7 +176,7 @@ flowchart TD
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code># All subsets
+                    <pre><code class="language-python"># All subsets
 def subsets(nums):
     result = []
 
@@ -217,7 +218,7 @@ def combinations(n, k):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>def solve_n_queens(n):
+                    <pre><code class="language-python">def solve_n_queens(n):
     """Place n queens on n×n board so no two attack each other."""
     result = []
     board = [['.'] * n for _ in range(n)]
@@ -297,7 +298,7 @@ flowchart TD
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code># Example 1: Combination Sum with Pruning
+                    <pre><code class="language-python"># Example 1: Combination Sum with Pruning
 # Find all combinations that sum to target (can reuse elements)
 
 def combination_sum(candidates, target):
@@ -388,7 +389,7 @@ flowchart TD
                 </div>
 
                 <div class="code-block">
-                    <pre><code># Branch and Bound for 0/1 Knapsack
+                    <pre><code class="language-python"># Branch and Bound for 0/1 Knapsack
 # Find maximum value without exceeding weight capacity
 
 def knapsack_branch_bound(weights, values, capacity):
@@ -479,7 +480,7 @@ def knapsack_branch_bound(weights, values, capacity):
                 <p>Sudoku is a classic constraint satisfaction problem. We combine backtracking with constraint propagation for efficiency.</p>
 
                 <div class="code-block">
-                    <pre><code>def solve_sudoku(board):
+                    <pre><code class="language-python">def solve_sudoku(board):
     """
     Solve Sudoku using backtracking with optimizations:
     1. Track valid candidates for each cell using sets
@@ -688,6 +689,239 @@ class SudokuSolverOptimized:
         <!-- Real-World Applications Section -->
         <h2 class="mt-4">Real-World Applications at Scale</h2>
 
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 1.5rem;">
+            <h3 style="color: white;">Why Backtracking Matters in Production</h3>
+            <p>Backtracking powers critical systems handling billions of decisions daily. From scheduling 750K+ Amazon robots to verifying Intel CPUs with billions of gates, these algorithms run at massive scale with aggressive optimizations.</p>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Amazon Warehouse Robot Path Planning (750K+ Robots)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Scale:</strong> Amazon operates 750,000+ robots across 175+ fulfillment centers, each making thousands of path decisions per hour.</p>
+
+                <h4>The Problem: Multi-Agent Path Finding (MAPF)</h4>
+                <p>Robots must navigate to shelves, pick items, and return to packing stations without collisions. This is a constraint satisfaction problem solved with backtracking + CBS (Conflict-Based Search).</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    A[Order Received] --> B[Find Shelf Location]
+    B --> C{Path Conflict?}
+    C -->|No| D[Execute Path]
+    C -->|Yes| E[Backtrack & Replan]
+    E --> F[Add Constraint]
+    F --> C
+    D --> G[Item Retrieved]
+    style E fill:#ffcccc
+    style F fill:#ffffcc
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <pre><code class="language-python"># Simplified Multi-Agent Path Finding with Conflict-Based Search
+# Similar approach used in Amazon robotics
+
+class WarehousePathPlanner:
+    """
+    Constraint-based backtracking for warehouse robot coordination.
+    Scale: Amazon plans ~10,000 paths/second per warehouse.
+    """
+
+    def __init__(self, grid_size, obstacles):
+        self.grid = grid_size  # Typically 100x100+ cells
+        self.obstacles = set(obstacles)
+        self.reservation_table = {}  # (x, y, time) -> robot_id
+
+    def find_path(self, robot_id, start, goal, constraints=None):
+        """
+        A* with time dimension + backtracking on conflicts.
+        Constraints: set of (x, y, time) that robot must avoid.
+        """
+        if constraints is None:
+            constraints = set()
+
+        # State: (x, y, time)
+        # Using A* with backtracking when conflicts detected
+        from heapq import heappush, heappop
+
+        def heuristic(pos):
+            return abs(pos[0] - goal[0]) + abs(pos[1] - goal[1])
+
+        # Priority queue: (f_score, time, x, y, path)
+        pq = [(heuristic(start), 0, start[0], start[1], [start])]
+        visited = set()
+
+        while pq:
+            _, time, x, y, path = heappop(pq)
+
+            if (x, y) == goal:
+                return path
+
+            if (x, y, time) in visited:
+                continue
+            visited.add((x, y, time))
+
+            # Try all moves: stay, up, down, left, right
+            for dx, dy in [(0, 0), (0, 1), (0, -1), (1, 0), (-1, 0)]:
+                nx, ny = x + dx, y + dy
+                next_time = time + 1
+
+                # Check constraints (from higher-priority robots)
+                if (nx, ny, next_time) in constraints:
+                    continue  # BACKTRACK - conflict with constraint
+
+                # Check bounds and obstacles
+                if not (0 <= nx < self.grid[0] and 0 <= ny < self.grid[1]):
+                    continue
+                if (nx, ny) in self.obstacles:
+                    continue
+
+                f_score = next_time + heuristic((nx, ny))
+                heappush(pq, (f_score, next_time, nx, ny, path + [(nx, ny)]))
+
+        return None  # No path found - triggers replanning
+
+    def resolve_conflicts(self, paths):
+        """
+        CBS-style conflict resolution using backtracking.
+        When robots collide, add constraints and replan.
+        """
+        for i, path_i in enumerate(paths):
+            for j, path_j in enumerate(paths[i+1:], i+1):
+                # Check for vertex and edge conflicts
+                for t in range(min(len(path_i), len(path_j))):
+                    if path_i[t] == path_j[t]:
+                        # Vertex conflict - one robot must wait
+                        return ('vertex', i, j, path_i[t], t)
+        return None  # No conflicts</code></pre>
+                </div>
+
+                <h4>Key Insight: Constraint Propagation at Scale</h4>
+                <p>Amazon's system uses hierarchical planning: high-level assigns zones, low-level handles path finding. When conflicts occur, the system backtracks to try alternative assignments, propagating constraints down.</p>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Google/Microsoft Meeting Scheduler (Billions of Constraints)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Scale:</strong> Google Calendar processes 500M+ users, scheduling millions of meetings daily with complex constraints (attendee availability, room capacity, timezone, recurring patterns).</p>
+
+                <div class="code-block">
+                    <pre><code class="language-python"># Meeting scheduler using backtracking with constraint propagation
+# Similar to Google Calendar's Speedy Meetings / Find Time features
+
+class MeetingScheduler:
+    """
+    Production meeting scheduling with backtracking.
+    Handles: availability, rooms, priorities, timezones.
+    """
+
+    def __init__(self):
+        self.calendars = {}  # user_id -> set of busy slots
+        self.rooms = {}      # room_id -> {capacity, busy_slots}
+
+    def schedule_meeting(self, attendees, duration, time_range,
+                         room_required=True, priority='normal'):
+        """
+        Find slot where all attendees are free.
+        Uses backtracking with constraint propagation.
+
+        Args:
+            attendees: List of user IDs (required + optional)
+            duration: Meeting length in minutes
+            time_range: (start_date, end_date) to search
+            room_required: Whether physical room needed
+            priority: 'high' allows suggesting time swaps
+        """
+        required = attendees['required']
+        optional = attendees.get('optional', [])
+
+        # Generate candidate slots (e.g., 30-min increments)
+        candidates = self._generate_slots(time_range, duration)
+
+        # Sort by optimization criteria (working hours, attendee preferences)
+        candidates.sort(key=lambda s: self._slot_score(s, required))
+
+        for slot in candidates:
+            # Check constraints for this slot
+            conflicts = self._check_conflicts(slot, duration, required)
+
+            if not conflicts:
+                # All required attendees free
+                if room_required:
+                    room = self._find_room(slot, duration, len(required))
+                    if room:
+                        return {'slot': slot, 'room': room, 'conflicts': []}
+                else:
+                    return {'slot': slot, 'room': None, 'conflicts': []}
+
+            # BACKTRACKING: If high priority, try to resolve conflicts
+            if priority == 'high' and len(conflicts) <= 2:
+                resolution = self._try_resolve_conflicts(
+                    slot, duration, conflicts
+                )
+                if resolution:
+                    return resolution
+
+        # No slot found - suggest alternatives
+        return self._suggest_alternatives(required, duration, time_range)
+
+    def _check_conflicts(self, slot, duration, attendees):
+        """Check which attendees have conflicts."""
+        conflicts = []
+        end_time = slot + duration
+
+        for user_id in attendees:
+            busy = self.calendars.get(user_id, set())
+            for busy_start, busy_end in busy:
+                # Overlap check
+                if not (end_time <= busy_start or slot >= busy_end):
+                    conflicts.append({
+                        'user': user_id,
+                        'conflict': (busy_start, busy_end)
+                    })
+                    break
+
+        return conflicts
+
+    def _try_resolve_conflicts(self, slot, duration, conflicts):
+        """
+        Backtracking: Try to move conflicting meetings.
+        Only for high-priority meetings (exec scheduling).
+        """
+        for conflict in conflicts:
+            # Can the conflicting meeting be rescheduled?
+            alt_slot = self._find_alternative_for_meeting(
+                conflict['conflict'],
+                conflict['user']
+            )
+            if alt_slot:
+                return {
+                    'slot': slot,
+                    'requires_reschedule': [{
+                        'user': conflict['user'],
+                        'move_to': alt_slot
+                    }]
+                }
+        return None</code></pre>
+                </div>
+
+                <h4>Production Optimizations</h4>
+                <ul>
+                    <li><strong>Interval trees:</strong> O(log n) availability queries instead of scanning all events</li>
+                    <li><strong>Caching:</strong> Pre-compute "free/busy" blocks per user</li>
+                    <li><strong>Pruning:</strong> Skip weekends, holidays, outside working hours early</li>
+                    <li><strong>Constraint propagation:</strong> If one required attendee only has 2 free slots, check those first</li>
+                </ul>
+            </div>
+        </div>
+
         <div class="collapsible">
             <div class="collapsible-header">
                 <span>Industry Applications of Backtracking</span>
@@ -710,6 +944,78 @@ class SudokuSolverOptimized:
                     <li>Backtracking when greedy coloring fails</li>
                 </ul>
 
+                <div class="code-block">
+                    <pre><code class="language-python"># Register allocation via graph coloring (simplified LLVM approach)
+# Backtracking when greedy coloring fails
+
+class RegisterAllocator:
+    """
+    Simplified register allocation using graph coloring with backtracking.
+    Real compilers (GCC, LLVM) use this for x86-64's 16 general-purpose registers.
+    """
+
+    def __init__(self, num_registers=16):
+        self.num_registers = num_registers  # x86-64 has 16 GP registers
+        self.interference_graph = {}  # variable -> set of conflicting variables
+
+    def build_interference_graph(self, live_ranges):
+        """
+        Build graph where edges = variables that are live simultaneously.
+        Two variables that interfere cannot share a register.
+        """
+        for var, (start, end) in live_ranges.items():
+            self.interference_graph[var] = set()
+
+            for other_var, (other_start, other_end) in live_ranges.items():
+                if var != other_var:
+                    # Check if live ranges overlap
+                    if not (end < other_start or start > other_end):
+                        self.interference_graph[var].add(other_var)
+
+    def allocate(self):
+        """
+        Allocate registers using graph coloring with backtracking.
+        Returns: {variable: register_number} or None if impossible.
+        """
+        variables = list(self.interference_graph.keys())
+        assignment = {}
+
+        def backtrack(var_idx):
+            if var_idx == len(variables):
+                return True  # All variables assigned
+
+            var = variables[var_idx]
+            neighbors = self.interference_graph[var]
+
+            # Find used registers among neighbors
+            used_registers = {
+                assignment[n] for n in neighbors if n in assignment
+            }
+
+            # Try each available register
+            for reg in range(self.num_registers):
+                if reg not in used_registers:
+                    assignment[var] = reg
+
+                    if backtrack(var_idx + 1):
+                        return True
+
+                    # BACKTRACK: remove assignment
+                    del assignment[var]
+
+            return False  # Need to spill to memory
+
+        # Order by degree (most constrained first - MRV heuristic)
+        variables.sort(
+            key=lambda v: len(self.interference_graph[v]),
+            reverse=True
+        )
+
+        if backtrack(0):
+            return assignment
+        return None  # Some variables must spill to stack</code></pre>
+                </div>
+
                 <h4>3. SAT Solvers (Boolean Satisfiability)</h4>
                 <p>Modern SAT solvers (MiniSat, Z3) power critical infrastructure. Used in:</p>
                 <ul>
@@ -719,8 +1025,210 @@ class SudokuSolverOptimized:
                 </ul>
                 <p>DPLL algorithm combines backtracking with unit propagation, solving industrial instances with millions of variables.</p>
 
+                <h4>4. npm/pip Dependency Resolution</h4>
+                <p><strong>Scale:</strong> npm handles 2+ billion package downloads per week, resolving complex version constraints.</p>
+
                 <div class="code-block">
-                    <pre><code># Simplified DPLL (basis of modern SAT solvers)
+                    <pre><code class="language-python"># Simplified package dependency resolver (npm/pip style)
+# Uses backtracking when version conflicts arise
+
+class DependencyResolver:
+    """
+    Resolve package dependencies with version constraints.
+    npm, pip, and cargo all use variations of this approach.
+
+    Scale: npm resolves billions of installs weekly with trees
+    having 1000+ transitive dependencies.
+    """
+
+    def __init__(self, registry):
+        self.registry = registry  # package -> {version -> dependencies}
+
+    def resolve(self, requirements):
+        """
+        Resolve all dependencies, returning locked versions.
+        Uses backtracking on version conflicts.
+
+        Args:
+            requirements: {"react": "^18.0.0", "lodash": ">=4.0"}
+        Returns:
+            {"react": "18.2.0", "lodash": "4.17.21", ...}
+        """
+        locked = {}  # package -> resolved version
+        constraints = {}  # package -> list of version constraints
+
+        def add_constraint(package, constraint, source):
+            if package not in constraints:
+                constraints[package] = []
+            constraints[package].append((constraint, source))
+
+        def satisfies_all(package, version):
+            """Check if version satisfies all constraints."""
+            for constraint, _ in constraints.get(package, []):
+                if not self._version_satisfies(version, constraint):
+                    return False
+            return True
+
+        def backtrack(packages_to_resolve):
+            if not packages_to_resolve:
+                return True  # All resolved
+
+            package = packages_to_resolve.pop()
+
+            # Get available versions (newest first)
+            versions = self.registry.get_versions(package)
+            versions.sort(reverse=True)  # Try newest first
+
+            for version in versions:
+                if not satisfies_all(package, version):
+                    continue  # Skip - doesn't satisfy constraints
+
+                # Try this version
+                locked[package] = version
+
+                # Add transitive dependencies
+                deps = self.registry.get_dependencies(package, version)
+                new_packages = []
+
+                for dep_pkg, dep_constraint in deps.items():
+                    add_constraint(dep_pkg, dep_constraint,
+                                   f"{package}@{version}")
+
+                    if dep_pkg in locked:
+                        # Already locked - check compatibility
+                        if not satisfies_all(dep_pkg, locked[dep_pkg]):
+                            # CONFLICT - backtrack
+                            self._remove_constraints(package, version)
+                            del locked[package]
+                            continue
+                    else:
+                        new_packages.append(dep_pkg)
+
+                # Recurse with new dependencies
+                if backtrack(packages_to_resolve + new_packages):
+                    return True
+
+                # BACKTRACK
+                self._remove_constraints(package, version)
+                del locked[package]
+
+            packages_to_resolve.append(package)  # Put back
+            return False
+
+        # Add root constraints
+        for package, constraint in requirements.items():
+            add_constraint(package, constraint, "root")
+
+        if backtrack(list(requirements.keys())):
+            return locked
+        raise Exception("Could not resolve dependencies")</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Uber/Lyft Driver-Rider Matching</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Scale:</strong> Uber processes 17+ million trips daily, matching drivers and riders with constraints on location, time, vehicle type, and driver ratings.</p>
+
+                <div class="code-block">
+                    <pre><code class="language-python"># Batch matching with backtracking for ride-sharing optimization
+# Similar to Uber Pool / Lyft Shared matching
+
+class RideShareMatcher:
+    """
+    Match riders to drivers with constraints.
+    Backtracking used when greedy matching leaves riders unserved.
+
+    Scale: Uber matches 17M+ rides/day across 10K+ cities.
+    """
+
+    def __init__(self, max_detour_minutes=10):
+        self.max_detour = max_detour_minutes
+
+    def batch_match(self, riders, drivers):
+        """
+        Match batch of riders to available drivers.
+        Objective: Minimize total wait time while respecting constraints.
+
+        Uses backtracking when greedy assignment is suboptimal.
+        """
+        # Sort riders by request time (FIFO fairness)
+        riders = sorted(riders, key=lambda r: r['request_time'])
+
+        assignment = {}  # rider_id -> driver_id
+        driver_capacity = {d['id']: d['capacity'] for d in drivers}
+
+        def estimate_pickup_time(driver, rider):
+            """ETA considering current route and traffic."""
+            # Real systems use ML models for accurate ETAs
+            return self._calculate_eta(
+                driver['current_location'],
+                rider['pickup_location'],
+                driver.get('current_route', [])
+            )
+
+        def can_add_rider(driver, new_rider, current_riders):
+            """Check if adding rider keeps detour within limits."""
+            if driver_capacity[driver['id']] <= len(current_riders):
+                return False
+
+            # Calculate detour for existing riders
+            new_route = self._optimize_route(
+                driver['current_location'],
+                [r['pickup_location'] for r in current_riders + [new_rider]],
+                [r['dropoff_location'] for r in current_riders + [new_rider]]
+            )
+
+            for existing in current_riders:
+                original_eta = existing['original_eta']
+                new_eta = self._eta_in_route(new_route, existing['dropoff_location'])
+                if new_eta - original_eta > self.max_detour:
+                    return False  # Detour too long for existing rider
+
+            return True
+
+        def backtrack(rider_idx, current_assignment, rider_groups):
+            if rider_idx == len(riders):
+                return True  # All riders assigned
+
+            rider = riders[rider_idx]
+
+            # Try each driver (sorted by proximity)
+            nearby_drivers = self._get_nearby_drivers(
+                rider['pickup_location'], drivers
+            )
+
+            for driver in nearby_drivers:
+                current_riders = rider_groups.get(driver['id'], [])
+
+                if can_add_rider(driver, rider, current_riders):
+                    # Make assignment
+                    current_assignment[rider['id']] = driver['id']
+                    rider_groups.setdefault(driver['id'], []).append(rider)
+
+                    if backtrack(rider_idx + 1, current_assignment, rider_groups):
+                        return True
+
+                    # BACKTRACK
+                    del current_assignment[rider['id']]
+                    rider_groups[driver['id']].remove(rider)
+
+            # Try leaving rider unmatched (will retry next batch)
+            return backtrack(rider_idx + 1, current_assignment, rider_groups)
+
+        rider_groups = {}
+        backtrack(0, assignment, rider_groups)
+        return assignment</code></pre>
+                </div>
+            </div>
+        </div>
+
+                <div class="code-block">
+                    <pre><code class="language-python"># Simplified DPLL (basis of modern SAT solvers)
 def dpll(clauses, assignment=None):
     """
     Davis-Putnam-Logemann-Loveland algorithm.

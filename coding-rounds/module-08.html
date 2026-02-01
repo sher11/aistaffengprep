@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 8: Non-LeetCode Problems - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
@@ -127,7 +128,7 @@ flowchart LR
                 </div>
 
                 <div class="code-block">
-                    <pre><code>class Node:
+                    <pre><code class="language-python">class Node:
     def __init__(self, key=0, val=0):
         self.key = key
         self.val = val
@@ -188,7 +189,7 @@ class LRUCache:
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>import time
+                    <pre><code class="language-python">import time
 from collections import deque
 
 class RateLimiter:
@@ -231,7 +232,7 @@ class RateLimiter:
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>import threading
+                    <pre><code class="language-python">import threading
 import re
 from collections import defaultdict
 from datetime import datetime
