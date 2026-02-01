@@ -20,11 +20,66 @@
         </div>
     </nav>
 
-    <div class="container">
-        <nav style="margin-bottom: 1rem;">
-            <a href="index.html">&larr; Back to Coding Rounds</a>
-        </nav>
+    <div class="layout-with-sidebar">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
 
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Fundamentals</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Foundations
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Arrays & Two Pointers
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Core Patterns</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>Trees & Binary Search
+                    </a>
+                    <a href="module-04.html" class="sidebar-link active" data-module="4">
+                        <span class="sidebar-link-number">4</span>Graphs
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>Dynamic Programming
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced</div>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Backtracking
+                    </a>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">7</span>Heaps & Sorting
+                    </a>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">8</span>Non-LeetCode Problems
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Interview Prep</div>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">9</span>Interview Simulation
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Mobile sidebar toggle -->
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
         <h1>Module 4: Graphs & Advanced Traversal</h1>
 
         <div class="card mt-3">
@@ -373,11 +428,35 @@ def count_components(n, edges):
             <a href="module-03.html" class="btn btn-secondary">&larr; Module 3</a>
             <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
         </div>
+        </main>
     </div>
 
     <script src="../assets/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle for mobile
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            // Update sidebar links based on completion status
+            document.querySelectorAll('.sidebar-link[data-module]').forEach(link => {
+                const moduleNum = parseInt(link.dataset.module);
+                if (StaffEngPrep.ProgressTracker.isModuleComplete('coding', moduleNum)) {
+                    link.classList.add('completed');
+                }
+            });
+
             const quizQuestions = [
                 {
                     question: "Which algorithm finds shortest path in an unweighted graph?",

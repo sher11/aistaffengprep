@@ -20,133 +20,95 @@
         </div>
     </nav>
 
-    <div class="container">
-        <h1>Behavioral Rounds</h1>
-        <p class="text-muted mb-3">Master the STAR method and prepare compelling stories for staff-level behavioral interviews.</p>
+    <div class="layout-with-sidebar">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link active">Introduction</a>
+                </div>
 
-        <!-- Progress -->
-        <div class="progress-container">
-            <div class="progress-header">
-                <span><strong>Course Progress</strong></span>
-                <span class="progress-label" id="progress-label">0% Complete</span>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundation</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>STAR Framework
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Story Mining
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Story Categories</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>Technical Leadership
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Conflict Resolution
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>Failure & Growth
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced</div>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Influence Without Authority
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Mobile sidebar toggle -->
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content-wide">
+            <h1>Behavioral Rounds</h1>
+            <p class="text-muted mb-3">Master the STAR method and prepare compelling stories for staff-level behavioral interviews.</p>
+
+            <!-- Progress -->
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span><strong>Course Progress</strong></span>
+                    <span class="progress-label" id="progress-label">0% Complete</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
             </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-            </div>
-        </div>
 
-        <!-- Learning Path Diagram -->
-        <div class="diagram-container">
-            <div class="mermaid">
-flowchart LR
-    subgraph "Foundation"
-        M1[STAR Framework]
-        M2[Story Mining]
-    end
+            <!-- STAR Framework Quick Reference -->
+            <h2 class="mt-4 mb-3">STAR Framework Quick Reference</h2>
 
-    subgraph "Categories"
-        M3[Technical Leadership]
-        M4[Conflict Resolution]
-        M5[Failure & Growth]
-    end
-
-    subgraph "Advanced"
-        M6[Influence]
-        M7[Company Alignment]
-        M8[Delivery Practice]
-    end
-
-    M1 --> M2 --> M3 --> M6
-    M2 --> M4 --> M6
-    M2 --> M5 --> M6
-    M6 --> M7 --> M8
-            </div>
-        </div>
-
-        <!-- Modules List -->
-        <h2 class="mt-4 mb-3">Modules</h2>
-
-        <div class="card">
-            <ul class="module-list">
-                <li class="module-item" onclick="window.location='module-01.html'">
-                    <div class="module-number">1</div>
-                    <div class="module-info">
-                        <div class="module-title">STAR Framework Mastery</div>
-                        <div class="module-desc">Core framework, time allocation, common mistakes</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-                <li class="module-item" onclick="window.location='module-02.html'">
-                    <div class="module-number">2</div>
-                    <div class="module-info">
-                        <div class="module-title">Story Mining & Preparation</div>
-                        <div class="module-desc">Building your story bank, categorization, templates</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-                <li class="module-item" onclick="window.location='module-03.html'">
-                    <div class="module-number">3</div>
-                    <div class="module-info">
-                        <div class="module-title">Technical Leadership Stories</div>
-                        <div class="module-desc">Decisions, mentoring, code quality leadership</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-                <li class="module-item" onclick="window.location='module-04.html'">
-                    <div class="module-number">4</div>
-                    <div class="module-info">
-                        <div class="module-title">Conflict & Collaboration</div>
-                        <div class="module-desc">Handling disagreements, difficult conversations</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-                <li class="module-item" onclick="window.location='module-05.html'">
-                    <div class="module-number">5</div>
-                    <div class="module-info">
-                        <div class="module-title">Failure & Growth Mindset</div>
-                        <div class="module-desc">Owning failures, demonstrating learning</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-                <li class="module-item" onclick="window.location='module-06.html'">
-                    <div class="module-number">6</div>
-                    <div class="module-info">
-                        <div class="module-title">Influence Without Authority</div>
-                        <div class="module-desc">Staff-level leadership, building coalitions</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-            </ul>
-        </div>
-
-        <!-- STAR Framework Quick Reference -->
-        <h2 class="mt-4 mb-3">STAR Framework Quick Reference</h2>
-
-        <div class="diagram-container">
-            <div class="mermaid">
+            <div class="diagram-container">
+                <div class="mermaid">
 flowchart LR
     S["<strong>S</strong>ituation<br>15%<br>Set the context"] --> T["<strong>T</strong>ask<br>15%<br>Your responsibility"]
     T --> A["<strong>A</strong>ction<br>50%<br>What you did"]
     A --> R["<strong>R</strong>esult<br>20%<br>Outcome & learnings"]
+                </div>
             </div>
-        </div>
 
-        <div class="card mt-3">
-            <h4>Time Allocation</h4>
-            <p>For a 2-3 minute response:</p>
-            <ul>
-                <li><strong>Situation (15-20 sec):</strong> Brief context, stakes</li>
-                <li><strong>Task (15-20 sec):</strong> Your role, challenges</li>
-                <li><strong>Action (90-120 sec):</strong> Specific steps YOU took</li>
-                <li><strong>Result (30-40 sec):</strong> Outcomes, metrics, learnings</li>
-            </ul>
-        </div>
+            <div class="card mt-3">
+                <h4>Time Allocation</h4>
+                <p>For a 2-3 minute response:</p>
+                <ul>
+                    <li><strong>Situation (15-20 sec):</strong> Brief context, stakes</li>
+                    <li><strong>Task (15-20 sec):</strong> Your role, challenges</li>
+                    <li><strong>Action (90-120 sec):</strong> Specific steps YOU took</li>
+                    <li><strong>Result (30-40 sec):</strong> Outcomes, metrics, learnings</li>
+                </ul>
+            </div>
 
-        <!-- Staff Competencies -->
-        <h2 class="mt-4 mb-3">Staff-Level Competencies</h2>
+            <!-- Staff Competencies -->
+            <h2 class="mt-4 mb-3">Staff-Level Competencies</h2>
 
-        <div class="diagram-container">
-            <div class="mermaid">
+            <div class="diagram-container">
+                <div class="mermaid">
 mindmap
   root((Staff Engineer))
     Technical Leadership
@@ -169,31 +131,52 @@ mindmap
       Self-awareness
       Learning
       Helping others grow
+                </div>
             </div>
-        </div>
 
-        <!-- Quick Quiz -->
-        <h2 class="mt-4 mb-3">Quick Assessment</h2>
+            <!-- Quick Quiz -->
+            <h2 class="mt-4 mb-3">Quick Assessment</h2>
 
-        <div class="quiz-container" id="quick-quiz"></div>
+            <div class="quiz-container" id="quick-quiz"></div>
 
-        <!-- Key Concepts to Review -->
-        <h2 class="mt-4 mb-3">Key Concepts to Review</h2>
+            <!-- Key Concepts to Review -->
+            <h2 class="mt-4 mb-3">Key Concepts to Review</h2>
 
-        <div class="review-schedule" id="behavioral-review"></div>
+            <div class="review-schedule" id="behavioral-review"></div>
 
+        </main>
     </div>
 
     <script src="../assets/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle for mobile
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            // Update sidebar links based on completion status
+            document.querySelectorAll('.sidebar-link[data-module]').forEach(link => {
+                const moduleNum = parseInt(link.dataset.module);
+                if (StaffEngPrep.ProgressTracker.isModuleComplete('behavioral', moduleNum)) {
+                    link.classList.add('completed');
+                }
+            });
+
             // Update progress
             const progress = StaffEngPrep.ProgressTracker.getOverallProgress('behavioral');
             document.getElementById('progress-fill').style.width = progress + '%';
             document.getElementById('progress-label').textContent = progress + '% Complete';
-
-            // Initialize module navigation
-            StaffEngPrep.initModuleNavigation('behavioral');
 
             // Initialize quick quiz
             const quizQuestions = [

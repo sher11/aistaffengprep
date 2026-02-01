@@ -20,111 +20,72 @@
         </div>
     </nav>
 
-    <div class="container">
-        <h1>Company-Specific Preparation</h1>
-        <p class="text-muted mb-3">Targeted preparation for top tech companies with unique interview styles.</p>
+    <div class="layout-with-sidebar">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link active">Introduction</a>
+                </div>
 
-        <!-- Progress -->
-        <div class="progress-container">
-            <div class="progress-header">
-                <span><strong>Course Progress</strong></span>
-                <span class="progress-label" id="progress-label">0% Complete</span>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundation</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Research Framework
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Interview Patterns
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Company Groups</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>Non-LeetCode
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Assessment-First
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>Systems-Heavy
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Application</div>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Culture Alignment
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Mobile sidebar toggle -->
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content-wide">
+            <h1>Company-Specific Preparation</h1>
+            <p class="text-muted mb-3">Targeted preparation for top tech companies with unique interview styles.</p>
+
+            <!-- Progress -->
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span><strong>Course Progress</strong></span>
+                    <span class="progress-label" id="progress-label">0% Complete</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
             </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-            </div>
-        </div>
 
-        <!-- Learning Path Diagram -->
-        <div class="diagram-container">
-            <div class="mermaid">
-flowchart LR
-    subgraph "Foundation"
-        M1[Research Framework]
-        M2[Interview Patterns]
-    end
+            <!-- Company Style Groups -->
+            <h2 class="mt-4 mb-3">Interview Style Groups</h2>
 
-    subgraph "Style Groups"
-        M3[Non-LeetCode]
-        M4[Assessment-First]
-        M5[Systems-Heavy]
-    end
-
-    subgraph "Application"
-        M6[Value Alignment]
-    end
-
-    M1 --> M2
-    M2 --> M3
-    M2 --> M4
-    M2 --> M5
-    M3 --> M6
-    M4 --> M6
-    M5 --> M6
-            </div>
-        </div>
-
-        <!-- Modules List -->
-        <h2 class="mt-4 mb-3">Modules</h2>
-
-        <div class="card">
-            <ul class="module-list">
-                <li class="module-item" onclick="window.location='module-01.html'">
-                    <div class="module-number">1</div>
-                    <div class="module-info">
-                        <div class="module-title">Company Research Framework</div>
-                        <div class="module-desc">How to research any company effectively</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-                <li class="module-item" onclick="window.location='module-02.html'">
-                    <div class="module-number">2</div>
-                    <div class="module-info">
-                        <div class="module-title">Interview Process Patterns</div>
-                        <div class="module-desc">Understanding different interview styles</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-                <li class="module-item" onclick="window.location='module-03.html'">
-                    <div class="module-number">3</div>
-                    <div class="module-info">
-                        <div class="module-title">Non-LeetCode Companies</div>
-                        <div class="module-desc">Stripe, Netflix, OpenAI preparation</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-                <li class="module-item" onclick="window.location='module-04.html'">
-                    <div class="module-number">4</div>
-                    <div class="module-info">
-                        <div class="module-title">Assessment-First Companies</div>
-                        <div class="module-desc">Anthropic, CodeSignal prep</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-                <li class="module-item" onclick="window.location='module-05.html'">
-                    <div class="module-number">5</div>
-                    <div class="module-info">
-                        <div class="module-title">Systems-Heavy Companies</div>
-                        <div class="module-desc">Databricks, Snowflake preparation</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-                <li class="module-item" onclick="window.location='module-06.html'">
-                    <div class="module-number">6</div>
-                    <div class="module-info">
-                        <div class="module-title">Culture & Value Alignment</div>
-                        <div class="module-desc">Mapping stories to company values</div>
-                    </div>
-                    <span class="module-status">Not Started</span>
-                </li>
-            </ul>
-        </div>
-
-        <!-- Company Style Groups -->
-        <h2 class="mt-4 mb-3">Interview Style Groups</h2>
-
-        <div class="diagram-container">
-            <div class="mermaid">
+            <div class="diagram-container">
+                <div class="mermaid">
 flowchart TD
     subgraph "Group A: Non-LeetCode Practical"
         A1[Stripe]
@@ -140,67 +101,88 @@ flowchart TD
         C1[Databricks]
         C2[Snowflake]
     end
+                </div>
             </div>
-        </div>
 
-        <!-- Company Quick Cards -->
-        <h2 class="mt-4 mb-3">Company Quick Reference</h2>
+            <!-- Company Quick Cards -->
+            <h2 class="mt-4 mb-3">Company Quick Reference</h2>
 
-        <div class="card-grid">
-            <div class="card">
-                <h3>Stripe</h3>
-                <p><strong>Style:</strong> Practical, non-LeetCode</p>
-                <p class="text-muted">Unique: Integration, Bug Squash rounds</p>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Stripe</h3>
+                    <p><strong>Style:</strong> Practical, non-LeetCode</p>
+                    <p class="text-muted">Unique: Integration, Bug Squash rounds</p>
+                </div>
+                <div class="card">
+                    <h3>Netflix</h3>
+                    <p><strong>Style:</strong> Code hygiene focus</p>
+                    <p class="text-muted">Key: Freedom & Responsibility culture</p>
+                </div>
+                <div class="card">
+                    <h3>OpenAI</h3>
+                    <p><strong>Style:</strong> Multi-part questions</p>
+                    <p class="text-muted">Focus: Completion rate, clean code</p>
+                </div>
+                <div class="card">
+                    <h3>Anthropic</h3>
+                    <p><strong>Style:</strong> CodeSignal first</p>
+                    <p class="text-muted">Target: 520+/600 to advance</p>
+                </div>
+                <div class="card">
+                    <h3>Databricks</h3>
+                    <p><strong>Style:</strong> Systems-heavy</p>
+                    <p class="text-muted">Focus: Deep technical knowledge</p>
+                </div>
+                <div class="card">
+                    <h3>Snowflake</h3>
+                    <p><strong>Style:</strong> DB focus + Panel</p>
+                    <p class="text-muted">Unique: 30-min presentation round</p>
+                </div>
             </div>
-            <div class="card">
-                <h3>Netflix</h3>
-                <p><strong>Style:</strong> Code hygiene focus</p>
-                <p class="text-muted">Key: Freedom & Responsibility culture</p>
-            </div>
-            <div class="card">
-                <h3>OpenAI</h3>
-                <p><strong>Style:</strong> Multi-part questions</p>
-                <p class="text-muted">Focus: Completion rate, clean code</p>
-            </div>
-            <div class="card">
-                <h3>Anthropic</h3>
-                <p><strong>Style:</strong> CodeSignal first</p>
-                <p class="text-muted">Target: 520+/600 to advance</p>
-            </div>
-            <div class="card">
-                <h3>Databricks</h3>
-                <p><strong>Style:</strong> Systems-heavy</p>
-                <p class="text-muted">Focus: Deep technical knowledge</p>
-            </div>
-            <div class="card">
-                <h3>Snowflake</h3>
-                <p><strong>Style:</strong> DB focus + Panel</p>
-                <p class="text-muted">Unique: 30-min presentation round</p>
-            </div>
-        </div>
 
-        <!-- Quick Quiz -->
-        <h2 class="mt-4 mb-3">Quick Assessment</h2>
+            <!-- Quick Quiz -->
+            <h2 class="mt-4 mb-3">Quick Assessment</h2>
 
-        <div class="quiz-container" id="company-quiz"></div>
+            <div class="quiz-container" id="company-quiz"></div>
 
-        <!-- Key Concepts to Review -->
-        <h2 class="mt-4 mb-3">Key Concepts to Review</h2>
+            <!-- Key Concepts to Review -->
+            <h2 class="mt-4 mb-3">Key Concepts to Review</h2>
 
-        <div class="review-schedule" id="company-review"></div>
+            <div class="review-schedule" id="company-review"></div>
 
+        </main>
     </div>
 
     <script src="../assets/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle for mobile
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            // Update sidebar links based on completion status
+            document.querySelectorAll('.sidebar-link[data-module]').forEach(link => {
+                const moduleNum = parseInt(link.dataset.module);
+                if (StaffEngPrep.ProgressTracker.isModuleComplete('companySpecific', moduleNum)) {
+                    link.classList.add('completed');
+                }
+            });
+
             // Update progress
             const progress = StaffEngPrep.ProgressTracker.getOverallProgress('companySpecific');
             document.getElementById('progress-fill').style.width = progress + '%';
             document.getElementById('progress-label').textContent = progress + '% Complete';
-
-            // Initialize module navigation
-            StaffEngPrep.initModuleNavigation('companySpecific');
 
             // Initialize quiz
             const quizQuestions = [

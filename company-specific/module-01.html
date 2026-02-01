@@ -20,9 +20,53 @@
         </div>
     </nav>
 
-    <div class="container">
-        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Companies</a></nav>
+    <div class="layout-with-sidebar">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
 
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundation</div>
+                    <a href="module-01.html" class="sidebar-link active" data-module="1">
+                        <span class="sidebar-link-number">1</span>Research Framework
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Interview Patterns
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Company Groups</div>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>Non-LeetCode
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Assessment-First
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>Systems-Heavy
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Application</div>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">6</span>Culture Alignment
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Mobile sidebar toggle -->
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
         <h1>Module 1: Company Research Framework</h1>
 
         <div class="card mt-3">
@@ -189,6 +233,7 @@ flowchart LR
             <a href="index.html" class="btn btn-secondary">&larr; Back to Overview</a>
             <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
         </div>
+        </main>
     </div>
 
     <script src="../assets/js/app.js"></script>
@@ -210,6 +255,29 @@ flowchart LR
             ];
             const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
             quiz.render();
+
+            // Sidebar toggle for mobile
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            // Update sidebar links based on completion status
+            document.querySelectorAll('.sidebar-link[data-module]').forEach(link => {
+                const moduleNum = parseInt(link.dataset.module);
+                if (StaffEngPrep.ProgressTracker.isModuleComplete('companySpecific', moduleNum)) {
+                    link.classList.add('completed');
+                }
+            });
         });
 
         function completeModule() {
