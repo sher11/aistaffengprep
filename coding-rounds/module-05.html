@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 5: Dynamic Programming - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
@@ -123,6 +124,39 @@ flowchart TD
             </div>
         </div>
 
+        <!-- Interactive DP Visualization -->
+        <h2 class="mt-4">Interactive: Watch DP in Action</h2>
+
+        <div class="interactive-demo">
+            <h4>Fibonacci / Climbing Stairs Visualization</h4>
+            <p class="text-muted">Watch how the DP table fills up step by step. Each cell shows the number of ways to reach that step.</p>
+
+            <div class="viz-controls">
+                <button id="dp-play" class="active">▶ Play</button>
+                <button id="dp-pause">⏸ Pause</button>
+                <button id="dp-reset">↺ Reset</button>
+                <button id="dp-step">Step →</button>
+                <div class="speed-slider">
+                    <label>Speed:</label>
+                    <input type="range" id="dp-speed" min="100" max="1000" value="500">
+                </div>
+            </div>
+
+            <div id="dp-array-viz" class="mt-2" style="min-height: 80px;"></div>
+
+            <div class="step-indicator">
+                <span>Step: <span class="current-step" id="dp-step-num">0</span> / <span id="dp-total-steps">10</span></span>
+            </div>
+
+            <div id="dp-explanation" class="callout callout-info mt-2">
+                <p>Click <strong>Play</strong> to watch the DP array fill up, or <strong>Step</strong> to go one step at a time.</p>
+            </div>
+        </div>
+
+        <div class="key-insight">
+            <p><strong>The key to DP:</strong> Instead of recalculating fib(3) multiple times (exponential), we store it once and reuse it (linear). This transforms O(2<sup>n</sup>) into O(n).</p>
+        </div>
+
         <!-- 1D DP -->
         <h2 class="mt-4">1D Dynamic Programming</h2>
 
@@ -133,7 +167,7 @@ flowchart TD
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code># Climbing Stairs: Ways to reach step n (1 or 2 steps)
+                    <pre><code class="language-python"># Climbing Stairs: Ways to reach step n (1 or 2 steps)
 def climb_stairs(n):
     if n <= 2:
         return n
@@ -173,7 +207,7 @@ def rob(nums):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>def coin_change(coins, amount):
+                    <pre><code class="language-python">def coin_change(coins, amount):
     """
     Minimum coins to make amount.
     dp[i] = minimum coins needed to make amount i
@@ -205,7 +239,7 @@ def rob(nums):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>def longest_common_subsequence(text1, text2):
+                    <pre><code class="language-python">def longest_common_subsequence(text1, text2):
     """
     dp[i][j] = LCS length of text1[:i] and text2[:j]
     Time: O(m*n), Space: O(m*n) or O(min(m,n)) optimized
@@ -227,6 +261,37 @@ def rob(nums):
             </div>
         </div>
 
+        <!-- Interactive 2D DP Visualization -->
+        <div class="interactive-demo">
+            <h4>Edit Distance Visualization</h4>
+            <p class="text-muted">Watch how the 2D DP table fills to compute minimum edits to transform one word into another.</p>
+
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                <div>
+                    <label>Word 1: </label>
+                    <input type="text" id="edit-word1" value="kitten" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.25rem;">
+                </div>
+                <div>
+                    <label>Word 2: </label>
+                    <input type="text" id="edit-word2" value="sitting" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.25rem;">
+                </div>
+                <button id="edit-start" class="btn btn-primary btn-sm">Visualize</button>
+            </div>
+
+            <div class="viz-controls">
+                <button id="edit-play">▶ Play</button>
+                <button id="edit-pause">⏸ Pause</button>
+                <button id="edit-reset">↺ Reset</button>
+                <button id="edit-step">Step →</button>
+            </div>
+
+            <div id="edit-grid-viz" class="mt-2" style="overflow-x: auto;"></div>
+
+            <div id="edit-explanation" class="callout callout-info mt-2">
+                <p>Enter two words and click <strong>Visualize</strong> to see how Edit Distance is computed.</p>
+            </div>
+        </div>
+
         <div class="collapsible">
             <div class="collapsible-header">
                 <span>Edit Distance</span>
@@ -234,7 +299,7 @@ def rob(nums):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>def edit_distance(word1, word2):
+                    <pre><code class="language-python">def edit_distance(word1, word2):
     """
     Minimum operations to convert word1 to word2.
     Operations: insert, delete, replace
@@ -275,7 +340,7 @@ def rob(nums):
             </div>
             <div class="collapsible-content">
                 <div class="code-block">
-                    <pre><code>def knapsack(weights, values, capacity):
+                    <pre><code class="language-python">def knapsack(weights, values, capacity):
     """
     Max value with weight limit. Each item used at most once.
     dp[i][w] = max value using items 0..i with capacity w
@@ -349,7 +414,7 @@ flowchart TD
                 <p>Finding similar listening patterns between users is essentially a variant of Longest Common Subsequence (LCS).</p>
 
                 <div class="code-block">
-                    <pre><code># Spotify-style playlist similarity using LCS variant
+                    <pre><code class="language-python"># Spotify-style playlist similarity using LCS variant
 def playlist_similarity(playlist_a, playlist_b, genre_weights):
     """
     Modified LCS that considers genre similarity, not just exact matches.
@@ -391,7 +456,7 @@ def playlist_similarity(playlist_a, playlist_b, genre_weights):
                 <p>Netflix spends $17B/year on content. Deciding which shows to license is a knapsack problem: maximize viewer engagement within budget constraints.</p>
 
                 <div class="code-block">
-                    <pre><code># Simplified Netflix content acquisition optimization
+                    <pre><code class="language-python"># Simplified Netflix content acquisition optimization
 def content_acquisition(shows, budget, regional_quotas):
     """
     0/1 Knapsack with multiple constraints:
@@ -446,7 +511,7 @@ def content_acquisition(shows, budget, regional_quotas):
 
                 <h4>Operational Transformation</h4>
                 <div class="code-block">
-                    <pre><code># Google Docs-style diff detection using edit distance
+                    <pre><code class="language-python"># Google Docs-style diff detection using edit distance
 def compute_edit_operations(old_text, new_text):
     """
     Compute minimum edit operations to transform old_text to new_text.
@@ -517,7 +582,7 @@ def compute_edit_operations(old_text, new_text):
 
                 <h4>Multi-Agent Path Finding</h4>
                 <div class="code-block">
-                    <pre><code># Simplified Amazon warehouse robot path planning
+                    <pre><code class="language-python"># Simplified Amazon warehouse robot path planning
 def robot_path_with_obstacles(grid, robots, goals):
     """
     Find collision-free paths for multiple robots.
@@ -579,6 +644,11 @@ def robot_path_with_obstacles(grid, robots, goals):
                 </div>
             </div>
         </div>
+
+        <!-- Flashcards for Spaced Repetition -->
+        <h2 class="mt-4">Flashcards: Key Concepts</h2>
+        <p class="text-muted">Click cards to flip. Review these concepts regularly for retention.</p>
+        <div id="dp-flashcards" class="mt-2"></div>
 
         <!-- Quiz Section -->
         <h2 class="mt-4">Self-Check Quiz</h2>
@@ -672,6 +742,8 @@ def robot_path_with_obstacles(grid, robots, goals):
         </main>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
     <script src="../assets/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -736,7 +808,316 @@ def robot_path_with_obstacles(grid, robots, goals):
 
             const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
             quiz.render();
+
+            // Flashcards
+            const flashcards = new StaffEngPrep.Flashcards('dp-flashcards', [
+                {
+                    question: "What are the two key properties required for a DP solution?",
+                    answer: "1. Overlapping Subproblems\n2. Optimal Substructure",
+                    explanation: "Without overlapping subproblems, memoization provides no benefit. Without optimal substructure, we can't build optimal solutions from sub-solutions."
+                },
+                {
+                    question: "What's the difference between memoization and tabulation?",
+                    answer: "Memoization: Top-down, recursive, lazy computation.\nTabulation: Bottom-up, iterative, computes all states.",
+                    explanation: "Memoization is often easier to write; tabulation avoids recursion overhead and is easier to space-optimize."
+                },
+                {
+                    question: "How do you identify the recurrence relation for a DP problem?",
+                    answer: "1. Define what dp[i] represents\n2. Ask: what decision do I make at step i?\n3. Express dp[i] in terms of smaller subproblems",
+                    explanation: "The recurrence is the heart of any DP solution. Always define your state clearly first."
+                },
+                {
+                    question: "In 0/1 Knapsack, why traverse backward when space-optimizing?",
+                    answer: "To avoid using the same item twice. Forward traversal would use already-updated values from the current row.",
+                    explanation: "This is a critical detail - getting it wrong gives unbounded knapsack instead of 0/1!"
+                },
+                {
+                    question: "What's the time/space complexity of Edit Distance?",
+                    answer: "Time: O(m × n)\nSpace: O(m × n), optimizable to O(min(m, n))",
+                    explanation: "We fill an m×n table. Space can be optimized since we only need the previous row."
+                }
+            ]);
+            flashcards.render();
+
+            // Interactive DP Visualizations
+            initDPVisualization();
+            initEditDistanceVisualization();
         });
+
+        function initDPVisualization() {
+            const n = 10;
+            let dp = new Array(n + 1).fill(null);
+            let currentStep = 0;
+            let isPlaying = false;
+            let playInterval = null;
+            let speed = 500;
+
+            const vizContainer = document.getElementById('dp-array-viz');
+            const stepNum = document.getElementById('dp-step-num');
+            const totalSteps = document.getElementById('dp-total-steps');
+            const explanation = document.getElementById('dp-explanation');
+            const playBtn = document.getElementById('dp-play');
+            const pauseBtn = document.getElementById('dp-pause');
+            const resetBtn = document.getElementById('dp-reset');
+            const stepBtn = document.getElementById('dp-step');
+            const speedSlider = document.getElementById('dp-speed');
+
+            totalSteps.textContent = n;
+
+            function render() {
+                let html = '<div class="array-viz">';
+                for (let i = 0; i <= n; i++) {
+                    let classes = 'array-cell';
+                    if (i === currentStep && currentStep > 0) {
+                        classes += ' current';
+                    } else if (dp[i] !== null && i < currentStep) {
+                        classes += ' sorted';
+                    }
+                    html += `
+                        <div class="${classes}">
+                            <span class="cell-value">${dp[i] !== null ? dp[i] : '?'}</span>
+                            <span class="cell-index">n=${i}</span>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                vizContainer.innerHTML = html;
+                stepNum.textContent = currentStep;
+            }
+
+            function step() {
+                if (currentStep > n) {
+                    pause();
+                    explanation.innerHTML = '<p><strong>Complete!</strong> We\'ve computed all values. Notice how each cell only depends on the two previous cells. This is why we can optimize space to O(1).</p>';
+                    return;
+                }
+
+                if (currentStep === 0) {
+                    dp[0] = 1;
+                    explanation.innerHTML = '<p><strong>Base case:</strong> dp[0] = 1 (one way to stay at ground)</p>';
+                } else if (currentStep === 1) {
+                    dp[1] = 1;
+                    explanation.innerHTML = '<p><strong>Base case:</strong> dp[1] = 1 (one way to reach step 1: take 1 step)</p>';
+                } else {
+                    dp[currentStep] = dp[currentStep - 1] + dp[currentStep - 2];
+                    explanation.innerHTML = `<p><strong>dp[${currentStep}]</strong> = dp[${currentStep - 1}] + dp[${currentStep - 2}] = ${dp[currentStep - 1]} + ${dp[currentStep - 2]} = <strong>${dp[currentStep]}</strong></p>
+                    <p class="text-muted">We can reach step ${currentStep} either from step ${currentStep - 1} (${dp[currentStep - 1]} ways) or step ${currentStep - 2} (${dp[currentStep - 2]} ways).</p>`;
+                }
+
+                currentStep++;
+                render();
+            }
+
+            function play() {
+                if (isPlaying) return;
+                isPlaying = true;
+                playBtn.classList.add('active');
+                pauseBtn.classList.remove('active');
+                playInterval = setInterval(() => {
+                    if (currentStep > n) {
+                        pause();
+                        return;
+                    }
+                    step();
+                }, speed);
+            }
+
+            function pause() {
+                isPlaying = false;
+                pauseBtn.classList.add('active');
+                playBtn.classList.remove('active');
+                if (playInterval) {
+                    clearInterval(playInterval);
+                    playInterval = null;
+                }
+            }
+
+            function reset() {
+                pause();
+                dp = new Array(n + 1).fill(null);
+                currentStep = 0;
+                explanation.innerHTML = '<p>Click <strong>Play</strong> to watch the DP array fill up, or <strong>Step</strong> to go one step at a time.</p>';
+                render();
+            }
+
+            playBtn.addEventListener('click', play);
+            pauseBtn.addEventListener('click', pause);
+            resetBtn.addEventListener('click', reset);
+            stepBtn.addEventListener('click', () => {
+                pause();
+                step();
+            });
+            speedSlider.addEventListener('input', (e) => {
+                speed = 1100 - parseInt(e.target.value);
+                if (isPlaying) {
+                    pause();
+                    play();
+                }
+            });
+
+            // Initial render
+            render();
+        }
+
+        function initEditDistanceVisualization() {
+            let word1 = 'kitten';
+            let word2 = 'sitting';
+            let dp = [];
+            let currentI = 0;
+            let currentJ = 0;
+            let isPlaying = false;
+            let playInterval = null;
+
+            const gridViz = document.getElementById('edit-grid-viz');
+            const explanation = document.getElementById('edit-explanation');
+            const word1Input = document.getElementById('edit-word1');
+            const word2Input = document.getElementById('edit-word2');
+            const startBtn = document.getElementById('edit-start');
+            const playBtn = document.getElementById('edit-play');
+            const pauseBtn = document.getElementById('edit-pause');
+            const resetBtn = document.getElementById('edit-reset');
+            const stepBtn = document.getElementById('edit-step');
+
+            function initGrid() {
+                word1 = word1Input.value || 'cat';
+                word2 = word2Input.value || 'cut';
+                const m = word1.length;
+                const n = word2.length;
+
+                dp = [];
+                for (let i = 0; i <= m; i++) {
+                    dp[i] = new Array(n + 1).fill(null);
+                }
+
+                currentI = 0;
+                currentJ = 0;
+                render();
+            }
+
+            function render() {
+                const m = word1.length;
+                const n = word2.length;
+
+                let html = '<table class="comparison-table" style="font-size: 0.85rem;">';
+
+                // Header row
+                html += '<thead><tr><th></th><th></th>';
+                for (let j = 0; j < n; j++) {
+                    html += `<th>${word2[j]}</th>`;
+                }
+                html += '</tr></thead><tbody>';
+
+                // Data rows
+                for (let i = 0; i <= m; i++) {
+                    html += '<tr>';
+                    html += `<td style="font-weight: 600;">${i === 0 ? '' : word1[i - 1]}</td>`;
+
+                    for (let j = 0; j <= n; j++) {
+                        let cellClass = '';
+                        if (i === currentI && j === currentJ && dp[i][j] !== null) {
+                            cellClass = 'style="background: rgba(37, 99, 235, 0.3); font-weight: bold;"';
+                        } else if (dp[i][j] !== null) {
+                            cellClass = 'style="background: rgba(16, 185, 129, 0.1);"';
+                        }
+                        html += `<td ${cellClass}>${dp[i][j] !== null ? dp[i][j] : '-'}</td>`;
+                    }
+                    html += '</tr>';
+                }
+
+                html += '</tbody></table>';
+                gridViz.innerHTML = html;
+            }
+
+            function step() {
+                const m = word1.length;
+                const n = word2.length;
+
+                if (currentI > m) {
+                    pause();
+                    explanation.innerHTML = `<p><strong>Complete!</strong> Edit distance = <strong>${dp[m][n]}</strong>. This means it takes ${dp[m][n]} operations to transform "${word1}" into "${word2}".</p>`;
+                    return false;
+                }
+
+                // Fill current cell
+                if (currentI === 0) {
+                    dp[0][currentJ] = currentJ;
+                    explanation.innerHTML = `<p><strong>Base case:</strong> dp[0][${currentJ}] = ${currentJ} (insert ${currentJ} characters)</p>`;
+                } else if (currentJ === 0) {
+                    dp[currentI][0] = currentI;
+                    explanation.innerHTML = `<p><strong>Base case:</strong> dp[${currentI}][0] = ${currentI} (delete ${currentI} characters)</p>`;
+                } else {
+                    const char1 = word1[currentI - 1];
+                    const char2 = word2[currentJ - 1];
+
+                    if (char1 === char2) {
+                        dp[currentI][currentJ] = dp[currentI - 1][currentJ - 1];
+                        explanation.innerHTML = `<p><strong>Match:</strong> '${char1}' = '${char2}', so dp[${currentI}][${currentJ}] = dp[${currentI - 1}][${currentJ - 1}] = ${dp[currentI][currentJ]}</p>`;
+                    } else {
+                        const del = dp[currentI - 1][currentJ];
+                        const ins = dp[currentI][currentJ - 1];
+                        const rep = dp[currentI - 1][currentJ - 1];
+                        dp[currentI][currentJ] = 1 + Math.min(del, ins, rep);
+
+                        let op = 'replace';
+                        if (del <= ins && del <= rep) op = 'delete';
+                        else if (ins <= del && ins <= rep) op = 'insert';
+
+                        explanation.innerHTML = `<p><strong>Mismatch:</strong> '${char1}' ≠ '${char2}'</p>
+                        <p>dp[${currentI}][${currentJ}] = 1 + min(delete=${del}, insert=${ins}, replace=${rep}) = <strong>${dp[currentI][currentJ]}</strong> (${op})</p>`;
+                    }
+                }
+
+                render();
+
+                // Move to next cell
+                currentJ++;
+                if (currentJ > n) {
+                    currentJ = 0;
+                    currentI++;
+                }
+
+                return true;
+            }
+
+            function play() {
+                if (isPlaying) return;
+                isPlaying = true;
+                playInterval = setInterval(() => {
+                    if (!step()) {
+                        pause();
+                    }
+                }, 300);
+            }
+
+            function pause() {
+                isPlaying = false;
+                if (playInterval) {
+                    clearInterval(playInterval);
+                    playInterval = null;
+                }
+            }
+
+            function reset() {
+                pause();
+                initGrid();
+                explanation.innerHTML = '<p>Click <strong>Play</strong> to animate, or <strong>Step</strong> to go one cell at a time.</p>';
+            }
+
+            startBtn.addEventListener('click', () => {
+                reset();
+            });
+
+            playBtn.addEventListener('click', play);
+            pauseBtn.addEventListener('click', pause);
+            resetBtn.addEventListener('click', reset);
+            stepBtn.addEventListener('click', () => {
+                pause();
+                step();
+            });
+
+            // Initialize
+            initGrid();
+        }
 
         function completeModule() {
             StaffEngPrep.ProgressTracker.markModuleComplete('coding', 5);

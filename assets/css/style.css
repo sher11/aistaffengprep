@@ -653,3 +653,599 @@ body {
         max-width: 100%;
     }
 }
+
+/* ============================================
+   Quiz Enhanced Styles
+   ============================================ */
+.quiz-question-block {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.quiz-question-block:last-of-type {
+    border-bottom: none;
+}
+
+.quiz-score-card {
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    text-align: center;
+}
+
+.quiz-score-card.passed {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border: 2px solid var(--secondary-color);
+}
+
+.quiz-score-card.needs-work {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 2px solid var(--warning-color);
+}
+
+.score-display {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 1rem 0;
+}
+
+.score-number {
+    color: var(--primary-color);
+}
+
+.score-percentage {
+    font-size: 1.25rem;
+    color: var(--text-light);
+    margin-left: 0.5rem;
+}
+
+/* ============================================
+   Algorithm Visualization Styles
+   ============================================ */
+.array-viz {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 1rem;
+}
+
+.array-cell {
+    width: 50px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--card-bg);
+    transition: all 0.3s ease;
+}
+
+.array-cell.current {
+    border-color: var(--primary-color);
+    background: rgba(37, 99, 235, 0.1);
+    transform: scale(1.1);
+}
+
+.array-cell.comparing {
+    border-color: var(--warning-color);
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.array-cell.sorted {
+    border-color: var(--secondary-color);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.array-cell.swapping {
+    border-color: var(--danger-color);
+    background: rgba(239, 68, 68, 0.1);
+    animation: swap-pulse 0.3s ease;
+}
+
+@keyframes swap-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+.cell-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.cell-index {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+}
+
+/* Graph Visualization */
+.graph-viz {
+    display: block;
+    margin: 0 auto;
+}
+
+.graph-edge {
+    stroke: var(--border-color);
+    stroke-width: 2;
+    transition: all 0.3s ease;
+}
+
+.graph-edge.highlighted {
+    stroke: var(--primary-color);
+    stroke-width: 3;
+}
+
+.graph-node {
+    fill: var(--card-bg);
+    stroke: var(--border-color);
+    stroke-width: 2;
+    transition: all 0.3s ease;
+}
+
+.graph-node.visited {
+    fill: rgba(16, 185, 129, 0.2);
+    stroke: var(--secondary-color);
+}
+
+.graph-node.current {
+    fill: rgba(37, 99, 235, 0.3);
+    stroke: var(--primary-color);
+    stroke-width: 3;
+}
+
+.graph-node.in-queue {
+    fill: rgba(245, 158, 11, 0.2);
+    stroke: var(--warning-color);
+}
+
+.graph-node-label {
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-weight: 600;
+    font-size: 14px;
+    fill: var(--text-color);
+}
+
+/* Tree Visualization */
+.tree-viz {
+    display: block;
+    margin: 0 auto;
+}
+
+.tree-edge {
+    stroke: var(--border-color);
+    stroke-width: 2;
+}
+
+.tree-node {
+    fill: var(--card-bg);
+    stroke: var(--border-color);
+    stroke-width: 2;
+    transition: all 0.3s ease;
+}
+
+.tree-node.current {
+    fill: rgba(37, 99, 235, 0.3);
+    stroke: var(--primary-color);
+    stroke-width: 3;
+}
+
+.tree-node.visited {
+    fill: rgba(16, 185, 129, 0.2);
+    stroke: var(--secondary-color);
+}
+
+.tree-node-label {
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-weight: 600;
+    font-size: 12px;
+    fill: var(--text-color);
+}
+
+/* ============================================
+   Flashcard Styles
+   ============================================ */
+.flashcard-container {
+    perspective: 1000px;
+}
+
+.flashcard {
+    width: 100%;
+    min-height: 200px;
+    cursor: pointer;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    position: relative;
+}
+
+.flashcard.flipped {
+    transform: rotateY(180deg);
+}
+
+.flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+}
+
+.flashcard-front,
+.flashcard-back {
+    position: absolute;
+    width: 100%;
+    min-height: 200px;
+    backface-visibility: hidden;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.flashcard-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-color: var(--primary-color);
+}
+
+.flashcard-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.flashcard-counter {
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* ============================================
+   Comparison Table Styles
+   ============================================ */
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: var(--card-bg);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.comparison-table th,
+.comparison-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.comparison-table th {
+    background: var(--primary-color);
+    color: white;
+    font-weight: 600;
+}
+
+.comparison-table tr:last-child td {
+    border-bottom: none;
+}
+
+.comparison-table tr:hover td {
+    background: rgba(37, 99, 235, 0.03);
+}
+
+.comparison-table td.highlight {
+    background: rgba(16, 185, 129, 0.1);
+    font-weight: 500;
+}
+
+/* ============================================
+   Interactive Controls
+   ============================================ */
+.viz-controls {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+}
+
+.viz-controls button {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--card-bg);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.viz-controls button:hover {
+    border-color: var(--primary-color);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.viz-controls button.active {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.speed-slider {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.speed-slider input[type="range"] {
+    width: 100px;
+}
+
+/* ============================================
+   Step-Through Animation
+   ============================================ */
+.step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+.step-indicator .current-step {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.code-highlight {
+    background: rgba(245, 158, 11, 0.2);
+    border-left: 3px solid var(--warning-color);
+    padding-left: 0.5rem;
+    margin-left: -0.5rem;
+}
+
+/* ============================================
+   Tabs Component
+   ============================================ */
+.tabs {
+    margin: 1rem 0;
+}
+
+.tab-list {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-light);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+    color: var(--primary-color);
+}
+
+.tab-button.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+    padding: 1rem 0;
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* ============================================
+   Tooltip Styles
+   ============================================ */
+[data-tooltip] {
+    position: relative;
+    cursor: help;
+}
+
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 0.75rem;
+    background: var(--code-bg);
+    color: white;
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 100;
+}
+
+[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ============================================
+   Interactive Demo Container
+   ============================================ */
+.interactive-demo {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.interactive-demo h4 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.interactive-demo h4::before {
+    content: "▶";
+    font-size: 0.75rem;
+}
+
+.demo-output {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.875rem;
+    min-height: 100px;
+}
+
+/* ============================================
+   Badge/Tag Styles
+   ============================================ */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-easy {
+    background: var(--success-bg);
+    color: #065f46;
+}
+
+.badge-medium {
+    background: rgba(245, 158, 11, 0.2);
+    color: #b45309;
+}
+
+.badge-hard {
+    background: var(--error-bg);
+    color: #991b1b;
+}
+
+.badge-new {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+}
+
+/* ============================================
+   Callout/Alert Boxes
+   ============================================ */
+.callout {
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    border-left: 4px solid;
+}
+
+.callout-info {
+    background: rgba(37, 99, 235, 0.05);
+    border-color: var(--primary-color);
+}
+
+.callout-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: var(--warning-color);
+}
+
+.callout-success {
+    background: var(--success-bg);
+    border-color: var(--secondary-color);
+}
+
+.callout-danger {
+    background: var(--error-bg);
+    border-color: var(--danger-color);
+}
+
+.callout-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* ============================================
+   Key Insight Box
+   ============================================ */
+.key-insight {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin: 1.5rem 0;
+    position: relative;
+}
+
+.key-insight::before {
+    content: "💡 Key Insight";
+    position: absolute;
+    top: -0.75rem;
+    left: 1rem;
+    background: var(--card-bg);
+    padding: 0 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* ============================================
+   Interview Tip Box
+   ============================================ */
+.interview-tip {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(56, 239, 125, 0.05) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin: 1.5rem 0;
+    position: relative;
+}
+
+.interview-tip::before {
+    content: "🎯 Interview Tip";
+    position: absolute;
+    top: -0.75rem;
+    left: 1rem;
+    background: var(--card-bg);
+    padding: 0 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+}

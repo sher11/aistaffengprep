@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Story Builder - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
+    <style>
+        .story-builder {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .step-indicator-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .step-indicator-bar::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--border-color);
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .step-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            z-index: 2;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .step-dot.active {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .step-dot.completed {
+            border-color: var(--secondary-color);
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .step-content {
+            display: none;
+        }
+
+        .step-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .form-group .hint {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .char-count.warning {
+            color: var(--warning-color);
+        }
+
+        .char-count.over {
+            color: var(--danger-color);
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .story-preview {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid var(--primary-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .story-preview h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .story-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .story-section h4 {
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .story-section h4 .badge {
+            font-size: 0.7rem;
+        }
+
+        .story-section p {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .timing-bar {
+            display: flex;
+            height: 30px;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .timing-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .timing-segment.situation { background: #667eea; }
+        .timing-segment.task { background: #764ba2; }
+        .timing-segment.action { background: #11998e; }
+        .timing-segment.result { background: #38ef7d; }
+
+        .example-prompts {
+            background: rgba(37, 99, 235, 0.05);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .example-prompts h5 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .example-prompts ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .example-prompts li {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .story-score {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .score-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--card-bg);
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .score-item .icon {
+            font-size: 1.2rem;
+        }
+
+        .category-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .category-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 2rem;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .category-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        .category-btn.selected {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .saved-stories {
+            margin-top: 2rem;
+        }
+
+        .saved-story-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .saved-story-card:hover {
+            border-color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .saved-story-card h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-color);
+        }
+
+        .saved-story-card .meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundation</div>
+                    <a href="module-01.html" class="sidebar-link">
+                        <span class="sidebar-link-number">1</span>STAR Framework
+                    </a>
+                    <a href="module-02.html" class="sidebar-link">
+                        <span class="sidebar-link-number">2</span>Story Mining
+                    </a>
+                    <a href="story-builder.html" class="sidebar-link active">
+                        <span class="sidebar-link-number">+</span>Story Builder
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Story Categories</div>
+                    <a href="module-03.html" class="sidebar-link">
+                        <span class="sidebar-link-number">3</span>Technical Leadership
+                    </a>
+                    <a href="module-04.html" class="sidebar-link">
+                        <span class="sidebar-link-number">4</span>Conflict Resolution
+                    </a>
+                    <a href="module-05.html" class="sidebar-link">
+                        <span class="sidebar-link-number">5</span>Failure & Growth
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced</div>
+                    <a href="module-06.html" class="sidebar-link">
+                        <span class="sidebar-link-number">6</span>Influence Without Authority
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Interactive Story Builder</h1>
+            <p class="text-muted">Build polished STAR stories step-by-step. Your stories are saved locally for later review.</p>
+
+            <!-- Timing Guide -->
+            <div class="card mt-3">
+                <h3>STAR Timing Guide (2 minutes total)</h3>
+                <div class="timing-bar">
+                    <div class="timing-segment situation" style="width: 15%;">S: 15%</div>
+                    <div class="timing-segment task" style="width: 15%;">T: 15%</div>
+                    <div class="timing-segment action" style="width: 50%;">A: 50%</div>
+                    <div class="timing-segment result" style="width: 20%;">R: 20%</div>
+                </div>
+                <p class="text-muted">Spend most of your time on Actions - this is where you demonstrate your skills.</p>
+            </div>
+
+            <!-- Story Builder -->
+            <div class="story-builder mt-3">
+                <div class="step-indicator-bar">
+                    <div class="step-dot active" data-step="1">S</div>
+                    <div class="step-dot" data-step="2">T</div>
+                    <div class="step-dot" data-step="3">A</div>
+                    <div class="step-dot" data-step="4">R</div>
+                    <div class="step-dot" data-step="5">&#10003;</div>
+                </div>
+
+                <!-- Step 1: Situation -->
+                <div class="step-content active" data-step="1">
+                    <h2>Situation <span class="badge badge-medium">~15 seconds</span></h2>
+                    <p>Set the context. Who, what, when, where? Keep it brief but specific enough for the interviewer to understand.</p>
+
+                    <div class="form-group">
+                        <label>Story Title</label>
+                        <div class="hint">A memorable name for this story (e.g., "Database Migration Crisis")</div>
+                        <input type="text" id="story-title" placeholder="Enter a title...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category</label>
+                        <div class="hint">Which question types can this story answer?</div>
+                        <div class="category-selector" id="category-selector">
+                            <button class="category-btn" data-category="leadership">Technical Leadership</button>
+                            <button class="category-btn" data-category="conflict">Conflict Resolution</button>
+                            <button class="category-btn" data-category="failure">Failure & Growth</button>
+                            <button class="category-btn" data-category="influence">Influence</button>
+                            <button class="category-btn" data-category="delivery">Delivery Under Pressure</button>
+                            <button class="category-btn" data-category="growth">Personal Growth</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Describe the Situation</label>
+                        <div class="hint">Context: role, team, company scale, timeline, stakes</div>
+                        <textarea id="situation" placeholder="Example: At my previous company (Series C, 200 engineers), I was the tech lead for the payments team. We had just launched a new checkout flow that was critical for our Q4 revenue targets..."></textarea>
+                        <div class="char-count"><span id="situation-count">0</span> / 200 characters recommended</div>
+                    </div>
+
+                    <div class="example-prompts">
+                        <h5>Questions to answer:</h5>
+                        <ul>
+                            <li>What was your role and team?</li>
+                            <li>What was the business context?</li>
+                            <li>What made this situation challenging or significant?</li>
+                            <li>When did this happen? (within last 3-5 years ideally)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Step 2: Task -->
+                <div class="step-content" data-step="2">
+                    <h2>Task <span class="badge badge-medium">~15 seconds</span></h2>
+                    <p>What was YOUR specific responsibility? What were you trying to achieve?</p>
+
+                    <div class="form-group">
+                        <label>Your Task / Responsibility</label>
+                        <div class="hint">Focus on YOUR role, not the team's goal. Use "I" not "we".</div>
+                        <textarea id="task" placeholder="Example: I was responsible for designing and implementing a solution that would reduce checkout latency by 50% while maintaining our 99.9% reliability SLA..."></textarea>
+                        <div class="char-count"><span id="task-count">0</span> / 150 characters recommended</div>
+                    </div>
+
+                    <div class="example-prompts">
+                        <h5>Strong Task statements include:</h5>
+                        <ul>
+                            <li>Specific, measurable objectives</li>
+                            <li>Your personal accountability (not team's)</li>
+                            <li>Constraints you were working within</li>
+                            <li>Why YOU were the one to do this</li>
+                        </ul>
+                    </div>
+
+                    <div class="callout callout-warning mt-2">
+                        <p><strong>Common mistake:</strong> Describing the team's goal instead of your personal responsibility. Interviewers want to know what YOU did.</p>
+                    </div>
+                </div>
+
+                <!-- Step 3: Action -->
+                <div class="step-content" data-step="3">
+                    <h2>Action <span class="badge badge-easy">~60 seconds</span></h2>
+                    <p>This is the meat of your story. What specific steps did YOU take? This is where you demonstrate your skills.</p>
+
+                    <div class="form-group">
+                        <label>Actions You Took</label>
+                        <div class="hint">Be specific. Use "I" statements. Include 3-5 concrete actions.</div>
+                        <textarea id="action" style="min-height: 200px;" placeholder="Example:
+1. First, I analyzed our existing architecture and identified that 70% of latency came from synchronous database calls...
+
+2. I then proposed a caching strategy and wrote an RFC that I shared with the team for feedback...
+
+3. I implemented a Redis caching layer with a 15-minute TTL, writing the code myself while pairing with junior engineers to help them learn...
+
+4. When we hit an issue with cache invalidation, I designed a pub/sub system using our existing Kafka infrastructure...
+
+5. I coordinated with the SRE team to set up monitoring dashboards and runbooks before the launch..."></textarea>
+                        <div class="char-count"><span id="action-count">0</span> / 500+ characters recommended</div>
+                    </div>
+
+                    <div class="example-prompts">
+                        <h5>Actions should demonstrate:</h5>
+                        <ul>
+                            <li><strong>Technical skills:</strong> What technologies did you use? What was your approach?</li>
+                            <li><strong>Leadership:</strong> How did you align people? Handle disagreements?</li>
+                            <li><strong>Problem-solving:</strong> What obstacles did you overcome?</li>
+                            <li><strong>Communication:</strong> How did you keep stakeholders informed?</li>
+                        </ul>
+                    </div>
+
+                    <div class="interview-tip">
+                        <p>Interviewers often ask follow-up questions about your actions. Be prepared to go deeper: "What alternatives did you consider?" "How did you handle resistance?"</p>
+                    </div>
+                </div>
+
+                <!-- Step 4: Result -->
+                <div class="step-content" data-step="4">
+                    <h2>Result <span class="badge badge-medium">~20 seconds</span></h2>
+                    <p>What was the outcome? Quantify the impact whenever possible. Include learnings.</p>
+
+                    <div class="form-group">
+                        <label>Results & Impact</label>
+                        <div class="hint">Use numbers! Before/after comparisons are powerful.</div>
+                        <textarea id="result" placeholder="Example: The project was successful:
+- Checkout latency dropped from 3.2s to 1.1s (66% improvement)
+- We maintained 99.95% uptime during the migration
+- The caching approach was adopted by 3 other teams
+- I was promoted to Staff Engineer the following quarter
+
+Looking back, I learned the importance of getting early buy-in from SRE - I should have involved them sooner in the design phase."></textarea>
+                        <div class="char-count"><span id="result-count">0</span> / 250 characters recommended</div>
+                    </div>
+
+                    <div class="example-prompts">
+                        <h5>Strong Results include:</h5>
+                        <ul>
+                            <li><strong>Metrics:</strong> Revenue, latency, uptime, efficiency gains</li>
+                            <li><strong>Business impact:</strong> Customer satisfaction, cost savings</li>
+                            <li><strong>Team impact:</strong> Processes improved, knowledge shared</li>
+                            <li><strong>Personal growth:</strong> What you learned, what you'd do differently</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Step 5: Review -->
+                <div class="step-content" data-step="5">
+                    <h2>Review Your Story</h2>
+                    <p>Read through your complete story. Practice saying it aloud in under 2 minutes.</p>
+
+                    <div class="story-preview" id="story-preview">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <div class="story-score" id="story-score">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <div class="nav-buttons">
+                        <button class="btn btn-secondary" id="edit-story">← Edit Story</button>
+                        <button class="btn btn-primary" id="save-story">Save Story</button>
+                    </div>
+                </div>
+
+                <!-- Navigation (for steps 1-4) -->
+                <div class="nav-buttons" id="step-nav">
+                    <button class="btn btn-secondary" id="prev-step" disabled>← Previous</button>
+                    <button class="btn btn-primary" id="next-step">Next →</button>
+                </div>
+            </div>
+
+            <!-- Saved Stories -->
+            <div class="saved-stories mt-4">
+                <h2>Your Saved Stories</h2>
+                <p class="text-muted">Stories are saved in your browser's local storage.</p>
+                <div id="saved-stories-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            // Story Builder Logic
+            let currentStep = 1;
+            const totalSteps = 5;
+            let selectedCategories = [];
+
+            const stepDots = document.querySelectorAll('.step-dot');
+            const stepContents = document.querySelectorAll('.step-content');
+            const prevBtn = document.getElementById('prev-step');
+            const nextBtn = document.getElementById('next-step');
+            const stepNav = document.getElementById('step-nav');
+
+            // Category selector
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btn.classList.toggle('selected');
+                    const category = btn.dataset.category;
+                    if (selectedCategories.includes(category)) {
+                        selectedCategories = selectedCategories.filter(c => c !== category);
+                    } else {
+                        selectedCategories.push(category);
+                    }
+                });
+            });
+
+            // Character counters
+            function setupCharCounter(inputId, countId, recommended) {
+                const input = document.getElementById(inputId);
+                const count = document.getElementById(countId);
+                if (!input || !count) return;
+
+                input.addEventListener('input', () => {
+                    const len = input.value.length;
+                    count.textContent = len;
+                    count.parentElement.classList.remove('warning', 'over');
+                    if (len > recommended * 1.5) {
+                        count.parentElement.classList.add('over');
+                    } else if (len > recommended) {
+                        count.parentElement.classList.add('warning');
+                    }
+                });
+            }
+
+            setupCharCounter('situation', 'situation-count', 200);
+            setupCharCounter('task', 'task-count', 150);
+            setupCharCounter('action', 'action-count', 500);
+            setupCharCounter('result', 'result-count', 250);
+
+            // Step navigation
+            function goToStep(step) {
+                currentStep = step;
+
+                stepDots.forEach((dot, i) => {
+                    dot.classList.remove('active', 'completed');
+                    if (i + 1 < step) dot.classList.add('completed');
+                    if (i + 1 === step) dot.classList.add('active');
+                });
+
+                stepContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (parseInt(content.dataset.step) === step) {
+                        content.classList.add('active');
+                    }
+                });
+
+                // Update nav buttons
+                prevBtn.disabled = step === 1;
+                nextBtn.textContent = step === 4 ? 'Review Story →' : 'Next →';
+                stepNav.style.display = step === 5 ? 'none' : 'flex';
+
+                // Populate preview on step 5
+                if (step === 5) {
+                    populatePreview();
+                }
+            }
+
+            stepDots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    const step = parseInt(dot.dataset.step);
+                    goToStep(step);
+                });
+            });
+
+            prevBtn.addEventListener('click', () => {
+                if (currentStep > 1) goToStep(currentStep - 1);
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentStep < totalSteps) goToStep(currentStep + 1);
+            });
+
+            document.getElementById('edit-story').addEventListener('click', () => {
+                goToStep(1);
+            });
+
+            // Populate preview
+            function populatePreview() {
+                const title = document.getElementById('story-title').value || 'Untitled Story';
+                const situation = document.getElementById('situation').value || '(Not provided)';
+                const task = document.getElementById('task').value || '(Not provided)';
+                const action = document.getElementById('action').value || '(Not provided)';
+                const result = document.getElementById('result').value || '(Not provided)';
+
+                const preview = document.getElementById('story-preview');
+                preview.innerHTML = `
+                    <h3>${title}</h3>
+                    <div class="story-section">
+                        <h4><span class="badge badge-new">S</span> Situation</h4>
+                        <p>${situation}</p>
+                    </div>
+                    <div class="story-section">
+                        <h4><span class="badge badge-new">T</span> Task</h4>
+                        <p>${task}</p>
+                    </div>
+                    <div class="story-section">
+                        <h4><span class="badge badge-easy">A</span> Action</h4>
+                        <p style="white-space: pre-wrap;">${action}</p>
+                    </div>
+                    <div class="story-section">
+                        <h4><span class="badge badge-medium">R</span> Result</h4>
+                        <p style="white-space: pre-wrap;">${result}</p>
+                    </div>
+                `;
+
+                // Calculate score
+                const scoreEl = document.getElementById('story-score');
+                const scores = [];
+
+                // Check length
+                if (situation.length >= 50) scores.push({ icon: '✓', text: 'Situation has context' });
+                else scores.push({ icon: '!', text: 'Situation needs more detail' });
+
+                if (action.length >= 200) scores.push({ icon: '✓', text: 'Actions are detailed' });
+                else scores.push({ icon: '!', text: 'Add more action details' });
+
+                if (result.includes('%') || /\d+/.test(result)) scores.push({ icon: '✓', text: 'Results have metrics' });
+                else scores.push({ icon: '!', text: 'Add quantified results' });
+
+                if (selectedCategories.length > 0) scores.push({ icon: '✓', text: `${selectedCategories.length} categories` });
+                else scores.push({ icon: '!', text: 'Select categories' });
+
+                scoreEl.innerHTML = scores.map(s => `
+                    <div class="score-item">
+                        <span class="icon">${s.icon === '✓' ? '✅' : '⚠️'}</span>
+                        <span>${s.text}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Save story
+            document.getElementById('save-story').addEventListener('click', () => {
+                const story = {
+                    id: Date.now(),
+                    title: document.getElementById('story-title').value || 'Untitled Story',
+                    categories: selectedCategories,
+                    situation: document.getElementById('situation').value,
+                    task: document.getElementById('task').value,
+                    action: document.getElementById('action').value,
+                    result: document.getElementById('result').value,
+                    createdAt: new Date().toISOString()
+                };
+
+                const stories = JSON.parse(localStorage.getItem('staffengprep_stories') || '[]');
+                stories.push(story);
+                localStorage.setItem('staffengprep_stories', JSON.stringify(stories));
+
+                alert('Story saved!');
+                loadSavedStories();
+
+                // Clear form
+                document.getElementById('story-title').value = '';
+                document.getElementById('situation').value = '';
+                document.getElementById('task').value = '';
+                document.getElementById('action').value = '';
+                document.getElementById('result').value = '';
+                selectedCategories = [];
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('selected'));
+                goToStep(1);
+            });
+
+            // Load saved stories
+            function loadSavedStories() {
+                const stories = JSON.parse(localStorage.getItem('staffengprep_stories') || '[]');
+                const container = document.getElementById('saved-stories-list');
+
+                if (stories.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No stories saved yet. Build your first story above!</p>';
+                    return;
+                }
+
+                container.innerHTML = stories.map(story => `
+                    <div class="saved-story-card" data-id="${story.id}">
+                        <h4>${story.title}</h4>
+                        <div class="meta">
+                            <span>${story.categories.join(', ') || 'No categories'}</span>
+                            <span>${new Date(story.createdAt).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Click to load story
+                container.querySelectorAll('.saved-story-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const id = parseInt(card.dataset.id);
+                        const story = stories.find(s => s.id === id);
+                        if (story) {
+                            document.getElementById('story-title').value = story.title;
+                            document.getElementById('situation').value = story.situation;
+                            document.getElementById('task').value = story.task;
+                            document.getElementById('action').value = story.action;
+                            document.getElementById('result').value = story.result;
+                            selectedCategories = story.categories || [];
+
+                            document.querySelectorAll('.category-btn').forEach(btn => {
+                                btn.classList.toggle('selected', selectedCategories.includes(btn.dataset.category));
+                            });
+
+                            goToStep(5);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    });
+                });
+            }
+
+            // Initial load
+            loadSavedStories();
+        });
+    </script>
+</body>
+</html>
