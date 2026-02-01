@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Design - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>System Design</h1>
+        <p class="text-muted mb-3">Learn to design scalable distributed systems and ace the system design interview.</p>
+
+        <!-- Progress -->
+        <div class="progress-container">
+            <div class="progress-header">
+                <span><strong>Course Progress</strong></span>
+                <span class="progress-label" id="progress-label">0% Complete</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Four Phase Overview -->
+        <h2 class="mt-4 mb-3">Four-Phase Approach</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart LR
+    subgraph "Phase 1 (2-3 months)"
+        A[Foundation Building]
+    end
+
+    subgraph "Phase 2 (1-2 months)"
+        B[Real-World Systems]
+    end
+
+    subgraph "Phase 3 (1 month)"
+        C[Interview Prep]
+    end
+
+    subgraph "Phase 4 (1 month)"
+        D[Mock Interviews]
+    end
+
+    A --> B --> C --> D
+            </div>
+        </div>
+
+        <!-- RESHADE Framework -->
+        <h2 class="mt-4 mb-3">Interview Framework: RESHADE</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h3>R - Requirements</h3>
+                <p>Clarify functional & non-functional requirements (5-8 min)</p>
+            </div>
+            <div class="card">
+                <h3>E - Estimation</h3>
+                <p>Calculate scale, storage, bandwidth (3-5 min)</p>
+            </div>
+            <div class="card">
+                <h3>S - Storage Schema</h3>
+                <p>Design data model and database choices (3-5 min)</p>
+            </div>
+            <div class="card">
+                <h3>H - High-Level Design</h3>
+                <p>Draw component architecture (10-15 min)</p>
+            </div>
+            <div class="card">
+                <h3>A - API Design</h3>
+                <p>Define interface contracts (3-5 min)</p>
+            </div>
+            <div class="card">
+                <h3>D - Deep Dive</h3>
+                <p>Detail critical components (15-20 min)</p>
+            </div>
+        </div>
+
+        <!-- Modules List -->
+        <h2 class="mt-4 mb-3">Modules</h2>
+
+        <div class="card">
+            <ul class="module-list">
+                <li class="module-item">
+                    <div class="module-number">1</div>
+                    <div class="module-info">
+                        <div class="module-title">Scalability Fundamentals</div>
+                        <div class="module-desc">Vertical vs horizontal scaling, load balancing, caching</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item">
+                    <div class="module-number">2</div>
+                    <div class="module-info">
+                        <div class="module-title">Database Systems</div>
+                        <div class="module-desc">SQL vs NoSQL, sharding, replication, indexing</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item">
+                    <div class="module-number">3</div>
+                    <div class="module-info">
+                        <div class="module-title">Distributed Systems Fundamentals</div>
+                        <div class="module-desc">CAP theorem, consensus algorithms, consistency models</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item">
+                    <div class="module-number">4</div>
+                    <div class="module-info">
+                        <div class="module-title">Storage and Data Processing</div>
+                        <div class="module-desc">Distributed file systems, message queues, stream processing</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item">
+                    <div class="module-number">5</div>
+                    <div class="module-info">
+                        <div class="module-title">Seminal Papers Study</div>
+                        <div class="module-desc">GFS, Dynamo, Kafka, Spanner, Memcache</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item">
+                    <div class="module-number">6</div>
+                    <div class="module-info">
+                        <div class="module-title">Common Design Problems</div>
+                        <div class="module-desc">URL shortener, rate limiter, chat system, news feed</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item">
+                    <div class="module-number">7</div>
+                    <div class="module-info">
+                        <div class="module-title">Interview Framework Mastery</div>
+                        <div class="module-desc">RESHADE framework, capacity estimation, communication</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item">
+                    <div class="module-number">8</div>
+                    <div class="module-info">
+                        <div class="module-title">Mock Interviews and Feedback</div>
+                        <div class="module-desc">Practice sessions, weak area identification, refinement</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Key Architecture -->
+        <h2 class="mt-4 mb-3">Typical Web Architecture</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart TB
+    subgraph "Client Layer"
+        U[Users]
+    end
+
+    subgraph "Edge"
+        CDN[CDN]
+        LB[Load Balancer]
+    end
+
+    subgraph "Application"
+        API1[API Server]
+        API2[API Server]
+    end
+
+    subgraph "Caching"
+        RC[Redis Cache]
+    end
+
+    subgraph "Data"
+        DB[(Primary DB)]
+        DBR[(Read Replica)]
+    end
+
+    subgraph "Async"
+        MQ[Message Queue]
+        W[Workers]
+    end
+
+    U --> CDN --> LB
+    LB --> API1 & API2
+    API1 & API2 --> RC
+    API1 & API2 --> DB
+    DB --> DBR
+    API1 & API2 --> MQ --> W
+            </div>
+        </div>
+
+        <!-- Quick Quiz -->
+        <h2 class="mt-4 mb-3">Quick Assessment</h2>
+
+        <div class="quiz-container" id="quick-quiz"></div>
+
+        <!-- Key Concepts -->
+        <h2 class="mt-4 mb-3">Key Concepts to Review</h2>
+
+        <div class="review-schedule" id="design-review"></div>
+
+        <!-- Resources -->
+        <h2 class="mt-4 mb-3">Essential Resources</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h3>DDIA Book</h3>
+                <p>Designing Data-Intensive Applications by Martin Kleppmann - The foundational book.</p>
+            </div>
+            <div class="card">
+                <h3>Seminal Papers</h3>
+                <p>Amazon Dynamo, Google GFS, Apache Kafka, Google Spanner</p>
+            </div>
+            <div class="card">
+                <h3>Tech Blogs</h3>
+                <p>Netflix, Uber, Meta, LinkedIn, Pinterest engineering blogs</p>
+            </div>
+            <div class="card">
+                <h3>Practice Platforms</h3>
+                <p>HelloInterview, Educative.io, Alex Xu books</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update progress
+            const progress = StaffEngPrep.ProgressTracker.getOverallProgress('systemDesign');
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('progress-label').textContent = progress + '% Complete';
+
+            // Initialize quiz
+            const quizQuestions = [
+                {
+                    question: "What does CAP theorem state?",
+                    options: [
+                        "You can have all three: Consistency, Availability, Partition tolerance",
+                        "You can only have two of: Consistency, Availability, Partition tolerance",
+                        "Consistency always beats Availability",
+                        "Partitions never happen in modern systems"
+                    ],
+                    correct: 1,
+                    explanation: "CAP theorem states that in the presence of network partitions, you must choose between consistency and availability."
+                },
+                {
+                    question: "When would you choose eventual consistency over strong consistency?",
+                    options: [
+                        "Financial transactions",
+                        "User authentication",
+                        "Social media feeds",
+                        "Inventory management"
+                    ],
+                    correct: 2,
+                    explanation: "Social media feeds can tolerate slightly stale data, making eventual consistency acceptable for better availability."
+                },
+                {
+                    question: "What is the main advantage of horizontal scaling?",
+                    options: [
+                        "Simpler architecture",
+                        "No distributed systems complexity",
+                        "Theoretically unlimited scaling",
+                        "Always cheaper"
+                    ],
+                    correct: 2,
+                    explanation: "Horizontal scaling allows adding more machines, theoretically enabling unlimited growth."
+                }
+            ];
+
+            const quiz = new StaffEngPrep.Quiz('quick-quiz', quizQuestions);
+            quiz.render();
+
+            // Review schedule
+            const concepts = [
+                { id: 'cap-theorem', name: 'CAP Theorem' },
+                { id: 'consistent-hashing', name: 'Consistent Hashing' },
+                { id: 'database-sharding', name: 'Database Sharding' },
+                { id: 'caching-strategies', name: 'Caching Strategies' },
+                { id: 'load-balancing', name: 'Load Balancing' },
+                { id: 'message-queues', name: 'Message Queues' }
+            ];
+            StaffEngPrep.renderReviewSchedule('design-review', concepts);
+        });
+    </script>
+</body>
+</html>

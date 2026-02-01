@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 7: Heaps & Sorting - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="index.html" style="color: var(--primary-color);">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Coding Rounds</a></nav>
+
+        <h1>Module 7: Heaps, Priority Queues & Sorting</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Understand heap data structure and operations</li>
+                <li>Solve Top-K problems efficiently</li>
+                <li>Use heaps for merge operations</li>
+                <li>Understand sorting algorithm trade-offs</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Heap Basics</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Heap Operations</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Operation</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Time</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">peek</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(1)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Get min/max</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">push</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(log n)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Insert element</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">pop</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(log n)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Remove min/max</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">heapify</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Build heap from array</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="code-block">
+                    <pre><code>import heapq
+
+# Python heapq is a MIN heap
+nums = [3, 1, 4, 1, 5, 9]
+heapq.heapify(nums)  # O(n) - transforms list in-place
+
+heapq.heappush(nums, 2)   # O(log n)
+smallest = heapq.heappop(nums)  # O(log n) - removes and returns smallest
+
+# For MAX heap, negate values
+max_heap = [-x for x in nums]
+heapq.heapify(max_heap)
+largest = -heapq.heappop(max_heap)</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Top-K Problems</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Kth Largest Element</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>import heapq
+
+def find_kth_largest(nums, k):
+    """
+    Find kth largest using min heap of size k.
+    Time: O(n log k), Space: O(k)
+    """
+    # Keep k largest elements
+    min_heap = []
+
+    for num in nums:
+        heapq.heappush(min_heap, num)
+        if len(min_heap) > k:
+            heapq.heappop(min_heap)  # Remove smallest
+
+    return min_heap[0]  # Kth largest is the smallest in heap
+
+# Alternative: O(n) average with quickselect
+def find_kth_largest_quickselect(nums, k):
+    k = len(nums) - k  # Convert to kth smallest index
+
+    def quickselect(l, r):
+        pivot, p = nums[r], l
+        for i in range(l, r):
+            if nums[i] <= pivot:
+                nums[p], nums[i] = nums[i], nums[p]
+                p += 1
+        nums[p], nums[r] = nums[r], nums[p]
+
+        if p > k: return quickselect(l, p - 1)
+        elif p < k: return quickselect(p + 1, r)
+        else: return nums[p]
+
+    return quickselect(0, len(nums) - 1)</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Merge K Sorted Lists</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>import heapq
+
+def merge_k_lists(lists):
+    """
+    Merge k sorted linked lists.
+    Time: O(n log k), Space: O(k)
+    """
+    # Min heap of (value, index, node)
+    heap = []
+
+    for i, lst in enumerate(lists):
+        if lst:
+            heapq.heappush(heap, (lst.val, i, lst))
+
+    dummy = ListNode()
+    current = dummy
+
+    while heap:
+        val, i, node = heapq.heappop(heap)
+        current.next = node
+        current = current.next
+
+        if node.next:
+            heapq.heappush(heap, (node.next.val, i, node.next))
+
+    return dummy.next</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Sorting Algorithms</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Algorithm Comparison</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Algorithm</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Time (avg)</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Space</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Stable</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Quick Sort</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n log n)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(log n)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">No</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Merge Sort</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n log n)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Yes</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Heap Sort</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n log n)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(1)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">No</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Counting Sort</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n + k)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(k)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Yes</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <h2 class="mt-4">Practice Problems</h2>
+        <div class="card">
+            <h4>Medium</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/kth-largest-element-in-an-array/" target="_blank">Kth Largest Element (LeetCode #215)</a></li>
+                <li><a href="https://leetcode.com/problems/top-k-frequent-elements/" target="_blank">Top K Frequent Elements (LeetCode #347)</a></li>
+                <li><a href="https://leetcode.com/problems/merge-k-sorted-lists/" target="_blank">Merge K Sorted Lists (LeetCode #23)</a></li>
+                <li><a href="https://leetcode.com/problems/task-scheduler/" target="_blank">Task Scheduler (LeetCode #621)</a></li>
+            </ul>
+        </div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-06.html" class="btn btn-secondary">&larr; Module 6</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What's the time complexity to find Kth largest using a heap of size k?",
+                    options: ["O(n)", "O(n log n)", "O(n log k)", "O(k log n)"],
+                    correct: 2,
+                    explanation: "We process n elements, each heap operation is O(log k)."
+                },
+                {
+                    question: "Python's heapq module implements which type of heap?",
+                    options: ["Max heap", "Min heap", "Both", "Neither"],
+                    correct: 1,
+                    explanation: "Python heapq is a min heap. For max heap, negate values."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('coding', 7);
+            alert('Module 7 marked as complete!');
+            window.location.href = 'module-08.html';
+        }
+    </script>
+</body>
+</html>

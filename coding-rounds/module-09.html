@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 9: Interview Simulation - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="index.html" style="color: var(--primary-color);">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Coding Rounds</a></nav>
+
+        <h1>Module 9: Interview Simulation & Communication</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Practice the UMPIRE method consistently</li>
+                <li>Master thinking aloud while coding</li>
+                <li>Handle ambiguity and hints gracefully</li>
+                <li>Manage time effectively during interviews</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">The UMPIRE Method</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart LR
+    U["<strong>U</strong>nderstand<br>2-3 min"] --> M["<strong>M</strong>atch<br>1-2 min"]
+    M --> P["<strong>P</strong>lan<br>3-5 min"]
+    P --> I["<strong>I</strong>mplement<br>15-20 min"]
+    I --> R["<strong>R</strong>eview<br>3-5 min"]
+    R --> E["<strong>E</strong>valuate<br>2-3 min"]
+            </div>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Step-by-Step Guide</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>U - Understand (2-3 min)</h4>
+                <ul>
+                    <li>Restate the problem in your own words</li>
+                    <li>Clarify inputs, outputs, constraints</li>
+                    <li>Ask about edge cases</li>
+                    <li>Confirm examples</li>
+                </ul>
+                <p><em>"Let me make sure I understand..."</em></p>
+
+                <h4>M - Match (1-2 min)</h4>
+                <ul>
+                    <li>Identify problem patterns</li>
+                    <li>Consider similar problems solved before</li>
+                    <li>Think about applicable data structures</li>
+                </ul>
+                <p><em>"This reminds me of..."</em></p>
+
+                <h4>P - Plan (3-5 min)</h4>
+                <ul>
+                    <li>Discuss brute force first</li>
+                    <li>Propose optimized approach</li>
+                    <li>Explain time/space complexity</li>
+                    <li>Get interviewer buy-in</li>
+                </ul>
+                <p><em>"Before I start coding, here's my approach..."</em></p>
+
+                <h4>I - Implement (15-20 min)</h4>
+                <ul>
+                    <li>Write clean, readable code</li>
+                    <li>Narrate as you code</li>
+                    <li>Use meaningful names</li>
+                    <li>Handle edge cases</li>
+                </ul>
+
+                <h4>R - Review (3-5 min)</h4>
+                <ul>
+                    <li>Walk through with an example</li>
+                    <li>Check for bugs</li>
+                    <li>Test edge cases</li>
+                </ul>
+                <p><em>"Let me trace through this..."</em></p>
+
+                <h4>E - Evaluate (2-3 min)</h4>
+                <ul>
+                    <li>Discuss final complexity</li>
+                    <li>Mention possible optimizations</li>
+                    <li>Ask if interviewer wants to explore anything</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Communication Patterns</h2>
+
+        <div class="card">
+            <h4>Phrases to Use</h4>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <th style="padding: 0.75rem; border: 1px solid var(--border-color); text-align: left;">Situation</th>
+                    <th style="padding: 0.75rem; border: 1px solid var(--border-color); text-align: left;">What to Say</th>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Starting</td>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Let me make sure I understand the problem correctly..."</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Thinking</td>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"I'm thinking about this... one approach could be..."</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Before coding</td>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Does this approach sound reasonable before I start coding?"</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Stuck</td>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"I'm not sure about X. Could you give me a hint?"</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Getting hint</td>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"That makes sense! So I should..."</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Finishing</td>
+                    <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"Let me trace through with an example to verify..."</td>
+                </tr>
+            </table>
+        </div>
+
+        <h2 class="mt-4">Time Management</h2>
+
+        <div class="card">
+            <h4>45-Minute Interview Breakdown</h4>
+            <div class="diagram-container">
+                <div class="mermaid">
+gantt
+    title Interview Time Allocation
+    dateFormat mm:ss
+    axisFormat %M:%S
+
+    section Phases
+    Understand & Match    :00:00, 5m
+    Plan & Discuss        :05:00, 5m
+    Implement             :10:00, 20m
+    Review & Test         :30:00, 10m
+    Questions             :40:00, 5m
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Mock Interview Checklist</h2>
+
+        <div class="card">
+            <div class="review-schedule">
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Asked clarifying questions before coding</span></div>
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Discussed approach before implementing</span></div>
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Thought aloud throughout</span></div>
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Handled hint gracefully</span></div>
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Tested solution with examples</span></div>
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Discussed time/space complexity</span></div>
+                <div class="review-item"><input type="checkbox" class="review-checkbox"><span class="review-concept">Finished within time limit</span></div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <h2 class="mt-4">Next Steps</h2>
+
+        <div class="card">
+            <h4>Practice Resources</h4>
+            <ul>
+                <li><strong>Pramp.com</strong> - Free peer mock interviews</li>
+                <li><strong>Interviewing.io</strong> - Anonymous practice with engineers</li>
+                <li><strong>Hello Interview</strong> - Expert feedback sessions</li>
+            </ul>
+
+            <h4 class="mt-3">Recommended Schedule</h4>
+            <ul>
+                <li>Complete 2-3 timed practice problems weekly</li>
+                <li>Do at least 4-6 mock interviews before real interviews</li>
+                <li>Practice explaining solutions out loud daily</li>
+            </ul>
+        </div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-08.html" class="btn btn-secondary">&larr; Module 8</a>
+            <button class="btn btn-primary" onclick="completeCourse()">Complete Course</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What should you do before starting to code?",
+                    options: ["Dive right in", "Get interviewer buy-in on approach", "Write tests first", "Ask for the solution"],
+                    correct: 1,
+                    explanation: "Always discuss your approach and get confirmation before coding."
+                },
+                {
+                    question: "How should you respond when stuck?",
+                    options: ["Stay silent", "Give up", "Ask for a hint clearly", "Start a different approach without saying anything"],
+                    correct: 2,
+                    explanation: "It's better to ask for help than to stay silent. Interviewers expect to give hints."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeCourse() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('coding', 9);
+            alert('Congratulations! You completed the Coding Rounds course!');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

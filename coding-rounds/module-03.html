@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 3: Trees & Binary Search - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="index.html" style="color: var(--primary-color);">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;">
+            <a href="index.html">&larr; Back to Coding Rounds</a>
+        </nav>
+
+        <h1>Module 3: Trees & Binary Search</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Implement all tree traversal methods (pre, in, post, level-order)</li>
+                <li>Master binary search variations and boundary finding</li>
+                <li>Understand BST properties and operations</li>
+                <li>Solve common tree problems recursively and iteratively</li>
+            </ul>
+        </div>
+
+        <!-- Tree Structure -->
+        <h2 class="mt-4">Binary Tree Fundamentals</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Tree Traversals</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph TD
+    A((1)) --> B((2))
+    A --> C((3))
+    B --> D((4))
+    B --> E((5))
+    C --> F((6))
+    C --> G((7))
+                    </div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Traversal</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Order</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Preorder</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Root → Left → Right</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">1, 2, 4, 5, 3, 6, 7</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Inorder</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Left → Root → Right</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">4, 2, 5, 1, 6, 3, 7</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Postorder</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Left → Right → Root</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">4, 5, 2, 6, 7, 3, 1</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Level Order</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">BFS by level</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">1, 2, 3, 4, 5, 6, 7</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="code-block">
+                    <pre><code># Recursive Traversals
+def preorder(root):
+    if not root: return []
+    return [root.val] + preorder(root.left) + preorder(root.right)
+
+def inorder(root):
+    if not root: return []
+    return inorder(root.left) + [root.val] + inorder(root.right)
+
+def postorder(root):
+    if not root: return []
+    return postorder(root.left) + postorder(root.right) + [root.val]
+
+# Iterative Inorder (most common)
+def inorder_iterative(root):
+    result, stack = [], []
+    current = root
+
+    while current or stack:
+        while current:
+            stack.append(current)
+            current = current.left
+        current = stack.pop()
+        result.append(current.val)
+        current = current.right
+
+    return result
+
+# Level Order (BFS)
+from collections import deque
+
+def level_order(root):
+    if not root: return []
+    result, queue = [], deque([root])
+
+    while queue:
+        level = []
+        for _ in range(len(queue)):
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left: queue.append(node.left)
+            if node.right: queue.append(node.right)
+        result.append(level)
+
+    return result</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Binary Search Section -->
+        <h2 class="mt-4">Binary Search</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Standard Binary Search</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    A["[1, 3, 5, 7, 9, 11, 13]"] --> B{arr[mid] vs target}
+    B -->|"< target"| C["Search right half"]
+    B -->|"= target"| D["Found!"]
+    B -->|"> target"| E["Search left half"]
+                    </div>
+                </div>
+
+                <div class="code-block">
+                    <pre><code>def binary_search(arr, target):
+    """Standard binary search for exact match.
+    Time: O(log n), Space: O(1)
+    """
+    left, right = 0, len(arr) - 1
+
+    while left <= right:
+        mid = left + (right - left) // 2  # Avoid overflow
+
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+
+    return -1  # Not found</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Finding Boundaries</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code># Find leftmost (first) position of target
+def find_left_boundary(arr, target):
+    left, right = 0, len(arr)
+
+    while left < right:
+        mid = left + (right - left) // 2
+        if arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid
+
+    return left  # First index where arr[i] >= target
+
+# Find rightmost (last) position of target
+def find_right_boundary(arr, target):
+    left, right = 0, len(arr)
+
+    while left < right:
+        mid = left + (right - left) // 2
+        if arr[mid] <= target:
+            left = mid + 1
+        else:
+            right = mid
+
+    return left - 1  # Last index where arr[i] <= target
+
+# Find first and last position of element
+def search_range(arr, target):
+    left = find_left_boundary(arr, target)
+
+    if left >= len(arr) or arr[left] != target:
+        return [-1, -1]
+
+    right = find_right_boundary(arr, target)
+    return [left, right]</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Binary Search on Answer</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>When the answer itself has a monotonic property, binary search on the answer space.</p>
+
+                <div class="code-block">
+                    <pre><code># Example: Koko Eating Bananas
+# Find minimum eating speed to finish within h hours
+
+def min_eating_speed(piles, h):
+    def can_finish(speed):
+        hours = sum((pile + speed - 1) // speed for pile in piles)
+        return hours <= h
+
+    left, right = 1, max(piles)
+
+    while left < right:
+        mid = left + (right - left) // 2
+        if can_finish(mid):
+            right = mid  # Try slower speed
+        else:
+            left = mid + 1  # Need faster speed
+
+    return left</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- BST Section -->
+        <h2 class="mt-4">Binary Search Trees</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>BST Properties & Validation</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>BST Property:</strong> For every node, all values in left subtree &lt; node value &lt; all values in right subtree.</p>
+
+                <div class="code-block">
+                    <pre><code>def is_valid_bst(root, min_val=float('-inf'), max_val=float('inf')):
+    """Validate BST using range checking.
+    Time: O(n), Space: O(h) for recursion stack
+    """
+    if not root:
+        return True
+
+    if not (min_val < root.val < max_val):
+        return False
+
+    return (is_valid_bst(root.left, min_val, root.val) and
+            is_valid_bst(root.right, root.val, max_val))
+
+# Alternative: Inorder traversal should be sorted
+def is_valid_bst_inorder(root):
+    prev = [float('-inf')]
+
+    def inorder(node):
+        if not node:
+            return True
+        if not inorder(node.left):
+            return False
+        if node.val <= prev[0]:
+            return False
+        prev[0] = node.val
+        return inorder(node.right)
+
+    return inorder(root)</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Problems -->
+        <h2 class="mt-4">Common Tree Problems</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Maximum Depth & Diameter</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>def max_depth(root):
+    if not root:
+        return 0
+    return 1 + max(max_depth(root.left), max_depth(root.right))
+
+def diameter(root):
+    """Diameter = longest path between any two nodes."""
+    result = [0]
+
+    def depth(node):
+        if not node:
+            return 0
+        left = depth(node.left)
+        right = depth(node.right)
+        result[0] = max(result[0], left + right)  # Path through node
+        return 1 + max(left, right)
+
+    depth(root)
+    return result[0]</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Lowest Common Ancestor</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="code-block">
+                    <pre><code>def lowest_common_ancestor(root, p, q):
+    """Find LCA of nodes p and q."""
+    if not root or root == p or root == q:
+        return root
+
+    left = lowest_common_ancestor(root.left, p, q)
+    right = lowest_common_ancestor(root.right, p, q)
+
+    if left and right:
+        return root  # p and q are on different sides
+    return left or right  # Both on same side</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <!-- Practice Problems -->
+        <h2 class="mt-4">Practice Problems</h2>
+        <div class="card">
+            <h4>Easy</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/binary-search/" target="_blank">Binary Search (LeetCode #704)</a></li>
+                <li><a href="https://leetcode.com/problems/maximum-depth-of-binary-tree/" target="_blank">Maximum Depth (LeetCode #104)</a></li>
+                <li><a href="https://leetcode.com/problems/invert-binary-tree/" target="_blank">Invert Binary Tree (LeetCode #226)</a></li>
+            </ul>
+
+            <h4 class="mt-3">Medium</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/validate-binary-search-tree/" target="_blank">Validate BST (LeetCode #98)</a></li>
+                <li><a href="https://leetcode.com/problems/binary-tree-level-order-traversal/" target="_blank">Level Order Traversal (LeetCode #102)</a></li>
+                <li><a href="https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/" target="_blank">Lowest Common Ancestor (LeetCode #236)</a></li>
+            </ul>
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex flex-between mt-4">
+            <a href="module-02.html" class="btn btn-secondary">&larr; Module 2</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What traversal gives sorted order for a BST?",
+                    options: ["Preorder", "Inorder", "Postorder", "Level Order"],
+                    correct: 1,
+                    explanation: "Inorder (Left → Root → Right) visits BST nodes in sorted order."
+                },
+                {
+                    question: "What's the time complexity of binary search?",
+                    options: ["O(n)", "O(n log n)", "O(log n)", "O(1)"],
+                    correct: 2,
+                    explanation: "Binary search halves the search space each iteration, giving O(log n)."
+                },
+                {
+                    question: "In binary search, why use 'left + (right - left) // 2' instead of '(left + right) // 2'?",
+                    options: ["It's faster", "Avoids integer overflow", "More readable", "Required by Python"],
+                    correct: 1,
+                    explanation: "In languages with fixed-size integers, (left + right) can overflow. The alternative avoids this."
+                }
+            ];
+
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('coding', 3);
+            alert('Module 3 marked as complete!');
+            window.location.href = 'module-04.html';
+        }
+    </script>
+</body>
+</html>
