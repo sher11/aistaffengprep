@@ -5,7 +5,268 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 4: Storage & Data Processing - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Interactive Kafka Demo */
+        .kafka-container {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .kafka-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .kafka-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .kafka-btn.produce {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .kafka-btn.consume {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .kafka-btn.batch {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+        }
+
+        .kafka-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .kafka-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .kafka-viz {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            margin: 1.5rem 0;
+            min-height: 300px;
+            flex-wrap: wrap;
+        }
+
+        .kafka-producers, .kafka-consumers {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .kafka-producer, .kafka-consumer {
+            width: 80px;
+            height: 80px;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .kafka-producer {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .kafka-consumer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .kafka-producer.sending, .kafka-consumer.consuming {
+            transform: scale(1.1);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .kafka-producer .icon, .kafka-consumer .icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .kafka-topic {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+        }
+
+        .kafka-topic-header {
+            text-align: center;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .kafka-partitions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .kafka-partition {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            position: relative;
+        }
+
+        .partition-label {
+            color: #a0aec0;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .partition-messages {
+            display: flex;
+            gap: 4px;
+            height: 40px;
+            align-items: center;
+            overflow-x: auto;
+            padding: 0.25rem;
+        }
+
+        .kafka-message {
+            min-width: 35px;
+            height: 35px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .kafka-message.new {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            animation: message-arrive 0.3s ease;
+        }
+
+        .kafka-message.committed {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .kafka-message.uncommitted {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        }
+
+        .kafka-message.consuming {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            animation: pulse-consume 0.5s ease;
+        }
+
+        @keyframes message-arrive {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse-consume {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); box-shadow: 0 0 15px rgba(102, 126, 234, 0.6); }
+        }
+
+        .consumer-offset {
+            position: absolute;
+            bottom: -25px;
+            height: 20px;
+            width: 2px;
+            background: #667eea;
+            transition: left 0.3s ease;
+        }
+
+        .consumer-offset::after {
+            content: '▲';
+            position: absolute;
+            bottom: -5px;
+            left: -6px;
+            color: #667eea;
+            font-size: 0.8rem;
+        }
+
+        .kafka-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .kafka-stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            color: white;
+            min-width: 100px;
+        }
+
+        .kafka-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffd700;
+        }
+
+        .kafka-stat-label {
+            font-size: 0.75rem;
+            color: #a0aec0;
+            margin-top: 0.25rem;
+        }
+
+        .kafka-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: #a0aec0;
+            margin-top: 1rem;
+        }
+
+        .kafka-log-entry {
+            padding: 0.2rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .kafka-log-entry.produce {
+            color: #48bb78;
+        }
+
+        .kafka-log-entry.consume {
+            color: #667eea;
+        }
+
+        .kafka-log-entry.commit {
+            color: #f6ad55;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -153,33 +414,106 @@ flowchart LR
 
         <h2 class="mt-4">Kafka Deep Dive</h2>
 
-        <div class="collapsible">
+        <!-- Interactive Kafka Demo -->
+        <div class="collapsible open">
             <div class="collapsible-header">
-                <span>Log-Based Messaging</span>
+                <span>🎮 Interactive Kafka Message Flow Demo</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
-                <div class="diagram-container">
-                    <div class="mermaid">
-flowchart TB
-    subgraph "Topic: orders"
-        subgraph "Partition 0"
-            P0[0 1 2 3 4 5]
-        end
-        subgraph "Partition 1"
-            P1[0 1 2 3]
-        end
-        subgraph "Partition 2"
-            P2[0 1 2 3 4]
-        end
-    end
+                <p class="text-muted">Watch how Kafka handles messages across partitions. Produce messages and see consumer offsets track progress.</p>
 
-    Producer --> P0
-    Producer --> P1
-    Producer --> P2
+                <div class="kafka-container" id="kafka-demo">
+                    <div class="kafka-controls">
+                        <button class="kafka-btn produce" onclick="produceMessage()">📤 Produce Message</button>
+                        <button class="kafka-btn consume" onclick="consumeMessage()">📥 Consume Message</button>
+                        <button class="kafka-btn batch" onclick="produceBatch()">📦 Produce Batch (5)</button>
+                    </div>
+
+                    <div class="kafka-viz">
+                        <div class="kafka-producers">
+                            <div class="kafka-producer" id="producer-1">
+                                <span class="icon">📤</span>
+                                <span>Producer</span>
+                            </div>
+                        </div>
+
+                        <div class="kafka-topic">
+                            <div class="kafka-topic-header">📋 Topic: orders</div>
+                            <div class="kafka-partitions">
+                                <div class="kafka-partition" id="partition-0">
+                                    <div class="partition-label">
+                                        <span>Partition 0 (key % 3 = 0)</span>
+                                        <span id="p0-offset">Offset: 0</span>
+                                    </div>
+                                    <div class="partition-messages" id="messages-0"></div>
+                                </div>
+                                <div class="kafka-partition" id="partition-1">
+                                    <div class="partition-label">
+                                        <span>Partition 1 (key % 3 = 1)</span>
+                                        <span id="p1-offset">Offset: 0</span>
+                                    </div>
+                                    <div class="partition-messages" id="messages-1"></div>
+                                </div>
+                                <div class="kafka-partition" id="partition-2">
+                                    <div class="partition-label">
+                                        <span>Partition 2 (key % 3 = 2)</span>
+                                        <span id="p2-offset">Offset: 0</span>
+                                    </div>
+                                    <div class="partition-messages" id="messages-2"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="kafka-consumers">
+                            <div class="kafka-consumer" id="consumer-1">
+                                <span class="icon">📥</span>
+                                <span>Consumer</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kafka-stats">
+                        <div class="kafka-stat">
+                            <div class="kafka-stat-value" id="total-produced">0</div>
+                            <div class="kafka-stat-label">Produced</div>
+                        </div>
+                        <div class="kafka-stat">
+                            <div class="kafka-stat-value" id="total-consumed">0</div>
+                            <div class="kafka-stat-label">Consumed</div>
+                        </div>
+                        <div class="kafka-stat">
+                            <div class="kafka-stat-value" id="consumer-lag">0</div>
+                            <div class="kafka-stat-label">Consumer Lag</div>
+                        </div>
+                        <div class="kafka-stat">
+                            <div class="kafka-stat-value" id="partition-balance">0/0/0</div>
+                            <div class="kafka-stat-label">Partition Balance</div>
+                        </div>
+                    </div>
+
+                    <div class="kafka-log" id="kafka-log">
+                        <div class="kafka-log-entry">Kafka demo ready. Produce messages to see them flow through partitions.</div>
                     </div>
                 </div>
 
+                <div class="card mt-2" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                    <strong>💡 Key Concepts Shown:</strong>
+                    <ul style="margin-top: 0.5rem;">
+                        <li><strong>Partitioning:</strong> Messages with same key go to same partition (ordering guarantee)</li>
+                        <li><strong>Consumer Offset:</strong> Tracks what's been processed - enables replay</li>
+                        <li><strong>Consumer Lag:</strong> Difference between latest message and consumer position</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Log-Based Architecture Explained</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
                 <h4>Key Design Decisions</h4>
                 <ul>
                     <li><strong>Why Log-Based?</strong> Sequential writes (fast), consumers track own offset, replay capability</li>
@@ -760,6 +1094,166 @@ flowchart TB
             alert('Module 4 marked as complete!');
             window.location.href = 'module-05.html';
         }
+
+        // ============================================
+        // Interactive Kafka Demo
+        // ============================================
+        let kafkaMessageId = 0;
+        let partitionOffsets = [0, 0, 0];
+        let consumerOffsets = [0, 0, 0];
+        let partitionMessages = [[], [], []];
+        let totalProduced = 0;
+        let totalConsumed = 0;
+
+        function addKafkaLog(message, type = '') {
+            const log = document.getElementById('kafka-log');
+            const entry = document.createElement('div');
+            entry.className = `kafka-log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            log.insertBefore(entry, log.firstChild);
+
+            while (log.children.length > 15) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        function updateKafkaStats() {
+            document.getElementById('total-produced').textContent = totalProduced;
+            document.getElementById('total-consumed').textContent = totalConsumed;
+            document.getElementById('consumer-lag').textContent = totalProduced - totalConsumed;
+
+            const balance = partitionMessages.map(p => p.length).join('/');
+            document.getElementById('partition-balance').textContent = balance;
+
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`p${i}-offset`).textContent = `Offset: ${partitionOffsets[i]}`;
+            }
+        }
+
+        function renderPartitionMessages(partitionId) {
+            const container = document.getElementById(`messages-${partitionId}`);
+            container.innerHTML = '';
+
+            partitionMessages[partitionId].forEach((msg, idx) => {
+                const msgEl = document.createElement('div');
+                msgEl.className = `kafka-message ${idx < consumerOffsets[partitionId] ? 'committed' : 'uncommitted'}`;
+                msgEl.textContent = msg.id;
+                msgEl.title = `Key: ${msg.key}, Offset: ${idx}`;
+                container.appendChild(msgEl);
+            });
+        }
+
+        function produceMessage() {
+            kafkaMessageId++;
+            const key = Math.floor(Math.random() * 100);
+            const partition = key % 3;
+
+            // Animate producer
+            const producer = document.getElementById('producer-1');
+            producer.classList.add('sending');
+            setTimeout(() => producer.classList.remove('sending'), 300);
+
+            // Add message to partition
+            setTimeout(() => {
+                const message = {
+                    id: kafkaMessageId,
+                    key: key,
+                    offset: partitionOffsets[partition]
+                };
+
+                partitionMessages[partition].push(message);
+                partitionOffsets[partition]++;
+                totalProduced++;
+
+                renderPartitionMessages(partition);
+                updateKafkaStats();
+
+                addKafkaLog(`Produced msg ${kafkaMessageId} (key=${key}) → Partition ${partition}`, 'produce');
+
+                // Highlight new message
+                const container = document.getElementById(`messages-${partition}`);
+                const lastMsg = container.lastElementChild;
+                if (lastMsg) {
+                    lastMsg.classList.add('new');
+                    setTimeout(() => lastMsg.classList.remove('new'), 500);
+                }
+            }, 150);
+        }
+
+        function consumeMessage() {
+            // Find partition with unconsumed messages
+            let partitionToConsume = -1;
+            let minOffset = Infinity;
+
+            for (let i = 0; i < 3; i++) {
+                if (consumerOffsets[i] < partitionMessages[i].length) {
+                    if (consumerOffsets[i] < minOffset) {
+                        minOffset = consumerOffsets[i];
+                        partitionToConsume = i;
+                    }
+                }
+            }
+
+            if (partitionToConsume === -1) {
+                addKafkaLog('No messages to consume - consumer caught up!', '');
+                return;
+            }
+
+            // Animate consumer
+            const consumer = document.getElementById('consumer-1');
+            consumer.classList.add('consuming');
+            setTimeout(() => consumer.classList.remove('consuming'), 300);
+
+            // Consume message
+            setTimeout(() => {
+                const msg = partitionMessages[partitionToConsume][consumerOffsets[partitionToConsume]];
+                consumerOffsets[partitionToConsume]++;
+                totalConsumed++;
+
+                // Animate message being consumed
+                const container = document.getElementById(`messages-${partitionToConsume}`);
+                const msgEl = container.children[consumerOffsets[partitionToConsume] - 1];
+                if (msgEl) {
+                    msgEl.classList.add('consuming');
+                    setTimeout(() => {
+                        msgEl.classList.remove('consuming');
+                        msgEl.classList.remove('uncommitted');
+                        msgEl.classList.add('committed');
+                    }, 300);
+                }
+
+                updateKafkaStats();
+                addKafkaLog(`Consumed msg ${msg.id} from Partition ${partitionToConsume} (offset ${consumerOffsets[partitionToConsume] - 1})`, 'consume');
+
+                // Commit offset
+                setTimeout(() => {
+                    addKafkaLog(`Committed offset ${consumerOffsets[partitionToConsume]} for Partition ${partitionToConsume}`, 'commit');
+                }, 200);
+            }, 150);
+        }
+
+        function produceBatch() {
+            let count = 0;
+            const batchSize = 5;
+
+            const interval = setInterval(() => {
+                produceMessage();
+                count++;
+                if (count >= batchSize) {
+                    clearInterval(interval);
+                    addKafkaLog(`Batch complete: ${batchSize} messages produced`, '');
+                }
+            }, 200);
+        }
+
+        // Initialize with some messages
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add a few initial messages
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => produceMessage(), i * 100);
+            }
+        });
     </script>
 </body>
 </html>

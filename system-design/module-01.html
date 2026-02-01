@@ -5,7 +5,366 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 1: Scalability - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Interactive Load Balancer Demo */
+        .lb-container {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .lb-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .lb-algo-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .lb-algo-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .lb-algo-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .lb-visualization {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 0;
+            position: relative;
+            min-height: 300px;
+        }
+
+        .lb-clients {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .lb-client {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .lb-client.sending {
+            animation: pulse-send 0.5s ease;
+        }
+
+        @keyframes pulse-send {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); box-shadow: 0 10px 30px rgba(17, 153, 142, 0.6); }
+        }
+
+        .lb-balancer {
+            width: 120px;
+            height: 120px;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+            position: relative;
+            z-index: 10;
+        }
+
+        .lb-balancer .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .lb-servers {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .lb-server {
+            width: 100px;
+            height: 80px;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .lb-server .icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .lb-server .load-bar {
+            position: absolute;
+            bottom: 5px;
+            left: 10px;
+            right: 10px;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .lb-server .load-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .lb-server.receiving {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(237, 137, 54, 0.4);
+        }
+
+        .lb-server.overloaded .load-fill {
+            background: linear-gradient(90deg, #f56565, #e53e3e);
+        }
+
+        .request-packet {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            box-shadow: 0 2px 10px rgba(255, 215, 0, 0.5);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .lb-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .lb-stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            color: white;
+            min-width: 120px;
+        }
+
+        .lb-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffd700;
+        }
+
+        .lb-stat-label {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-top: 0.25rem;
+        }
+
+        .lb-explanation {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1rem 1.5rem;
+            color: white;
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        /* Cache Animation Demo */
+        .cache-container {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .cache-visualization {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .cache-component {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cache-box {
+            width: 120px;
+            height: 100px;
+            border-radius: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .cache-box.app {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .cache-box.cache {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+        }
+
+        .cache-box.db {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .cache-box.active {
+            transform: scale(1.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .cache-box .icon {
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .cache-arrow {
+            width: 60px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            position: relative;
+        }
+
+        .cache-arrow.active {
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+        }
+
+        .cache-arrow::after {
+            content: '→';
+            position: absolute;
+            right: -10px;
+            top: -10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1.2rem;
+        }
+
+        .cache-arrow.active::after {
+            color: #ffd700;
+        }
+
+        .cache-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .cache-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .cache-btn.hit {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .cache-btn.miss {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+
+        .cache-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .cache-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        .cache-log-entry {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cache-log-entry.hit {
+            color: #48bb78;
+        }
+
+        .cache-log-entry.miss {
+            color: #f56565;
+        }
+
+        .cache-stats {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .cache-stat {
+            text-align: center;
+            color: white;
+        }
+
+        .cache-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .cache-stat-value.hit-rate {
+            color: #48bb78;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -142,22 +501,98 @@ flowchart LR
 
             <h2 class="mt-4">Load Balancing</h2>
 
+            <!-- Interactive Load Balancer Demo -->
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>🎮 Interactive Load Balancer Demo</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p class="text-muted">Select an algorithm and watch how requests are distributed across servers. Notice the different distribution patterns.</p>
+
+                    <div class="lb-container" id="lb-demo">
+                        <div class="lb-controls">
+                            <button class="lb-algo-btn active" onclick="setLbAlgorithm('round-robin')">Round Robin</button>
+                            <button class="lb-algo-btn" onclick="setLbAlgorithm('weighted')">Weighted</button>
+                            <button class="lb-algo-btn" onclick="setLbAlgorithm('least-conn')">Least Connections</button>
+                            <button class="lb-algo-btn" onclick="setLbAlgorithm('random')">Random</button>
+                        </div>
+
+                        <div class="lb-visualization" id="lb-viz">
+                            <div class="lb-clients">
+                                <div class="lb-client" id="client-1">👤</div>
+                                <div class="lb-client" id="client-2">👤</div>
+                                <div class="lb-client" id="client-3">👤</div>
+                            </div>
+
+                            <div class="lb-balancer">
+                                <span class="icon">⚖️</span>
+                                <span>Load Balancer</span>
+                            </div>
+
+                            <div class="lb-servers">
+                                <div class="lb-server" id="server-1" data-weight="3" data-connections="0">
+                                    <span class="icon">🖥️</span>
+                                    <span>Server 1</span>
+                                    <span class="weight-label" style="font-size: 0.7rem; color: #a0aec0;">w:3</span>
+                                    <div class="load-bar"><div class="load-fill" style="width: 20%"></div></div>
+                                </div>
+                                <div class="lb-server" id="server-2" data-weight="2" data-connections="0">
+                                    <span class="icon">🖥️</span>
+                                    <span>Server 2</span>
+                                    <span class="weight-label" style="font-size: 0.7rem; color: #a0aec0;">w:2</span>
+                                    <div class="load-bar"><div class="load-fill" style="width: 40%"></div></div>
+                                </div>
+                                <div class="lb-server" id="server-3" data-weight="1" data-connections="0">
+                                    <span class="icon">🖥️</span>
+                                    <span>Server 3</span>
+                                    <span class="weight-label" style="font-size: 0.7rem; color: #a0aec0;">w:1</span>
+                                    <div class="load-bar"><div class="load-fill" style="width: 70%"></div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin-bottom: 1rem;">
+                            <button class="lb-algo-btn" onclick="sendRequest()" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                                📤 Send Request
+                            </button>
+                            <button class="lb-algo-btn" onclick="autoSendRequests()" id="auto-send-btn" style="background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);">
+                                🔄 Auto Send (5 req)
+                            </button>
+                        </div>
+
+                        <div class="lb-stats">
+                            <div class="lb-stat">
+                                <div class="lb-stat-value" id="total-requests">0</div>
+                                <div class="lb-stat-label">Total Requests</div>
+                            </div>
+                            <div class="lb-stat">
+                                <div class="lb-stat-value" id="server1-count">0</div>
+                                <div class="lb-stat-label">Server 1</div>
+                            </div>
+                            <div class="lb-stat">
+                                <div class="lb-stat-value" id="server2-count">0</div>
+                                <div class="lb-stat-label">Server 2</div>
+                            </div>
+                            <div class="lb-stat">
+                                <div class="lb-stat-value" id="server3-count">0</div>
+                                <div class="lb-stat-label">Server 3</div>
+                            </div>
+                        </div>
+
+                        <div class="lb-explanation" id="lb-explanation">
+                            <strong>Round Robin:</strong> Requests are distributed sequentially to each server in order. Simple but doesn't account for server load or capacity.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="collapsible">
                 <div class="collapsible-header">
                     <span>Algorithms & Strategies</span>
                     <span class="collapsible-icon">&#9660;</span>
                 </div>
                 <div class="collapsible-content">
-                    <div class="diagram-container">
-                        <div class="mermaid">
-flowchart TD
-    C[Clients] --> LB[Load Balancer]
-    LB --> S1[Server 1]
-    LB --> S2[Server 2]
-    LB --> S3[Server 3]
-                        </div>
-                    </div>
-
                     <h4>Common Algorithms</h4>
                     <ul>
                         <li><strong>Round Robin:</strong> Rotate through servers sequentially</li>
@@ -295,38 +730,104 @@ listen stats
 
             <h2 class="mt-4">Caching</h2>
 
-            <div class="collapsible">
+            <!-- Interactive Cache Demo -->
+            <div class="collapsible open">
                 <div class="collapsible-header">
-                    <span>Caching Strategies</span>
+                    <span>🎮 Interactive Cache-Aside Pattern Demo</span>
                     <span class="collapsible-icon">&#9660;</span>
                 </div>
                 <div class="collapsible-content">
-                    <div class="diagram-container">
-                        <div class="mermaid">
-flowchart LR
-    subgraph "Cache-Aside"
-        A1[App] -->|1. Check| C1[Cache]
-        C1 -->|2. Miss| A1
-        A1 -->|3. Fetch| D1[DB]
-        A1 -->|4. Update| C1
-    end
+                    <p class="text-muted">Watch how Cache-Aside works with cache hits and misses. The pattern shows the flow between App, Cache, and Database.</p>
+
+                    <div class="cache-container" id="cache-demo">
+                        <div class="cache-controls">
+                            <button class="cache-btn hit" onclick="simulateCacheHit()">✅ Simulate Cache Hit</button>
+                            <button class="cache-btn miss" onclick="simulateCacheMiss()">❌ Simulate Cache Miss</button>
+                        </div>
+
+                        <div class="cache-visualization">
+                            <div class="cache-component">
+                                <div class="cache-box app" id="cache-app">
+                                    <span class="icon">📱</span>
+                                    <span>Application</span>
+                                </div>
+                                <span style="color: #a0aec0; font-size: 0.8rem;">Requests data</span>
+                            </div>
+
+                            <div class="cache-arrow" id="arrow-app-cache"></div>
+
+                            <div class="cache-component">
+                                <div class="cache-box cache" id="cache-cache">
+                                    <span class="icon">⚡</span>
+                                    <span>Cache</span>
+                                    <span style="font-size: 0.7rem; color: rgba(255,255,255,0.7);" id="cache-items">3 items</span>
+                                </div>
+                                <span style="color: #a0aec0; font-size: 0.8rem;">~1ms latency</span>
+                            </div>
+
+                            <div class="cache-arrow" id="arrow-cache-db"></div>
+
+                            <div class="cache-component">
+                                <div class="cache-box db" id="cache-db">
+                                    <span class="icon">🗄️</span>
+                                    <span>Database</span>
+                                </div>
+                                <span style="color: #a0aec0; font-size: 0.8rem;">~50ms latency</span>
+                            </div>
+                        </div>
+
+                        <div class="cache-stats">
+                            <div class="cache-stat">
+                                <div class="cache-stat-value" id="cache-hits">0</div>
+                                <div style="font-size: 0.8rem; color: #48bb78;">Cache Hits</div>
+                            </div>
+                            <div class="cache-stat">
+                                <div class="cache-stat-value" id="cache-misses">0</div>
+                                <div style="font-size: 0.8rem; color: #f56565;">Cache Misses</div>
+                            </div>
+                            <div class="cache-stat">
+                                <div class="cache-stat-value hit-rate" id="cache-hit-rate">0%</div>
+                                <div style="font-size: 0.8rem; color: #a0aec0;">Hit Rate</div>
+                            </div>
+                        </div>
+
+                        <div class="cache-log" id="cache-log">
+                            <div class="cache-log-entry">Cache demo ready. Click buttons to simulate requests.</div>
                         </div>
                     </div>
+                </div>
+            </div>
 
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Caching Strategies & Patterns</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
                     <h4>Cache Patterns</h4>
                     <ul>
-                        <li><strong>Cache-Aside:</strong> App manages cache (most common)</li>
-                        <li><strong>Read-Through:</strong> Cache fetches from DB on miss</li>
-                        <li><strong>Write-Through:</strong> Write to cache, cache writes to DB</li>
-                        <li><strong>Write-Behind:</strong> Async write to DB</li>
+                        <li><strong>Cache-Aside (Lazy Loading):</strong> App manages cache - most common, simple to implement</li>
+                        <li><strong>Read-Through:</strong> Cache library fetches from DB on miss - cleaner app code</li>
+                        <li><strong>Write-Through:</strong> Sync write to cache AND DB - ensures consistency</li>
+                        <li><strong>Write-Behind (Write-Back):</strong> Async write to DB - faster writes, eventual consistency</li>
                     </ul>
 
                     <h4>Eviction Policies</h4>
                     <ul>
-                        <li><strong>LRU:</strong> Least Recently Used</li>
-                        <li><strong>LFU:</strong> Least Frequently Used</li>
-                        <li><strong>TTL:</strong> Time To Live expiration</li>
+                        <li><strong>LRU (Least Recently Used):</strong> Evicts oldest accessed items - good general purpose</li>
+                        <li><strong>LFU (Least Frequently Used):</strong> Evicts least accessed items - good for stable access patterns</li>
+                        <li><strong>TTL (Time To Live):</strong> Expires after set time - good for time-sensitive data</li>
+                        <li><strong>FIFO (First In First Out):</strong> Simple queue eviction - predictable but not access-aware</li>
                     </ul>
+
+                    <div class="card mt-2" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                        <strong>💡 Interview Tip:</strong> When discussing caching, always mention:
+                        <ul style="margin-top: 0.5rem;">
+                            <li><strong>Cache invalidation</strong> - "One of the two hard problems in CS"</li>
+                            <li><strong>Cache stampede</strong> - What happens when cache expires and many requests hit DB</li>
+                            <li><strong>Consistency trade-offs</strong> - Stale data vs performance</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
@@ -387,6 +888,264 @@ flowchart LR
             alert('Module 1 marked as complete!');
             window.location.href = 'module-02.html';
         }
+
+        // ============================================
+        // Interactive Load Balancer Demo
+        // ============================================
+        let lbAlgorithm = 'round-robin';
+        let rrIndex = 0;
+        let totalRequests = 0;
+        let serverCounts = [0, 0, 0];
+        let serverConnections = [2, 4, 7]; // Simulated current connections
+
+        const lbExplanations = {
+            'round-robin': '<strong>Round Robin:</strong> Requests are distributed sequentially to each server in order (1→2→3→1→2→3...). Simple but doesn\'t account for server load or capacity.',
+            'weighted': '<strong>Weighted Round Robin:</strong> Servers receive requests proportional to their weight (Server 1: 3x, Server 2: 2x, Server 3: 1x). Better for heterogeneous servers.',
+            'least-conn': '<strong>Least Connections:</strong> Routes to the server with fewest active connections. Ideal when request processing times vary significantly.',
+            'random': '<strong>Random:</strong> Randomly selects a server. Simple implementation, statistically even distribution over time.'
+        };
+
+        function setLbAlgorithm(algo) {
+            lbAlgorithm = algo;
+            document.querySelectorAll('.lb-algo-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('lb-explanation').innerHTML = lbExplanations[algo];
+
+            // Show/hide weight labels based on algorithm
+            document.querySelectorAll('.weight-label').forEach(label => {
+                label.style.opacity = algo === 'weighted' ? '1' : '0.3';
+            });
+        }
+
+        function getNextServer() {
+            switch (lbAlgorithm) {
+                case 'round-robin':
+                    const server = rrIndex % 3;
+                    rrIndex++;
+                    return server;
+
+                case 'weighted':
+                    // Weighted selection: Server 1 (weight 3), Server 2 (weight 2), Server 3 (weight 1)
+                    const weights = [3, 2, 1];
+                    const totalWeight = weights.reduce((a, b) => a + b, 0);
+                    let random = Math.random() * totalWeight;
+                    for (let i = 0; i < weights.length; i++) {
+                        random -= weights[i];
+                        if (random <= 0) return i;
+                    }
+                    return 0;
+
+                case 'least-conn':
+                    // Return server with least connections
+                    let minConn = Infinity;
+                    let minServer = 0;
+                    serverConnections.forEach((conn, i) => {
+                        if (conn < minConn) {
+                            minConn = conn;
+                            minServer = i;
+                        }
+                    });
+                    return minServer;
+
+                case 'random':
+                    return Math.floor(Math.random() * 3);
+
+                default:
+                    return 0;
+            }
+        }
+
+        function sendRequest() {
+            const clientId = (totalRequests % 3) + 1;
+            const targetServer = getNextServer();
+
+            // Animate client
+            const client = document.getElementById(`client-${clientId}`);
+            client.classList.add('sending');
+            setTimeout(() => client.classList.remove('sending'), 500);
+
+            // Animate server receiving
+            setTimeout(() => {
+                const server = document.getElementById(`server-${targetServer + 1}`);
+                server.classList.add('receiving');
+                setTimeout(() => server.classList.remove('receiving'), 400);
+
+                // Update stats
+                totalRequests++;
+                serverCounts[targetServer]++;
+                serverConnections[targetServer]++;
+
+                // Decrease connections after "processing"
+                setTimeout(() => {
+                    serverConnections[targetServer] = Math.max(1, serverConnections[targetServer] - 1);
+                    updateLoadBars();
+                }, 1000);
+
+                updateLbStats();
+            }, 200);
+        }
+
+        function updateLbStats() {
+            document.getElementById('total-requests').textContent = totalRequests;
+            document.getElementById('server1-count').textContent = serverCounts[0];
+            document.getElementById('server2-count').textContent = serverCounts[1];
+            document.getElementById('server3-count').textContent = serverCounts[2];
+            updateLoadBars();
+        }
+
+        function updateLoadBars() {
+            for (let i = 0; i < 3; i++) {
+                const server = document.getElementById(`server-${i + 1}`);
+                const loadFill = server.querySelector('.load-fill');
+                const loadPercent = Math.min(100, 20 + serverConnections[i] * 10);
+                loadFill.style.width = `${loadPercent}%`;
+
+                if (loadPercent >= 80) {
+                    server.classList.add('overloaded');
+                } else {
+                    server.classList.remove('overloaded');
+                }
+            }
+        }
+
+        function autoSendRequests() {
+            const btn = document.getElementById('auto-send-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Sending...';
+
+            let count = 0;
+            const interval = setInterval(() => {
+                sendRequest();
+                count++;
+                if (count >= 5) {
+                    clearInterval(interval);
+                    btn.disabled = false;
+                    btn.textContent = '🔄 Auto Send (5 req)';
+                }
+            }, 400);
+        }
+
+        // ============================================
+        // Interactive Cache Demo
+        // ============================================
+        let cacheHits = 0;
+        let cacheMisses = 0;
+        let cacheSize = 3;
+
+        function addCacheLog(message, type) {
+            const log = document.getElementById('cache-log');
+            const entry = document.createElement('div');
+            entry.className = `cache-log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.insertBefore(entry, log.firstChild);
+
+            // Keep only last 10 entries
+            while (log.children.length > 10) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        function updateCacheStats() {
+            document.getElementById('cache-hits').textContent = cacheHits;
+            document.getElementById('cache-misses').textContent = cacheMisses;
+
+            const total = cacheHits + cacheMisses;
+            const hitRate = total > 0 ? Math.round((cacheHits / total) * 100) : 0;
+            document.getElementById('cache-hit-rate').textContent = `${hitRate}%`;
+            document.getElementById('cache-items').textContent = `${cacheSize} items`;
+        }
+
+        function animateComponent(id, duration = 500) {
+            const el = document.getElementById(id);
+            el.classList.add('active');
+            setTimeout(() => el.classList.remove('active'), duration);
+        }
+
+        function animateArrow(id, duration = 300) {
+            const el = document.getElementById(id);
+            el.classList.add('active');
+            setTimeout(() => el.classList.remove('active'), duration);
+        }
+
+        function simulateCacheHit() {
+            const key = `user_${Math.floor(Math.random() * 100)}`;
+
+            // Step 1: App requests data
+            animateComponent('cache-app');
+            addCacheLog(`App requests key: ${key}`, '');
+
+            // Step 2: Check cache
+            setTimeout(() => {
+                animateArrow('arrow-app-cache');
+            }, 200);
+
+            // Step 3: Cache HIT!
+            setTimeout(() => {
+                animateComponent('cache-cache');
+                cacheHits++;
+                addCacheLog(`CACHE HIT! Found ${key} in cache (1ms)`, 'hit');
+                updateCacheStats();
+            }, 500);
+
+            // Step 4: Return to app
+            setTimeout(() => {
+                animateArrow('arrow-app-cache');
+                animateComponent('cache-app');
+                addCacheLog(`Returned data to app - Total: 1ms`, 'hit');
+            }, 800);
+        }
+
+        function simulateCacheMiss() {
+            const key = `product_${Math.floor(Math.random() * 1000)}`;
+
+            // Step 1: App requests data
+            animateComponent('cache-app');
+            addCacheLog(`App requests key: ${key}`, '');
+
+            // Step 2: Check cache
+            setTimeout(() => {
+                animateArrow('arrow-app-cache');
+            }, 200);
+
+            // Step 3: Cache MISS
+            setTimeout(() => {
+                animateComponent('cache-cache');
+                cacheMisses++;
+                addCacheLog(`CACHE MISS! ${key} not in cache`, 'miss');
+                updateCacheStats();
+            }, 500);
+
+            // Step 4: Fetch from DB
+            setTimeout(() => {
+                animateArrow('arrow-cache-db');
+                addCacheLog(`Fetching ${key} from database...`, '');
+            }, 800);
+
+            // Step 5: DB returns data
+            setTimeout(() => {
+                animateComponent('cache-db');
+                addCacheLog(`Database returned ${key} (50ms)`, '');
+            }, 1300);
+
+            // Step 6: Update cache
+            setTimeout(() => {
+                animateArrow('arrow-cache-db');
+                animateComponent('cache-cache');
+                cacheSize = Math.min(10, cacheSize + 1);
+                addCacheLog(`Stored ${key} in cache`, '');
+                updateCacheStats();
+            }, 1600);
+
+            // Step 7: Return to app
+            setTimeout(() => {
+                animateArrow('arrow-app-cache');
+                animateComponent('cache-app');
+                addCacheLog(`Returned data to app - Total: 51ms`, 'miss');
+            }, 1900);
+        }
+
+        // Initialize load bars
+        updateLoadBars();
     </script>
 </body>
 </html>
