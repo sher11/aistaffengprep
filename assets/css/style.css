@@ -347,6 +347,7 @@ body {
     padding: 1rem;
     border-bottom: 1px solid var(--border-color);
     transition: background 0.2s;
+    cursor: pointer;
 }
 
 .module-item:hover {
