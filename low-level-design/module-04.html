@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 4: Behavioral Patterns - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">LLD</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="../generative-ai/index.html">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Design Patterns</div>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Creational Patterns
+                    </a>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>Structural Patterns
+                    </a>
+                    <a href="module-04.html" class="sidebar-link active" data-module="4">
+                        <span class="sidebar-link-number">4</span>Behavioral Patterns
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Practice Problems</div>
+                    <a href="problems/parking-lot.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P1</span>Parking Lot
+                    </a>
+                    <a href="problems/elevator-system.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P2</span>Elevator System
+                    </a>
+                    <a href="problems/vending-machine.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P3</span>Vending Machine
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 4: Behavioral Design Patterns</h1>
+
+            <div class="card mt-3">
+                <h3>Learning Objectives</h3>
+                <ul>
+                    <li>Understand how behavioral patterns manage algorithms and object communication</li>
+                    <li>Implement Strategy, Observer, State, Command patterns in Java</li>
+                    <li>Know when to use each pattern and avoid common pitfalls</li>
+                    <li>Apply these patterns in LLD interview problems</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">What Are Behavioral Patterns?</h2>
+
+            <p>Behavioral patterns are concerned with algorithms and the assignment of responsibilities between objects. They describe not just patterns of objects but also patterns of communication between them.</p>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart LR
+    subgraph "Behavioral Patterns"
+        ST[Strategy] --> |"Swap algorithms"| R1[Algorithm family]
+        OB[Observer] --> |"Notify changes"| R2[Event handling]
+        SA[State] --> |"State-dependent behavior"| R3[State machines]
+        CM[Command] --> |"Encapsulate request"| R4[Undo/redo]
+        CH[Chain of Resp.] --> |"Pass request"| R5[Handler chain]
+    end
+                </div>
+            </div>
+
+            <!-- Strategy Pattern -->
+            <h2 class="mt-4">1. Strategy Pattern</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Strategy - Swappable Algorithms</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>Many related classes differ only in their behavior</li>
+                        <li>You need different variants of an algorithm</li>
+                        <li>An algorithm uses data that clients shouldn't know about</li>
+                        <li>A class defines many behaviors via conditionals - move each branch into its own Strategy</li>
+                    </ul>
+
+                    <h4>Real-World Example: Shipping Cost Calculator</h4>
+                    <pre><code class="language-java">// Strategy interface
+public interface ShippingStrategy {
+    Money calculateCost(Order order);
+    String getCarrierName();
+    Duration getEstimatedDelivery(Address destination);
+}
+
+// Concrete strategies
+public class StandardShipping implements ShippingStrategy {
+    private static final Money BASE_COST = Money.of(5.99);
+    private static final Money PER_POUND = Money.of(0.50);
+
+    @Override
+    public Money calculateCost(Order order) {
+        return BASE_COST.add(PER_POUND.multiply(order.getTotalWeight()));
+    }
+
+    @Override
+    public String getCarrierName() {
+        return "USPS Standard";
+    }
+
+    @Override
+    public Duration getEstimatedDelivery(Address destination) {
+        return Duration.ofDays(5);
+    }
+}
+
+public class ExpressShipping implements ShippingStrategy {
+    private static final Money BASE_COST = Money.of(15.99);
+
+    @Override
+    public Money calculateCost(Order order) {
+        // Express: flat rate up to 5 lbs, then $3/lb
+        if (order.getTotalWeight() <= 5) {
+            return BASE_COST;
+        }
+        return BASE_COST.add(Money.of(3.0).multiply(order.getTotalWeight() - 5));
+    }
+
+    @Override
+    public String getCarrierName() {
+        return "FedEx Express";
+    }
+
+    @Override
+    public Duration getEstimatedDelivery(Address destination) {
+        return Duration.ofDays(2);
+    }
+}
+
+public class FreeShipping implements ShippingStrategy {
+    private final Money minimumOrderAmount;
+
+    public FreeShipping(Money minimumOrderAmount) {
+        this.minimumOrderAmount = minimumOrderAmount;
+    }
+
+    @Override
+    public Money calculateCost(Order order) {
+        if (order.getSubtotal().isGreaterThanOrEqual(minimumOrderAmount)) {
+            return Money.ZERO;
+        }
+        // Fall back to standard shipping if order doesn't qualify
+        return new StandardShipping().calculateCost(order);
+    }
+
+    @Override
+    public String getCarrierName() {
+        return "Standard (Free)";
+    }
+
+    @Override
+    public Duration getEstimatedDelivery(Address destination) {
+        return Duration.ofDays(7);
+    }
+}
+
+// Context that uses strategies
+public class ShoppingCart {
+    private final List&lt;CartItem&gt; items = new ArrayList&lt;&gt;();
+    private ShippingStrategy shippingStrategy;
+
+    public ShoppingCart() {
+        // Default shipping
+        this.shippingStrategy = new StandardShipping();
+    }
+
+    public void setShippingStrategy(ShippingStrategy strategy) {
+        this.shippingStrategy = strategy;
+    }
+
+    public Order checkout(Customer customer) {
+        Order order = new Order(items, customer);
+
+        // Calculate shipping using current strategy
+        Money shippingCost = shippingStrategy.calculateCost(order);
+        order.setShippingCost(shippingCost);
+        order.setShippingCarrier(shippingStrategy.getCarrierName());
+        order.setEstimatedDelivery(
+            shippingStrategy.getEstimatedDelivery(customer.getShippingAddress())
+        );
+
+        return order;
+    }
+
+    public ShippingQuote getShippingQuote(Order order) {
+        return new ShippingQuote(
+            shippingStrategy.getCarrierName(),
+            shippingStrategy.calculateCost(order),
+            shippingStrategy.getEstimatedDelivery(order.getShippingAddress())
+        );
+    }
+}
+
+// Usage
+public class CheckoutController {
+    private final ShoppingCart cart;
+
+    public OrderSummary reviewOrder(String shippingOption) {
+        // Strategy is selected at runtime based on user choice
+        ShippingStrategy strategy = switch (shippingOption) {
+            case "express" -> new ExpressShipping();
+            case "free" -> new FreeShipping(Money.of(50));
+            default -> new StandardShipping();
+        };
+
+        cart.setShippingStrategy(strategy);
+        return cart.getOrderSummary();
+    }
+}</code></pre>
+
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Strategy vs If-Else:</strong> Before Strategy, you might write:
+                        <pre><code class="language-java">// BAD: Violates Open-Closed Principle
+if (shippingType.equals("express")) {
+    cost = calculateExpressCost();
+} else if (shippingType.equals("overnight")) {
+    cost = calculateOvernightCost();
+} // Adding new type requires modifying this method</code></pre>
+                        <p>Strategy pattern makes adding new algorithms easy without modifying existing code.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observer Pattern -->
+            <h2 class="mt-4">2. Observer Pattern</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Observer - Event Notification</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>A change to one object requires changing others, and you don't know how many</li>
+                        <li>An object should notify other objects without making assumptions about who they are</li>
+                        <li>Implementing event handling systems</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant Subject as Stock (Subject)
+    participant O1 as MobileApp (Observer)
+    participant O2 as WebDashboard (Observer)
+    participant O3 as AlertService (Observer)
+
+    Note over Subject: Price changes to $150
+
+    Subject->>O1: notify(priceUpdate)
+    Subject->>O2: notify(priceUpdate)
+    Subject->>O3: notify(priceUpdate)
+
+    O1-->>O1: Update UI
+    O2-->>O2: Refresh chart
+    O3-->>O3: Send alert if threshold met
+                        </div>
+                    </div>
+
+                    <h4>Java Implementation: Stock Price Monitoring</h4>
+                    <pre><code class="language-java">// Observer interface
+public interface StockObserver {
+    void onPriceUpdate(String symbol, BigDecimal oldPrice, BigDecimal newPrice);
+    void onVolumeUpdate(String symbol, long volume);
+}
+
+// Subject interface
+public interface StockSubject {
+    void registerObserver(StockObserver observer);
+    void removeObserver(StockObserver observer);
+    void notifyObservers();
+}
+
+// Concrete Subject
+public class Stock implements StockSubject {
+    private final String symbol;
+    private BigDecimal price;
+    private long volume;
+    private final List&lt;StockObserver&gt; observers = new CopyOnWriteArrayList&lt;&gt;();
+
+    public Stock(String symbol, BigDecimal initialPrice) {
+        this.symbol = symbol;
+        this.price = initialPrice;
+        this.volume = 0;
+    }
+
+    @Override
+    public void registerObserver(StockObserver observer) {
+        observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(StockObserver observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers() {
+        // Push model - send data with notification
+        for (StockObserver observer : observers) {
+            observer.onPriceUpdate(symbol, price, price);
+        }
+    }
+
+    public void setPrice(BigDecimal newPrice) {
+        BigDecimal oldPrice = this.price;
+        this.price = newPrice;
+
+        // Notify all observers of change
+        for (StockObserver observer : observers) {
+            observer.onPriceUpdate(symbol, oldPrice, newPrice);
+        }
+    }
+
+    public void setVolume(long newVolume) {
+        this.volume = newVolume;
+        for (StockObserver observer : observers) {
+            observer.onVolumeUpdate(symbol, newVolume);
+        }
+    }
+
+    public String getSymbol() { return symbol; }
+    public BigDecimal getPrice() { return price; }
+}
+
+// Concrete Observers
+public class PriceAlertObserver implements StockObserver {
+    private final String symbol;
+    private final BigDecimal targetPrice;
+    private final NotificationService notificationService;
+
+    public PriceAlertObserver(String symbol, BigDecimal targetPrice,
+                               NotificationService notificationService) {
+        this.symbol = symbol;
+        this.targetPrice = targetPrice;
+        this.notificationService = notificationService;
+    }
+
+    @Override
+    public void onPriceUpdate(String symbol, BigDecimal oldPrice, BigDecimal newPrice) {
+        if (!this.symbol.equals(symbol)) return;
+
+        // Check if price crossed target threshold
+        boolean crossedUp = oldPrice.compareTo(targetPrice) < 0 &&
+                           newPrice.compareTo(targetPrice) >= 0;
+        boolean crossedDown = oldPrice.compareTo(targetPrice) > 0 &&
+                             newPrice.compareTo(targetPrice) <= 0;
+
+        if (crossedUp) {
+            notificationService.send("Price Alert: " + symbol + " reached $" + newPrice);
+        } else if (crossedDown) {
+            notificationService.send("Price Alert: " + symbol + " dropped to $" + newPrice);
+        }
+    }
+
+    @Override
+    public void onVolumeUpdate(String symbol, long volume) {
+        // Not interested in volume updates
+    }
+}
+
+public class StockDashboard implements StockObserver {
+    private final Map&lt;String, StockDisplay&gt; displays = new HashMap&lt;&gt;();
+
+    @Override
+    public void onPriceUpdate(String symbol, BigDecimal oldPrice, BigDecimal newPrice) {
+        StockDisplay display = displays.computeIfAbsent(symbol, StockDisplay::new);
+        display.updatePrice(newPrice);
+
+        BigDecimal change = newPrice.subtract(oldPrice);
+        BigDecimal percentChange = change.divide(oldPrice, 4, RoundingMode.HALF_UP)
+            .multiply(BigDecimal.valueOf(100));
+
+        display.updateChange(change, percentChange);
+    }
+
+    @Override
+    public void onVolumeUpdate(String symbol, long volume) {
+        StockDisplay display = displays.get(symbol);
+        if (display != null) {
+            display.updateVolume(volume);
+        }
+    }
+}
+
+public class TradingBot implements StockObserver {
+    private final TradingStrategy strategy;
+
+    @Override
+    public void onPriceUpdate(String symbol, BigDecimal oldPrice, BigDecimal newPrice) {
+        // Automated trading based on price movements
+        TradeSignal signal = strategy.analyze(symbol, oldPrice, newPrice);
+        if (signal.shouldTrade()) {
+            executeTrade(signal);
+        }
+    }
+
+    @Override
+    public void onVolumeUpdate(String symbol, long volume) {
+        // Factor volume into trading decisions
+    }
+}
+
+// Usage
+public class StockMarket {
+    private final Map&lt;String, Stock&gt; stocks = new ConcurrentHashMap&lt;&gt;();
+
+    public void simulateMarket() {
+        Stock apple = new Stock("AAPL", new BigDecimal("150.00"));
+        Stock google = new Stock("GOOGL", new BigDecimal("2800.00"));
+
+        // Register observers
+        StockDashboard dashboard = new StockDashboard();
+        apple.registerObserver(dashboard);
+        google.registerObserver(dashboard);
+
+        // Price alert for Apple at $160
+        apple.registerObserver(new PriceAlertObserver(
+            "AAPL",
+            new BigDecimal("160.00"),
+            notificationService
+        ));
+
+        // Trading bot watches both
+        TradingBot bot = new TradingBot(new MomentumStrategy());
+        apple.registerObserver(bot);
+        google.registerObserver(bot);
+
+        // Simulate price changes
+        apple.setPrice(new BigDecimal("155.50"));  // All observers notified
+        apple.setPrice(new BigDecimal("162.00"));  // Alert triggered!
+    }
+}</code></pre>
+
+                    <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                        <strong>Modern Java Alternatives:</strong>
+                        <ul>
+                            <li><code>java.util.Observable</code> is deprecated - implement your own or use libraries</li>
+                            <li>Consider <code>java.beans.PropertyChangeSupport</code> for JavaBeans</li>
+                            <li>For reactive systems, use RxJava or Project Reactor</li>
+                            <li>Spring's <code>ApplicationEventPublisher</code> for application events</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- State Pattern -->
+            <h2 class="mt-4">3. State Pattern</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>State - State-Dependent Behavior</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Allow an object to alter its behavior when its internal state changes. The object will appear to change its class.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>Object's behavior depends on its state and must change at runtime</li>
+                        <li>Operations have large conditional statements that depend on state</li>
+                        <li>Implementing state machines (vending machines, document workflows, game states)</li>
+                    </ul>
+
+                    <h4>Classic Example: Vending Machine</h4>
+                    <pre><code class="language-java">// State interface
+public interface VendingMachineState {
+    void insertCoin(VendingMachine machine, int amount);
+    void selectProduct(VendingMachine machine, String productCode);
+    void dispense(VendingMachine machine);
+    void cancel(VendingMachine machine);
+}
+
+// Concrete states
+public class IdleState implements VendingMachineState {
+    @Override
+    public void insertCoin(VendingMachine machine, int amount) {
+        machine.addBalance(amount);
+        System.out.println("Inserted: $" + amount + ". Balance: $" + machine.getBalance());
+        machine.setState(new HasMoneyState());
+    }
+
+    @Override
+    public void selectProduct(VendingMachine machine, String productCode) {
+        System.out.println("Please insert coins first");
+    }
+
+    @Override
+    public void dispense(VendingMachine machine) {
+        System.out.println("Please insert coins and select a product");
+    }
+
+    @Override
+    public void cancel(VendingMachine machine) {
+        System.out.println("Nothing to cancel");
+    }
+}
+
+public class HasMoneyState implements VendingMachineState {
+    @Override
+    public void insertCoin(VendingMachine machine, int amount) {
+        machine.addBalance(amount);
+        System.out.println("Added: $" + amount + ". Total balance: $" + machine.getBalance());
+    }
+
+    @Override
+    public void selectProduct(VendingMachine machine, String productCode) {
+        Product product = machine.getProduct(productCode);
+
+        if (product == null) {
+            System.out.println("Invalid product code");
+            return;
+        }
+
+        if (product.getQuantity() <= 0) {
+            System.out.println("Product out of stock");
+            return;
+        }
+
+        if (machine.getBalance() < product.getPrice()) {
+            System.out.println("Insufficient balance. Need $" +
+                (product.getPrice() - machine.getBalance()) + " more");
+            return;
+        }
+
+        machine.setSelectedProduct(product);
+        machine.setState(new DispensingState());
+        machine.dispense();
+    }
+
+    @Override
+    public void dispense(VendingMachine machine) {
+        System.out.println("Please select a product first");
+    }
+
+    @Override
+    public void cancel(VendingMachine machine) {
+        int refund = machine.getBalance();
+        machine.setBalance(0);
+        System.out.println("Transaction cancelled. Refunding: $" + refund);
+        machine.setState(new IdleState());
+    }
+}
+
+public class DispensingState implements VendingMachineState {
+    @Override
+    public void insertCoin(VendingMachine machine, int amount) {
+        System.out.println("Please wait, dispensing product...");
+    }
+
+    @Override
+    public void selectProduct(VendingMachine machine, String productCode) {
+        System.out.println("Please wait, dispensing product...");
+    }
+
+    @Override
+    public void dispense(VendingMachine machine) {
+        Product product = machine.getSelectedProduct();
+
+        // Deduct price from balance
+        machine.deductBalance(product.getPrice());
+        product.decrementQuantity();
+
+        System.out.println("Dispensing: " + product.getName());
+
+        // Return change if any
+        int change = machine.getBalance();
+        if (change > 0) {
+            System.out.println("Returning change: $" + change);
+            machine.setBalance(0);
+        }
+
+        machine.setSelectedProduct(null);
+
+        // Transition back to idle or has money if balance remains
+        machine.setState(new IdleState());
+    }
+
+    @Override
+    public void cancel(VendingMachine machine) {
+        System.out.println("Cannot cancel during dispensing");
+    }
+}
+
+// Context
+public class VendingMachine {
+    private VendingMachineState state;
+    private int balance;
+    private Product selectedProduct;
+    private final Map&lt;String, Product&gt; inventory;
+
+    public VendingMachine() {
+        this.state = new IdleState();
+        this.balance = 0;
+        this.inventory = new HashMap&lt;&gt;();
+    }
+
+    // Delegate to current state
+    public void insertCoin(int amount) {
+        state.insertCoin(this, amount);
+    }
+
+    public void selectProduct(String productCode) {
+        state.selectProduct(this, productCode);
+    }
+
+    public void dispense() {
+        state.dispense(this);
+    }
+
+    public void cancel() {
+        state.cancel(this);
+    }
+
+    // State management
+    public void setState(VendingMachineState state) {
+        this.state = state;
+    }
+
+    // Getters and setters for internal state
+    public int getBalance() { return balance; }
+    public void setBalance(int balance) { this.balance = balance; }
+    public void addBalance(int amount) { this.balance += amount; }
+    public void deductBalance(int amount) { this.balance -= amount; }
+
+    public Product getProduct(String code) { return inventory.get(code); }
+    public Product getSelectedProduct() { return selectedProduct; }
+    public void setSelectedProduct(Product product) { this.selectedProduct = product; }
+
+    public void addProduct(String code, Product product) {
+        inventory.put(code, product);
+    }
+}
+
+// Usage
+VendingMachine machine = new VendingMachine();
+machine.addProduct("A1", new Product("Cola", 150, 5));
+machine.addProduct("A2", new Product("Chips", 200, 3));
+
+machine.selectProduct("A1");      // "Please insert coins first"
+machine.insertCoin(100);          // "Inserted: $100. Balance: $100"
+machine.insertCoin(50);           // "Added: $50. Total balance: $150"
+machine.selectProduct("A1");      // "Dispensing: Cola"</code></pre>
+
+                    <div class="card" style="background: var(--warning-bg);">
+                        <strong>State vs Strategy:</strong>
+                        <ul>
+                            <li><strong>State:</strong> Behavior changes automatically based on internal state transitions</li>
+                            <li><strong>Strategy:</strong> Client explicitly chooses which algorithm to use</li>
+                        </ul>
+                        <p>State objects often know about and transition to other states. Strategy objects are usually independent.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Command Pattern -->
+            <h2 class="mt-4">4. Command Pattern</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Command - Encapsulating Requests</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>Parameterize objects with actions to perform</li>
+                        <li>Specify, queue, and execute requests at different times</li>
+                        <li>Support undo/redo functionality</li>
+                        <li>Support logging of changes for recovery</li>
+                        <li>Structure system around high-level operations built on primitives</li>
+                    </ul>
+
+                    <h4>Text Editor with Undo/Redo</h4>
+                    <pre><code class="language-java">// Command interface
+public interface Command {
+    void execute();
+    void undo();
+    String getDescription();
+}
+
+// Receiver
+public class TextDocument {
+    private StringBuilder content = new StringBuilder();
+    private int cursorPosition = 0;
+
+    public void insertText(int position, String text) {
+        content.insert(position, text);
+        cursorPosition = position + text.length();
+    }
+
+    public void deleteText(int start, int end) {
+        content.delete(start, end);
+        cursorPosition = start;
+    }
+
+    public String getContent() {
+        return content.toString();
+    }
+
+    public int getCursorPosition() {
+        return cursorPosition;
+    }
+
+    public void setCursorPosition(int position) {
+        this.cursorPosition = position;
+    }
+}
+
+// Concrete Commands
+public class InsertTextCommand implements Command {
+    private final TextDocument document;
+    private final int position;
+    private final String text;
+
+    public InsertTextCommand(TextDocument document, int position, String text) {
+        this.document = document;
+        this.position = position;
+        this.text = text;
+    }
+
+    @Override
+    public void execute() {
+        document.insertText(position, text);
+    }
+
+    @Override
+    public void undo() {
+        document.deleteText(position, position + text.length());
+    }
+
+    @Override
+    public String getDescription() {
+        return "Insert '" + truncate(text, 20) + "' at position " + position;
+    }
+
+    private String truncate(String s, int maxLen) {
+        return s.length() <= maxLen ? s : s.substring(0, maxLen) + "...";
+    }
+}
+
+public class DeleteTextCommand implements Command {
+    private final TextDocument document;
+    private final int start;
+    private final int end;
+    private String deletedText; // Store for undo
+
+    public DeleteTextCommand(TextDocument document, int start, int end) {
+        this.document = document;
+        this.start = start;
+        this.end = end;
+    }
+
+    @Override
+    public void execute() {
+        // Save deleted text before deletion
+        deletedText = document.getContent().substring(start, end);
+        document.deleteText(start, end);
+    }
+
+    @Override
+    public void undo() {
+        document.insertText(start, deletedText);
+    }
+
+    @Override
+    public String getDescription() {
+        return "Delete from " + start + " to " + end;
+    }
+}
+
+// Macro command - composite of commands
+public class MacroCommand implements Command {
+    private final String name;
+    private final List&lt;Command&gt; commands;
+
+    public MacroCommand(String name, List&lt;Command&gt; commands) {
+        this.name = name;
+        this.commands = new ArrayList&lt;&gt;(commands);
+    }
+
+    @Override
+    public void execute() {
+        for (Command cmd : commands) {
+            cmd.execute();
+        }
+    }
+
+    @Override
+    public void undo() {
+        // Undo in reverse order
+        for (int i = commands.size() - 1; i >= 0; i--) {
+            commands.get(i).undo();
+        }
+    }
+
+    @Override
+    public String getDescription() {
+        return "Macro: " + name + " (" + commands.size() + " commands)";
+    }
+}
+
+// Invoker with history
+public class TextEditor {
+    private final TextDocument document;
+    private final Deque&lt;Command&gt; undoStack = new ArrayDeque&lt;&gt;();
+    private final Deque&lt;Command&gt; redoStack = new ArrayDeque&lt;&gt;();
+    private static final int MAX_HISTORY = 100;
+
+    public TextEditor() {
+        this.document = new TextDocument();
+    }
+
+    public void executeCommand(Command command) {
+        command.execute();
+        undoStack.push(command);
+        redoStack.clear(); // Clear redo stack on new action
+
+        // Limit history size
+        while (undoStack.size() > MAX_HISTORY) {
+            undoStack.removeLast();
+        }
+    }
+
+    public void undo() {
+        if (undoStack.isEmpty()) {
+            System.out.println("Nothing to undo");
+            return;
+        }
+
+        Command command = undoStack.pop();
+        command.undo();
+        redoStack.push(command);
+        System.out.println("Undid: " + command.getDescription());
+    }
+
+    public void redo() {
+        if (redoStack.isEmpty()) {
+            System.out.println("Nothing to redo");
+            return;
+        }
+
+        Command command = redoStack.pop();
+        command.execute();
+        undoStack.push(command);
+        System.out.println("Redid: " + command.getDescription());
+    }
+
+    public void type(String text) {
+        int position = document.getCursorPosition();
+        executeCommand(new InsertTextCommand(document, position, text));
+    }
+
+    public void delete(int start, int end) {
+        executeCommand(new DeleteTextCommand(document, start, end));
+    }
+
+    public String getContent() {
+        return document.getContent();
+    }
+
+    public List&lt;String&gt; getUndoHistory() {
+        return undoStack.stream()
+            .map(Command::getDescription)
+            .collect(Collectors.toList());
+    }
+}
+
+// Usage
+TextEditor editor = new TextEditor();
+
+editor.type("Hello");
+editor.type(" World");
+editor.type("!");
+
+System.out.println(editor.getContent());  // "Hello World!"
+
+editor.undo();  // Undid: Insert '!' at position 11
+System.out.println(editor.getContent());  // "Hello World"
+
+editor.undo();  // Undid: Insert ' World' at position 5
+System.out.println(editor.getContent());  // "Hello"
+
+editor.redo();  // Redid: Insert ' World' at position 5
+System.out.println(editor.getContent());  // "Hello World"</code></pre>
+                </div>
+            </div>
+
+            <!-- Chain of Responsibility -->
+            <h2 class="mt-4">5. Chain of Responsibility</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Chain of Responsibility - Handler Pipeline</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Intent:</strong> Avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it.</p>
+
+                    <p><strong>When to Use:</strong></p>
+                    <ul>
+                        <li>More than one object may handle a request</li>
+                        <li>Handler isn't known a priori - determined at runtime</li>
+                        <li>You want to issue a request without specifying the receiver explicitly</li>
+                        <li>The set of handlers should be specified dynamically</li>
+                    </ul>
+
+                    <h4>HTTP Middleware Chain</h4>
+                    <pre><code class="language-java">// Handler interface
+public interface RequestHandler {
+    void setNext(RequestHandler handler);
+    HttpResponse handle(HttpRequest request);
+}
+
+// Base handler with chaining logic
+public abstract class BaseHandler implements RequestHandler {
+    protected RequestHandler nextHandler;
+
+    @Override
+    public void setNext(RequestHandler handler) {
+        this.nextHandler = handler;
+    }
+
+    protected HttpResponse handleNext(HttpRequest request) {
+        if (nextHandler != null) {
+            return nextHandler.handle(request);
+        }
+        // End of chain - return default response
+        return new HttpResponse(404, "Not Found");
+    }
+}
+
+// Concrete handlers
+public class AuthenticationHandler extends BaseHandler {
+    private final AuthService authService;
+
+    @Override
+    public HttpResponse handle(HttpRequest request) {
+        String token = request.getHeader("Authorization");
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return new HttpResponse(401, "Missing or invalid token");
+        }
+
+        try {
+            User user = authService.validateToken(token.substring(7));
+            request.setAttribute("user", user);
+            return handleNext(request);
+        } catch (InvalidTokenException e) {
+            return new HttpResponse(401, "Invalid token: " + e.getMessage());
+        }
+    }
+}
+
+public class RateLimitHandler extends BaseHandler {
+    private final RateLimiter rateLimiter;
+
+    @Override
+    public HttpResponse handle(HttpRequest request) {
+        String clientId = getClientId(request);
+
+        if (!rateLimiter.tryAcquire(clientId)) {
+            return new HttpResponse(429, "Rate limit exceeded")
+                .withHeader("Retry-After", "60");
+        }
+
+        return handleNext(request);
+    }
+
+    private String getClientId(HttpRequest request) {
+        User user = (User) request.getAttribute("user");
+        return user != null ? user.getId() : request.getRemoteAddress();
+    }
+}
+
+public class LoggingHandler extends BaseHandler {
+    private final Logger logger;
+
+    @Override
+    public HttpResponse handle(HttpRequest request) {
+        long startTime = System.currentTimeMillis();
+        String requestId = UUID.randomUUID().toString();
+        request.setAttribute("requestId", requestId);
+
+        logger.info("[{}] {} {} - Start", requestId, request.getMethod(), request.getPath());
+
+        HttpResponse response = handleNext(request);
+
+        long duration = System.currentTimeMillis() - startTime;
+        logger.info("[{}] {} {} - {} ({}ms)",
+            requestId, request.getMethod(), request.getPath(),
+            response.getStatus(), duration);
+
+        return response;
+    }
+}
+
+public class ValidationHandler extends BaseHandler {
+    private final Map&lt;String, Validator&gt; validators;
+
+    @Override
+    public HttpResponse handle(HttpRequest request) {
+        String path = request.getPath();
+
+        Validator validator = validators.get(path);
+        if (validator != null) {
+            ValidationResult result = validator.validate(request.getBody());
+            if (!result.isValid()) {
+                return new HttpResponse(400, "Validation failed: " + result.getErrors());
+            }
+        }
+
+        return handleNext(request);
+    }
+}
+
+public class RouterHandler extends BaseHandler {
+    private final Map&lt;String, Controller&gt; routes;
+
+    @Override
+    public HttpResponse handle(HttpRequest request) {
+        String path = request.getPath();
+        Controller controller = routes.get(path);
+
+        if (controller == null) {
+            return new HttpResponse(404, "Route not found: " + path);
+        }
+
+        try {
+            return controller.handle(request);
+        } catch (Exception e) {
+            return new HttpResponse(500, "Internal error: " + e.getMessage());
+        }
+    }
+}
+
+// Building the chain
+public class HttpPipeline {
+    private RequestHandler firstHandler;
+
+    public static HttpPipeline create() {
+        HttpPipeline pipeline = new HttpPipeline();
+
+        LoggingHandler logging = new LoggingHandler();
+        AuthenticationHandler auth = new AuthenticationHandler();
+        RateLimitHandler rateLimit = new RateLimitHandler();
+        ValidationHandler validation = new ValidationHandler();
+        RouterHandler router = new RouterHandler();
+
+        // Build chain: Logging -> Auth -> RateLimit -> Validation -> Router
+        logging.setNext(auth);
+        auth.setNext(rateLimit);
+        rateLimit.setNext(validation);
+        validation.setNext(router);
+
+        pipeline.firstHandler = logging;
+        return pipeline;
+    }
+
+    public HttpResponse process(HttpRequest request) {
+        return firstHandler.handle(request);
+    }
+}</code></pre>
+
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Real-World Examples:</strong>
+                        <ul>
+                            <li>Java Servlet Filters</li>
+                            <li>Spring Security Filter Chain</li>
+                            <li>Express.js/Koa middleware</li>
+                            <li>Apache Commons Chain</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Pattern Comparison</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Choosing the Right Behavioral Pattern</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pattern</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Use Case</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">LLD Interview Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Strategy</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Interchangeable algorithms</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Payment methods, sorting algorithms, route calculation</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Observer</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Event notification</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Stock ticker, notification system, chat rooms</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>State</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">State machines</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Vending machine, document workflow, game states</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Command</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Encapsulate actions</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Text editor (undo/redo), task queue, transactions</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Chain of Resp.</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Handler pipeline</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Request validation, approval workflows, logging chain</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Self-Check Quiz</h2>
+            <div class="quiz-container" id="module-quiz"></div>
+
+            <div class="flex flex-between mt-4">
+                <a href="module-03.html" class="btn btn-secondary">&larr; Previous: Structural Patterns</a>
+                <a href="module-05.html" class="btn btn-primary">Next: UML & Diagrams &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            const quizQuestions = [
+                {
+                    question: "Which pattern allows you to swap algorithms at runtime?",
+                    options: ["State", "Strategy", "Command", "Observer"],
+                    correct: 1,
+                    explanation: "Strategy pattern defines a family of interchangeable algorithms that can be selected at runtime."
+                },
+                {
+                    question: "Which pattern is ideal for implementing undo/redo functionality?",
+                    options: ["Observer", "State", "Command", "Chain of Responsibility"],
+                    correct: 2,
+                    explanation: "Command pattern encapsulates actions as objects, making it easy to store and reverse them."
+                },
+                {
+                    question: "What's the key difference between State and Strategy patterns?",
+                    options: ["State uses inheritance, Strategy uses composition", "State transitions happen automatically, Strategy is client-selected", "State is faster", "There is no difference"],
+                    correct: 1,
+                    explanation: "State pattern handles automatic transitions based on internal state, while Strategy is explicitly chosen by the client."
+                },
+                {
+                    question: "Which pattern implements a publish-subscribe mechanism?",
+                    options: ["Command", "Observer", "State", "Strategy"],
+                    correct: 1,
+                    explanation: "Observer pattern defines a one-to-many dependency where observers are notified of state changes."
+                }
+            ];
+
+            if (typeof StaffEngPrep !== 'undefined' && StaffEngPrep.Quiz) {
+                const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+                quiz.render();
+            }
+        });
+    </script>
+</body>
+</html>
