@@ -839,6 +839,7 @@
     gap: 0.75rem;
 }
 
+a.module-item-roadmap,
 .module-item-roadmap {
     display: flex;
     align-items: center;
@@ -849,6 +850,8 @@
     border: 1px solid var(--border-color);
     cursor: pointer;
     transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
 }
 
 .module-item-roadmap:hover {
@@ -912,6 +915,7 @@
     gap: 0.75rem;
 }
 
+a.problem-item,
 .problem-item {
     display: flex;
     align-items: center;
@@ -923,6 +927,8 @@
     cursor: pointer;
     font-size: 0.875rem;
     transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
 }
 
 .problem-item:hover {
