@@ -5,7 +5,293 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 11: Real-time Updates - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Interactive Real-time Updates Demo */
+        .realtime-demo {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .realtime-tabs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .realtime-tab {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        .realtime-tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .realtime-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .realtime-viz {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            min-height: 300px;
+            position: relative;
+        }
+
+        .rt-node {
+            width: 100px;
+            height: 100px;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .rt-node.client {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .rt-node.server {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .rt-node .icon {
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .rt-node .label {
+            font-size: 0.8rem;
+        }
+
+        .rt-connection {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rt-message {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            position: absolute;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+
+        .rt-message.request {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+        }
+
+        .rt-message.response {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .rt-message.visible {
+            opacity: 1;
+        }
+
+        .rt-message.at-client {
+            left: 15%;
+        }
+
+        .rt-message.at-server {
+            left: 75%;
+        }
+
+        .rt-message.in-transit-to-server {
+            animation: moveToServer 0.5s ease forwards;
+        }
+
+        .rt-message.in-transit-to-client {
+            animation: moveToClient 0.5s ease forwards;
+        }
+
+        @keyframes moveToServer {
+            from { left: 15%; }
+            to { left: 75%; }
+        }
+
+        @keyframes moveToClient {
+            from { left: 75%; }
+            to { left: 15%; }
+        }
+
+        .rt-connection-line {
+            position: absolute;
+            top: 50%;
+            left: 20%;
+            right: 20%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-50%);
+        }
+
+        .rt-connection-line.active {
+            background: linear-gradient(90deg, #11998e, #667eea);
+            animation: pulse-line 1s ease infinite;
+        }
+
+        .rt-connection-line.websocket {
+            background: linear-gradient(90deg, #ec4899, #8b5cf6, #06b6d4, #8b5cf6, #ec4899);
+            background-size: 200% 100%;
+            animation: flow-gradient 2s linear infinite;
+        }
+
+        @keyframes pulse-line {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes flow-gradient {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        .rt-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .rt-stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            color: white;
+            min-width: 100px;
+        }
+
+        .rt-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffd700;
+        }
+
+        .rt-stat-label {
+            font-size: 0.75rem;
+            color: #a0aec0;
+            margin-top: 0.25rem;
+        }
+
+        .rt-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: #a0aec0;
+            margin-top: 1rem;
+        }
+
+        .rt-log-entry {
+            padding: 0.2rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .rt-log-entry.request { color: #f6ad55; }
+        .rt-log-entry.response { color: #48bb78; }
+        .rt-log-entry.data { color: #667eea; }
+        .rt-log-entry.open { color: #ec4899; }
+        .rt-log-entry.close { color: #f56565; }
+
+        .rt-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .rt-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .rt-btn.start {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .rt-btn.stop {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .rt-btn.send {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .rt-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .rt-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .latency-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+
+        .latency-bar {
+            width: 200px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .latency-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .latency-fill.low { background: linear-gradient(90deg, #48bb78, #38a169); }
+        .latency-fill.medium { background: linear-gradient(90deg, #f6ad55, #ed8936); }
+        .latency-fill.high { background: linear-gradient(90deg, #f56565, #e53e3e); }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -96,6 +382,77 @@
                     <li>Understand scaling challenges for real-time systems</li>
                     <li>Design notification and live update systems</li>
                 </ul>
+            </div>
+
+            <!-- Interactive Real-time Demo -->
+            <h2 class="mt-4">🎮 Interactive Real-time Methods Demo</h2>
+            <p class="text-muted">Compare different real-time communication methods side by side. Watch how requests and data flow!</p>
+
+            <div class="realtime-demo" id="realtime-demo">
+                <div class="realtime-tabs">
+                    <button class="realtime-tab active" onclick="switchMethod('polling')">Short Polling</button>
+                    <button class="realtime-tab" onclick="switchMethod('longpolling')">Long Polling</button>
+                    <button class="realtime-tab" onclick="switchMethod('sse')">SSE</button>
+                    <button class="realtime-tab" onclick="switchMethod('websocket')">WebSocket</button>
+                </div>
+
+                <div class="rt-controls">
+                    <button class="rt-btn start" id="rt-start" onclick="startDemo()">▶️ Start</button>
+                    <button class="rt-btn stop" id="rt-stop" onclick="stopDemo()" disabled>⏹️ Stop</button>
+                    <button class="rt-btn send" id="rt-send" onclick="triggerServerEvent()" disabled>📤 Server Event</button>
+                </div>
+
+                <div class="realtime-viz">
+                    <div class="rt-node client">
+                        <span class="icon">💻</span>
+                        <span class="label">Client</span>
+                    </div>
+
+                    <div class="rt-connection-line" id="rt-line"></div>
+
+                    <div class="rt-message request" id="rt-request">📤</div>
+                    <div class="rt-message response" id="rt-response">📥</div>
+
+                    <div class="rt-node server">
+                        <span class="icon">🖥️</span>
+                        <span class="label">Server</span>
+                    </div>
+                </div>
+
+                <div class="latency-indicator">
+                    <span style="color: #a0aec0; font-size: 0.8rem;">Latency:</span>
+                    <div class="latency-bar">
+                        <div class="latency-fill low" id="latency-fill" style="width: 0%"></div>
+                    </div>
+                    <span style="color: white; font-size: 0.8rem;" id="latency-value">0ms</span>
+                </div>
+
+                <div class="rt-stats">
+                    <div class="rt-stat">
+                        <div class="rt-stat-value" id="rt-requests">0</div>
+                        <div class="rt-stat-label">Requests</div>
+                    </div>
+                    <div class="rt-stat">
+                        <div class="rt-stat-value" id="rt-responses">0</div>
+                        <div class="rt-stat-label">Responses</div>
+                    </div>
+                    <div class="rt-stat">
+                        <div class="rt-stat-value" id="rt-data-events">0</div>
+                        <div class="rt-stat-label">Data Events</div>
+                    </div>
+                    <div class="rt-stat">
+                        <div class="rt-stat-value" id="rt-avg-latency">0ms</div>
+                        <div class="rt-stat-label">Avg Latency</div>
+                    </div>
+                </div>
+
+                <div class="rt-log" id="rt-log">
+                    <div class="rt-log-entry">Select a method and click Start to see how it works!</div>
+                </div>
+            </div>
+
+            <div class="card mt-2" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                <strong>💡 Try this:</strong> Start each method, then click "Server Event" to see how quickly data reaches the client. Notice how WebSocket and SSE deliver data instantly, while polling has delays!
             </div>
 
             <h2 class="mt-4">Real-time Communication Methods</h2>
@@ -895,6 +1252,346 @@ func handleConnection(w http.ResponseWriter, r *http.Request) {
 
     <script src="../assets/js/app.js"></script>
     <script>
+        // ===== Interactive Real-time Demo =====
+        const rtState = {
+            method: 'polling',
+            running: false,
+            interval: null,
+            stats: {
+                requests: 0,
+                responses: 0,
+                dataEvents: 0,
+                latencies: []
+            },
+            pendingServerEvent: false,
+            connectionOpen: false
+        };
+
+        function switchMethod(method) {
+            stopDemo();
+            rtState.method = method;
+
+            // Update tabs
+            document.querySelectorAll('.realtime-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Reset stats
+            rtState.stats = { requests: 0, responses: 0, dataEvents: 0, latencies: [] };
+            updateRtStats();
+
+            // Update line style
+            const line = document.getElementById('rt-line');
+            line.className = 'rt-connection-line';
+
+            // Clear log
+            document.getElementById('rt-log').innerHTML = `<div class="rt-log-entry">Selected: ${getMethodName(method)}. Click Start to begin.</div>`;
+
+            // Enable/disable send button based on method
+            const sendBtn = document.getElementById('rt-send');
+            sendBtn.disabled = true;
+        }
+
+        function getMethodName(method) {
+            const names = {
+                'polling': 'Short Polling',
+                'longpolling': 'Long Polling',
+                'sse': 'Server-Sent Events',
+                'websocket': 'WebSocket'
+            };
+            return names[method] || method;
+        }
+
+        function startDemo() {
+            rtState.running = true;
+            document.getElementById('rt-start').disabled = true;
+            document.getElementById('rt-stop').disabled = false;
+            document.getElementById('rt-send').disabled = false;
+
+            addRtLog(`▶️ Started ${getMethodName(rtState.method)} demo`, 'open');
+
+            switch (rtState.method) {
+                case 'polling':
+                    runPolling();
+                    break;
+                case 'longpolling':
+                    runLongPolling();
+                    break;
+                case 'sse':
+                    runSSE();
+                    break;
+                case 'websocket':
+                    runWebSocket();
+                    break;
+            }
+        }
+
+        function stopDemo() {
+            rtState.running = false;
+            rtState.connectionOpen = false;
+            if (rtState.interval) {
+                clearTimeout(rtState.interval);
+                rtState.interval = null;
+            }
+
+            document.getElementById('rt-start').disabled = false;
+            document.getElementById('rt-stop').disabled = true;
+            document.getElementById('rt-send').disabled = true;
+
+            // Reset visuals
+            document.getElementById('rt-line').className = 'rt-connection-line';
+            document.getElementById('rt-request').className = 'rt-message request';
+            document.getElementById('rt-response').className = 'rt-message response';
+
+            addRtLog('⏹️ Demo stopped', 'close');
+        }
+
+        function triggerServerEvent() {
+            rtState.pendingServerEvent = true;
+            addRtLog('📤 Server received new data to push', 'data');
+
+            // For SSE/WebSocket, immediately send data
+            if (rtState.method === 'sse' || rtState.method === 'websocket') {
+                setTimeout(() => {
+                    if (rtState.running) {
+                        sendDataToClient(10); // Low latency
+                    }
+                }, 50);
+            }
+        }
+
+        // ===== Polling =====
+        function runPolling() {
+            if (!rtState.running) return;
+
+            const pollInterval = 2000; // 2 seconds
+
+            function poll() {
+                if (!rtState.running) return;
+
+                // Send request
+                rtState.stats.requests++;
+                updateRtStats();
+                animateRequest();
+
+                setTimeout(() => {
+                    if (!rtState.running) return;
+
+                    // Server responds
+                    rtState.stats.responses++;
+                    const latency = pollInterval + Math.random() * 100;
+                    rtState.stats.latencies.push(latency);
+                    updateLatency(latency);
+
+                    if (rtState.pendingServerEvent) {
+                        rtState.pendingServerEvent = false;
+                        rtState.stats.dataEvents++;
+                        addRtLog(`📥 Response: New data received (waited ${Math.round(latency)}ms)`, 'response');
+                    } else {
+                        addRtLog(`📥 Response: No new data`, 'response');
+                    }
+                    animateResponse();
+                    updateRtStats();
+
+                    // Schedule next poll
+                    rtState.interval = setTimeout(poll, pollInterval);
+                }, 300);
+
+                addRtLog(`📤 Request: Checking for updates...`, 'request');
+            }
+
+            poll();
+        }
+
+        // ===== Long Polling =====
+        function runLongPolling() {
+            if (!rtState.running) return;
+
+            function longPoll() {
+                if (!rtState.running) return;
+
+                // Send request
+                rtState.stats.requests++;
+                updateRtStats();
+                animateRequest();
+                addRtLog(`📤 Request: Long poll started, waiting for data...`, 'request');
+
+                // Simulate server holding connection
+                const line = document.getElementById('rt-line');
+                line.classList.add('active');
+
+                // Check periodically if there's data or timeout
+                const startTime = Date.now();
+                const maxWait = 5000;
+
+                function checkForData() {
+                    if (!rtState.running) return;
+
+                    const elapsed = Date.now() - startTime;
+
+                    if (rtState.pendingServerEvent) {
+                        // Data available!
+                        rtState.pendingServerEvent = false;
+                        rtState.stats.responses++;
+                        rtState.stats.dataEvents++;
+                        const latency = elapsed + 50;
+                        rtState.stats.latencies.push(latency);
+                        updateLatency(latency);
+                        updateRtStats();
+
+                        addRtLog(`📥 Response: Data received after ${Math.round(latency)}ms hold`, 'response');
+                        animateResponse();
+                        line.classList.remove('active');
+
+                        // Immediately start new long poll
+                        setTimeout(longPoll, 100);
+                    } else if (elapsed >= maxWait) {
+                        // Timeout, reconnect
+                        rtState.stats.responses++;
+                        rtState.stats.latencies.push(maxWait);
+                        updateLatency(maxWait);
+                        updateRtStats();
+
+                        addRtLog(`📥 Response: Timeout, no data (held ${maxWait}ms)`, 'response');
+                        animateResponse();
+                        line.classList.remove('active');
+
+                        // Reconnect
+                        setTimeout(longPoll, 100);
+                    } else {
+                        // Keep waiting
+                        rtState.interval = setTimeout(checkForData, 200);
+                    }
+                }
+
+                rtState.interval = setTimeout(checkForData, 200);
+            }
+
+            longPoll();
+        }
+
+        // ===== SSE =====
+        function runSSE() {
+            if (!rtState.running) return;
+
+            // Establish connection
+            rtState.stats.requests++;
+            updateRtStats();
+            addRtLog(`📤 Request: EventSource connection opening...`, 'request');
+
+            setTimeout(() => {
+                if (!rtState.running) return;
+
+                rtState.connectionOpen = true;
+                rtState.stats.responses++;
+                updateRtStats();
+                addRtLog(`✅ Connection established (HTTP streaming)`, 'open');
+
+                const line = document.getElementById('rt-line');
+                line.classList.add('active');
+            }, 200);
+        }
+
+        // ===== WebSocket =====
+        function runWebSocket() {
+            if (!rtState.running) return;
+
+            // Establish connection
+            rtState.stats.requests++;
+            updateRtStats();
+            addRtLog(`📤 Request: WebSocket handshake...`, 'request');
+
+            setTimeout(() => {
+                if (!rtState.running) return;
+
+                rtState.connectionOpen = true;
+                rtState.stats.responses++;
+                updateRtStats();
+                addRtLog(`✅ WebSocket connected (bidirectional)`, 'open');
+
+                const line = document.getElementById('rt-line');
+                line.classList.add('websocket');
+            }, 150);
+        }
+
+        function sendDataToClient(latency) {
+            if (!rtState.running) return;
+
+            rtState.pendingServerEvent = false;
+            rtState.stats.dataEvents++;
+            rtState.stats.latencies.push(latency);
+            updateLatency(latency);
+            updateRtStats();
+
+            animateResponse();
+            addRtLog(`📥 Data pushed to client instantly (${latency}ms)`, 'data');
+        }
+
+        function animateRequest() {
+            const req = document.getElementById('rt-request');
+            req.className = 'rt-message request visible at-client';
+            setTimeout(() => {
+                req.className = 'rt-message request visible in-transit-to-server';
+            }, 50);
+            setTimeout(() => {
+                req.className = 'rt-message request';
+            }, 600);
+        }
+
+        function animateResponse() {
+            const res = document.getElementById('rt-response');
+            res.className = 'rt-message response visible at-server';
+            setTimeout(() => {
+                res.className = 'rt-message response visible in-transit-to-client';
+            }, 50);
+            setTimeout(() => {
+                res.className = 'rt-message response';
+            }, 600);
+        }
+
+        function updateLatency(latency) {
+            const fill = document.getElementById('latency-fill');
+            const value = document.getElementById('latency-value');
+
+            // Scale: 0-100ms low, 100-500ms medium, 500+ high
+            const percent = Math.min(100, (latency / 3000) * 100);
+            fill.style.width = percent + '%';
+
+            if (latency < 100) {
+                fill.className = 'latency-fill low';
+            } else if (latency < 500) {
+                fill.className = 'latency-fill medium';
+            } else {
+                fill.className = 'latency-fill high';
+            }
+
+            value.textContent = Math.round(latency) + 'ms';
+        }
+
+        function updateRtStats() {
+            document.getElementById('rt-requests').textContent = rtState.stats.requests;
+            document.getElementById('rt-responses').textContent = rtState.stats.responses;
+            document.getElementById('rt-data-events').textContent = rtState.stats.dataEvents;
+
+            if (rtState.stats.latencies.length > 0) {
+                const avg = rtState.stats.latencies.reduce((a, b) => a + b, 0) / rtState.stats.latencies.length;
+                document.getElementById('rt-avg-latency').textContent = Math.round(avg) + 'ms';
+            }
+        }
+
+        function addRtLog(message, type) {
+            const log = document.getElementById('rt-log');
+            const entry = document.createElement('div');
+            entry.className = `rt-log-entry ${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${message}`;
+            log.insertBefore(entry, log.firstChild);
+
+            while (log.children.length > 20) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // ===== Sidebar =====
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebarToggle');

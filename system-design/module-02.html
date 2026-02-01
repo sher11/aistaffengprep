@@ -5,7 +5,246 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 2: Database Systems - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Interactive Database Replication Demo */
+        .repl-container {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .repl-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .repl-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .repl-btn.write {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .repl-btn.read {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .repl-btn.fail {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .repl-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .repl-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .repl-viz {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+            min-height: 250px;
+        }
+
+        .db-node {
+            width: 120px;
+            height: 140px;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .db-node.leader {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .db-node.follower {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        }
+
+        .db-node.syncing {
+            animation: pulse-sync 0.5s ease;
+        }
+
+        @keyframes pulse-sync {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 10px 40px rgba(102, 126, 234, 0.5); }
+        }
+
+        .db-node.failed {
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+            opacity: 0.6;
+        }
+
+        .db-node .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .db-node .label {
+            font-size: 0.9rem;
+        }
+
+        .db-node .data-version {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 0.25rem;
+        }
+
+        .db-node .status-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #48bb78;
+            border: 2px solid #1a1a2e;
+        }
+
+        .db-node.failed .status-indicator {
+            background: #f56565;
+        }
+
+        .repl-arrow {
+            width: 60px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .repl-arrow.active {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            animation: flow-right 0.5s ease;
+        }
+
+        @keyframes flow-right {
+            from { background-position: -60px 0; }
+            to { background-position: 60px 0; }
+        }
+
+        .repl-arrow::after {
+            content: '→';
+            position: absolute;
+            right: -15px;
+            top: -10px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1.2rem;
+        }
+
+        .repl-arrow.active::after {
+            color: #667eea;
+        }
+
+        .repl-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .repl-stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            color: white;
+            min-width: 100px;
+        }
+
+        .repl-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffd700;
+        }
+
+        .repl-stat-label {
+            font-size: 0.75rem;
+            color: #a0aec0;
+            margin-top: 0.25rem;
+        }
+
+        .repl-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: #a0aec0;
+            margin-top: 1rem;
+        }
+
+        .repl-log-entry {
+            padding: 0.2rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .repl-log-entry.write {
+            color: #48bb78;
+        }
+
+        .repl-log-entry.sync {
+            color: #667eea;
+        }
+
+        .repl-log-entry.fail {
+            color: #f56565;
+        }
+
+        .repl-lag-bar {
+            background: rgba(255, 255, 255, 0.1);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .repl-lag-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .repl-lag-fill.lagging {
+            background: linear-gradient(90deg, #f6ad55, #ed8936);
+        }
+
+        .repl-lag-fill.stale {
+            background: linear-gradient(90deg, #f56565, #e53e3e);
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -260,6 +499,83 @@ flowchart LR
             <!-- Replication -->
             <h2 class="mt-4">Replication Patterns</h2>
 
+            <!-- Interactive Replication Demo -->
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>🎮 Interactive Leader-Follower Replication Demo</span>
+                    <span class="collapsible-icon">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <p class="text-muted">Watch how writes propagate from leader to followers. Notice the replication lag!</p>
+
+                    <div class="repl-container" id="repl-demo">
+                        <div class="repl-controls">
+                            <button class="repl-btn write" onclick="writeToLeader()">✍️ Write to Leader</button>
+                            <button class="repl-btn read" onclick="readFromFollower()">📖 Read from Follower</button>
+                            <button class="repl-btn fail" onclick="toggleLeaderFailure()">💥 Toggle Leader Failure</button>
+                        </div>
+
+                        <div class="repl-viz">
+                            <div class="db-node leader" id="db-leader">
+                                <span class="status-indicator"></span>
+                                <span class="icon">👑</span>
+                                <span class="label">Leader</span>
+                                <span class="data-version" id="leader-version">v0</span>
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div class="repl-arrow" id="arrow-1"></div>
+                                <div class="repl-arrow" id="arrow-2"></div>
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div class="db-node follower" id="db-follower-1">
+                                    <span class="status-indicator"></span>
+                                    <span class="icon">📡</span>
+                                    <span class="label">Follower 1</span>
+                                    <span class="data-version" id="follower1-version">v0</span>
+                                    <div class="repl-lag-bar"><div class="repl-lag-fill" id="lag-1" style="width: 100%"></div></div>
+                                </div>
+                                <div class="db-node follower" id="db-follower-2">
+                                    <span class="status-indicator"></span>
+                                    <span class="icon">📡</span>
+                                    <span class="label">Follower 2</span>
+                                    <span class="data-version" id="follower2-version">v0</span>
+                                    <div class="repl-lag-bar"><div class="repl-lag-fill" id="lag-2" style="width: 100%"></div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="repl-stats">
+                            <div class="repl-stat">
+                                <div class="repl-stat-value" id="total-writes">0</div>
+                                <div class="repl-stat-label">Total Writes</div>
+                            </div>
+                            <div class="repl-stat">
+                                <div class="repl-stat-value" id="total-reads">0</div>
+                                <div class="repl-stat-label">Total Reads</div>
+                            </div>
+                            <div class="repl-stat">
+                                <div class="repl-stat-value" id="stale-reads">0</div>
+                                <div class="repl-stat-label">Stale Reads</div>
+                            </div>
+                            <div class="repl-stat">
+                                <div class="repl-stat-value" id="repl-lag">0ms</div>
+                                <div class="repl-stat-label">Repl. Lag</div>
+                            </div>
+                        </div>
+
+                        <div class="repl-log" id="repl-log">
+                            <div class="repl-log-entry">Replication demo ready. Write to leader to see data propagate.</div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-2" style="background: linear-gradient(135deg, rgba(246, 173, 85, 0.2), rgba(237, 137, 54, 0.2)); border-left: 4px solid #f6ad55;">
+                        <strong>⚠️ Replication Lag Issue:</strong> When you read from a follower immediately after writing to leader, you might get stale data! This is the consistency vs availability trade-off in action.
+                    </div>
+                </div>
+            </div>
+
             <div class="collapsible">
                 <div class="collapsible-header">
                     <span>Leader-Follower, Multi-Leader, and Leaderless</span>
@@ -269,17 +585,6 @@ flowchart LR
                     <p><strong>Why replicate?</strong> High availability (survive node failures) and read scalability (distribute read load).</p>
 
                     <h4>Pattern 1: Leader-Follower (Most Common)</h4>
-                    <div class="diagram-container">
-                        <div class="mermaid">
-flowchart LR
-    W[Writes] --> L[(Leader)]
-    L --> |Replication| F1[(Follower 1)]
-    L --> |Replication| F2[(Follower 2)]
-    R1[Reads] --> L
-    R2[Reads] --> F1
-    R3[Reads] --> F2
-                        </div>
-                    </div>
 
                     <p><strong>How it works:</strong> All writes go to leader, replicated async (or sync) to followers. Reads can go to any node.</p>
 
@@ -451,6 +756,160 @@ flowchart LR
             sidebar.classList.remove('open');
             sidebarOverlay.classList.remove('open');
         });
+
+        // ===== Interactive Replication Demo =====
+        const replState = {
+            leaderVersion: 0,
+            follower1Version: 0,
+            follower2Version: 0,
+            leaderFailed: false,
+            totalWrites: 0,
+            totalReads: 0,
+            staleReads: 0,
+            replicationLag: 0,
+            pendingReplications: []
+        };
+
+        function writeToLeader() {
+            if (replState.leaderFailed) {
+                addReplLog('❌ Write failed: Leader is down!', 'fail');
+                return;
+            }
+
+            replState.leaderVersion++;
+            replState.totalWrites++;
+            document.getElementById('leader-version').textContent = 'v' + replState.leaderVersion;
+
+            // Visual feedback on leader
+            const leader = document.getElementById('db-leader');
+            leader.classList.add('syncing');
+            setTimeout(() => leader.classList.remove('syncing'), 500);
+
+            addReplLog(`✍️ Write v${replState.leaderVersion} to Leader`, 'write');
+
+            // Simulate async replication with random lag
+            const lag1 = 200 + Math.random() * 800; // 200-1000ms
+            const lag2 = 300 + Math.random() * 1200; // 300-1500ms
+            replState.replicationLag = Math.max(lag1, lag2);
+
+            // Animate arrows
+            setTimeout(() => {
+                document.getElementById('arrow-1').classList.add('active');
+                setTimeout(() => document.getElementById('arrow-1').classList.remove('active'), 300);
+            }, lag1 / 2);
+
+            setTimeout(() => {
+                document.getElementById('arrow-2').classList.add('active');
+                setTimeout(() => document.getElementById('arrow-2').classList.remove('active'), 300);
+            }, lag2 / 2);
+
+            // Replicate to follower 1
+            setTimeout(() => {
+                if (!replState.leaderFailed) {
+                    replState.follower1Version = replState.leaderVersion;
+                    document.getElementById('follower1-version').textContent = 'v' + replState.follower1Version;
+                    const f1 = document.getElementById('db-follower-1');
+                    f1.classList.add('syncing');
+                    setTimeout(() => f1.classList.remove('syncing'), 500);
+                    addReplLog(`📡 Follower 1 synced to v${replState.follower1Version}`, 'sync');
+                    updateLagIndicator(1);
+                }
+            }, lag1);
+
+            // Replicate to follower 2 (slower)
+            setTimeout(() => {
+                if (!replState.leaderFailed) {
+                    replState.follower2Version = replState.leaderVersion;
+                    document.getElementById('follower2-version').textContent = 'v' + replState.follower2Version;
+                    const f2 = document.getElementById('db-follower-2');
+                    f2.classList.add('syncing');
+                    setTimeout(() => f2.classList.remove('syncing'), 500);
+                    addReplLog(`📡 Follower 2 synced to v${replState.follower2Version}`, 'sync');
+                    updateLagIndicator(2);
+                }
+            }, lag2);
+
+            updateReplStats();
+        }
+
+        function readFromFollower() {
+            replState.totalReads++;
+
+            // Randomly pick a follower
+            const followerNum = Math.random() > 0.5 ? 1 : 2;
+            const followerVersion = followerNum === 1 ? replState.follower1Version : replState.follower2Version;
+
+            const follower = document.getElementById(`db-follower-${followerNum}`);
+            follower.classList.add('syncing');
+            setTimeout(() => follower.classList.remove('syncing'), 500);
+
+            if (followerVersion < replState.leaderVersion) {
+                replState.staleReads++;
+                addReplLog(`⚠️ Stale read from Follower ${followerNum}: got v${followerVersion}, latest is v${replState.leaderVersion}`, 'fail');
+            } else {
+                addReplLog(`📖 Read v${followerVersion} from Follower ${followerNum}`, 'sync');
+            }
+
+            updateReplStats();
+        }
+
+        function toggleLeaderFailure() {
+            replState.leaderFailed = !replState.leaderFailed;
+            const leader = document.getElementById('db-leader');
+            const btn = document.querySelector('.repl-btn.fail');
+
+            if (replState.leaderFailed) {
+                leader.classList.add('failed');
+                btn.textContent = '🔧 Restore Leader';
+                addReplLog('💥 Leader failure! Writes will fail until restored.', 'fail');
+            } else {
+                leader.classList.remove('failed');
+                btn.textContent = '💥 Toggle Leader Failure';
+                addReplLog('✅ Leader restored and accepting writes.', 'write');
+            }
+        }
+
+        function addReplLog(message, type) {
+            const log = document.getElementById('repl-log');
+            const entry = document.createElement('div');
+            entry.className = `repl-log-entry ${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${message}`;
+            log.insertBefore(entry, log.firstChild);
+
+            // Keep only last 20 entries
+            while (log.children.length > 20) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        function updateReplStats() {
+            document.getElementById('total-writes').textContent = replState.totalWrites;
+            document.getElementById('total-reads').textContent = replState.totalReads;
+            document.getElementById('stale-reads').textContent = replState.staleReads;
+            document.getElementById('repl-lag').textContent = Math.round(replState.replicationLag) + 'ms';
+        }
+
+        function updateLagIndicator(followerNum) {
+            const lagBar = document.getElementById(`lag-${followerNum}`);
+            const version = followerNum === 1 ? replState.follower1Version : replState.follower2Version;
+
+            if (replState.leaderVersion === 0) {
+                lagBar.style.width = '100%';
+                lagBar.className = 'repl-lag-fill';
+            } else {
+                const lagPercent = (version / replState.leaderVersion) * 100;
+                lagBar.style.width = lagPercent + '%';
+
+                if (lagPercent >= 100) {
+                    lagBar.className = 'repl-lag-fill';
+                } else if (lagPercent >= 50) {
+                    lagBar.className = 'repl-lag-fill lagging';
+                } else {
+                    lagBar.className = 'repl-lag-fill stale';
+                }
+            }
+        }
     </script>
 </body>
 </html>

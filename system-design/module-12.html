@@ -5,7 +5,282 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 12: Rate Limiting - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Interactive Token Bucket Demo */
+        .bucket-demo {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .bucket-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .bucket-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .bucket-btn.request {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .bucket-btn.burst {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+        }
+
+        .bucket-btn.reset {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+        }
+
+        .bucket-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .bucket-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .bucket-viz {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 2rem;
+            min-height: 300px;
+            margin: 1.5rem 0;
+        }
+
+        .bucket-container {
+            position: relative;
+            width: 120px;
+            height: 200px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: none;
+            border-radius: 0 0 1rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .bucket-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, #ffd700 0%, #ff8c00 100%);
+            transition: height 0.3s ease;
+        }
+
+        .bucket-tokens {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: flex-end;
+            padding: 0.25rem;
+            gap: 0.25rem;
+        }
+
+        .token {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            animation: token-appear 0.3s ease;
+        }
+
+        @keyframes token-appear {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .token.consumed {
+            animation: token-consumed 0.3s ease forwards;
+        }
+
+        @keyframes token-consumed {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); background: #48bb78; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .bucket-label {
+            text-align: center;
+            color: white;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .bucket-capacity {
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        .refill-indicator {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffd700;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .request-queue {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .request-item {
+            width: 40px;
+            height: 40px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            animation: request-enter 0.3s ease;
+        }
+
+        .request-item.pending {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .request-item.allowed {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            animation: request-allowed 0.5s ease forwards;
+        }
+
+        .request-item.rejected {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            animation: request-rejected 0.5s ease forwards;
+        }
+
+        @keyframes request-enter {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes request-allowed {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: translateX(100px) scale(0); opacity: 0; }
+        }
+
+        @keyframes request-rejected {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2) rotate(10deg); }
+            100% { transform: translateY(50px) rotate(45deg) scale(0); opacity: 0; }
+        }
+
+        .bucket-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .bucket-stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            color: white;
+            min-width: 100px;
+        }
+
+        .bucket-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .bucket-stat-value.allowed { color: #48bb78; }
+        .bucket-stat-value.rejected { color: #f56565; }
+        .bucket-stat-value.tokens { color: #ffd700; }
+
+        .bucket-stat-label {
+            font-size: 0.75rem;
+            color: #a0aec0;
+            margin-top: 0.25rem;
+        }
+
+        .bucket-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: #a0aec0;
+            margin-top: 1rem;
+        }
+
+        .bucket-log-entry {
+            padding: 0.2rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .bucket-log-entry.allowed { color: #48bb78; }
+        .bucket-log-entry.rejected { color: #f56565; }
+        .bucket-log-entry.refill { color: #ffd700; }
+
+        .settings-panel {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.5rem;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .setting-label {
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        .setting-input {
+            width: 80px;
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.25rem;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            text-align: center;
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -117,6 +392,79 @@
                     <h4>Ensure Stability</h4>
                     <p>Prevent cascading failures during traffic spikes.</p>
                 </div>
+            </div>
+
+            <!-- Interactive Token Bucket Demo -->
+            <h2 class="mt-4">🎮 Interactive Token Bucket Demo</h2>
+            <p class="text-muted">Visualize how token bucket rate limiting works. Send requests and watch tokens being consumed and refilled!</p>
+
+            <div class="bucket-demo" id="bucket-demo">
+                <div class="settings-panel">
+                    <div class="setting-item">
+                        <label class="setting-label">Bucket Capacity</label>
+                        <input type="number" class="setting-input" id="bucket-capacity" value="10" min="1" max="20">
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">Refill Rate (tokens/sec)</label>
+                        <input type="number" class="setting-input" id="refill-rate" value="2" min="1" max="10">
+                    </div>
+                </div>
+
+                <div class="bucket-controls">
+                    <button class="bucket-btn request" onclick="sendRequest()">📤 Send Request</button>
+                    <button class="bucket-btn burst" onclick="sendBurst()">⚡ Send Burst (5)</button>
+                    <button class="bucket-btn reset" onclick="resetBucket()">🔄 Reset</button>
+                </div>
+
+                <div class="bucket-viz">
+                    <div class="request-queue" id="request-queue">
+                        <div style="color: #a0aec0; font-size: 0.8rem; margin-bottom: 0.5rem;">Requests</div>
+                    </div>
+
+                    <div style="position: relative;">
+                        <div class="refill-indicator" id="refill-indicator">+1 token</div>
+                        <div class="bucket-container">
+                            <div class="bucket-tokens" id="bucket-tokens"></div>
+                        </div>
+                        <div class="bucket-label">
+                            <span id="token-count">10</span> / <span id="max-tokens">10</span> tokens
+                        </div>
+                        <div class="bucket-capacity">Token Bucket</div>
+                    </div>
+
+                    <div style="text-align: center;">
+                        <div style="color: #a0aec0; font-size: 0.8rem; margin-bottom: 0.5rem;">Result</div>
+                        <div id="result-area" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bucket-stats">
+                    <div class="bucket-stat">
+                        <div class="bucket-stat-value tokens" id="stat-tokens">10</div>
+                        <div class="bucket-stat-label">Current Tokens</div>
+                    </div>
+                    <div class="bucket-stat">
+                        <div class="bucket-stat-value allowed" id="stat-allowed">0</div>
+                        <div class="bucket-stat-label">Allowed</div>
+                    </div>
+                    <div class="bucket-stat">
+                        <div class="bucket-stat-value rejected" id="stat-rejected">0</div>
+                        <div class="bucket-stat-label">Rejected</div>
+                    </div>
+                    <div class="bucket-stat">
+                        <div class="bucket-stat-value" id="stat-rate" style="color: #667eea;">0%</div>
+                        <div class="bucket-stat-label">Success Rate</div>
+                    </div>
+                </div>
+
+                <div class="bucket-log" id="bucket-log">
+                    <div class="bucket-log-entry">Token bucket initialized with 10 tokens. Refill rate: 2 tokens/second.</div>
+                </div>
+            </div>
+
+            <div class="card mt-2" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2)); border-left: 4px solid #ffd700;">
+                <strong>💡 Try this:</strong> Click "Send Burst" to quickly deplete tokens, then watch them refill over time. This shows how token bucket allows controlled bursts while maintaining long-term rate limits!
             </div>
 
             <h2 class="mt-4">Rate Limiting Algorithms</h2>
@@ -776,6 +1124,188 @@ class GraduatedRateLimiter:
 
     <script src="../assets/js/app.js"></script>
     <script>
+        // ===== Interactive Token Bucket Demo =====
+        const bucketState = {
+            tokens: 10,
+            capacity: 10,
+            refillRate: 2,
+            allowed: 0,
+            rejected: 0,
+            refillInterval: null,
+            requestId: 0
+        };
+
+        function initBucket() {
+            bucketState.capacity = parseInt(document.getElementById('bucket-capacity').value) || 10;
+            bucketState.refillRate = parseInt(document.getElementById('refill-rate').value) || 2;
+            bucketState.tokens = bucketState.capacity;
+
+            renderTokens();
+            startRefill();
+        }
+
+        function renderTokens() {
+            const container = document.getElementById('bucket-tokens');
+            container.innerHTML = '';
+
+            for (let i = 0; i < bucketState.tokens; i++) {
+                const token = document.createElement('div');
+                token.className = 'token';
+                token.style.animationDelay = (i * 0.05) + 's';
+                container.appendChild(token);
+            }
+
+            document.getElementById('token-count').textContent = bucketState.tokens;
+            document.getElementById('max-tokens').textContent = bucketState.capacity;
+            document.getElementById('stat-tokens').textContent = bucketState.tokens;
+        }
+
+        function startRefill() {
+            if (bucketState.refillInterval) {
+                clearInterval(bucketState.refillInterval);
+            }
+
+            const refillMs = 1000 / bucketState.refillRate;
+            bucketState.refillInterval = setInterval(() => {
+                if (bucketState.tokens < bucketState.capacity) {
+                    bucketState.tokens++;
+                    renderTokens();
+
+                    // Flash refill indicator
+                    const indicator = document.getElementById('refill-indicator');
+                    indicator.style.opacity = '1';
+                    setTimeout(() => indicator.style.opacity = '0.5', 200);
+
+                    addBucketLog(`🪙 Token refilled (${bucketState.tokens}/${bucketState.capacity})`, 'refill');
+                }
+            }, refillMs);
+        }
+
+        function sendRequest() {
+            bucketState.requestId++;
+            const reqId = bucketState.requestId;
+
+            // Show request in queue
+            showRequestInQueue(reqId);
+
+            // Process after brief delay
+            setTimeout(() => {
+                if (bucketState.tokens > 0) {
+                    // Allowed
+                    bucketState.tokens--;
+                    bucketState.allowed++;
+                    renderTokens();
+                    markRequestAllowed(reqId);
+                    showResult('✅');
+                    addBucketLog(`✅ Request #${reqId} allowed (${bucketState.tokens} tokens left)`, 'allowed');
+                } else {
+                    // Rejected
+                    bucketState.rejected++;
+                    markRequestRejected(reqId);
+                    showResult('❌');
+                    addBucketLog(`❌ Request #${reqId} rejected (no tokens available)`, 'rejected');
+                }
+                updateBucketStats();
+            }, 200);
+        }
+
+        function sendBurst() {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => sendRequest(), i * 100);
+            }
+        }
+
+        function resetBucket() {
+            bucketState.tokens = bucketState.capacity;
+            bucketState.allowed = 0;
+            bucketState.rejected = 0;
+            bucketState.requestId = 0;
+
+            renderTokens();
+            updateBucketStats();
+            document.getElementById('result-area').innerHTML = '';
+            addBucketLog('🔄 Bucket reset to full capacity', 'refill');
+        }
+
+        function showRequestInQueue(reqId) {
+            const queue = document.getElementById('request-queue');
+            const item = document.createElement('div');
+            item.className = 'request-item pending';
+            item.id = `req-${reqId}`;
+            item.textContent = '📤';
+            queue.appendChild(item);
+        }
+
+        function markRequestAllowed(reqId) {
+            const item = document.getElementById(`req-${reqId}`);
+            if (item) {
+                item.className = 'request-item allowed';
+                item.textContent = '✅';
+                setTimeout(() => item.remove(), 500);
+            }
+        }
+
+        function markRequestRejected(reqId) {
+            const item = document.getElementById(`req-${reqId}`);
+            if (item) {
+                item.className = 'request-item rejected';
+                item.textContent = '❌';
+                setTimeout(() => item.remove(), 500);
+            }
+        }
+
+        function showResult(emoji) {
+            const area = document.getElementById('result-area');
+            area.innerHTML = `<span style="animation: request-enter 0.3s ease">${emoji}</span>`;
+            setTimeout(() => {
+                if (area.innerHTML.includes(emoji)) {
+                    area.innerHTML = '';
+                }
+            }, 1000);
+        }
+
+        function updateBucketStats() {
+            document.getElementById('stat-allowed').textContent = bucketState.allowed;
+            document.getElementById('stat-rejected').textContent = bucketState.rejected;
+
+            const total = bucketState.allowed + bucketState.rejected;
+            const rate = total > 0 ? Math.round((bucketState.allowed / total) * 100) : 100;
+            document.getElementById('stat-rate').textContent = rate + '%';
+        }
+
+        function addBucketLog(message, type) {
+            const log = document.getElementById('bucket-log');
+            const entry = document.createElement('div');
+            entry.className = `bucket-log-entry ${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${message}`;
+            log.insertBefore(entry, log.firstChild);
+
+            while (log.children.length > 20) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // Settings change handlers
+        document.getElementById('bucket-capacity').addEventListener('change', function() {
+            bucketState.capacity = parseInt(this.value) || 10;
+            if (bucketState.tokens > bucketState.capacity) {
+                bucketState.tokens = bucketState.capacity;
+            }
+            renderTokens();
+            addBucketLog(`⚙️ Capacity changed to ${bucketState.capacity}`, 'refill');
+        });
+
+        document.getElementById('refill-rate').addEventListener('change', function() {
+            bucketState.refillRate = parseInt(this.value) || 2;
+            startRefill();
+            addBucketLog(`⚙️ Refill rate changed to ${bucketState.refillRate}/sec`, 'refill');
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initBucket);
+
+        // ===== Sidebar =====
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebarToggle');
