@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 5: UML & Class Diagrams - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">LLD</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="../generative-ai/index.html">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Foundations</div>
+                    <a href="module-01.html" class="sidebar-link">
+                        <span class="sidebar-link-number">1</span>Design Principles
+                    </a>
+                    <a href="module-05.html" class="sidebar-link active">
+                        <span class="sidebar-link-number">2</span>UML & Class Diagrams
+                    </a>
+                    <a href="module-06.html" class="sidebar-link">
+                        <span class="sidebar-link-number">3</span>Interview Framework
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Design Patterns</div>
+                    <a href="module-02.html" class="sidebar-link">
+                        <span class="sidebar-link-number">4</span>Creational Patterns
+                    </a>
+                    <a href="module-03.html" class="sidebar-link">
+                        <span class="sidebar-link-number">5</span>Structural Patterns
+                    </a>
+                    <a href="module-04.html" class="sidebar-link">
+                        <span class="sidebar-link-number">6</span>Behavioral Patterns
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Practice Problems</div>
+                    <a href="problems/parking-lot.html" class="sidebar-link">
+                        <span class="sidebar-link-number">P1</span>Parking Lot
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 5: UML & Class Diagrams</h1>
+
+            <div class="card mt-3">
+                <h3>Learning Objectives</h3>
+                <ul>
+                    <li>Draw clear class diagrams quickly during interviews</li>
+                    <li>Understand UML relationship types and when to use each</li>
+                    <li>Create sequence diagrams for complex interactions</li>
+                    <li>Communicate designs effectively through diagrams</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Why UML Matters in LLD Interviews</h2>
+
+            <p>In LLD interviews, you often have limited time (35-45 minutes) to design a system. A quick, clear diagram can communicate more than paragraphs of explanation. You don't need to follow UML perfectly - the goal is clear communication.</p>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-left: 4px solid #667eea;">
+                <strong>Interview Reality:</strong> Interviewers don't expect pixel-perfect UML. They want to see:
+                <ul>
+                    <li>Clear entity identification</li>
+                    <li>Correct relationship types (inheritance, composition, etc.)</li>
+                    <li>Key attributes and methods</li>
+                    <li>Logical organization</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Class Diagram Basics</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Class Notation</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>A class is represented as a rectangle divided into three sections:</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+classDiagram
+    class User {
+        -Long id
+        -String username
+        -String email
+        -String passwordHash
+        -UserStatus status
+        +getId() Long
+        +getUsername() String
+        +authenticate(password) boolean
+        +updateProfile(ProfileDTO) void
+    }
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Section</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Content</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Top</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Class name (+ stereotypes)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>User</code> or <code>&lt;&lt;abstract&gt;&gt; Vehicle</code></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Middle</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Attributes (fields)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>-id: Long</code>, <code>-username: String</code></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Bottom</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Methods (operations)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>+authenticate(password): boolean</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Visibility Modifiers</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><code>+</code></td>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Public</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><code>-</code></td>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Private</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><code>#</code></td>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Protected</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><code>~</code></td>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Package/Default</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Relationship Types</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>The Big 6 Relationships</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+classDiagram
+    class A
+    class B
+    class C
+    class D
+    class E
+    class F
+    class G
+    class H
+    class I
+    class J
+    class K
+    class L
+
+    A --|> B : Inheritance
+    C ..|> D : Implementation
+    E --o F : Aggregation
+    G --* H : Composition
+    I --> J : Association
+    K ..> L : Dependency
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Relationship</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Symbol</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Meaning</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Java Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Inheritance</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Solid line, hollow arrow</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"is-a" relationship</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>class Car extends Vehicle</code></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Implementation</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Dashed line, hollow arrow</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Implements interface</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>class EmailService implements NotificationService</code></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Composition</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Solid line, filled diamond</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"has-a" (part cannot exist without whole)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>class House { Room room; }</code> (Room dies with House)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Aggregation</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Solid line, hollow diamond</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">"has-a" (part can exist independently)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>class Team { List&lt;Player&gt; players; }</code> (Players exist without Team)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Association</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Solid line, optional arrow</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">General relationship</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>class Student { Course[] courses; }</code></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Dependency</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Dashed line, arrow</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Uses (method parameter, local variable)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>void process(Parser parser)</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Composition vs Aggregation - Deep Dive</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>This is one of the most commonly confused relationships. The key question is: <strong>Can the part exist without the whole?</strong></p>
+
+                    <h4>Composition Example (Part CANNOT exist without whole)</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+classDiagram
+    class Order {
+        -Long id
+        -List~OrderItem~ items
+        +addItem(product, qty)
+        +removeItem(itemId)
+        +getTotal() Money
+    }
+
+    class OrderItem {
+        -Long id
+        -Product product
+        -int quantity
+        -Money unitPrice
+        +getSubtotal() Money
+    }
+
+    Order *-- OrderItem : contains
+    note for OrderItem "OrderItem makes no sense without Order.\nIf Order is deleted, OrderItems are deleted too."
+                        </div>
+                    </div>
+
+                    <h4>Aggregation Example (Part CAN exist without whole)</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+classDiagram
+    class Department {
+        -String name
+        -List~Employee~ employees
+        +addEmployee(emp)
+        +removeEmployee(emp)
+    }
+
+    class Employee {
+        -Long id
+        -String name
+        -String email
+    }
+
+    Department o-- Employee : employs
+    note for Employee "Employee exists independently.\nIf Department is dissolved, Employees still exist."
+                        </div>
+                    </div>
+
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Quick Decision Guide:</strong>
+                        <ul>
+                            <li><strong>Composition:</strong> "Part is OWNED by whole" - Order/OrderItem, Document/Paragraph, Car/Engine</li>
+                            <li><strong>Aggregation:</strong> "Part is REFERENCED by whole" - Department/Employee, Playlist/Song, Course/Student</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Multiplicity (Cardinality)</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Expressing Relationship Quantities</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Notation</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Meaning</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>1</code></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Exactly one</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Order has 1 Customer</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>0..1</code></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zero or one (optional)</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">User has 0..1 Profile</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>*</code> or <code>0..*</code></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Zero or more</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">User has 0..* Orders</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>1..*</code></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">One or more</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Order has 1..* OrderItems</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>n..m</code></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Range</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Team has 5..11 Players</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+classDiagram
+    class Customer {
+        -Long id
+        -String name
+    }
+
+    class Order {
+        -Long id
+        -LocalDateTime createdAt
+    }
+
+    class OrderItem {
+        -int quantity
+        -Money price
+    }
+
+    class Product {
+        -Long id
+        -String name
+    }
+
+    Customer "1" --> "*" Order : places
+    Order "1" *-- "1..*" OrderItem : contains
+    OrderItem "*" --> "1" Product : references
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Sequence Diagrams</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Modeling Interactions Over Time</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Sequence diagrams show how objects interact over time. They're useful for explaining complex flows like authentication, checkout, or multi-step processes.</p>
+
+                    <h4>Example: User Authentication Flow</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant A as AuthController
+    participant S as AuthService
+    participant R as UserRepository
+    participant T as TokenService
+
+    C->>A: POST /login {email, password}
+    A->>S: authenticate(email, password)
+    S->>R: findByEmail(email)
+    R-->>S: User
+    S->>S: verifyPassword(password, user.hash)
+    alt Password Valid
+        S->>T: generateToken(user)
+        T-->>S: JWT Token
+        S-->>A: AuthResult.success(token)
+        A-->>C: 200 OK {token}
+    else Password Invalid
+        S-->>A: AuthResult.failure("Invalid credentials")
+        A-->>C: 401 Unauthorized
+    end
+                        </div>
+                    </div>
+
+                    <h4>Key Sequence Diagram Elements</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><code>->>></code></td>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Synchronous message (call)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><code>-->>></code></td>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Return message</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><code>-)></code></td>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Asynchronous message</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><code>alt/else</code></td>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Alternative paths (if/else)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><code>loop</code></td>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Repetition</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><code>opt</code></td>
+                            <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Optional fragment</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Complete Example: E-Commerce Domain</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Full Class Diagram</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+classDiagram
+    class User {
+        -Long id
+        -String email
+        -String passwordHash
+        -UserRole role
+        +authenticate(password) boolean
+    }
+
+    class Customer {
+        -String firstName
+        -String lastName
+        -List~Address~ addresses
+        +getDefaultAddress() Address
+    }
+
+    class Address {
+        -String street
+        -String city
+        -String zipCode
+        -String country
+        -boolean isDefault
+    }
+
+    class Order {
+        -Long id
+        -OrderStatus status
+        -LocalDateTime createdAt
+        -Address shippingAddress
+        +addItem(product, qty)
+        +calculateTotal() Money
+        +submit()
+    }
+
+    class OrderItem {
+        -Product product
+        -int quantity
+        -Money unitPrice
+        +getSubtotal() Money
+    }
+
+    class Product {
+        -Long id
+        -String name
+        -String description
+        -Money price
+        -int stockQuantity
+        +isInStock() boolean
+        +decrementStock(qty)
+    }
+
+    class Category {
+        -Long id
+        -String name
+        -Category parent
+    }
+
+    class Payment {
+        &lt;&lt;interface&gt;&gt;
+        +process(amount) PaymentResult
+    }
+
+    class CreditCardPayment {
+        -String cardNumber
+        -String expiryDate
+        +process(amount) PaymentResult
+    }
+
+    class PayPalPayment {
+        -String paypalEmail
+        +process(amount) PaymentResult
+    }
+
+    User <|-- Customer
+    Customer "1" *-- "1..*" Address : has
+    Customer "1" --> "*" Order : places
+    Order "1" *-- "1..*" OrderItem : contains
+    OrderItem "*" --> "1" Product : references
+    Product "*" --> "*" Category : belongsTo
+    Category "0..1" <-- "*" Category : parent
+    Order "1" --> "1" Payment : paidWith
+    Payment <|.. CreditCardPayment
+    Payment <|.. PayPalPayment
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Interview Tips for Diagrams</h2>
+
+            <div class="card" style="background: linear-gradient(135deg, rgba(72, 187, 120, 0.15), rgba(56, 161, 105, 0.15)); border-left: 4px solid #48bb78;">
+                <h3>Do's</h3>
+                <ul>
+                    <li><strong>Start simple:</strong> Begin with core entities, add detail iteratively</li>
+                    <li><strong>Label relationships:</strong> Use verbs (places, contains, references)</li>
+                    <li><strong>Show multiplicity:</strong> Especially 1:1, 1:N, N:M relationships</li>
+                    <li><strong>Identify abstractions:</strong> Use interfaces and abstract classes where appropriate</li>
+                    <li><strong>Think aloud:</strong> Explain your design decisions as you draw</li>
+                </ul>
+            </div>
+
+            <div class="card" style="background: var(--warning-bg);">
+                <h3>Don'ts</h3>
+                <ul>
+                    <li><strong>Don't over-detail:</strong> You don't need every getter/setter</li>
+                    <li><strong>Don't worry about perfect UML:</strong> Clear communication > strict notation</li>
+                    <li><strong>Don't draw without thinking:</strong> Pause to identify entities first</li>
+                    <li><strong>Don't forget relationships:</strong> Classes without connections are red flags</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Quick Reference Card</h2>
+
+            <div class="card">
+                <h3>Drawing Checklist</h3>
+                <ol>
+                    <li><strong>Identify nouns</strong> in requirements → These are your classes</li>
+                    <li><strong>Identify verbs</strong> → These suggest methods or relationships</li>
+                    <li><strong>Determine relationships</strong> → Is-a? Has-a? Uses?</li>
+                    <li><strong>Add attributes</strong> → What data does each class hold?</li>
+                    <li><strong>Add key methods</strong> → Focus on public API</li>
+                    <li><strong>Refine</strong> → Look for abstractions, apply SOLID principles</li>
+                </ol>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="module-01.html" class="btn btn-secondary">&larr; Previous: Design Principles</a>
+                <a href="module-06.html" class="btn btn-primary">Next: Interview Framework &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>
