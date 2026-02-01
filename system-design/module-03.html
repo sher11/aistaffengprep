@@ -5,7 +5,499 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Module 3: Distributed Systems - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Interactive CAP Theorem Visualization */
+        .cap-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 1rem;
+            margin: 1rem 0;
+        }
+
+        .cap-triangle {
+            position: relative;
+            width: 350px;
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+
+        .cap-node {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 4px solid transparent;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .cap-node.consistency {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .cap-node.availability {
+            bottom: 0;
+            left: 0;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .cap-node.partition {
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .cap-node:hover, .cap-node.active {
+            transform: scale(1.15);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        .cap-node.consistency:hover, .cap-node.consistency.active {
+            transform: translateX(-50%) scale(1.15);
+        }
+
+        .cap-node.selected {
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .cap-node.dimmed {
+            opacity: 0.3;
+            transform: scale(0.9);
+        }
+
+        .cap-node.consistency.dimmed {
+            transform: translateX(-50%) scale(0.9);
+        }
+
+        .cap-edge {
+            position: absolute;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            transform-origin: left center;
+            transition: all 0.3s ease;
+        }
+
+        .cap-edge.highlighted {
+            background: linear-gradient(90deg, #ffd700, #ffed4a);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .cap-edge-ca {
+            width: 140px;
+            top: 85px;
+            left: 70px;
+            transform: rotate(60deg);
+        }
+
+        .cap-edge-cp {
+            width: 140px;
+            top: 85px;
+            right: 70px;
+            transform: rotate(-60deg);
+            transform-origin: right center;
+        }
+
+        .cap-edge-ap {
+            width: 150px;
+            bottom: 50px;
+            left: 100px;
+        }
+
+        .cap-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .cap-scenario-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .cap-scenario-btn.cp {
+            background: linear-gradient(135deg, #667eea 0%, #eb3349 100%);
+            color: white;
+        }
+
+        .cap-scenario-btn.ap {
+            background: linear-gradient(135deg, #11998e 0%, #eb3349 100%);
+            color: white;
+        }
+
+        .cap-scenario-btn.ca {
+            background: linear-gradient(135deg, #667eea 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .cap-scenario-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .cap-scenario-btn.active {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            border: 2px solid #ffd700;
+        }
+
+        .cap-explanation {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            color: white;
+            max-width: 500px;
+            text-align: center;
+            min-height: 120px;
+        }
+
+        .cap-explanation h4 {
+            margin-bottom: 0.75rem;
+            color: #ffd700;
+        }
+
+        .cap-examples {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 0.75rem;
+        }
+
+        .cap-example-tag {
+            padding: 0.25rem 0.75rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            font-size: 0.8rem;
+        }
+
+        /* Animated Network Partition Demo */
+        .partition-demo {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .partition-grid {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            min-height: 200px;
+            position: relative;
+        }
+
+        .partition-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            transition: all 0.5s ease;
+        }
+
+        .partition-zone.zone-a {
+            border-color: #667eea;
+        }
+
+        .partition-zone.zone-b {
+            border-color: #eb3349;
+        }
+
+        .partition-zone.partitioned {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .server-node {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .server-node.leader {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .server-node.follower {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        }
+
+        .server-node.unavailable {
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+            animation: pulse-error 1s infinite;
+        }
+
+        @keyframes pulse-error {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .server-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .network-line {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #eb3349);
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            transition: all 0.5s ease;
+        }
+
+        .network-line.broken {
+            background: transparent;
+            border-top: 3px dashed #ff6b6b;
+        }
+
+        .network-line.broken::after {
+            content: '⚡';
+            position: absolute;
+            left: 50%;
+            top: -15px;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            animation: flash 0.5s infinite;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .partition-status {
+            text-align: center;
+            color: white;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+        }
+
+        .partition-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .partition-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .partition-btn.normal {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .partition-btn.partition {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .partition-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Raft Animation Styles */
+        .raft-container {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .raft-nodes {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            min-height: 150px;
+            margin-bottom: 2rem;
+        }
+
+        .raft-node {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        .raft-node.follower {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            border: 3px solid #4a5568;
+        }
+
+        .raft-node.candidate {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+            border: 3px solid #ffd700;
+            animation: pulse-candidate 1s infinite;
+        }
+
+        @keyframes pulse-candidate {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(246, 173, 85, 0.4); }
+            50% { box-shadow: 0 0 0 15px rgba(246, 173, 85, 0); }
+        }
+
+        .raft-node.leader {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        .raft-node .term {
+            font-size: 0.7rem;
+            margin-top: 0.25rem;
+            opacity: 0.8;
+        }
+
+        .raft-node .vote-count {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #48bb78;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .raft-node.candidate .vote-count {
+            opacity: 1;
+        }
+
+        .raft-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        .raft-log-entry {
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeInLog 0.3s ease;
+        }
+
+        @keyframes fadeInLog {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .raft-log-entry.election {
+            color: #f6ad55;
+        }
+
+        .raft-log-entry.vote {
+            color: #48bb78;
+        }
+
+        .raft-log-entry.leader {
+            color: #ffd700;
+        }
+
+        .raft-log-entry.heartbeat {
+            color: #667eea;
+        }
+
+        .raft-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .raft-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .raft-btn.start {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .raft-btn.stop {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .raft-btn.kill {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        }
+
+        .raft-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .raft-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -106,34 +598,54 @@
 
         <div class="collapsible open">
             <div class="collapsible-header">
-                <span>The CAP Trade-off</span>
+                <span>The CAP Trade-off - Interactive Explorer</span>
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
-                <div class="diagram-container">
-                    <div class="mermaid">
-graph TD
-    subgraph "Pick Two"
-        C((Consistency))
-        A((Availability))
-        P((Partition Tolerance))
-    end
+                <p class="text-muted mb-2">Click on the scenarios below to see how different systems make trade-offs.</p>
 
-    C --- CA[CA Systems<br>Traditional RDBMS]
-    C --- CP[CP Systems<br>MongoDB, HBase]
-    A --- AP[AP Systems<br>Cassandra, DynamoDB]
+                <!-- Interactive CAP Triangle -->
+                <div class="cap-container" id="cap-demo">
+                    <div class="cap-triangle">
+                        <div class="cap-edge cap-edge-ca" id="edge-ca"></div>
+                        <div class="cap-edge cap-edge-cp" id="edge-cp"></div>
+                        <div class="cap-edge cap-edge-ap" id="edge-ap"></div>
+
+                        <div class="cap-node consistency" id="cap-c">
+                            <span style="font-size: 1.5rem;">🔒</span>
+                            <span>Consistency</span>
+                        </div>
+                        <div class="cap-node availability" id="cap-a">
+                            <span style="font-size: 1.5rem;">✅</span>
+                            <span>Availability</span>
+                        </div>
+                        <div class="cap-node partition" id="cap-p">
+                            <span style="font-size: 1.5rem;">🌐</span>
+                            <span>Partition<br>Tolerance</span>
+                        </div>
+                    </div>
+
+                    <div class="cap-controls">
+                        <button class="cap-scenario-btn cp" onclick="showCapScenario('cp')">CP Systems</button>
+                        <button class="cap-scenario-btn ap" onclick="showCapScenario('ap')">AP Systems</button>
+                        <button class="cap-scenario-btn ca" onclick="showCapScenario('ca')">CA Systems</button>
+                    </div>
+
+                    <div class="cap-explanation" id="cap-explanation">
+                        <h4>Choose a Scenario</h4>
+                        <p>Click on CP, AP, or CA to see how different systems prioritize these properties and the trade-offs they make.</p>
                     </div>
                 </div>
 
                 <h4>Definitions</h4>
                 <ul>
                     <li><strong>Consistency:</strong> Every read receives the most recent write</li>
-                    <li><strong>Availability:</strong> Every request receives a response</li>
-                    <li><strong>Partition Tolerance:</strong> System continues despite network failures</li>
+                    <li><strong>Availability:</strong> Every request receives a response (no timeout)</li>
+                    <li><strong>Partition Tolerance:</strong> System continues operating despite network failures</li>
                 </ul>
 
-                <div class="card mt-2" style="background: var(--success-bg);">
-                    <strong>Reality:</strong> In distributed systems, partition tolerance is required. The real choice is between CP and AP during a partition.
+                <div class="card mt-2" style="background: linear-gradient(135deg, rgba(17, 153, 142, 0.2), rgba(56, 239, 125, 0.2)); border-left: 4px solid #38ef7d;">
+                    <strong>🎯 Reality Check:</strong> In distributed systems, network partitions WILL happen. Partition Tolerance is not optional - it's a fact of life. The real choice during a partition is between Consistency and Availability.
                 </div>
 
                 <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
@@ -144,11 +656,72 @@ graph TD
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Financial transactions</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Social media feeds</td></tr>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Inventory management</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Content delivery</td></tr>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">User authentication</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Analytics / Logging</td></tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">💰 Financial transactions (banks, payment)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">📱 Social media feeds (Twitter, Facebook)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">📦 Inventory management (prevent overselling)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">🎬 Content delivery (Netflix streaming)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">🔐 User authentication (security critical)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">📊 Analytics / Logging (eventual accuracy OK)</td>
+                        </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Interactive Network Partition Demo -->
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Live Demo: Network Partition Simulation</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>See what happens when a network partition occurs in a distributed system. Watch how CP vs AP systems respond differently.</p>
+
+                <div class="partition-demo" id="partition-demo">
+                    <div class="partition-controls">
+                        <button class="partition-btn normal" onclick="setPartitionState('normal')">🟢 Normal Operation</button>
+                        <button class="partition-btn partition" onclick="setPartitionState('partition')">⚡ Simulate Partition</button>
+                    </div>
+
+                    <div class="partition-grid">
+                        <div class="partition-zone zone-a" id="zone-a">
+                            <div class="server-node leader" id="server-1">
+                                <span class="server-icon">👑</span>
+                                <span>Leader</span>
+                            </div>
+                            <div class="server-node follower" id="server-2">
+                                <span class="server-icon">📡</span>
+                                <span>Node 2</span>
+                            </div>
+                        </div>
+
+                        <div class="network-line" id="network-line"></div>
+
+                        <div class="partition-zone zone-b" id="zone-b">
+                            <div class="server-node follower" id="server-3">
+                                <span class="server-icon">📡</span>
+                                <span>Node 3</span>
+                            </div>
+                            <div class="server-node follower" id="server-4">
+                                <span class="server-icon">📡</span>
+                                <span>Node 4</span>
+                            </div>
+                            <div class="server-node follower" id="server-5">
+                                <span class="server-icon">📡</span>
+                                <span>Node 5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="partition-status" id="partition-status">
+                        <strong>Status:</strong> All nodes communicating normally. Cluster is healthy with 5/5 nodes.
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -218,10 +791,54 @@ sequenceDiagram
 
                 <h4>Raft (Simpler Alternative)</h4>
                 <ul>
-                    <li><strong>Leader Election:</strong> One node becomes leader</li>
+                    <li><strong>Leader Election:</strong> One node becomes leader via majority vote</li>
                     <li><strong>Log Replication:</strong> Leader replicates entries to followers</li>
-                    <li><strong>Safety:</strong> Committed entries are durable</li>
+                    <li><strong>Safety:</strong> Committed entries are durable across failures</li>
                 </ul>
+
+                <!-- Interactive Raft Election Demo -->
+                <h4 class="mt-3">🎮 Interactive Raft Election Demo</h4>
+                <p class="text-muted">Watch leader election in action. Click "Kill Leader" to trigger a new election.</p>
+
+                <div class="raft-container" id="raft-demo">
+                    <div class="raft-controls">
+                        <button class="raft-btn start" id="raft-start" onclick="startRaft()">▶ Start Cluster</button>
+                        <button class="raft-btn stop" id="raft-stop" onclick="stopRaft()" disabled>⏹ Stop</button>
+                        <button class="raft-btn kill" id="raft-kill" onclick="killLeader()" disabled>💀 Kill Leader</button>
+                    </div>
+
+                    <div class="raft-nodes" id="raft-nodes">
+                        <div class="raft-node follower" id="raft-node-1">
+                            <span>Node 1</span>
+                            <span class="term">Term: 0</span>
+                            <span class="vote-count">0</span>
+                        </div>
+                        <div class="raft-node follower" id="raft-node-2">
+                            <span>Node 2</span>
+                            <span class="term">Term: 0</span>
+                            <span class="vote-count">0</span>
+                        </div>
+                        <div class="raft-node follower" id="raft-node-3">
+                            <span>Node 3</span>
+                            <span class="term">Term: 0</span>
+                            <span class="vote-count">0</span>
+                        </div>
+                        <div class="raft-node follower" id="raft-node-4">
+                            <span>Node 4</span>
+                            <span class="term">Term: 0</span>
+                            <span class="vote-count">0</span>
+                        </div>
+                        <div class="raft-node follower" id="raft-node-5">
+                            <span>Node 5</span>
+                            <span class="term">Term: 0</span>
+                            <span class="vote-count">0</span>
+                        </div>
+                    </div>
+
+                    <div class="raft-log" id="raft-log">
+                        <div class="raft-log-entry">Waiting to start cluster...</div>
+                    </div>
+                </div>
 
                 <h4 class="mt-3">Raft Leader Election - Implementation</h4>
                 <div class="code-block">
@@ -816,6 +1433,274 @@ graph TD
             StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 3);
             alert('Module 3 marked as complete!');
             window.location.href = 'module-04.html';
+        }
+
+        // ============================================
+        // Interactive CAP Theorem Demo
+        // ============================================
+        const capScenarios = {
+            cp: {
+                title: 'CP Systems (Consistency + Partition Tolerance)',
+                description: 'During a network partition, the system may reject requests to maintain consistency. Example: A bank refusing transactions during network issues rather than risking inconsistent balances.',
+                examples: ['MongoDB', 'HBase', 'Redis Cluster', 'ZooKeeper'],
+                nodes: ['consistency', 'partition'],
+                edge: 'cp'
+            },
+            ap: {
+                title: 'AP Systems (Availability + Partition Tolerance)',
+                description: 'During a network partition, the system remains available but may return stale data. Example: A social media feed showing slightly outdated posts during network issues.',
+                examples: ['Cassandra', 'DynamoDB', 'CouchDB', 'Riak'],
+                nodes: ['availability', 'partition'],
+                edge: 'ap'
+            },
+            ca: {
+                title: 'CA Systems (Consistency + Availability)',
+                description: 'Only possible in a single-node system or when there are no network partitions. Traditional RDBMS fits here, but in practice, partition tolerance is required for distributed systems.',
+                examples: ['PostgreSQL (single)', 'MySQL (single)', 'Traditional RDBMS'],
+                nodes: ['consistency', 'availability'],
+                edge: 'ca'
+            }
+        };
+
+        function showCapScenario(type) {
+            const scenario = capScenarios[type];
+            const capC = document.getElementById('cap-c');
+            const capA = document.getElementById('cap-a');
+            const capP = document.getElementById('cap-p');
+            const edgeCA = document.getElementById('edge-ca');
+            const edgeCP = document.getElementById('edge-cp');
+            const edgeAP = document.getElementById('edge-ap');
+            const explanation = document.getElementById('cap-explanation');
+
+            // Reset all
+            [capC, capA, capP].forEach(n => {
+                n.classList.remove('selected', 'dimmed');
+            });
+            [edgeCA, edgeCP, edgeAP].forEach(e => {
+                e.classList.remove('highlighted');
+            });
+            document.querySelectorAll('.cap-scenario-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Highlight selected
+            const nodeMap = { consistency: capC, availability: capA, partition: capP };
+            const edgeMap = { ca: edgeCA, cp: edgeCP, ap: edgeAP };
+
+            scenario.nodes.forEach(n => nodeMap[n].classList.add('selected'));
+            edgeMap[scenario.edge].classList.add('highlighted');
+
+            // Dim the unselected node
+            ['consistency', 'availability', 'partition'].forEach(n => {
+                if (!scenario.nodes.includes(n)) {
+                    nodeMap[n].classList.add('dimmed');
+                }
+            });
+
+            // Highlight button
+            document.querySelector(`.cap-scenario-btn.${type}`).classList.add('active');
+
+            // Update explanation
+            explanation.innerHTML = `
+                <h4>${scenario.title}</h4>
+                <p>${scenario.description}</p>
+                <div class="cap-examples">
+                    ${scenario.examples.map(ex => `<span class="cap-example-tag">${ex}</span>`).join('')}
+                </div>
+            `;
+        }
+
+        // ============================================
+        // Network Partition Demo
+        // ============================================
+        function setPartitionState(state) {
+            const networkLine = document.getElementById('network-line');
+            const zoneA = document.getElementById('zone-a');
+            const zoneB = document.getElementById('zone-b');
+            const server3 = document.getElementById('server-3');
+            const server4 = document.getElementById('server-4');
+            const server5 = document.getElementById('server-5');
+            const status = document.getElementById('partition-status');
+
+            if (state === 'partition') {
+                networkLine.classList.add('broken');
+                zoneA.classList.add('partitioned');
+                zoneB.classList.add('partitioned');
+
+                // Zone B has majority (3 nodes) - they elect new leader
+                setTimeout(() => {
+                    server3.className = 'server-node leader';
+                    server3.innerHTML = '<span class="server-icon">👑</span><span>New Leader</span>';
+
+                    status.innerHTML = `
+                        <strong style="color: #ff6b6b;">⚠️ Network Partition Detected!</strong><br><br>
+                        <strong>Zone A (2 nodes):</strong> Old leader becomes unavailable - minority cannot serve writes (CP behavior)<br>
+                        <strong>Zone B (3 nodes):</strong> New leader elected - majority can continue serving requests<br><br>
+                        <em style="color: #a0aec0;">This is how Raft/Paxos handle partitions - the majority partition continues operating.</em>
+                    `;
+                }, 500);
+
+            } else {
+                networkLine.classList.remove('broken');
+                zoneA.classList.remove('partitioned');
+                zoneB.classList.remove('partitioned');
+
+                server3.className = 'server-node follower';
+                server3.innerHTML = '<span class="server-icon">📡</span><span>Node 3</span>';
+
+                status.innerHTML = '<strong>Status:</strong> All nodes communicating normally. Cluster is healthy with 5/5 nodes.';
+            }
+        }
+
+        // ============================================
+        // Interactive Raft Election Demo
+        // ============================================
+        let raftRunning = false;
+        let raftInterval = null;
+        let raftTerm = 0;
+        let raftLeader = null;
+        let raftNodes = [
+            { id: 1, state: 'follower', votes: 0 },
+            { id: 2, state: 'follower', votes: 0 },
+            { id: 3, state: 'follower', votes: 0 },
+            { id: 4, state: 'follower', votes: 0 },
+            { id: 5, state: 'follower', votes: 0 }
+        ];
+
+        function addRaftLog(message, type = '') {
+            const log = document.getElementById('raft-log');
+            const entry = document.createElement('div');
+            entry.className = `raft-log-entry ${type}`;
+            entry.textContent = `[Term ${raftTerm}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+
+            // Keep only last 20 entries
+            while (log.children.length > 20) {
+                log.removeChild(log.firstChild);
+            }
+        }
+
+        function updateRaftUI() {
+            raftNodes.forEach(node => {
+                const el = document.getElementById(`raft-node-${node.id}`);
+                el.className = `raft-node ${node.state}`;
+                el.querySelector('.term').textContent = `Term: ${raftTerm}`;
+                el.querySelector('.vote-count').textContent = node.votes;
+            });
+        }
+
+        function startRaft() {
+            raftRunning = true;
+            document.getElementById('raft-start').disabled = true;
+            document.getElementById('raft-stop').disabled = false;
+            document.getElementById('raft-kill').disabled = false;
+            document.getElementById('raft-log').innerHTML = '';
+
+            addRaftLog('Cluster starting...', '');
+
+            // Simulate election after timeout
+            setTimeout(() => {
+                if (!raftRunning) return;
+                triggerElection();
+            }, 1000);
+        }
+
+        function triggerElection() {
+            if (!raftRunning) return;
+
+            raftTerm++;
+            const candidateId = raftLeader ?
+                raftNodes.filter(n => n.id !== raftLeader).sort(() => Math.random() - 0.5)[0].id :
+                Math.floor(Math.random() * 5) + 1;
+
+            // Reset all nodes
+            raftNodes.forEach(n => {
+                n.state = 'follower';
+                n.votes = 0;
+            });
+
+            const candidate = raftNodes.find(n => n.id === candidateId);
+            candidate.state = 'candidate';
+            candidate.votes = 1; // Vote for self
+            updateRaftUI();
+
+            addRaftLog(`Node ${candidateId} election timeout - becoming candidate`, 'election');
+            addRaftLog(`Node ${candidateId} requests votes for term ${raftTerm}`, 'election');
+
+            // Simulate vote collection
+            let voteDelay = 300;
+            raftNodes.forEach(node => {
+                if (node.id !== candidateId && raftRunning) {
+                    setTimeout(() => {
+                        if (!raftRunning || candidate.state !== 'candidate') return;
+                        candidate.votes++;
+                        addRaftLog(`Node ${node.id} votes for Node ${candidateId}`, 'vote');
+                        updateRaftUI();
+
+                        // Check if won majority
+                        if (candidate.votes >= 3 && candidate.state === 'candidate') {
+                            candidate.state = 'leader';
+                            raftLeader = candidateId;
+                            addRaftLog(`Node ${candidateId} wins election with ${candidate.votes} votes!`, 'leader');
+                            updateRaftUI();
+
+                            // Start heartbeats
+                            startHeartbeats(candidateId);
+                        }
+                    }, voteDelay);
+                    voteDelay += 200;
+                }
+            });
+        }
+
+        function startHeartbeats(leaderId) {
+            if (raftInterval) clearInterval(raftInterval);
+
+            raftInterval = setInterval(() => {
+                if (!raftRunning) return;
+                addRaftLog(`Leader ${leaderId} sends heartbeat to followers`, 'heartbeat');
+            }, 2000);
+        }
+
+        function killLeader() {
+            if (!raftLeader || !raftRunning) return;
+
+            const oldLeader = raftLeader;
+            addRaftLog(`Node ${oldLeader} (leader) crashed!`, 'election');
+
+            // Mark old leader as dead
+            const leaderNode = raftNodes.find(n => n.id === oldLeader);
+            leaderNode.state = 'follower';
+            raftLeader = null;
+
+            if (raftInterval) clearInterval(raftInterval);
+            updateRaftUI();
+
+            // Trigger new election after timeout
+            setTimeout(() => {
+                if (raftRunning) {
+                    addRaftLog('Election timeout - starting new election', 'election');
+                    triggerElection();
+                }
+            }, 1500);
+        }
+
+        function stopRaft() {
+            raftRunning = false;
+            if (raftInterval) clearInterval(raftInterval);
+            document.getElementById('raft-start').disabled = false;
+            document.getElementById('raft-stop').disabled = true;
+            document.getElementById('raft-kill').disabled = true;
+
+            raftTerm = 0;
+            raftLeader = null;
+            raftNodes.forEach(n => {
+                n.state = 'follower';
+                n.votes = 0;
+            });
+            updateRaftUI();
+            addRaftLog('Cluster stopped.', '');
         }
     </script>
 </body>
