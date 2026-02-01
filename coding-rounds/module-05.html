@@ -714,25 +714,337 @@ def knapsack_optimized(weights, values, capacity):
         <!-- Pattern Recognition -->
         <h2 class="mt-4">DP Pattern Recognition</h2>
 
-        <div class="diagram-container">
-            <div class="mermaid">
-flowchart TD
-    A[DP Problem] --> B{Linear sequence?}
-    B -->|Yes| C{Decision at each step?}
-    B -->|No| D{Two sequences?}
+        <!-- Interactive DP Pattern Recognition Decision Tree -->
+        <div class="dp-pattern-tree" id="dp-pattern-tree">
+            <style>
+                .dp-pattern-tree {
+                    background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+                    border-radius: 16px;
+                    padding: 1.5rem;
+                    margin: 1.5rem 0;
+                    position: relative;
+                    overflow: hidden;
+                    min-height: 520px;
+                }
+                .dp-pattern-tree::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background:
+                        radial-gradient(circle at 10% 90%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 10%, rgba(168, 85, 247, 0.1) 0%, transparent 40%);
+                    pointer-events: none;
+                }
+                .tree-container {
+                    position: relative;
+                    width: 100%;
+                    height: 100%;
+                }
+                .tree-node {
+                    position: absolute;
+                    padding: 0.75rem 1rem;
+                    border-radius: 10px;
+                    font-size: 0.85rem;
+                    font-weight: 500;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    opacity: 0;
+                    transform: scale(0.8);
+                    z-index: 5;
+                    min-width: 120px;
+                }
+                .tree-node.visible {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                .tree-node.root {
+                    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+                    color: white;
+                    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
+                    left: 50%;
+                    top: 10px;
+                    transform: translateX(-50%) scale(0.8);
+                }
+                .tree-node.root.visible {
+                    transform: translateX(-50%) scale(1);
+                }
+                .tree-node.decision {
+                    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                    color: white;
+                    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.35);
+                    border-radius: 50%;
+                    width: 100px;
+                    height: 100px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: auto;
+                    padding: 0.5rem;
+                }
+                .tree-node.decision:hover {
+                    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.5);
+                    transform: scale(1.08);
+                }
+                .tree-node.leaf {
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    color: white;
+                    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.35);
+                }
+                .tree-node.leaf:hover {
+                    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.5);
+                    transform: scale(1.05);
+                }
+                .tree-node.leaf.selected {
+                    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.5), 0 8px 32px rgba(16, 185, 129, 0.5);
+                }
+                .tree-node.highlighted {
+                    animation: node-pulse 0.8s ease-in-out infinite;
+                }
+                @keyframes node-pulse {
+                    0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.6); }
+                    50% { box-shadow: 0 0 0 12px rgba(251, 191, 36, 0); }
+                }
+                .tree-edge {
+                    position: absolute;
+                    background: linear-gradient(180deg, rgba(148, 163, 184, 0.6), rgba(148, 163, 184, 0.2));
+                    z-index: 1;
+                    transition: all 0.4s ease;
+                    opacity: 0;
+                }
+                .tree-edge.visible { opacity: 1; }
+                .tree-edge-label {
+                    position: absolute;
+                    background: rgba(30, 41, 59, 0.9);
+                    color: #94a3b8;
+                    padding: 0.2rem 0.5rem;
+                    border-radius: 4px;
+                    font-size: 0.7rem;
+                    font-weight: 600;
+                    z-index: 4;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                }
+                .tree-edge-label.visible { opacity: 1; }
+                .tree-controls {
+                    position: absolute;
+                    bottom: 15px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    display: flex;
+                    gap: 0.75rem;
+                    z-index: 10;
+                }
+                .tree-btn {
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    color: white;
+                    padding: 0.5rem 1rem;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 0.85rem;
+                    transition: all 0.2s ease;
+                }
+                .tree-btn:hover {
+                    background: rgba(255, 255, 255, 0.2);
+                }
+                .tree-btn.active {
+                    background: rgba(99, 102, 241, 0.5);
+                    border-color: #6366f1;
+                }
+                .pattern-result {
+                    position: absolute;
+                    bottom: 60px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(16, 185, 129, 0.2);
+                    border: 1px solid rgba(16, 185, 129, 0.5);
+                    color: #10b981;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 10px;
+                    font-weight: 600;
+                    text-align: center;
+                    opacity: 0;
+                    transition: opacity 0.4s ease;
+                    z-index: 10;
+                }
+                .pattern-result.visible { opacity: 1; }
+            </style>
 
-    C -->|Yes| E["1D DP<br>House Robber"]
-    C -->|No| F["1D DP Linear<br>Climbing Stairs"]
+            <div class="tree-container" id="tree-container">
+                <!-- Root Node -->
+                <div class="tree-node root visible" id="node-root" onclick="startPatternWizard()">DP Problem</div>
 
-    D -->|Yes| G["2D String DP<br>LCS, Edit Distance"]
-    D -->|No| H{Subset/Partition?}
+                <!-- Level 1: Linear Sequence? -->
+                <div class="tree-node decision" id="node-linear" style="left: 50%; top: 80px; transform: translateX(-50%);">
+                    Linear sequence?
+                </div>
 
-    H -->|Yes| I["Knapsack Pattern"]
-    H -->|No| J{Grid?}
+                <!-- Level 2 Left: Decision at each step? -->
+                <div class="tree-node decision" id="node-decision" style="left: 20%; top: 180px;">
+                    Decision at each step?
+                </div>
 
-    J -->|Yes| K["2D Grid DP<br>Unique Paths"]
+                <!-- Level 2 Right: Two sequences? -->
+                <div class="tree-node decision" id="node-two-seq" style="left: 70%; top: 180px;">
+                    Two sequences?
+                </div>
+
+                <!-- Level 3 Leaves -->
+                <div class="tree-node leaf" id="node-house-robber" style="left: 5%; top: 290px;">
+                    1D DP<br><small>House Robber</small>
+                </div>
+                <div class="tree-node leaf" id="node-climbing" style="left: 25%; top: 290px;">
+                    1D DP Linear<br><small>Climbing Stairs</small>
+                </div>
+                <div class="tree-node leaf" id="node-lcs" style="left: 58%; top: 290px;">
+                    2D String DP<br><small>LCS, Edit Distance</small>
+                </div>
+
+                <!-- Level 3 Right: Subset/Partition? -->
+                <div class="tree-node decision" id="node-subset" style="left: 82%; top: 290px; width: 80px; height: 80px;">
+                    Subset?
+                </div>
+
+                <!-- Level 4 -->
+                <div class="tree-node leaf" id="node-knapsack" style="left: 68%; top: 390px;">
+                    Knapsack<br><small>Pattern</small>
+                </div>
+                <div class="tree-node decision" id="node-grid" style="left: 88%; top: 390px; width: 70px; height: 70px;">
+                    Grid?
+                </div>
+
+                <!-- Level 5 -->
+                <div class="tree-node leaf" id="node-unique-paths" style="left: 85%; top: 470px;">
+                    2D Grid DP<br><small>Unique Paths</small>
+                </div>
+
+                <!-- Edge Labels -->
+                <div class="tree-edge-label" id="label-yes-1" style="left: 30%; top: 140px;">Yes</div>
+                <div class="tree-edge-label" id="label-no-1" style="left: 65%; top: 140px;">No</div>
+                <div class="tree-edge-label" id="label-yes-2" style="left: 10%; top: 240px;">Yes</div>
+                <div class="tree-edge-label" id="label-no-2" style="left: 28%; top: 240px;">No</div>
+                <div class="tree-edge-label" id="label-yes-3" style="left: 58%; top: 240px;">Yes</div>
+                <div class="tree-edge-label" id="label-no-3" style="left: 82%; top: 240px;">No</div>
+                <div class="tree-edge-label" id="label-yes-4" style="left: 70%; top: 340px;">Yes</div>
+                <div class="tree-edge-label" id="label-no-4" style="left: 90%; top: 340px;">No</div>
+                <div class="tree-edge-label" id="label-yes-5" style="left: 88%; top: 435px;">Yes</div>
+            </div>
+
+            <div class="pattern-result" id="pattern-result"></div>
+
+            <div class="tree-controls">
+                <button class="tree-btn" onclick="animateFullTree()">Reveal All</button>
+                <button class="tree-btn" onclick="startPatternWizard()">Interactive Quiz</button>
+                <button class="tree-btn" onclick="resetPatternTree()">Reset</button>
             </div>
         </div>
+
+        <script>
+            let treeAnimationTimeout = null;
+            let wizardStep = 0;
+
+            function animateFullTree() {
+                resetPatternTree();
+                const nodeOrder = [
+                    'node-root', 'node-linear',
+                    'node-decision', 'node-two-seq',
+                    'node-house-robber', 'node-climbing', 'node-lcs', 'node-subset',
+                    'node-knapsack', 'node-grid',
+                    'node-unique-paths'
+                ];
+                const labelOrder = [
+                    'label-yes-1', 'label-no-1',
+                    'label-yes-2', 'label-no-2', 'label-yes-3', 'label-no-3',
+                    'label-yes-4', 'label-no-4',
+                    'label-yes-5'
+                ];
+
+                let step = 0;
+                function showNext() {
+                    if (step < nodeOrder.length) {
+                        const node = document.getElementById(nodeOrder[step]);
+                        if (node) node.classList.add('visible');
+                    }
+                    if (step > 0 && step - 1 < labelOrder.length) {
+                        const label = document.getElementById(labelOrder[step - 1]);
+                        if (label) label.classList.add('visible');
+                    }
+                    step++;
+                    if (step <= nodeOrder.length + labelOrder.length) {
+                        treeAnimationTimeout = setTimeout(showNext, 300);
+                    }
+                }
+                showNext();
+            }
+
+            function resetPatternTree() {
+                if (treeAnimationTimeout) {
+                    clearTimeout(treeAnimationTimeout);
+                    treeAnimationTimeout = null;
+                }
+                wizardStep = 0;
+                document.querySelectorAll('.tree-node').forEach(node => {
+                    node.classList.remove('visible', 'highlighted', 'selected');
+                });
+                document.querySelectorAll('.tree-edge-label').forEach(label => {
+                    label.classList.remove('visible');
+                });
+                document.getElementById('node-root').classList.add('visible');
+                document.getElementById('pattern-result').classList.remove('visible');
+                document.getElementById('pattern-result').textContent = '';
+            }
+
+            function startPatternWizard() {
+                resetPatternTree();
+                wizardStep = 1;
+                document.getElementById('node-linear').classList.add('visible', 'highlighted');
+                document.getElementById('label-yes-1').classList.add('visible');
+                document.getElementById('label-no-1').classList.add('visible');
+
+                document.getElementById('node-linear').onclick = () => handleWizardClick('linear', true);
+
+                document.getElementById('pattern-result').textContent = 'Click the decision node to answer: Is it a linear sequence?';
+                document.getElementById('pattern-result').classList.add('visible');
+            }
+
+            function handleWizardClick(nodeType, isYes) {
+                const resultEl = document.getElementById('pattern-result');
+
+                if (nodeType === 'linear') {
+                    document.getElementById('node-linear').classList.remove('highlighted');
+
+                    // Randomly pick a path for demo
+                    const goYes = Math.random() > 0.5;
+                    if (goYes) {
+                        document.getElementById('node-decision').classList.add('visible', 'highlighted');
+                        document.getElementById('label-yes-2').classList.add('visible');
+                        document.getElementById('label-no-2').classList.add('visible');
+                        resultEl.textContent = 'Yes! Next: Do you make a decision at each step?';
+                        setTimeout(() => {
+                            document.getElementById('node-decision').classList.remove('highlighted');
+                            document.getElementById('node-house-robber').classList.add('visible', 'selected');
+                            document.getElementById('node-climbing').classList.add('visible');
+                            resultEl.textContent = 'Use 1D DP - like House Robber or Climbing Stairs!';
+                        }, 1500);
+                    } else {
+                        document.getElementById('node-two-seq').classList.add('visible', 'highlighted');
+                        document.getElementById('label-yes-3').classList.add('visible');
+                        document.getElementById('label-no-3').classList.add('visible');
+                        resultEl.textContent = 'Not linear. Do you have two sequences to compare?';
+                        setTimeout(() => {
+                            document.getElementById('node-two-seq').classList.remove('highlighted');
+                            document.getElementById('node-lcs').classList.add('visible', 'selected');
+                            document.getElementById('node-subset').classList.add('visible');
+                            resultEl.textContent = 'Use 2D String DP - like LCS or Edit Distance!';
+                        }, 1500);
+                    }
+                }
+            }
+        </script>
 
         <!-- Real-World Scale Examples -->
         <h2 class="mt-4">Real-World Scale Examples</h2>

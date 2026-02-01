@@ -6,7 +6,6 @@
     <title>Module 2: Arrays & Two Pointers - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -668,20 +667,491 @@
                 <p>Sliding window maintains a "window" of elements that expands/contracts based on conditions.</p>
 
                 <div class="diagram-container">
-                    <div class="mermaid">
-flowchart LR
-    subgraph "Fixed Window"
-        A1["[a, b, c] d, e, f"]
-        A2["a, [b, c, d] e, f"]
-        A3["a, b, [c, d, e] f"]
-    end
+                    <!-- Interactive Sliding Window Animation -->
+                    <div class="sliding-window-animation" id="slidingWindowDemo">
+                        <style>
+                            .sliding-window-animation {
+                                font-family: 'Segoe UI', system-ui, sans-serif;
+                                padding: 30px;
+                                background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+                                border-radius: 16px;
+                                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                            }
+                            .sw-section {
+                                margin-bottom: 30px;
+                                padding: 20px;
+                                background: rgba(255,255,255,0.03);
+                                border-radius: 12px;
+                                border: 1px solid rgba(255,255,255,0.08);
+                                transition: all 0.3s ease;
+                            }
+                            .sw-section:hover {
+                                background: rgba(255,255,255,0.05);
+                                border-color: rgba(14, 165, 233, 0.3);
+                            }
+                            .sw-section-title {
+                                font-size: 14px;
+                                font-weight: 600;
+                                color: #7dd3fc;
+                                text-transform: uppercase;
+                                letter-spacing: 1.5px;
+                                margin-bottom: 20px;
+                                display: flex;
+                                align-items: center;
+                                gap: 10px;
+                            }
+                            .sw-section-title::before {
+                                content: '';
+                                width: 4px;
+                                height: 20px;
+                                background: linear-gradient(180deg, #0ea5e9, #06b6d4);
+                                border-radius: 2px;
+                            }
+                            .sw-array-container {
+                                display: flex;
+                                justify-content: center;
+                                gap: 6px;
+                                margin: 25px 0;
+                                position: relative;
+                                padding: 20px 0;
+                            }
+                            .sw-cell {
+                                width: 50px;
+                                height: 50px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 18px;
+                                font-weight: 600;
+                                color: #94a3b8;
+                                background: linear-gradient(145deg, #1e293b, #0f172a);
+                                border-radius: 8px;
+                                border: 2px solid #334155;
+                                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                                position: relative;
+                                z-index: 1;
+                            }
+                            .sw-cell:hover {
+                                transform: translateY(-2px);
+                                border-color: #0ea5e9;
+                            }
+                            .sw-cell.in-window {
+                                color: #f0f9ff;
+                                background: linear-gradient(145deg, #0369a1, #0284c7);
+                                border-color: #38bdf8;
+                                box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+                                transform: scale(1.05);
+                                z-index: 2;
+                            }
+                            .sw-cell.highlight {
+                                background: linear-gradient(145deg, #059669, #10b981);
+                                border-color: #34d399;
+                                box-shadow: 0 0 25px rgba(16, 185, 129, 0.5);
+                            }
+                            .sw-window-bracket {
+                                position: absolute;
+                                height: 70px;
+                                border: 3px solid #0ea5e9;
+                                border-radius: 12px;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                                background: rgba(14, 165, 233, 0.1);
+                                pointer-events: none;
+                                z-index: 0;
+                            }
+                            .sw-window-label {
+                                position: absolute;
+                                top: -25px;
+                                left: 50%;
+                                transform: translateX(-50%);
+                                font-size: 11px;
+                                font-weight: 700;
+                                color: #7dd3fc;
+                                background: #0f172a;
+                                padding: 2px 8px;
+                                border-radius: 4px;
+                                white-space: nowrap;
+                            }
+                            .sw-controls {
+                                display: flex;
+                                justify-content: center;
+                                gap: 12px;
+                                margin-top: 20px;
+                                flex-wrap: wrap;
+                            }
+                            .sw-btn {
+                                padding: 10px 20px;
+                                font-size: 13px;
+                                font-weight: 600;
+                                border: none;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                            }
+                            .sw-btn-primary {
+                                background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+                                color: white;
+                            }
+                            .sw-btn-primary:hover {
+                                transform: translateY(-2px);
+                                box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+                            }
+                            .sw-btn-primary:disabled {
+                                opacity: 0.5;
+                                cursor: not-allowed;
+                                transform: none;
+                            }
+                            .sw-btn-secondary {
+                                background: rgba(255,255,255,0.1);
+                                color: #e2e8f0;
+                                border: 1px solid rgba(255,255,255,0.2);
+                            }
+                            .sw-btn-secondary:hover {
+                                background: rgba(255,255,255,0.15);
+                            }
+                            .sw-status {
+                                text-align: center;
+                                margin-top: 15px;
+                                padding: 12px;
+                                background: rgba(14, 165, 233, 0.1);
+                                border-radius: 8px;
+                                color: #bae6fd;
+                                font-size: 14px;
+                                border: 1px solid rgba(14, 165, 233, 0.2);
+                                min-height: 44px;
+                            }
+                            .sw-sum-display {
+                                display: flex;
+                                justify-content: center;
+                                gap: 30px;
+                                margin-top: 15px;
+                                flex-wrap: wrap;
+                            }
+                            .sw-sum-item {
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                gap: 5px;
+                            }
+                            .sw-sum-label {
+                                font-size: 11px;
+                                color: #64748b;
+                                text-transform: uppercase;
+                                letter-spacing: 1px;
+                            }
+                            .sw-sum-value {
+                                font-size: 24px;
+                                font-weight: 700;
+                                color: #38bdf8;
+                            }
+                            .sw-sum-value.max {
+                                color: #34d399;
+                            }
+                            @keyframes slideIn {
+                                from { opacity: 0; transform: scale(0.8); }
+                                to { opacity: 1; transform: scale(1.05); }
+                            }
+                            .sw-cell.animate-in {
+                                animation: slideIn 0.3s ease forwards;
+                            }
+                        </style>
 
-    subgraph "Variable Window"
-        B1["[a, b] c, d, e"]
-        B2["[a, b, c, d] e"]
-        B3["a, [b, c] d, e"]
-    end
+                        <!-- Fixed Window Section -->
+                        <div class="sw-section">
+                            <div class="sw-section-title">Fixed Window (Size = 3)</div>
+                            <div class="sw-array-container" id="fixedWindowArray">
+                                <div class="sw-window-bracket" id="fixedWindowBracket">
+                                    <div class="sw-window-label">Window</div>
+                                </div>
+                                <div class="sw-cell" data-index="0" data-value="2">2</div>
+                                <div class="sw-cell" data-index="1" data-value="1">1</div>
+                                <div class="sw-cell" data-index="2" data-value="5">5</div>
+                                <div class="sw-cell" data-index="3" data-value="1">1</div>
+                                <div class="sw-cell" data-index="4" data-value="3">3</div>
+                                <div class="sw-cell" data-index="5" data-value="2">2</div>
+                            </div>
+                            <div class="sw-sum-display">
+                                <div class="sw-sum-item">
+                                    <div class="sw-sum-label">Window Sum</div>
+                                    <div class="sw-sum-value" id="fixedWindowSum">8</div>
+                                </div>
+                                <div class="sw-sum-item">
+                                    <div class="sw-sum-label">Max Sum</div>
+                                    <div class="sw-sum-value max" id="fixedMaxSum">8</div>
+                                </div>
+                            </div>
+                            <div class="sw-controls">
+                                <button class="sw-btn sw-btn-primary" id="animateFixed">Animate</button>
+                                <button class="sw-btn sw-btn-secondary" id="resetFixed">Reset</button>
+                                <button class="sw-btn sw-btn-secondary" id="stepFixed">Step</button>
+                            </div>
+                            <div class="sw-status" id="fixedStatus">Find maximum sum of any 3 consecutive elements</div>
+                        </div>
+
+                        <!-- Variable Window Section -->
+                        <div class="sw-section">
+                            <div class="sw-section-title">Variable Window (Sum >= 7)</div>
+                            <div class="sw-array-container" id="variableWindowArray">
+                                <div class="sw-window-bracket" id="variableWindowBracket">
+                                    <div class="sw-window-label">Window</div>
+                                </div>
+                                <div class="sw-cell" data-index="0" data-value="2">2</div>
+                                <div class="sw-cell" data-index="1" data-value="3">3</div>
+                                <div class="sw-cell" data-index="2" data-value="1">1</div>
+                                <div class="sw-cell" data-index="3" data-value="2">2</div>
+                                <div class="sw-cell" data-index="4" data-value="4">4</div>
+                                <div class="sw-cell" data-index="5" data-value="3">3</div>
+                            </div>
+                            <div class="sw-sum-display">
+                                <div class="sw-sum-item">
+                                    <div class="sw-sum-label">Window Sum</div>
+                                    <div class="sw-sum-value" id="variableWindowSum">2</div>
+                                </div>
+                                <div class="sw-sum-item">
+                                    <div class="sw-sum-label">Min Length</div>
+                                    <div class="sw-sum-value max" id="variableMinLen">-</div>
+                                </div>
+                            </div>
+                            <div class="sw-controls">
+                                <button class="sw-btn sw-btn-primary" id="animateVariable">Animate</button>
+                                <button class="sw-btn sw-btn-secondary" id="resetVariable">Reset</button>
+                                <button class="sw-btn sw-btn-secondary" id="stepVariable">Step</button>
+                            </div>
+                            <div class="sw-status" id="variableStatus">Find minimum window with sum >= 7</div>
+                        </div>
                     </div>
+
+                    <script>
+                    (function() {
+                        // Sliding Window Animation State
+                        const swState = {
+                            fixed: { left: 0, windowSize: 3, animating: false, maxSum: 0, values: [2, 1, 5, 1, 3, 2] },
+                            variable: { left: 0, right: 0, target: 7, animating: false, minLen: Infinity, values: [2, 3, 1, 2, 4, 3] }
+                        };
+
+                        function getWindowBounds(container, left, right) {
+                            const cells = container.querySelectorAll('.sw-cell');
+                            if (cells[left] && cells[right]) {
+                                const containerRect = container.getBoundingClientRect();
+                                const leftRect = cells[left].getBoundingClientRect();
+                                const rightRect = cells[right].getBoundingClientRect();
+                                return {
+                                    left: leftRect.left - containerRect.left - 5,
+                                    width: rightRect.right - leftRect.left + 10
+                                };
+                            }
+                            return { left: 0, width: 0 };
+                        }
+
+                        function updateFixedWindowUI() {
+                            const container = document.getElementById('fixedWindowArray');
+                            const cells = container.querySelectorAll('.sw-cell');
+                            const bracket = document.getElementById('fixedWindowBracket');
+                            const right = swState.fixed.left + swState.fixed.windowSize - 1;
+
+                            let windowSum = 0;
+                            cells.forEach((cell, idx) => {
+                                cell.classList.remove('in-window', 'highlight', 'animate-in');
+                                if (idx >= swState.fixed.left && idx <= right && idx < cells.length) {
+                                    cell.classList.add('in-window');
+                                    windowSum += swState.fixed.values[idx];
+                                }
+                            });
+
+                            const bounds = getWindowBounds(container, swState.fixed.left, Math.min(right, cells.length - 1));
+                            bracket.style.left = bounds.left + 'px';
+                            bracket.style.width = bounds.width + 'px';
+
+                            document.getElementById('fixedWindowSum').textContent = windowSum;
+                            if (windowSum > swState.fixed.maxSum) {
+                                swState.fixed.maxSum = windowSum;
+                            }
+                            document.getElementById('fixedMaxSum').textContent = swState.fixed.maxSum;
+                        }
+
+                        function animateFixedWindow() {
+                            if (swState.fixed.animating) return;
+                            swState.fixed.animating = true;
+                            swState.fixed.left = 0;
+                            swState.fixed.maxSum = 0;
+                            document.getElementById('animateFixed').disabled = true;
+
+                            const animate = () => {
+                                const maxLeft = swState.fixed.values.length - swState.fixed.windowSize;
+                                if (swState.fixed.left > maxLeft) {
+                                    document.getElementById('fixedStatus').textContent =
+                                        'Complete! Maximum sum found: ' + swState.fixed.maxSum;
+                                    swState.fixed.animating = false;
+                                    document.getElementById('animateFixed').disabled = false;
+                                    return;
+                                }
+
+                                updateFixedWindowUI();
+                                const right = swState.fixed.left + swState.fixed.windowSize - 1;
+                                let sum = 0;
+                                for (let i = swState.fixed.left; i <= right; i++) {
+                                    sum += swState.fixed.values[i];
+                                }
+                                document.getElementById('fixedStatus').textContent =
+                                    'Window [' + swState.fixed.left + ',' + right + '] sum = ' + sum +
+                                    (sum === swState.fixed.maxSum ? ' (new max!)' : '');
+
+                                setTimeout(() => {
+                                    swState.fixed.left++;
+                                    setTimeout(animate, 800);
+                                }, 600);
+                            };
+
+                            animate();
+                        }
+
+                        function stepFixedWindow() {
+                            const maxLeft = swState.fixed.values.length - swState.fixed.windowSize;
+                            if (swState.fixed.left > maxLeft) {
+                                resetFixedWindow();
+                                return;
+                            }
+                            updateFixedWindowUI();
+                            swState.fixed.left++;
+                        }
+
+                        function resetFixedWindow() {
+                            swState.fixed.left = 0;
+                            swState.fixed.maxSum = 0;
+                            swState.fixed.animating = false;
+                            document.getElementById('animateFixed').disabled = false;
+                            updateFixedWindowUI();
+                            document.getElementById('fixedStatus').textContent = 'Find maximum sum of any 3 consecutive elements';
+                        }
+
+                        function updateVariableWindowUI() {
+                            const container = document.getElementById('variableWindowArray');
+                            const cells = container.querySelectorAll('.sw-cell');
+                            const bracket = document.getElementById('variableWindowBracket');
+
+                            let windowSum = 0;
+                            cells.forEach((cell, idx) => {
+                                cell.classList.remove('in-window', 'highlight', 'animate-in');
+                                if (idx >= swState.variable.left && idx <= swState.variable.right) {
+                                    cell.classList.add('in-window');
+                                    windowSum += swState.variable.values[idx];
+                                }
+                            });
+
+                            const bounds = getWindowBounds(container, swState.variable.left, swState.variable.right);
+                            bracket.style.left = bounds.left + 'px';
+                            bracket.style.width = bounds.width + 'px';
+
+                            document.getElementById('variableWindowSum').textContent = windowSum;
+                            document.getElementById('variableMinLen').textContent =
+                                swState.variable.minLen === Infinity ? '-' : swState.variable.minLen;
+
+                            return windowSum;
+                        }
+
+                        function animateVariableWindow() {
+                            if (swState.variable.animating) return;
+                            swState.variable.animating = true;
+                            swState.variable.left = 0;
+                            swState.variable.right = 0;
+                            swState.variable.minLen = Infinity;
+                            document.getElementById('animateVariable').disabled = true;
+
+                            let currentSum = swState.variable.values[0];
+
+                            const animate = () => {
+                                if (swState.variable.right >= swState.variable.values.length) {
+                                    document.getElementById('variableStatus').textContent =
+                                        'Complete! Minimum window length: ' +
+                                        (swState.variable.minLen === Infinity ? 'none found' : swState.variable.minLen);
+                                    swState.variable.animating = false;
+                                    document.getElementById('animateVariable').disabled = false;
+                                    return;
+                                }
+
+                                const windowSum = updateVariableWindowUI();
+                                const windowLen = swState.variable.right - swState.variable.left + 1;
+
+                                if (windowSum >= swState.variable.target) {
+                                    if (windowLen < swState.variable.minLen) {
+                                        swState.variable.minLen = windowLen;
+                                    }
+                                    document.getElementById('fixedStatus').textContent;
+                                    document.getElementById('variableStatus').textContent =
+                                        'Sum ' + windowSum + ' >= ' + swState.variable.target + '! Length=' + windowLen + '. Shrinking window...';
+
+                                    setTimeout(() => {
+                                        currentSum -= swState.variable.values[swState.variable.left];
+                                        swState.variable.left++;
+                                        setTimeout(animate, 600);
+                                    }, 800);
+                                } else {
+                                    document.getElementById('variableStatus').textContent =
+                                        'Sum ' + windowSum + ' < ' + swState.variable.target + '. Expanding window...';
+
+                                    setTimeout(() => {
+                                        swState.variable.right++;
+                                        if (swState.variable.right < swState.variable.values.length) {
+                                            currentSum += swState.variable.values[swState.variable.right];
+                                        }
+                                        setTimeout(animate, 600);
+                                    }, 800);
+                                }
+                            };
+
+                            animate();
+                        }
+
+                        function stepVariableWindow() {
+                            if (swState.variable.right >= swState.variable.values.length) {
+                                resetVariableWindow();
+                                return;
+                            }
+
+                            const windowSum = updateVariableWindowUI();
+                            if (windowSum >= swState.variable.target) {
+                                const windowLen = swState.variable.right - swState.variable.left + 1;
+                                if (windowLen < swState.variable.minLen) {
+                                    swState.variable.minLen = windowLen;
+                                }
+                                swState.variable.left++;
+                            } else {
+                                swState.variable.right++;
+                            }
+                            updateVariableWindowUI();
+                        }
+
+                        function resetVariableWindow() {
+                            swState.variable.left = 0;
+                            swState.variable.right = 0;
+                            swState.variable.minLen = Infinity;
+                            swState.variable.animating = false;
+                            document.getElementById('animateVariable').disabled = false;
+                            updateVariableWindowUI();
+                            document.getElementById('variableStatus').textContent = 'Find minimum window with sum >= 7';
+                        }
+
+                        // Initialize after DOM is ready
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Set up event listeners for sliding window
+                            document.getElementById('animateFixed').addEventListener('click', animateFixedWindow);
+                            document.getElementById('resetFixed').addEventListener('click', resetFixedWindow);
+                            document.getElementById('stepFixed').addEventListener('click', stepFixedWindow);
+                            document.getElementById('animateVariable').addEventListener('click', animateVariableWindow);
+                            document.getElementById('resetVariable').addEventListener('click', resetVariableWindow);
+                            document.getElementById('stepVariable').addEventListener('click', stepVariableWindow);
+
+                            // Initial render with a small delay to ensure layout is complete
+                            setTimeout(() => {
+                                updateFixedWindowUI();
+                                updateVariableWindowUI();
+                            }, 100);
+                        });
+                    })();
+                    </script>
                 </div>
 
                 <h4>Template</h4>

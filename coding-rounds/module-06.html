@@ -6,7 +6,7 @@
     <title>Module 6: Backtracking - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <!-- Mermaid replaced with custom interactive animations -->
 </head>
 <body>
     <nav class="navbar">
@@ -424,15 +424,165 @@ def combinations(n, k):
                 <p>Pruning eliminates branches of the search tree that cannot lead to valid solutions. Without pruning, backtracking degenerates to brute-force enumeration. Effective pruning can reduce exponential time complexity by orders of magnitude.</p>
 
                 <div class="diagram-container">
-                    <div class="mermaid">
-flowchart TD
-    A[Search Space] --> B{Constraint Check}
-    B -->|Valid| C[Explore Branch]
-    B -->|Invalid| D["PRUNE - Skip entire subtree"]
-    C --> E[Recursive call]
-    D --> F["Significant speedup"]
-    style D fill:#ffcccc
-    style F fill:#ccffcc
+                    <!-- Interactive Pruning Visualization -->
+                    <div id="pruning-animation" style="background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); border-radius: 16px; padding: 30px; position: relative; overflow: hidden; min-height: 420px;">
+                        <style>
+                            #pruning-animation .prune-node {
+                                position: absolute;
+                                padding: 14px 22px;
+                                border-radius: 12px;
+                                font-weight: 600;
+                                font-size: 13px;
+                                cursor: pointer;
+                                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                                box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+                                text-align: center;
+                                z-index: 2;
+                            }
+                            #pruning-animation .prune-node:hover {
+                                transform: scale(1.08) translateY(-3px);
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                            }
+                            #pruning-animation .prune-node.highlight {
+                                animation: prune-pulse 0.8s ease-in-out infinite;
+                            }
+                            @keyframes prune-pulse {
+                                0%, 100% { transform: scale(1); }
+                                50% { transform: scale(1.05); }
+                            }
+                            #pruning-animation .prune-node.pruned {
+                                animation: shake-prune 0.5s ease-in-out;
+                                opacity: 0.5;
+                            }
+                            @keyframes shake-prune {
+                                0%, 100% { transform: translateX(0); }
+                                20%, 60% { transform: translateX(-5px); }
+                                40%, 80% { transform: translateX(5px); }
+                            }
+                            #pruning-animation .node-search { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; left: 50%; top: 20px; transform: translateX(-50%); }
+                            #pruning-animation .node-check { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; left: 50%; top: 100px; transform: translateX(-50%); border-radius: 50%; width: 140px; height: 50px; display: flex; align-items: center; justify-content: center; padding: 0; }
+                            #pruning-animation .node-explore { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; left: 18%; top: 200px; }
+                            #pruning-animation .node-prune { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); color: white; left: 58%; top: 200px; font-size: 12px; }
+                            #pruning-animation .node-recurse { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #1a1a2e; left: 18%; top: 300px; }
+                            #pruning-animation .node-speedup { background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; left: 58%; top: 300px; }
+                            #pruning-animation svg.prune-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+                            #pruning-animation .prune-line { stroke: rgba(255,255,255,0.4); stroke-width: 2.5; fill: none; transition: all 0.4s; }
+                            #pruning-animation .prune-line.valid-path { stroke: #38ef7d; stroke-width: 3; filter: drop-shadow(0 0 8px #38ef7d); }
+                            #pruning-animation .prune-line.pruned-path { stroke: #eb3349; stroke-width: 3; stroke-dasharray: 8,4; filter: drop-shadow(0 0 8px #eb3349); }
+                            #pruning-animation .prune-arrow { fill: rgba(255,255,255,0.6); }
+                            #pruning-animation .prune-label { fill: rgba(255,255,255,0.95); font-size: 12px; font-weight: 700; }
+                            #pruning-animation .label-valid { fill: #38ef7d; }
+                            #pruning-animation .label-invalid { fill: #f45c43; }
+                            #pruning-animation .prune-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 3; }
+                            #pruning-animation .prune-btn { padding: 12px 24px; border: none; border-radius: 25px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+                            #pruning-animation .prune-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(17, 153, 142, 0.5); }
+                            #pruning-animation .prune-btn.danger { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); }
+                            #pruning-animation .prune-btn.danger:hover { box-shadow: 0 8px 25px rgba(235, 51, 73, 0.5); }
+                            #pruning-animation .stats-panel { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); padding: 12px 18px; border-radius: 12px; color: white; font-size: 12px; backdrop-filter: blur(10px); }
+                            #pruning-animation .stats-panel div { margin: 4px 0; }
+                            #pruning-animation .stat-value { font-weight: 700; color: #38ef7d; }
+                            #pruning-animation .stat-value.pruned { color: #f45c43; }
+                        </style>
+                        <div class="stats-panel">
+                            <div>Explored: <span class="stat-value" id="prune-explored">0</span></div>
+                            <div>Pruned: <span class="stat-value pruned" id="prune-pruned">0</span></div>
+                            <div>Saved: <span class="stat-value" id="prune-saved">0%</span></div>
+                        </div>
+                        <svg class="prune-lines" viewBox="0 0 400 380" preserveAspectRatio="xMidYMid meet">
+                            <defs>
+                                <marker id="arrowhead-prune" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" class="prune-arrow"/>
+                                </marker>
+                            </defs>
+                            <path class="prune-line" id="prune-line-1" d="M200,55 L200,90" marker-end="url(#arrowhead-prune)"/>
+                            <path class="prune-line" id="prune-line-2" d="M145,130 L100,185" marker-end="url(#arrowhead-prune)"/>
+                            <text class="prune-label label-valid" x="95" y="155">Valid</text>
+                            <path class="prune-line" id="prune-line-3" d="M255,130 L290,185" marker-end="url(#arrowhead-prune)"/>
+                            <text class="prune-label label-invalid" x="275" y="155">Invalid</text>
+                            <path class="prune-line" id="prune-line-4" d="M100,240 L100,285" marker-end="url(#arrowhead-prune)"/>
+                            <path class="prune-line" id="prune-line-5" d="M300,240 L300,285" marker-end="url(#arrowhead-prune)"/>
+                        </svg>
+                        <div class="prune-node node-search">Search Space</div>
+                        <div class="prune-node node-check">Constraint Check</div>
+                        <div class="prune-node node-explore" id="prune-explore">Explore Branch</div>
+                        <div class="prune-node node-prune" id="prune-skip">PRUNE - Skip Subtree</div>
+                        <div class="prune-node node-recurse" id="prune-recurse">Recursive call</div>
+                        <div class="prune-node node-speedup" id="prune-speedup">Significant speedup!</div>
+                        <div class="prune-controls">
+                            <button class="prune-btn" onclick="demoPruningValid()">Demo Valid Path</button>
+                            <button class="prune-btn danger" onclick="demoPruningInvalid()">Demo Pruning</button>
+                            <button class="prune-btn" onclick="resetPruning()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">Reset</button>
+                        </div>
+                        <script>
+                            let pruneExplored = 0, prunePruned = 0;
+
+                            function updatePruneStats() {
+                                document.getElementById('prune-explored').textContent = pruneExplored;
+                                document.getElementById('prune-pruned').textContent = prunePruned;
+                                const total = pruneExplored + prunePruned;
+                                const saved = total > 0 ? Math.round((prunePruned / total) * 100) : 0;
+                                document.getElementById('prune-saved').textContent = saved + '%';
+                            }
+
+                            function demoPruningValid() {
+                                resetPruning();
+                                const nodes = ['node-search', 'node-check', 'node-explore', 'node-recurse'];
+                                const lines = ['prune-line-1', 'prune-line-2', 'prune-line-4'];
+
+                                let step = 0;
+                                const interval = setInterval(() => {
+                                    if (step < nodes.length) {
+                                        const node = document.querySelector('#pruning-animation .' + nodes[step]);
+                                        if (node) node.classList.add('highlight');
+                                        if (step > 0 && lines[step-1]) {
+                                            document.getElementById(lines[step-1]).classList.add('valid-path');
+                                        }
+                                        step++;
+                                    } else {
+                                        clearInterval(interval);
+                                        pruneExplored++;
+                                        updatePruneStats();
+                                    }
+                                }, 600);
+                            }
+
+                            function demoPruningInvalid() {
+                                resetPruning();
+                                const container = document.getElementById('pruning-animation');
+
+                                setTimeout(() => {
+                                    container.querySelector('.node-search').classList.add('highlight');
+                                    document.getElementById('prune-line-1').classList.add('valid-path');
+                                }, 300);
+
+                                setTimeout(() => {
+                                    container.querySelector('.node-check').classList.add('highlight');
+                                }, 600);
+
+                                setTimeout(() => {
+                                    document.getElementById('prune-line-3').classList.add('pruned-path');
+                                    container.querySelector('.node-prune').classList.add('pruned');
+                                    container.querySelector('.node-prune').classList.add('highlight');
+                                }, 1000);
+
+                                setTimeout(() => {
+                                    document.getElementById('prune-line-5').classList.add('valid-path');
+                                    container.querySelector('.node-speedup').classList.add('highlight');
+                                    prunePruned++;
+                                    updatePruneStats();
+                                }, 1500);
+                            }
+
+                            function resetPruning() {
+                                const container = document.getElementById('pruning-animation');
+                                container.querySelectorAll('.prune-node').forEach(n => {
+                                    n.classList.remove('highlight', 'pruned');
+                                });
+                                container.querySelectorAll('.prune-line').forEach(l => {
+                                    l.classList.remove('valid-path', 'pruned-path');
+                                });
+                            }
+                        </script>
                     </div>
                 </div>
 
@@ -528,18 +678,181 @@ def subsets_with_dup(nums):
                 <p>Branch and Bound extends backtracking for optimization problems by maintaining a bound on the best solution. Branches are pruned when their best possible outcome cannot beat the current best.</p>
 
                 <div class="diagram-container">
-                    <div class="mermaid">
-flowchart TD
-    A[Current Node] --> B{Calculate Bound}
-    B --> C{Bound better than best?}
-    C -->|Yes| D[Explore children]
-    C -->|No| E["PRUNE - Cannot improve"]
-    D --> F{Is leaf/solution?}
-    F -->|Yes| G[Update best if better]
-    F -->|No| H[Branch to children]
-    H --> A
-    style E fill:#ffcccc
-    style G fill:#ccffcc
+                    <!-- Interactive Branch and Bound Animation -->
+                    <div id="bnb-animation" style="background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #16213e 100%); border-radius: 16px; padding: 25px; position: relative; overflow: hidden; min-height: 520px;">
+                        <style>
+                            #bnb-animation .bnb-node {
+                                position: absolute;
+                                padding: 10px 16px;
+                                border-radius: 10px;
+                                font-weight: 600;
+                                font-size: 12px;
+                                cursor: pointer;
+                                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                                box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+                                text-align: center;
+                                z-index: 2;
+                                white-space: nowrap;
+                            }
+                            #bnb-animation .bnb-node:hover {
+                                transform: scale(1.1);
+                                z-index: 10;
+                            }
+                            #bnb-animation .bnb-node.active {
+                                animation: bnb-glow 1s ease-in-out infinite;
+                            }
+                            @keyframes bnb-glow {
+                                0%, 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+                                50% { box-shadow: 0 4px 30px rgba(79, 172, 254, 0.8); }
+                            }
+                            #bnb-animation .bnb-node.pruned-node {
+                                opacity: 0.4;
+                                transform: scale(0.9);
+                            }
+                            #bnb-animation .bnb-node.solution-node {
+                                animation: solution-found 0.6s ease-out;
+                            }
+                            @keyframes solution-found {
+                                0% { transform: scale(1); }
+                                50% { transform: scale(1.2); }
+                                100% { transform: scale(1); }
+                            }
+                            #bnb-animation .node-current { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; left: 50%; top: 15px; transform: translateX(-50%); }
+                            #bnb-animation .node-bound { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; left: 50%; top: 75px; transform: translateX(-50%); border-radius: 50%; width: 120px; height: 42px; display: flex; align-items: center; justify-content: center; padding: 0; }
+                            #bnb-animation .node-compare { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: #1a1a2e; left: 50%; top: 140px; transform: translateX(-50%); border-radius: 50%; width: 150px; height: 45px; display: flex; align-items: center; justify-content: center; padding: 0; font-size: 11px; }
+                            #bnb-animation .node-explore { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #1a1a2e; left: 20%; top: 220px; }
+                            #bnb-animation .node-prune-bnb { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); color: white; left: 60%; top: 220px; font-size: 11px; }
+                            #bnb-animation .node-leaf { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; left: 20%; top: 295px; transform: translateX(-50%); border-radius: 50%; width: 110px; height: 42px; display: flex; align-items: center; justify-content: center; padding: 0; font-size: 11px; }
+                            #bnb-animation .node-update { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; left: 8%; top: 375px; font-size: 11px; }
+                            #bnb-animation .node-branch { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #1a1a2e; left: 32%; top: 375px; }
+                            #bnb-animation svg.bnb-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+                            #bnb-animation .bnb-line { stroke: rgba(255,255,255,0.35); stroke-width: 2; fill: none; transition: all 0.4s; }
+                            #bnb-animation .bnb-line.active-line { stroke: #4facfe; stroke-width: 3; filter: drop-shadow(0 0 6px #4facfe); }
+                            #bnb-animation .bnb-line.prune-line { stroke: #eb3349; stroke-width: 3; stroke-dasharray: 6,4; }
+                            #bnb-animation .bnb-line.success-line { stroke: #38ef7d; stroke-width: 3; filter: drop-shadow(0 0 6px #38ef7d); }
+                            #bnb-animation .bnb-arrow { fill: rgba(255,255,255,0.5); }
+                            #bnb-animation .bnb-label { fill: rgba(255,255,255,0.9); font-size: 11px; font-weight: 600; }
+                            #bnb-animation .bnb-controls { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 3; flex-wrap: wrap; justify-content: center; }
+                            #bnb-animation .bnb-btn { padding: 10px 18px; border: none; border-radius: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.3s; }
+                            #bnb-animation .bnb-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5); }
+                            #bnb-animation .best-display { position: absolute; top: 15px; right: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 10px 18px; border-radius: 20px; color: white; font-size: 13px; font-weight: 700; }
+                            #bnb-animation .bound-display { position: absolute; top: 15px; left: 15px; background: rgba(255,255,255,0.15); padding: 10px 18px; border-radius: 20px; color: white; font-size: 12px; backdrop-filter: blur(5px); }
+                        </style>
+                        <div class="best-display">Best: <span id="bnb-best">0</span></div>
+                        <div class="bound-display">Bound: <span id="bnb-bound">--</span></div>
+                        <svg class="bnb-lines" viewBox="0 0 400 460" preserveAspectRatio="xMidYMid meet">
+                            <defs>
+                                <marker id="arrowhead-bnb" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" class="bnb-arrow"/>
+                                </marker>
+                            </defs>
+                            <path class="bnb-line" id="bnb-line-1" d="M200,42 L200,68" marker-end="url(#arrowhead-bnb)"/>
+                            <path class="bnb-line" id="bnb-line-2" d="M200,98 L200,130" marker-end="url(#arrowhead-bnb)"/>
+                            <path class="bnb-line" id="bnb-line-3" d="M145,163 L110,205" marker-end="url(#arrowhead-bnb)"/>
+                            <text class="bnb-label" x="105" y="182">Yes</text>
+                            <path class="bnb-line" id="bnb-line-4" d="M255,163 L285,205" marker-end="url(#arrowhead-bnb)"/>
+                            <text class="bnb-label" x="280" y="182" style="fill: #f45c43;">No</text>
+                            <path class="bnb-line" id="bnb-line-5" d="M105,255 L95,285" marker-end="url(#arrowhead-bnb)"/>
+                            <path class="bnb-line" id="bnb-line-6" d="M60,320 L55,360" marker-end="url(#arrowhead-bnb)"/>
+                            <text class="bnb-label" x="30" y="340">Yes</text>
+                            <path class="bnb-line" id="bnb-line-7" d="M130,320 L155,360" marker-end="url(#arrowhead-bnb)"/>
+                            <text class="bnb-label" x="160" y="340">No</text>
+                            <path class="bnb-line" id="bnb-line-8" d="M195,395 C250,420 350,380 350,100 L250,50" marker-end="url(#arrowhead-bnb)" stroke-dasharray="4,4"/>
+                        </svg>
+                        <div class="bnb-node node-current">Current Node</div>
+                        <div class="bnb-node node-bound">Calculate Bound</div>
+                        <div class="bnb-node node-compare">Bound > Best?</div>
+                        <div class="bnb-node node-explore">Explore children</div>
+                        <div class="bnb-node node-prune-bnb" id="bnb-prune">PRUNE - Cannot improve</div>
+                        <div class="bnb-node node-leaf">Is leaf/solution?</div>
+                        <div class="bnb-node node-update" id="bnb-update">Update best</div>
+                        <div class="bnb-node node-branch">Branch to children</div>
+                        <div class="bnb-controls">
+                            <button class="bnb-btn" onclick="animateBnBExplore()">Explore Path</button>
+                            <button class="bnb-btn" onclick="animateBnBPrune()" style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);">Prune Path</button>
+                            <button class="bnb-btn" onclick="animateBnBSolution()" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">Find Solution</button>
+                            <button class="bnb-btn" onclick="resetBnB()">Reset</button>
+                        </div>
+                        <script>
+                            let bnbBest = 0;
+
+                            function animateBnBExplore() {
+                                resetBnB();
+                                const container = document.getElementById('bnb-animation');
+                                const nodes = container.querySelectorAll('.bnb-node');
+                                const boundDisplay = document.getElementById('bnb-bound');
+                                const sequence = [
+                                    {idx: 0, bound: '150', line: null},
+                                    {idx: 1, bound: '150', line: 'bnb-line-1'},
+                                    {idx: 2, bound: '150 > ' + bnbBest + '?', line: 'bnb-line-2'},
+                                    {idx: 3, bound: 'Yes! Explore', line: 'bnb-line-3'},
+                                    {idx: 5, bound: 'Check leaf', line: 'bnb-line-5'},
+                                    {idx: 7, bound: 'Not leaf, branch', line: 'bnb-line-7'},
+                                ];
+                                let step = 0;
+                                const interval = setInterval(() => {
+                                    nodes.forEach(n => n.classList.remove('active'));
+                                    if (step < sequence.length) {
+                                        nodes[sequence[step].idx].classList.add('active');
+                                        boundDisplay.textContent = sequence[step].bound;
+                                        if (sequence[step].line) {
+                                            document.getElementById(sequence[step].line).classList.add('active-line');
+                                        }
+                                        step++;
+                                    } else {
+                                        clearInterval(interval);
+                                    }
+                                }, 800);
+                            }
+
+                            function animateBnBPrune() {
+                                resetBnB();
+                                bnbBest = 200;
+                                document.getElementById('bnb-best').textContent = bnbBest;
+                                const container = document.getElementById('bnb-animation');
+                                const nodes = container.querySelectorAll('.bnb-node');
+                                const boundDisplay = document.getElementById('bnb-bound');
+
+                                setTimeout(() => { nodes[0].classList.add('active'); boundDisplay.textContent = '150'; document.getElementById('bnb-line-1').classList.add('active-line'); }, 400);
+                                setTimeout(() => { nodes[1].classList.add('active'); document.getElementById('bnb-line-2').classList.add('active-line'); }, 800);
+                                setTimeout(() => { nodes[2].classList.add('active'); boundDisplay.textContent = '150 < 200'; }, 1200);
+                                setTimeout(() => {
+                                    document.getElementById('bnb-line-4').classList.add('prune-line');
+                                    document.getElementById('bnb-prune').classList.add('active');
+                                    document.getElementById('bnb-prune').classList.add('pruned-node');
+                                    boundDisplay.textContent = 'PRUNED!';
+                                }, 1600);
+                            }
+
+                            function animateBnBSolution() {
+                                resetBnB();
+                                const container = document.getElementById('bnb-animation');
+                                const nodes = container.querySelectorAll('.bnb-node');
+                                const boundDisplay = document.getElementById('bnb-bound');
+
+                                setTimeout(() => { nodes[0].classList.add('active'); document.getElementById('bnb-line-1').classList.add('success-line'); }, 300);
+                                setTimeout(() => { nodes[1].classList.add('active'); boundDisplay.textContent = '250'; document.getElementById('bnb-line-2').classList.add('success-line'); }, 600);
+                                setTimeout(() => { nodes[2].classList.add('active'); boundDisplay.textContent = '250 > ' + bnbBest; document.getElementById('bnb-line-3').classList.add('success-line'); }, 900);
+                                setTimeout(() => { nodes[3].classList.add('active'); document.getElementById('bnb-line-5').classList.add('success-line'); }, 1200);
+                                setTimeout(() => { nodes[5].classList.add('active'); boundDisplay.textContent = 'Leaf found!'; document.getElementById('bnb-line-6').classList.add('success-line'); }, 1500);
+                                setTimeout(() => {
+                                    document.getElementById('bnb-update').classList.add('active');
+                                    document.getElementById('bnb-update').classList.add('solution-node');
+                                    bnbBest = 250;
+                                    document.getElementById('bnb-best').textContent = bnbBest;
+                                    boundDisplay.textContent = 'Best updated!';
+                                }, 1800);
+                            }
+
+                            function resetBnB() {
+                                const container = document.getElementById('bnb-animation');
+                                container.querySelectorAll('.bnb-node').forEach(n => n.classList.remove('active', 'pruned-node', 'solution-node'));
+                                container.querySelectorAll('.bnb-line').forEach(l => l.classList.remove('active-line', 'prune-line', 'success-line'));
+                                document.getElementById('bnb-bound').textContent = '--';
+                                bnbBest = 0;
+                                document.getElementById('bnb-best').textContent = '0';
+                            }
+                        </script>
                     </div>
                 </div>
 
@@ -861,17 +1174,222 @@ class SudokuSolverOptimized:
                 <p>Robots must navigate to shelves, pick items, and return to packing stations without collisions. This is a constraint satisfaction problem solved with backtracking + CBS (Conflict-Based Search).</p>
 
                 <div class="diagram-container">
-                    <div class="mermaid">
-flowchart LR
-    A[Order Received] --> B[Find Shelf Location]
-    B --> C{Path Conflict?}
-    C -->|No| D[Execute Path]
-    C -->|Yes| E[Backtrack & Replan]
-    E --> F[Add Constraint]
-    F --> C
-    D --> G[Item Retrieved]
-    style E fill:#ffcccc
-    style F fill:#ffffcc
+                    <!-- Interactive Amazon Robot Path Planning Animation -->
+                    <div id="robot-path-animation" style="background: linear-gradient(135deg, #0c0c1e 0%, #1a1a3a 50%, #0f0f2a 100%); border-radius: 16px; padding: 25px; position: relative; overflow: hidden; min-height: 400px;">
+                        <style>
+                            #robot-path-animation .robot-node {
+                                position: absolute;
+                                padding: 12px 18px;
+                                border-radius: 10px;
+                                font-weight: 600;
+                                font-size: 12px;
+                                cursor: pointer;
+                                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                                text-align: center;
+                                z-index: 2;
+                                white-space: nowrap;
+                            }
+                            #robot-path-animation .robot-node:hover {
+                                transform: scale(1.08);
+                                z-index: 10;
+                            }
+                            #robot-path-animation .robot-node.active {
+                                animation: robot-pulse 0.8s ease-in-out infinite;
+                            }
+                            @keyframes robot-pulse {
+                                0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+                                50% { box-shadow: 0 4px 35px rgba(255, 165, 0, 0.7); }
+                            }
+                            #robot-path-animation .robot-node.conflict {
+                                animation: conflict-shake 0.4s ease-in-out;
+                            }
+                            @keyframes conflict-shake {
+                                0%, 100% { transform: translateX(0) rotate(0); }
+                                25% { transform: translateX(-4px) rotate(-2deg); }
+                                75% { transform: translateX(4px) rotate(2deg); }
+                            }
+                            #robot-path-animation .node-order { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; left: 3%; top: 50%; transform: translateY(-50%); }
+                            #robot-path-animation .node-shelf { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #1a1a2e; left: 18%; top: 50%; transform: translateY(-50%); }
+                            #robot-path-animation .node-conflict { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; left: 38%; top: 50%; transform: translateY(-50%); border-radius: 50%; width: 100px; height: 45px; display: flex; align-items: center; justify-content: center; padding: 0; }
+                            #robot-path-animation .node-execute { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; left: 58%; top: 25%; }
+                            #robot-path-animation .node-backtrack { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); color: white; left: 58%; top: 75%; font-size: 11px; }
+                            #robot-path-animation .node-constraint { background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); color: #1a1a2e; left: 75%; top: 75%; font-size: 11px; }
+                            #robot-path-animation .node-retrieved { background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); color: white; left: 82%; top: 25%; }
+                            #robot-path-animation svg.robot-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+                            #robot-path-animation .robot-line { stroke: rgba(255,255,255,0.3); stroke-width: 2.5; fill: none; transition: all 0.4s; }
+                            #robot-path-animation .robot-line.flow-active { stroke: #38ef7d; stroke-width: 3; filter: drop-shadow(0 0 8px #38ef7d); }
+                            #robot-path-animation .robot-line.backtrack-active { stroke: #eb3349; stroke-width: 3; stroke-dasharray: 8,4; filter: drop-shadow(0 0 8px #eb3349); }
+                            #robot-path-animation .robot-line.constraint-active { stroke: #ffd200; stroke-width: 3; filter: drop-shadow(0 0 8px #ffd200); }
+                            #robot-path-animation .robot-arrow { fill: rgba(255,255,255,0.5); }
+                            #robot-path-animation .robot-label { fill: rgba(255,255,255,0.9); font-size: 11px; font-weight: 600; }
+                            #robot-path-animation .robot-controls { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 3; }
+                            #robot-path-animation .robot-btn { padding: 10px 20px; border: none; border-radius: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.3s; }
+                            #robot-path-animation .robot-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5); }
+                            #robot-path-animation .warehouse-grid { position: absolute; top: 10px; right: 10px; width: 120px; height: 120px; background: rgba(255,255,255,0.08); border-radius: 8px; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); gap: 2px; padding: 5px; }
+                            #robot-path-animation .grid-cell { background: rgba(255,255,255,0.1); border-radius: 3px; transition: all 0.3s; }
+                            #robot-path-animation .grid-cell.robot { background: #4facfe; }
+                            #robot-path-animation .grid-cell.target { background: #38ef7d; }
+                            #robot-path-animation .grid-cell.obstacle { background: #eb3349; }
+                            #robot-path-animation .grid-cell.path { background: rgba(79, 172, 254, 0.5); }
+                            #robot-path-animation .status-bar { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 15px; color: white; font-size: 11px; backdrop-filter: blur(5px); }
+                        </style>
+                        <div class="status-bar" id="robot-status">Status: Awaiting order</div>
+                        <div class="warehouse-grid" id="warehouse-grid">
+                            <!-- Grid cells will be generated by JS -->
+                        </div>
+                        <svg class="robot-lines" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet">
+                            <defs>
+                                <marker id="arrowhead-robot" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" class="robot-arrow"/>
+                                </marker>
+                            </defs>
+                            <path class="robot-line" id="robot-line-1" d="M70,150 L100,150" marker-end="url(#arrowhead-robot)"/>
+                            <path class="robot-line" id="robot-line-2" d="M150,150 L190,150" marker-end="url(#arrowhead-robot)"/>
+                            <path class="robot-line" id="robot-line-3" d="M270,130 L300,90" marker-end="url(#arrowhead-robot)"/>
+                            <text class="robot-label" x="270" y="100">No</text>
+                            <path class="robot-line" id="robot-line-4" d="M270,170 L300,210" marker-end="url(#arrowhead-robot)"/>
+                            <text class="robot-label" x="265" y="200" style="fill: #f45c43;">Yes</text>
+                            <path class="robot-line" id="robot-line-5" d="M365,220 L385,220" marker-end="url(#arrowhead-robot)"/>
+                            <path class="robot-line" id="robot-line-6" d="M420,200 C450,170 450,160 270,145" marker-end="url(#arrowhead-robot)" stroke-dasharray="4,4"/>
+                            <path class="robot-line" id="robot-line-7" d="M345,75 L390,75" marker-end="url(#arrowhead-robot)"/>
+                        </svg>
+                        <div class="robot-node node-order">Order Received</div>
+                        <div class="robot-node node-shelf">Find Shelf</div>
+                        <div class="robot-node node-conflict">Conflict?</div>
+                        <div class="robot-node node-execute">Execute Path</div>
+                        <div class="robot-node node-backtrack" id="robot-backtrack">Backtrack & Replan</div>
+                        <div class="robot-node node-constraint" id="robot-constraint">Add Constraint</div>
+                        <div class="robot-node node-retrieved">Item Retrieved!</div>
+                        <div class="robot-controls">
+                            <button class="robot-btn" onclick="simulateNoConflict()">No Conflict</button>
+                            <button class="robot-btn" onclick="simulateConflict()" style="background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);">Conflict!</button>
+                            <button class="robot-btn" onclick="resetRobotPath()">Reset</button>
+                        </div>
+                        <script>
+                            // Initialize warehouse grid
+                            (function() {
+                                const grid = document.getElementById('warehouse-grid');
+                                for (let i = 0; i < 25; i++) {
+                                    const cell = document.createElement('div');
+                                    cell.className = 'grid-cell';
+                                    cell.id = 'grid-cell-' + i;
+                                    grid.appendChild(cell);
+                                }
+                            })();
+
+                            function updateGrid(robotPos, targetPos, obstacles, path) {
+                                for (let i = 0; i < 25; i++) {
+                                    document.getElementById('grid-cell-' + i).className = 'grid-cell';
+                                }
+                                obstacles.forEach(o => document.getElementById('grid-cell-' + o).classList.add('obstacle'));
+                                path.forEach(p => document.getElementById('grid-cell-' + p).classList.add('path'));
+                                if (targetPos !== null) document.getElementById('grid-cell-' + targetPos).classList.add('target');
+                                if (robotPos !== null) document.getElementById('grid-cell-' + robotPos).classList.add('robot');
+                            }
+
+                            function simulateNoConflict() {
+                                resetRobotPath();
+                                const container = document.getElementById('robot-path-animation');
+                                const nodes = container.querySelectorAll('.robot-node');
+                                const status = document.getElementById('robot-status');
+
+                                const steps = [
+                                    {node: 0, line: null, status: 'Order received!', grid: {robot: 20, target: 4, obstacles: [], path: []}},
+                                    {node: 1, line: 'robot-line-1', status: 'Finding shelf location...', grid: {robot: 20, target: 4, obstacles: [], path: [15, 10, 5]}},
+                                    {node: 2, line: 'robot-line-2', status: 'Checking for conflicts...', grid: {robot: 15, target: 4, obstacles: [], path: [10, 5]}},
+                                    {node: 3, line: 'robot-line-3', status: 'No conflict! Executing path...', grid: {robot: 10, target: 4, obstacles: [], path: [5]}},
+                                    {node: 6, line: 'robot-line-7', status: 'Item retrieved successfully!', grid: {robot: 4, target: null, obstacles: [], path: []}},
+                                ];
+
+                                let step = 0;
+                                const interval = setInterval(() => {
+                                    nodes.forEach(n => n.classList.remove('active', 'conflict'));
+                                    container.querySelectorAll('.robot-line').forEach(l => l.classList.remove('flow-active', 'backtrack-active', 'constraint-active'));
+
+                                    if (step < steps.length) {
+                                        nodes[steps[step].node].classList.add('active');
+                                        if (steps[step].line) document.getElementById(steps[step].line).classList.add('flow-active');
+                                        status.textContent = 'Status: ' + steps[step].status;
+                                        const g = steps[step].grid;
+                                        updateGrid(g.robot, g.target, g.obstacles, g.path);
+                                        step++;
+                                    } else {
+                                        clearInterval(interval);
+                                    }
+                                }, 1000);
+                            }
+
+                            function simulateConflict() {
+                                resetRobotPath();
+                                const container = document.getElementById('robot-path-animation');
+                                const nodes = container.querySelectorAll('.robot-node');
+                                const status = document.getElementById('robot-status');
+
+                                setTimeout(() => {
+                                    nodes[0].classList.add('active');
+                                    document.getElementById('robot-line-1').classList.add('flow-active');
+                                    status.textContent = 'Status: Order received!';
+                                    updateGrid(20, 4, [], []);
+                                }, 500);
+
+                                setTimeout(() => {
+                                    nodes[1].classList.add('active');
+                                    document.getElementById('robot-line-2').classList.add('flow-active');
+                                    status.textContent = 'Status: Finding shelf...';
+                                    updateGrid(20, 4, [11, 12], [15, 10, 5]);
+                                }, 1200);
+
+                                setTimeout(() => {
+                                    nodes[2].classList.add('active');
+                                    status.textContent = 'Status: CONFLICT DETECTED!';
+                                    nodes[2].classList.add('conflict');
+                                    updateGrid(15, 4, [11, 12, 10], [5]);
+                                }, 1900);
+
+                                setTimeout(() => {
+                                    document.getElementById('robot-line-4').classList.add('backtrack-active');
+                                    document.getElementById('robot-backtrack').classList.add('active');
+                                    status.textContent = 'Status: Backtracking...';
+                                    updateGrid(15, 4, [11, 12, 10], []);
+                                }, 2600);
+
+                                setTimeout(() => {
+                                    document.getElementById('robot-line-5').classList.add('constraint-active');
+                                    document.getElementById('robot-constraint').classList.add('active');
+                                    status.textContent = 'Status: Adding constraint, replanning...';
+                                    updateGrid(15, 4, [11, 12, 10], [16, 17, 18, 13, 8, 3]);
+                                }, 3300);
+
+                                setTimeout(() => {
+                                    document.getElementById('robot-line-6').classList.add('flow-active');
+                                    nodes[2].classList.add('active');
+                                    status.textContent = 'Status: New path found! Executing...';
+                                    updateGrid(8, 4, [11, 12, 10], [3]);
+                                }, 4000);
+
+                                setTimeout(() => {
+                                    document.getElementById('robot-line-3').classList.add('flow-active');
+                                    nodes[3].classList.add('active');
+                                    updateGrid(3, 4, [11, 12, 10], []);
+                                }, 4700);
+
+                                setTimeout(() => {
+                                    document.getElementById('robot-line-7').classList.add('flow-active');
+                                    nodes[6].classList.add('active');
+                                    status.textContent = 'Status: Item retrieved after replanning!';
+                                    updateGrid(4, null, [11, 12, 10], []);
+                                }, 5400);
+                            }
+
+                            function resetRobotPath() {
+                                const container = document.getElementById('robot-path-animation');
+                                container.querySelectorAll('.robot-node').forEach(n => n.classList.remove('active', 'conflict'));
+                                container.querySelectorAll('.robot-line').forEach(l => l.classList.remove('flow-active', 'backtrack-active', 'constraint-active'));
+                                document.getElementById('robot-status').textContent = 'Status: Awaiting order';
+                                updateGrid(null, null, [], []);
+                            }
+                        </script>
                     </div>
                 </div>
 

@@ -582,23 +582,470 @@
 
         <h2 class="mt-4">Time Management</h2>
 
-        <div class="card">
+        <div class="card" style="overflow: visible;">
             <h4>45-Minute Interview Breakdown</h4>
-            <div class="diagram-container">
-                <div class="mermaid">
-gantt
-    title Interview Time Allocation
-    dateFormat mm:ss
-    axisFormat %M:%S
 
-    section Phases
-    Understand & Match    :00:00, 5m
-    Plan & Discuss        :05:00, 5m
-    Implement             :10:00, 20m
-    Review & Test         :30:00, 10m
-    Questions             :40:00, 5m
+            <!-- Interactive Timeline Animation -->
+            <style>
+                .timeline-container {
+                    position: relative;
+                    padding: 2rem 1rem;
+                    background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+                    border-radius: 12px;
+                    margin-top: 1rem;
+                    overflow: hidden;
+                }
+
+                .timeline-header {
+                    text-align: center;
+                    margin-bottom: 2rem;
+                }
+
+                .timeline-title {
+                    color: white;
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                    margin-bottom: 0.5rem;
+                }
+
+                .timeline-clock {
+                    font-size: 2.5rem;
+                    font-weight: 700;
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                    font-family: 'Courier New', monospace;
+                }
+
+                .timeline-track {
+                    position: relative;
+                    height: 60px;
+                    background: rgba(255,255,255,0.1);
+                    border-radius: 30px;
+                    margin: 1.5rem 0;
+                    overflow: hidden;
+                }
+
+                .timeline-segments {
+                    display: flex;
+                    height: 100%;
+                    position: relative;
+                }
+
+                .timeline-segment {
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: 600;
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .timeline-segment::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(255,255,255,0);
+                    transition: all 0.3s ease;
+                }
+
+                .timeline-segment:hover::before {
+                    background: rgba(255,255,255,0.1);
+                }
+
+                .timeline-segment.active::before {
+                    background: rgba(255,255,255,0.2);
+                }
+
+                .timeline-segment:nth-child(1) {
+                    width: 11.11%;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 30px 0 0 30px;
+                }
+
+                .timeline-segment:nth-child(2) {
+                    width: 11.11%;
+                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                }
+
+                .timeline-segment:nth-child(3) {
+                    width: 44.44%;
+                    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+                }
+
+                .timeline-segment:nth-child(4) {
+                    width: 22.22%;
+                    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+                }
+
+                .timeline-segment:nth-child(5) {
+                    width: 11.11%;
+                    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+                    border-radius: 0 30px 30px 0;
+                }
+
+                .timeline-segment:nth-child(3) .segment-label,
+                .timeline-segment:nth-child(4) .segment-label,
+                .timeline-segment:nth-child(5) .segment-label {
+                    color: #1a1a2e;
+                }
+
+                .segment-label {
+                    position: relative;
+                    z-index: 1;
+                    text-align: center;
+                    white-space: nowrap;
+                }
+
+                .segment-time {
+                    font-size: 0.65rem;
+                    opacity: 0.9;
+                    display: block;
+                    margin-top: 2px;
+                }
+
+                .timeline-playhead {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 4px;
+                    height: 100%;
+                    background: white;
+                    box-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.5);
+                    border-radius: 2px;
+                    transition: left 0.1s linear;
+                    z-index: 10;
+                }
+
+                .timeline-markers {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 0 1rem;
+                    margin-top: 0.5rem;
+                }
+
+                .timeline-marker {
+                    color: rgba(255,255,255,0.6);
+                    font-size: 0.75rem;
+                    font-family: 'Courier New', monospace;
+                }
+
+                .phase-details {
+                    margin-top: 1.5rem;
+                    padding: 1.25rem;
+                    background: rgba(255,255,255,0.08);
+                    border-radius: 12px;
+                    min-height: 100px;
+                    transition: all 0.3s ease;
+                }
+
+                .phase-details h5 {
+                    color: white;
+                    font-size: 1.1rem;
+                    margin-bottom: 0.5rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                .phase-details .phase-badge {
+                    display: inline-block;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 15px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                }
+
+                .phase-details p {
+                    color: rgba(255,255,255,0.85);
+                    font-size: 0.9rem;
+                    line-height: 1.6;
+                    margin: 0;
+                }
+
+                .phase-details ul {
+                    color: rgba(255,255,255,0.85);
+                    font-size: 0.9rem;
+                    line-height: 1.8;
+                    margin: 0.5rem 0 0 1.25rem;
+                    padding: 0;
+                }
+
+                .timeline-controls {
+                    display: flex;
+                    justify-content: center;
+                    gap: 1rem;
+                    margin-top: 1.5rem;
+                }
+
+                .timeline-btn {
+                    padding: 0.6rem 1.5rem;
+                    border: none;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                    font-size: 0.85rem;
+                }
+
+                .timeline-btn-play {
+                    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+                    color: #1a1a2e;
+                }
+
+                .timeline-btn-play:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 20px rgba(67, 233, 123, 0.4);
+                }
+
+                .timeline-btn-pause {
+                    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+                    color: #1a1a2e;
+                }
+
+                .timeline-btn-reset {
+                    background: rgba(255,255,255,0.15);
+                    color: white;
+                    border: 1px solid rgba(255,255,255,0.3);
+                }
+
+                .timeline-btn-reset:hover {
+                    background: rgba(255,255,255,0.25);
+                }
+
+                .speed-control {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    color: rgba(255,255,255,0.7);
+                    font-size: 0.8rem;
+                }
+
+                .speed-control select {
+                    background: rgba(255,255,255,0.1);
+                    border: 1px solid rgba(255,255,255,0.3);
+                    color: white;
+                    padding: 0.3rem 0.5rem;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+
+                .speed-control select option {
+                    background: #1a1a2e;
+                }
+
+                @media (max-width: 768px) {
+                    .timeline-segment {
+                        font-size: 0.6rem;
+                    }
+                    .segment-time {
+                        display: none;
+                    }
+                    .timeline-clock {
+                        font-size: 2rem;
+                    }
+                }
+            </style>
+
+            <div class="timeline-container" id="timelineContainer">
+                <div class="timeline-header">
+                    <div class="timeline-title">Interview Timer</div>
+                    <div class="timeline-clock" id="timelineClock">00:00</div>
+                </div>
+
+                <div class="timeline-track">
+                    <div class="timeline-segments">
+                        <div class="timeline-segment" data-phase="0" onclick="selectPhase(0)">
+                            <span class="segment-label">U+M<span class="segment-time">5 min</span></span>
+                        </div>
+                        <div class="timeline-segment" data-phase="1" onclick="selectPhase(1)">
+                            <span class="segment-label">Plan<span class="segment-time">5 min</span></span>
+                        </div>
+                        <div class="timeline-segment" data-phase="2" onclick="selectPhase(2)">
+                            <span class="segment-label">Implement<span class="segment-time">20 min</span></span>
+                        </div>
+                        <div class="timeline-segment" data-phase="3" onclick="selectPhase(3)">
+                            <span class="segment-label">Review<span class="segment-time">10 min</span></span>
+                        </div>
+                        <div class="timeline-segment" data-phase="4" onclick="selectPhase(4)">
+                            <span class="segment-label">Q&amp;A<span class="segment-time">5 min</span></span>
+                        </div>
+                    </div>
+                    <div class="timeline-playhead" id="playhead"></div>
+                </div>
+
+                <div class="timeline-markers">
+                    <span class="timeline-marker">0:00</span>
+                    <span class="timeline-marker">5:00</span>
+                    <span class="timeline-marker">10:00</span>
+                    <span class="timeline-marker">30:00</span>
+                    <span class="timeline-marker">40:00</span>
+                    <span class="timeline-marker">45:00</span>
+                </div>
+
+                <div class="phase-details" id="phaseDetails">
+                    <h5>Click a phase or press Play</h5>
+                    <p>Each phase has specific goals and time limits. Click on any segment above to see what you should focus on during that time.</p>
+                </div>
+
+                <div class="timeline-controls">
+                    <button class="timeline-btn timeline-btn-play" id="playPauseBtn" onclick="toggleTimeline()">Play Simulation</button>
+                    <button class="timeline-btn timeline-btn-reset" onclick="resetTimeline()">Reset</button>
+                    <div class="speed-control">
+                        <label>Speed:</label>
+                        <select id="speedSelect" onchange="updateSpeed()">
+                            <option value="1">1x</option>
+                            <option value="2">2x</option>
+                            <option value="5" selected>5x</option>
+                            <option value="10">10x</option>
+                            <option value="30">30x</option>
+                        </select>
+                    </div>
                 </div>
             </div>
+
+            <script>
+                const phaseData = [
+                    {
+                        title: "Understand & Match",
+                        time: "0:00 - 5:00",
+                        color: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        textColor: "white",
+                        content: "<ul><li>Restate the problem clearly</li><li>Ask about input/output formats</li><li>Clarify constraints and edge cases</li><li>Identify the pattern (two pointers, sliding window, etc.)</li><li>Think of similar problems you have solved</li></ul>"
+                    },
+                    {
+                        title: "Plan & Discuss",
+                        time: "5:00 - 10:00",
+                        color: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                        textColor: "white",
+                        content: "<ul><li>Explain brute force approach first</li><li>Discuss why it is suboptimal</li><li>Propose your optimized solution</li><li>State expected time/space complexity</li><li>Get interviewer buy-in before coding</li></ul>"
+                    },
+                    {
+                        title: "Implement",
+                        time: "10:00 - 30:00",
+                        color: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+                        textColor: "#1a1a2e",
+                        content: "<ul><li>Write clean, readable code</li><li>Use meaningful variable names</li><li>Narrate your thought process</li><li>Handle edge cases as you go</li><li>Do not get stuck - ask for hints if needed</li></ul>"
+                    },
+                    {
+                        title: "Review & Test",
+                        time: "30:00 - 40:00",
+                        color: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+                        textColor: "#1a1a2e",
+                        content: "<ul><li>Walk through with a concrete example</li><li>Check for off-by-one errors</li><li>Verify null/empty input handling</li><li>Test edge cases manually</li><li>Fix any bugs found</li></ul>"
+                    },
+                    {
+                        title: "Questions & Discussion",
+                        time: "40:00 - 45:00",
+                        color: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+                        textColor: "#1a1a2e",
+                        content: "<ul><li>Discuss final complexity analysis</li><li>Mention potential optimizations</li><li>Ask thoughtful questions about the role</li><li>Show enthusiasm and curiosity</li><li>Thank the interviewer</li></ul>"
+                    }
+                ];
+
+                const phaseTimes = [0, 5, 10, 30, 40, 45]; // Minutes
+                let currentTime = 0; // In seconds
+                let isPlaying = false;
+                let timelineInterval = null;
+                let playbackSpeed = 5;
+
+                function formatTime(seconds) {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+                }
+
+                function updatePlayhead() {
+                    const totalSeconds = 45 * 60;
+                    const percentage = (currentTime / totalSeconds) * 100;
+                    document.getElementById('playhead').style.left = percentage + '%';
+                    document.getElementById('timelineClock').textContent = formatTime(currentTime);
+
+                    // Update active phase
+                    const currentMinutes = currentTime / 60;
+                    let activePhase = 0;
+                    for (let i = 0; i < phaseTimes.length - 1; i++) {
+                        if (currentMinutes >= phaseTimes[i] && currentMinutes < phaseTimes[i + 1]) {
+                            activePhase = i;
+                            break;
+                        }
+                    }
+                    if (currentMinutes >= 40) activePhase = 4;
+
+                    const segments = document.querySelectorAll('.timeline-segment');
+                    segments.forEach((seg, i) => {
+                        seg.classList.toggle('active', i === activePhase);
+                    });
+
+                    updatePhaseDetails(activePhase);
+                }
+
+                function selectPhase(index) {
+                    currentTime = phaseTimes[index] * 60;
+                    updatePlayhead();
+                }
+
+                function updatePhaseDetails(index) {
+                    const phase = phaseData[index];
+                    const details = document.getElementById('phaseDetails');
+                    details.innerHTML = '<h5><span class="phase-badge" style="background: ' + phase.color + '; color: ' + phase.textColor + '">' + phase.time + '</span> ' + phase.title + '</h5>' + phase.content;
+                }
+
+                function toggleTimeline() {
+                    const btn = document.getElementById('playPauseBtn');
+                    if (isPlaying) {
+                        isPlaying = false;
+                        clearInterval(timelineInterval);
+                        btn.textContent = 'Resume';
+                        btn.classList.remove('timeline-btn-pause');
+                        btn.classList.add('timeline-btn-play');
+                    } else {
+                        isPlaying = true;
+                        btn.textContent = 'Pause';
+                        btn.classList.remove('timeline-btn-play');
+                        btn.classList.add('timeline-btn-pause');
+                        timelineInterval = setInterval(() => {
+                            currentTime += playbackSpeed;
+                            if (currentTime >= 45 * 60) {
+                                currentTime = 45 * 60;
+                                isPlaying = false;
+                                clearInterval(timelineInterval);
+                                btn.textContent = 'Replay';
+                                btn.classList.remove('timeline-btn-pause');
+                                btn.classList.add('timeline-btn-play');
+                            }
+                            updatePlayhead();
+                        }, 1000);
+                    }
+                }
+
+                function resetTimeline() {
+                    isPlaying = false;
+                    clearInterval(timelineInterval);
+                    currentTime = 0;
+                    updatePlayhead();
+                    const btn = document.getElementById('playPauseBtn');
+                    btn.textContent = 'Play Simulation';
+                    btn.classList.remove('timeline-btn-pause');
+                    btn.classList.add('timeline-btn-play');
+                }
+
+                function updateSpeed() {
+                    playbackSpeed = parseInt(document.getElementById('speedSelect').value);
+                }
+
+                // Initialize
+                updatePlayhead();
+            </script>
         </div>
 
         <h2 class="mt-4">Mock Interview Checklist</h2>

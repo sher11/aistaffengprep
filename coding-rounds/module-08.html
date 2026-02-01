@@ -6,7 +6,6 @@
     <title>Module 8: Non-LeetCode Problems - Staff Engineer Prep</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -389,6 +388,195 @@ class LRUCache:
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
+                <!-- Interactive Rate Limiter Animation -->
+                <div id="rate-limiter-animation" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 24px; margin: 20px 0; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                    <style>
+                        #rate-limiter-animation * { box-sizing: border-box; }
+                        .rl-title { color: #fff; font-size: 1.2em; font-weight: 600; margin-bottom: 8px; text-align: center; }
+                        .rl-subtitle { color: #94a3b8; font-size: 0.85em; text-align: center; margin-bottom: 20px; }
+                        .rl-window-container { background: linear-gradient(145deg, #2d3a4f, #1f2937); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+                        .rl-window-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+                        .rl-window-title { color: #60a5fa; font-weight: 600; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
+                        .rl-window-stats { color: #94a3b8; font-size: 0.8em; }
+                        .rl-timeline { position: relative; height: 80px; background: linear-gradient(90deg, rgba(239,68,68,0.1) 0%, rgba(34,197,94,0.1) 100%); border-radius: 8px; overflow: hidden; border: 2px solid #374151; }
+                        .rl-timeline-bg { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, rgba(239,68,68,0.2), rgba(239,68,68,0.05)); transition: width 0.1s linear; }
+                        .rl-request { position: absolute; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, -50%); top: 50%; transition: all 0.3s ease; cursor: pointer; }
+                        .rl-request.allowed { background: linear-gradient(145deg, #22c55e, #16a34a); box-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
+                        .rl-request.denied { background: linear-gradient(145deg, #ef4444, #dc2626); box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+                        .rl-request.expired { background: #4b5563; box-shadow: none; opacity: 0.5; }
+                        .rl-request:hover { transform: translate(-50%, -50%) scale(1.3); }
+                        .rl-limit-line { position: absolute; top: 0; bottom: 0; width: 2px; background: #f59e0b; left: 0; }
+                        .rl-controls { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+                        .rl-btn { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 0.9em; }
+                        .rl-btn-request { background: linear-gradient(145deg, #3b82f6, #2563eb); color: white; }
+                        .rl-btn-request:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4); }
+                        .rl-btn-request:disabled { opacity: 0.5; cursor: not-allowed; }
+                        .rl-btn-burst { background: linear-gradient(145deg, #f59e0b, #d97706); color: white; }
+                        .rl-btn-burst:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4); }
+                        .rl-btn-reset { background: linear-gradient(145deg, #6b7280, #4b5563); color: white; }
+                        .rl-btn-reset:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4); }
+                        .rl-status { text-align: center; padding: 12px; margin-top: 16px; border-radius: 8px; font-weight: 500; transition: all 0.3s ease; }
+                        .rl-status.allowed { background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+                        .rl-status.denied { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+                        .rl-status.info { background: rgba(96, 165, 250, 0.2); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
+                        .rl-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+                        .rl-metric { background: linear-gradient(145deg, #2d3a4f, #1f2937); border-radius: 8px; padding: 12px; text-align: center; }
+                        .rl-metric-value { font-size: 1.5em; font-weight: 700; color: #fff; }
+                        .rl-metric-label { font-size: 0.75em; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+                        .rl-metric-value.allowed { color: #22c55e; }
+                        .rl-metric-value.denied { color: #ef4444; }
+                        @keyframes request-pop { 0% { transform: translate(-50%, -50%) scale(0); } 50% { transform: translate(-50%, -50%) scale(1.3); } 100% { transform: translate(-50%, -50%) scale(1); } }
+                        .rl-request.new { animation: request-pop 0.3s ease; }
+                    </style>
+
+                    <div class="rl-title">Sliding Window Rate Limiter</div>
+                    <div class="rl-subtitle">Limit: 5 requests per 10 seconds</div>
+
+                    <div class="rl-window-container">
+                        <div class="rl-window-header">
+                            <span class="rl-window-title">Time Window (10s)</span>
+                            <span class="rl-window-stats" id="rl-window-stats">0/5 requests</span>
+                        </div>
+                        <div class="rl-timeline" id="rl-timeline">
+                            <div class="rl-timeline-bg" id="rl-timeline-bg"></div>
+                        </div>
+                    </div>
+
+                    <div class="rl-controls">
+                        <button class="rl-btn rl-btn-request" id="rl-request-btn" onclick="rlMakeRequest()">Make Request</button>
+                        <button class="rl-btn rl-btn-burst" onclick="rlBurstRequests()">Burst (3x)</button>
+                        <button class="rl-btn rl-btn-reset" onclick="rlReset()">Reset</button>
+                    </div>
+
+                    <div class="rl-status info" id="rl-status">Click "Make Request" to simulate API calls</div>
+
+                    <div class="rl-metrics">
+                        <div class="rl-metric">
+                            <div class="rl-metric-value allowed" id="rl-allowed-count">0</div>
+                            <div class="rl-metric-label">Allowed</div>
+                        </div>
+                        <div class="rl-metric">
+                            <div class="rl-metric-value denied" id="rl-denied-count">0</div>
+                            <div class="rl-metric-label">Denied</div>
+                        </div>
+                        <div class="rl-metric">
+                            <div class="rl-metric-value" id="rl-rate">0%</div>
+                            <div class="rl-metric-label">Success Rate</div>
+                        </div>
+                    </div>
+
+                    <script>
+                        (function() {
+                            var RL_LIMIT = 5;
+                            var RL_WINDOW = 10000; // 10 seconds in ms
+                            var rlRequests = [];
+                            var rlAllowed = 0;
+                            var rlDenied = 0;
+                            var rlStartTime = Date.now();
+                            var rlAnimationId = null;
+
+                            function rlGetActiveRequests() {
+                                var now = Date.now();
+                                return rlRequests.filter(function(r) { return (now - r.time) < RL_WINDOW; });
+                            }
+
+                            function rlUpdateDisplay() {
+                                var now = Date.now();
+                                var timeline = document.getElementById('rl-timeline');
+                                var activeRequests = rlGetActiveRequests();
+
+                                // Clear old request markers
+                                var oldMarkers = timeline.querySelectorAll('.rl-request');
+                                oldMarkers.forEach(function(m) { m.remove(); });
+
+                                // Add request markers
+                                rlRequests.forEach(function(req, idx) {
+                                    var age = now - req.time;
+                                    if (age > RL_WINDOW + 2000) return; // Keep expired ones visible briefly
+
+                                    var marker = document.createElement('div');
+                                    marker.className = 'rl-request';
+                                    if (age >= RL_WINDOW) {
+                                        marker.classList.add('expired');
+                                    } else if (req.allowed) {
+                                        marker.classList.add('allowed');
+                                    } else {
+                                        marker.classList.add('denied');
+                                    }
+                                    if (req.isNew) {
+                                        marker.classList.add('new');
+                                        req.isNew = false;
+                                    }
+
+                                    // Position based on age (newer on right)
+                                    var position = Math.max(0, Math.min(100, 100 - (age / RL_WINDOW) * 100));
+                                    marker.style.left = position + '%';
+                                    marker.title = (req.allowed ? 'Allowed' : 'Denied') + ' - ' + (age / 1000).toFixed(1) + 's ago';
+                                    timeline.appendChild(marker);
+                                });
+
+                                // Update stats
+                                document.getElementById('rl-window-stats').textContent = activeRequests.length + '/' + RL_LIMIT + ' requests';
+                                document.getElementById('rl-allowed-count').textContent = rlAllowed;
+                                document.getElementById('rl-denied-count').textContent = rlDenied;
+                                var total = rlAllowed + rlDenied;
+                                document.getElementById('rl-rate').textContent = total > 0 ? Math.round((rlAllowed / total) * 100) + '%' : '0%';
+
+                                // Update timeline background
+                                var bgWidth = (activeRequests.length / RL_LIMIT) * 100;
+                                document.getElementById('rl-timeline-bg').style.width = Math.min(100, bgWidth) + '%';
+
+                                // Clean up old requests
+                                rlRequests = rlRequests.filter(function(r) { return (now - r.time) < RL_WINDOW + 2000; });
+                            }
+
+                            function rlAnimate() {
+                                rlUpdateDisplay();
+                                rlAnimationId = requestAnimationFrame(rlAnimate);
+                            }
+
+                            window.rlMakeRequest = function() {
+                                var activeRequests = rlGetActiveRequests();
+                                var allowed = activeRequests.length < RL_LIMIT;
+
+                                rlRequests.push({
+                                    time: Date.now(),
+                                    allowed: allowed,
+                                    isNew: true
+                                });
+
+                                if (allowed) {
+                                    rlAllowed++;
+                                    document.getElementById('rl-status').className = 'rl-status allowed';
+                                    document.getElementById('rl-status').textContent = 'Request ALLOWED - ' + (activeRequests.length + 1) + '/' + RL_LIMIT + ' in window';
+                                } else {
+                                    rlDenied++;
+                                    document.getElementById('rl-status').className = 'rl-status denied';
+                                    document.getElementById('rl-status').textContent = 'Request DENIED - Rate limit exceeded! Wait for old requests to expire.';
+                                }
+                            };
+
+                            window.rlBurstRequests = function() {
+                                rlMakeRequest();
+                                setTimeout(rlMakeRequest, 100);
+                                setTimeout(rlMakeRequest, 200);
+                            };
+
+                            window.rlReset = function() {
+                                rlRequests = [];
+                                rlAllowed = 0;
+                                rlDenied = 0;
+                                rlUpdateDisplay();
+                                document.getElementById('rl-status').className = 'rl-status info';
+                                document.getElementById('rl-status').textContent = 'Rate limiter reset. Click "Make Request" to start again.';
+                            };
+
+                            // Start animation loop
+                            rlAnimate();
+                        })();
+                    </script>
+                </div>
+
                 <div class="code-block">
                     <pre><code class="language-python">import time
 from collections import deque

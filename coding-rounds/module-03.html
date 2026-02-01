@@ -584,6 +584,195 @@ def level_order(root):
             </div>
         </div>
 
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Advanced Traversals: Morris & Iterative (Staff-Level)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Why this matters at Staff level:</strong> Interviewers expect you to know O(1) space traversal methods and understand when recursion stack space matters in production systems.</p>
+
+                <h4>Morris Traversal - O(1) Space Inorder</h4>
+                <p>Morris traversal uses threading (temporary pointer modification) to achieve O(1) space without recursion or explicit stack. Critical for memory-constrained systems.</p>
+
+                <div class="code-block">
+                    <pre><code class="language-python">def morris_inorder(root):
+    """
+    Inorder traversal with O(1) space using Morris threading.
+
+    Key insight: We temporarily create "threads" from rightmost node
+    of left subtree back to current node. This lets us return to
+    the current node after processing left subtree.
+
+    Time: O(n), Space: O(1)
+    """
+    result = []
+    current = root
+
+    while current:
+        if not current.left:
+            # No left subtree - process current, go right
+            result.append(current.val)
+            current = current.right
+        else:
+            # Find inorder predecessor (rightmost in left subtree)
+            predecessor = current.left
+            while predecessor.right and predecessor.right != current:
+                predecessor = predecessor.right
+
+            if not predecessor.right:
+                # Create thread back to current
+                predecessor.right = current
+                current = current.left
+            else:
+                # Thread exists - we've returned from left subtree
+                # Remove thread, process current, go right
+                predecessor.right = None
+                result.append(current.val)
+                current = current.right
+
+    return result
+
+def morris_preorder(root):
+    """
+    Preorder traversal with O(1) space.
+    Similar to inorder, but process node before going left.
+    """
+    result = []
+    current = root
+
+    while current:
+        if not current.left:
+            result.append(current.val)
+            current = current.right
+        else:
+            predecessor = current.left
+            while predecessor.right and predecessor.right != current:
+                predecessor = predecessor.right
+
+            if not predecessor.right:
+                # Process node BEFORE going left (preorder)
+                result.append(current.val)
+                predecessor.right = current
+                current = current.left
+            else:
+                predecessor.right = None
+                current = current.right
+
+    return result</code></pre>
+                </div>
+
+                <h4>Iterative Preorder & Postorder</h4>
+                <div class="code-block">
+                    <pre><code class="language-python">def iterative_preorder(root):
+    """
+    Iterative preorder using explicit stack.
+    Time: O(n), Space: O(h) where h = height
+    """
+    if not root:
+        return []
+
+    result = []
+    stack = [root]
+
+    while stack:
+        node = stack.pop()
+        result.append(node.val)
+        # Push right first so left is processed first
+        if node.right:
+            stack.append(node.right)
+        if node.left:
+            stack.append(node.left)
+
+    return result
+
+def iterative_postorder(root):
+    """
+    Iterative postorder using two stacks OR reverse modified preorder.
+
+    Method 1: Modified preorder then reverse
+    - Preorder: Root -> Left -> Right
+    - Modified: Root -> Right -> Left
+    - Reversed: Left -> Right -> Root (postorder!)
+    """
+    if not root:
+        return []
+
+    result = []
+    stack = [root]
+
+    while stack:
+        node = stack.pop()
+        result.append(node.val)
+        # Push left first (opposite of preorder)
+        if node.left:
+            stack.append(node.left)
+        if node.right:
+            stack.append(node.right)
+
+    return result[::-1]  # Reverse to get postorder
+
+def iterative_postorder_single_stack(root):
+    """
+    True iterative postorder with single stack.
+    More complex but demonstrates deeper understanding.
+    """
+    if not root:
+        return []
+
+    result = []
+    stack = []
+    current = root
+    last_visited = None
+
+    while stack or current:
+        if current:
+            stack.append(current)
+            current = current.left
+        else:
+            peek_node = stack[-1]
+            # If right child exists and not yet visited
+            if peek_node.right and last_visited != peek_node.right:
+                current = peek_node.right
+            else:
+                result.append(peek_node.val)
+                last_visited = stack.pop()
+
+    return result</code></pre>
+                </div>
+
+                <h4>When to Use Each Approach</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Method</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Space</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Use Case</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Recursive</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(h) stack</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Simple, readable, interviews</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Iterative (stack)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(h) heap</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Avoid stack overflow, deep trees</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Morris</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(1)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Memory-critical systems, embedded</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p><strong>Staff-level insight:</strong> In production, Python's default recursion limit is ~1000. For trees deeper than this, you MUST use iterative approaches. Java's stack is typically 512KB-1MB, which allows ~10K-20K recursive calls.</p>
+            </div>
+        </div>
+
         <!-- Binary Search Section -->
         <h2 class="mt-4">Binary Search</h2>
 
@@ -594,13 +783,439 @@ def level_order(root):
             </div>
             <div class="collapsible-content">
                 <div class="diagram-container">
-                    <div class="mermaid">
-flowchart LR
-    A["[1, 3, 5, 7, 9, 11, 13]"] --> B{arr[mid] vs target}
-    B -->|"< target"| C["Search right half"]
-    B -->|"= target"| D["Found!"]
-    B -->|"> target"| E["Search left half"]
+                    <!-- Interactive Binary Search Animation -->
+                    <style>
+                        .bs-animation-container {
+                            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+                            border-radius: 16px;
+                            padding: 30px;
+                            position: relative;
+                            overflow: hidden;
+                            box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+                        }
+                        .bs-animation-container::before {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: radial-gradient(circle at 30% 70%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                                        radial-gradient(circle at 70% 30%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+                            pointer-events: none;
+                        }
+                        .bs-array-container {
+                            display: flex;
+                            justify-content: center;
+                            gap: 8px;
+                            margin: 20px 0;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        .bs-cell {
+                            width: 55px;
+                            height: 55px;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            border-radius: 12px;
+                            font-weight: bold;
+                            font-size: 18px;
+                            color: #e2e8f0;
+                            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                            position: relative;
+                            background: linear-gradient(135deg, #475569, #334155);
+                            border: 2px solid rgba(148, 163, 184, 0.3);
+                            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                        }
+                        .bs-cell .index {
+                            font-size: 10px;
+                            color: #94a3b8;
+                            position: absolute;
+                            top: -18px;
+                        }
+                        .bs-cell.in-range {
+                            background: linear-gradient(135deg, #3b82f6, #2563eb);
+                            border-color: #60a5fa;
+                            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+                        }
+                        .bs-cell.mid {
+                            background: linear-gradient(135deg, #f59e0b, #d97706);
+                            border-color: #fbbf24;
+                            transform: scale(1.15);
+                            box-shadow: 0 8px 30px rgba(245, 158, 11, 0.5);
+                            animation: pulse-mid 0.6s ease-in-out;
+                        }
+                        @keyframes pulse-mid {
+                            0%, 100% { transform: scale(1.15); }
+                            50% { transform: scale(1.25); }
+                        }
+                        .bs-cell.found {
+                            background: linear-gradient(135deg, #22c55e, #16a34a);
+                            border-color: #4ade80;
+                            transform: scale(1.2);
+                            box-shadow: 0 8px 35px rgba(34, 197, 94, 0.6);
+                            animation: found-bounce 0.5s ease-out;
+                        }
+                        @keyframes found-bounce {
+                            0% { transform: scale(1.15); }
+                            50% { transform: scale(1.3); }
+                            100% { transform: scale(1.2); }
+                        }
+                        .bs-cell.eliminated {
+                            background: linear-gradient(135deg, #64748b, #475569);
+                            opacity: 0.4;
+                            transform: scale(0.9);
+                            border-color: rgba(148, 163, 184, 0.2);
+                        }
+                        .bs-pointers {
+                            display: flex;
+                            justify-content: center;
+                            gap: 8px;
+                            margin-top: 10px;
+                            position: relative;
+                            z-index: 1;
+                            height: 35px;
+                        }
+                        .bs-pointer-slot {
+                            width: 55px;
+                            display: flex;
+                            justify-content: center;
+                            font-size: 12px;
+                            font-weight: 600;
+                        }
+                        .bs-pointer {
+                            padding: 4px 10px;
+                            border-radius: 6px;
+                            animation: pointer-appear 0.3s ease-out;
+                        }
+                        @keyframes pointer-appear {
+                            0% { transform: translateY(-10px); opacity: 0; }
+                            100% { transform: translateY(0); opacity: 1; }
+                        }
+                        .bs-pointer.left { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; }
+                        .bs-pointer.right { background: linear-gradient(135deg, #ec4899, #db2777); color: white; }
+                        .bs-pointer.mid-ptr { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+                        .bs-controls {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            gap: 15px;
+                            margin-top: 25px;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        .bs-target-input {
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+                        }
+                        .bs-target-input label {
+                            color: #94a3b8;
+                            font-size: 14px;
+                        }
+                        .bs-target-input input {
+                            width: 80px;
+                            padding: 10px 15px;
+                            border: 2px solid rgba(148, 163, 184, 0.3);
+                            border-radius: 10px;
+                            background: rgba(0,0,0,0.3);
+                            color: #e2e8f0;
+                            font-size: 16px;
+                            font-weight: 600;
+                            text-align: center;
+                            transition: all 0.3s ease;
+                        }
+                        .bs-target-input input:focus {
+                            outline: none;
+                            border-color: #3b82f6;
+                            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+                        }
+                        .bs-buttons {
+                            display: flex;
+                            gap: 12px;
+                            flex-wrap: wrap;
+                            justify-content: center;
+                        }
+                        .bs-btn {
+                            padding: 12px 28px;
+                            border: none;
+                            border-radius: 12px;
+                            font-weight: 600;
+                            font-size: 14px;
+                            cursor: pointer;
+                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        .bs-btn::before {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            left: -100%;
+                            width: 100%;
+                            height: 100%;
+                            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                            transition: left 0.5s;
+                        }
+                        .bs-btn:hover::before {
+                            left: 100%;
+                        }
+                        .bs-btn-search {
+                            background: linear-gradient(135deg, #3b82f6, #2563eb);
+                            color: white;
+                            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+                        }
+                        .bs-btn-search:hover {
+                            transform: translateY(-3px);
+                            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+                        }
+                        .bs-btn-step {
+                            background: linear-gradient(135deg, #10b981, #059669);
+                            color: white;
+                            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+                        }
+                        .bs-btn-step:hover {
+                            transform: translateY(-3px);
+                            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+                        }
+                        .bs-btn-reset {
+                            background: linear-gradient(135deg, #64748b, #475569);
+                            color: white;
+                            box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
+                        }
+                        .bs-btn-reset:hover {
+                            transform: translateY(-3px);
+                            box-shadow: 0 8px 25px rgba(100, 116, 139, 0.5);
+                        }
+                        .bs-btn:disabled {
+                            opacity: 0.5;
+                            cursor: not-allowed;
+                            transform: none !important;
+                        }
+                        .bs-status {
+                            margin-top: 20px;
+                            padding: 15px 25px;
+                            background: rgba(0,0,0,0.3);
+                            border-radius: 12px;
+                            text-align: center;
+                            color: #e2e8f0;
+                            font-size: 15px;
+                            border: 1px solid rgba(148, 163, 184, 0.2);
+                            position: relative;
+                            z-index: 1;
+                            min-height: 50px;
+                        }
+                        .bs-status .step-count {
+                            font-size: 12px;
+                            color: #94a3b8;
+                            margin-bottom: 5px;
+                        }
+                        .bs-status .message {
+                            font-weight: 500;
+                        }
+                        .bs-status .comparison {
+                            font-family: 'Fira Code', monospace;
+                            margin-top: 8px;
+                            padding: 8px 15px;
+                            background: rgba(59, 130, 246, 0.2);
+                            border-radius: 8px;
+                            display: inline-block;
+                        }
+                        .bs-legend {
+                            display: flex;
+                            justify-content: center;
+                            gap: 20px;
+                            margin-top: 15px;
+                            flex-wrap: wrap;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        .bs-legend-item {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            font-size: 12px;
+                            color: #94a3b8;
+                        }
+                        .bs-legend-color {
+                            width: 16px;
+                            height: 16px;
+                            border-radius: 4px;
+                        }
+                        .bs-legend-color.in-range-color { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+                        .bs-legend-color.mid-color { background: linear-gradient(135deg, #f59e0b, #d97706); }
+                        .bs-legend-color.found-color { background: linear-gradient(135deg, #22c55e, #16a34a); }
+                        .bs-legend-color.eliminated-color { background: linear-gradient(135deg, #64748b, #475569); opacity: 0.5; }
+                    </style>
+                    <div class="bs-animation-container" id="bsAnimationContainer">
+                        <div class="bs-array-container" id="bsArray"></div>
+                        <div class="bs-pointers" id="bsPointers"></div>
+                        <div class="bs-controls">
+                            <div class="bs-target-input">
+                                <label>Target value:</label>
+                                <input type="number" id="bsTarget" value="9" min="1" max="15">
+                            </div>
+                            <div class="bs-buttons">
+                                <button class="bs-btn bs-btn-search" onclick="startBinarySearch()">Auto Search</button>
+                                <button class="bs-btn bs-btn-step" onclick="stepBinarySearch()" id="bsStepBtn" disabled>Step</button>
+                                <button class="bs-btn bs-btn-reset" onclick="resetBinarySearch()">Reset</button>
+                            </div>
+                        </div>
+                        <div class="bs-status" id="bsStatus">
+                            <div class="step-count" id="bsStepCount"></div>
+                            <div class="message">Enter a target value and click "Auto Search" or "Step" to begin</div>
+                        </div>
+                        <div class="bs-legend">
+                            <div class="bs-legend-item"><div class="bs-legend-color in-range-color"></div>In Search Range</div>
+                            <div class="bs-legend-item"><div class="bs-legend-color mid-color"></div>Current Mid</div>
+                            <div class="bs-legend-item"><div class="bs-legend-color found-color"></div>Found</div>
+                            <div class="bs-legend-item"><div class="bs-legend-color eliminated-color"></div>Eliminated</div>
+                        </div>
                     </div>
+                    <script>
+                        (function() {
+                            const bsArray = [1, 3, 5, 7, 9, 11, 13];
+                            let left = 0, right = bsArray.length - 1, mid = -1;
+                            let target = 9;
+                            let isSearching = false;
+                            let stepCount = 0;
+                            let found = false;
+                            let searchComplete = false;
+
+                            function renderArray() {
+                                const container = document.getElementById('bsArray');
+                                container.innerHTML = bsArray.map((val, idx) => {
+                                    let classes = 'bs-cell';
+                                    if (found && idx === mid) {
+                                        classes += ' found';
+                                    } else if (idx === mid && !searchComplete) {
+                                        classes += ' mid';
+                                    } else if (idx >= left && idx <= right && !searchComplete) {
+                                        classes += ' in-range';
+                                    } else if (searchComplete || idx < left || idx > right) {
+                                        classes += ' eliminated';
+                                    }
+                                    return `<div class="${classes}"><span class="index">[${idx}]</span>${val}</div>`;
+                                }).join('');
+                            }
+
+                            function renderPointers() {
+                                const container = document.getElementById('bsPointers');
+                                container.innerHTML = bsArray.map((_, idx) => {
+                                    let content = '';
+                                    if (idx === left && !searchComplete) content += '<span class="bs-pointer left">L</span>';
+                                    if (idx === mid && !searchComplete && !found) content += '<span class="bs-pointer mid-ptr">M</span>';
+                                    if (idx === right && !searchComplete) content += '<span class="bs-pointer right">R</span>';
+                                    return `<div class="bs-pointer-slot">${content}</div>`;
+                                }).join('');
+                            }
+
+                            function updateStatus(message, comparison = '') {
+                                const statusEl = document.getElementById('bsStatus');
+                                const stepCountEl = document.getElementById('bsStepCount');
+                                stepCountEl.textContent = stepCount > 0 ? `Step ${stepCount}` : '';
+                                statusEl.querySelector('.message').textContent = message;
+                                if (comparison) {
+                                    statusEl.innerHTML = `<div class="step-count">${stepCount > 0 ? 'Step ' + stepCount : ''}</div><div class="message">${message}</div><div class="comparison">${comparison}</div>`;
+                                }
+                            }
+
+                            function initSearch() {
+                                target = parseInt(document.getElementById('bsTarget').value) || 9;
+                                left = 0;
+                                right = bsArray.length - 1;
+                                mid = -1;
+                                stepCount = 0;
+                                found = false;
+                                searchComplete = false;
+                                document.getElementById('bsStepBtn').disabled = false;
+                                renderArray();
+                                renderPointers();
+                            }
+
+                            function doStep() {
+                                if (left > right) {
+                                    searchComplete = true;
+                                    updateStatus(`Target ${target} not found in the array!`);
+                                    document.getElementById('bsStepBtn').disabled = true;
+                                    renderArray();
+                                    renderPointers();
+                                    return false;
+                                }
+
+                                stepCount++;
+                                mid = Math.floor(left + (right - left) / 2);
+
+                                if (bsArray[mid] === target) {
+                                    found = true;
+                                    searchComplete = true;
+                                    updateStatus(`Found ${target} at index ${mid}!`, `arr[${mid}] = ${bsArray[mid]} === ${target}`);
+                                    document.getElementById('bsStepBtn').disabled = true;
+                                    renderArray();
+                                    renderPointers();
+                                    return false;
+                                } else if (bsArray[mid] < target) {
+                                    updateStatus(`${bsArray[mid]} < ${target}, search right half`, `arr[${mid}] = ${bsArray[mid]} < ${target}`);
+                                    renderArray();
+                                    renderPointers();
+                                    left = mid + 1;
+                                } else {
+                                    updateStatus(`${bsArray[mid]} > ${target}, search left half`, `arr[${mid}] = ${bsArray[mid]} > ${target}`);
+                                    renderArray();
+                                    renderPointers();
+                                    right = mid - 1;
+                                }
+                                return true;
+                            }
+
+                            window.startBinarySearch = async function() {
+                                if (isSearching) return;
+                                isSearching = true;
+                                document.querySelectorAll('.bs-btn').forEach(btn => btn.disabled = true);
+
+                                initSearch();
+                                updateStatus('Starting binary search...');
+                                await new Promise(r => setTimeout(r, 600));
+
+                                while (doStep()) {
+                                    await new Promise(r => setTimeout(r, 1000));
+                                }
+
+                                isSearching = false;
+                                document.querySelector('.bs-btn-search').disabled = false;
+                                document.querySelector('.bs-btn-reset').disabled = false;
+                            };
+
+                            window.stepBinarySearch = function() {
+                                if (isSearching) return;
+                                if (stepCount === 0) {
+                                    initSearch();
+                                }
+                                doStep();
+                            };
+
+                            window.resetBinarySearch = function() {
+                                isSearching = false;
+                                left = 0;
+                                right = bsArray.length - 1;
+                                mid = -1;
+                                stepCount = 0;
+                                found = false;
+                                searchComplete = false;
+                                document.querySelectorAll('.bs-btn').forEach(btn => btn.disabled = false);
+                                document.getElementById('bsStepBtn').disabled = true;
+                                renderArray();
+                                renderPointers();
+                                updateStatus('Enter a target value and click "Auto Search" or "Step" to begin');
+                            };
+
+                            // Initialize on load
+                            renderArray();
+                            renderPointers();
+                        })();
+                    </script>
                 </div>
 
                 <div class="code-block">
@@ -699,6 +1314,153 @@ def min_eating_speed(piles, h):
 
     return left</code></pre>
                 </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Binary Search in Rotated Sorted Array (Staff-Level)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>A critical staff-level problem: searching in an array that was sorted, then rotated at some pivot point. This tests your ability to maintain binary search invariants in non-standard scenarios.</p>
+
+                <h4>The Key Insight</h4>
+                <p>In a rotated sorted array like <code>[4,5,6,7,0,1,2]</code>, at least one half is always sorted. We determine which half is sorted, then check if our target falls within that sorted range.</p>
+
+                <div class="code-block">
+                    <pre><code class="language-python">def search_rotated(nums, target):
+    """
+    Search in rotated sorted array with distinct values.
+    Time: O(log n), Space: O(1)
+
+    Key insight: At least one half is always sorted.
+    Example: [4,5,6,7,0,1,2] rotated at index 4
+    - If mid is at 7: left half [4,5,6,7] is sorted
+    - If mid is at 0: right half [0,1,2] is sorted
+    """
+    left, right = 0, len(nums) - 1
+
+    while left <= right:
+        mid = left + (right - left) // 2
+
+        if nums[mid] == target:
+            return mid
+
+        # Determine which half is sorted
+        if nums[left] <= nums[mid]:  # Left half is sorted
+            if nums[left] <= target < nums[mid]:
+                right = mid - 1  # Target in sorted left half
+            else:
+                left = mid + 1   # Target in unsorted right half
+        else:  # Right half is sorted
+            if nums[mid] < target <= nums[right]:
+                left = mid + 1   # Target in sorted right half
+            else:
+                right = mid - 1  # Target in unsorted left half
+
+    return -1
+
+def search_rotated_with_duplicates(nums, target):
+    """
+    Search in rotated sorted array WITH DUPLICATES.
+    Worst case: O(n) when all elements are same except one.
+    Example: [1,1,1,1,1,1,1,1,1,1,1,1,0,1,1]
+
+    Staff-level insight: Duplicates break our ability to determine
+    which half is sorted when nums[left] == nums[mid] == nums[right].
+    """
+    left, right = 0, len(nums) - 1
+
+    while left <= right:
+        mid = left + (right - left) // 2
+
+        if nums[mid] == target:
+            return True
+
+        # Handle duplicates: can't determine sorted half
+        if nums[left] == nums[mid] == nums[right]:
+            left += 1
+            right -= 1
+        elif nums[left] <= nums[mid]:  # Left half is sorted
+            if nums[left] <= target < nums[mid]:
+                right = mid - 1
+            else:
+                left = mid + 1
+        else:  # Right half is sorted
+            if nums[mid] < target <= nums[right]:
+                left = mid + 1
+            else:
+                right = mid - 1
+
+    return False
+
+def find_rotation_point(nums):
+    """
+    Find the index of minimum element (rotation point).
+    This is where the array was rotated.
+
+    Example: [4,5,6,7,0,1,2] -> returns 4 (index of 0)
+    """
+    left, right = 0, len(nums) - 1
+
+    while left < right:
+        mid = left + (right - left) // 2
+
+        if nums[mid] > nums[right]:
+            # Minimum is in right half
+            left = mid + 1
+        else:
+            # Minimum is in left half (including mid)
+            right = mid
+
+    return left  # Index of minimum element</code></pre>
+                </div>
+
+                <h4>Edge Cases to Handle</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Edge Case</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Example</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Why It Matters</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Not rotated</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>[1,2,3,4,5]</code></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Array rotated by n positions (full rotation)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Single element</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>[3]</code></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Must handle left == right</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Two elements</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>[2,1]</code></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Boundary condition testing</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">All duplicates</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><code>[1,1,1,1]</code></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cannot determine sorted half</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Target at boundary</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">target = 4 in <code>[4,5,6,0,1,2]</code></td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Test &lt;= vs &lt; boundary conditions</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Staff Interview Discussion Points</h4>
+                <ul>
+                    <li><strong>Follow-up:</strong> "What if we need to find the k-th smallest element?" Answer: Find rotation point, then calculate adjusted index.</li>
+                    <li><strong>Follow-up:</strong> "Can we do better than O(n) with duplicates?" Answer: No, adversarial input can force linear scan.</li>
+                    <li><strong>System design connection:</strong> Rotated arrays appear in time-series databases with circular buffers.</li>
+                </ul>
             </div>
         </div>
 
@@ -801,6 +1563,190 @@ def diameter(root):
             </div>
         </div>
 
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Tree Edge Cases & Advanced Problems (Staff-Level)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>Critical Edge Cases for Tree Problems</h4>
+                <p>Staff engineers are expected to identify and handle these edge cases without prompting:</p>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Edge Case</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Impact</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Empty tree (root is None)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">NullPointerException</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Check <code>if not root</code> first</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Single node tree</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Boundary conditions</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Test depth=0 vs depth=1 semantics</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Skewed tree (linked list)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">O(n) height, stack overflow</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Iterative solution or tail recursion</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Duplicate values in BST</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Ambiguous ordering</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Define convention: left &lt;= root or left &lt; root</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Integer overflow in path sum</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Wrong answer</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Use long/BigInteger for large values</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Negative node values</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Max path sum logic breaks</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Initialize with float('-inf'), not 0</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Advanced Tree Problems for Staff Level</h4>
+
+                <div class="code-block">
+                    <pre><code class="language-python"># 1. Construct Tree from Preorder + Inorder
+# Key insight: First element of preorder is always root
+# Find that in inorder to split left/right subtrees
+
+def build_tree(preorder, inorder):
+    """
+    Time: O(n), Space: O(n) for hashmap
+    Without hashmap: O(n^2) due to index searching
+    """
+    if not preorder or not inorder:
+        return None
+
+    # Hashmap for O(1) index lookup
+    inorder_map = {val: idx for idx, val in enumerate(inorder)}
+
+    def build(pre_start, pre_end, in_start, in_end):
+        if pre_start > pre_end:
+            return None
+
+        root_val = preorder[pre_start]
+        root = TreeNode(root_val)
+
+        # Find root in inorder
+        in_root_idx = inorder_map[root_val]
+        left_size = in_root_idx - in_start
+
+        root.left = build(pre_start + 1, pre_start + left_size,
+                          in_start, in_root_idx - 1)
+        root.right = build(pre_start + left_size + 1, pre_end,
+                           in_root_idx + 1, in_end)
+
+        return root
+
+    return build(0, len(preorder) - 1, 0, len(inorder) - 1)
+
+# 2. Binary Tree Maximum Path Sum
+# Path can start and end at any node
+# Key insight: At each node, decide whether to extend path or start new
+
+def max_path_sum(root):
+    """
+    Time: O(n), Space: O(h)
+    Handle negative values correctly!
+    """
+    max_sum = [float('-inf')]  # Use list for closure
+
+    def max_gain(node):
+        if not node:
+            return 0
+
+        # Max gain from left/right subtrees
+        # max(0, ...) to ignore negative paths
+        left_gain = max(0, max_gain(node.left))
+        right_gain = max(0, max_gain(node.right))
+
+        # Price of path through this node
+        path_price = node.val + left_gain + right_gain
+
+        # Update global max
+        max_sum[0] = max(max_sum[0], path_price)
+
+        # Return max gain if we continue this path upward
+        # Can only go through one child
+        return node.val + max(left_gain, right_gain)
+
+    max_gain(root)
+    return max_sum[0]
+
+# 3. Flatten Binary Tree to Linked List (In-place)
+# Important: Must be done in preorder
+
+def flatten(root):
+    """
+    Morris-style O(1) space flattening.
+    Key: For each node with left child, find rightmost of left subtree,
+    connect it to current right, then move left subtree to right.
+    """
+    current = root
+
+    while current:
+        if current.left:
+            # Find rightmost node of left subtree
+            rightmost = current.left
+            while rightmost.right:
+                rightmost = rightmost.right
+
+            # Rewire connections
+            rightmost.right = current.right
+            current.right = current.left
+            current.left = None
+
+        current = current.right
+
+# 4. Serialize and Deserialize Binary Tree
+# Staff-level: Discuss trade-offs of different approaches
+
+def serialize(root):
+    """Preorder with null markers. Time: O(n), Space: O(n)"""
+    def helper(node):
+        if not node:
+            return ['null']
+        return [str(node.val)] + helper(node.left) + helper(node.right)
+
+    return ','.join(helper(root))
+
+def deserialize(data):
+    """Reconstruct from serialized string"""
+    values = iter(data.split(','))
+
+    def helper():
+        val = next(values)
+        if val == 'null':
+            return None
+        node = TreeNode(int(val))
+        node.left = helper()
+        node.right = helper()
+        return node
+
+    return helper()</code></pre>
+                </div>
+
+                <h4>Staff Interview Follow-ups</h4>
+                <ul>
+                    <li><strong>Serialization format:</strong> "Why preorder? What about level-order?" Level-order is better for sparse trees, preorder for dense trees.</li>
+                    <li><strong>Path sum variants:</strong> "What if path must go through root?" "What if path must start at root?" Each variant has different recursive structure.</li>
+                    <li><strong>Construction uniqueness:</strong> "Can you construct tree from preorder + postorder?" Only if all nodes have 0 or 2 children.</li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Real-World Scale Examples -->
         <h2 class="mt-4">Real-World Scale Examples</h2>
 
@@ -843,6 +1789,73 @@ print(f"B-tree: {disk_reads_btree(n)} disk reads")  # ~4
 
                 <h4>Google's SSTable + LSM Tree</h4>
                 <p>Google's Bigtable (and LevelDB, RocksDB) uses Log-Structured Merge trees - essentially sorted arrays with binary search merged periodically. This optimizes for write-heavy workloads while maintaining O(log n) reads.</p>
+
+                <h4>Staff-Level Deep Dive: B+ Tree vs LSM Tree Trade-offs</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Aspect</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">B+ Tree (MySQL, PostgreSQL)</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">LSM Tree (Cassandra, RocksDB)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Write Pattern</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Random I/O (update in place)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Sequential I/O (append only)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Write Amplification</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low (1x)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">High (10-30x due to compaction)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Read Amplification</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low (single tree)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Higher (check multiple levels)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Space Amplification</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Medium (~1.5x)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Variable (1-2x)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Best For</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Read-heavy, OLTP</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Write-heavy, time-series</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="code-block">
+                    <pre><code class="language-python"># LSM Tree Read: Binary search at multiple levels
+def lsm_read(key, levels):
+    """
+    LSM trees maintain sorted runs at different levels.
+    Binary search is used at each level.
+
+    Read amplification = number of levels to check
+    Bloom filters reduce this significantly.
+    """
+    # Check memtable (in-memory) first
+    if key in memtable:
+        return memtable[key]
+
+    # Check each level (L0, L1, L2, ...)
+    for level in levels:
+        for sstable in level.sstables:
+            # Bloom filter: probabilistic "not in set" check
+            if not sstable.bloom_filter.might_contain(key):
+                continue  # Definitely not in this SSTable
+
+            # Binary search within SSTable
+            result = binary_search(sstable, key)
+            if result:
+                return result
+
+    return None  # Key not found</code></pre>
+                </div>
             </div>
         </div>
 
@@ -990,18 +2003,43 @@ def trees_differ(tree1, tree2):
         <!-- Practice Problems -->
         <h2 class="mt-4">Practice Problems</h2>
         <div class="card">
-            <h4>Easy</h4>
+            <h4>Easy (Warm-up)</h4>
             <ul>
                 <li><a href="https://leetcode.com/problems/binary-search/" target="_blank">Binary Search (LeetCode #704)</a></li>
                 <li><a href="https://leetcode.com/problems/maximum-depth-of-binary-tree/" target="_blank">Maximum Depth (LeetCode #104)</a></li>
                 <li><a href="https://leetcode.com/problems/invert-binary-tree/" target="_blank">Invert Binary Tree (LeetCode #226)</a></li>
+                <li><a href="https://leetcode.com/problems/symmetric-tree/" target="_blank">Symmetric Tree (LeetCode #101)</a></li>
             </ul>
 
-            <h4 class="mt-3">Medium</h4>
+            <h4 class="mt-3">Medium (Interview Standard)</h4>
             <ul>
                 <li><a href="https://leetcode.com/problems/validate-binary-search-tree/" target="_blank">Validate BST (LeetCode #98)</a></li>
                 <li><a href="https://leetcode.com/problems/binary-tree-level-order-traversal/" target="_blank">Level Order Traversal (LeetCode #102)</a></li>
                 <li><a href="https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/" target="_blank">Lowest Common Ancestor (LeetCode #236)</a></li>
+                <li><a href="https://leetcode.com/problems/search-in-rotated-sorted-array/" target="_blank">Search in Rotated Sorted Array (LeetCode #33)</a></li>
+                <li><a href="https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/" target="_blank">Construct Tree from Preorder and Inorder (LeetCode #105)</a></li>
+                <li><a href="https://leetcode.com/problems/koko-eating-bananas/" target="_blank">Koko Eating Bananas (LeetCode #875)</a> - Binary Search on Answer</li>
+                <li><a href="https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/" target="_blank">Find Minimum in Rotated Array (LeetCode #153)</a></li>
+            </ul>
+
+            <h4 class="mt-3">Hard (Staff-Level Expected)</h4>
+            <ul>
+                <li><a href="https://leetcode.com/problems/binary-tree-maximum-path-sum/" target="_blank">Binary Tree Maximum Path Sum (LeetCode #124)</a></li>
+                <li><a href="https://leetcode.com/problems/serialize-and-deserialize-binary-tree/" target="_blank">Serialize and Deserialize Binary Tree (LeetCode #297)</a></li>
+                <li><a href="https://leetcode.com/problems/median-of-two-sorted-arrays/" target="_blank">Median of Two Sorted Arrays (LeetCode #4)</a> - Binary Search Mastery</li>
+                <li><a href="https://leetcode.com/problems/recover-binary-search-tree/" target="_blank">Recover Binary Search Tree (LeetCode #99)</a> - Morris Traversal Application</li>
+                <li><a href="https://leetcode.com/problems/search-in-rotated-sorted-array-ii/" target="_blank">Search in Rotated Array II (LeetCode #81)</a> - With Duplicates</li>
+                <li><a href="https://leetcode.com/problems/binary-tree-cameras/" target="_blank">Binary Tree Cameras (LeetCode #968)</a> - Tree DP</li>
+            </ul>
+
+            <h4 class="mt-3">Staff Interview Focus Areas</h4>
+            <p style="margin-top: 1rem; color: var(--text-secondary);">For Staff-level interviews, focus on:</p>
+            <ul style="color: var(--text-secondary);">
+                <li>Being able to implement Morris traversal from scratch</li>
+                <li>Handling all edge cases without prompting</li>
+                <li>Discussing time-space trade-offs and real-world implications</li>
+                <li>Connecting tree/search concepts to database indexing</li>
+                <li>Optimizing binary search variations for production use</li>
             </ul>
         </div>
 

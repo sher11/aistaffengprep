@@ -510,22 +510,250 @@ queue.popleft()     # dequeue</code></pre>
         <!-- Decision Tree -->
         <h2 class="mt-4">Data Structure Selection</h2>
 
-        <div class="diagram-container">
-            <div class="mermaid">
-flowchart TD
-    A[Need to store data] --> B{Need key-value pairs?}
-    B -->|Yes| C[Hash Table]
-    B -->|No| D{Need ordering?}
-    D -->|Yes| E{By value?}
-    D -->|No| F{LIFO or FIFO?}
-    E -->|Yes| G[BST/TreeMap]
-    E -->|No, insertion order| H[LinkedHashMap]
-    F -->|LIFO| I[Stack]
-    F -->|FIFO| J[Queue]
-    F -->|Neither| K{Fast random access?}
-    K -->|Yes| L[Array]
-    K -->|No| M[Linked List]
+        <div class="diagram-container interactive">
+            <!-- Interactive Data Structure Selection Guide -->
+            <div id="ds-selection-animation" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <h4 style="color: #fff; text-align: center; margin-bottom: 25px; font-size: 1.2rem;">Interactive Data Structure Decision Guide</h4>
+
+                <!-- Decision Tree Visualization -->
+                <div id="ds-tree" style="position: relative; min-height: 400px;">
+                    <!-- Start Node -->
+                    <div class="ds-node ds-start" id="node-start" data-step="0" style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #8b5cf6, #7c3aed); padding: 15px 25px; border-radius: 12px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); text-align: center; z-index: 10;">
+                        Need to store data?<br><span style="font-size: 0.8rem; opacity: 0.8;">Click to start</span>
+                    </div>
+
+                    <!-- Question: Key-Value? -->
+                    <div class="ds-node ds-question hidden" id="node-keyvalue" data-step="1" style="position: absolute; top: 80px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #f59e0b, #d97706); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        Need key-value pairs?
+                    </div>
+
+                    <!-- Answer: Hash Table -->
+                    <div class="ds-node ds-answer hidden" id="node-hashtable" data-step="2" style="position: absolute; top: 160px; left: 20%; transform: translateX(-50%); background: linear-gradient(135deg, #4ade80, #22c55e); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(74, 222, 128, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        Hash Table<br><span style="font-size: 0.75rem; opacity: 0.8;">O(1) lookup</span>
+                    </div>
+
+                    <!-- Question: Need Ordering? -->
+                    <div class="ds-node ds-question hidden" id="node-ordering" data-step="2" style="position: absolute; top: 160px; left: 70%; transform: translateX(-50%); background: linear-gradient(135deg, #f59e0b, #d97706); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        Need ordering?
+                    </div>
+
+                    <!-- Question: By Value? -->
+                    <div class="ds-node ds-question hidden" id="node-byvalue" data-step="3" style="position: absolute; top: 240px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #f59e0b, #d97706); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        Order by value?
+                    </div>
+
+                    <!-- Question: LIFO/FIFO? -->
+                    <div class="ds-node ds-question hidden" id="node-lifofifo" data-step="3" style="position: absolute; top: 240px; left: 85%; transform: translateX(-50%); background: linear-gradient(135deg, #f59e0b, #d97706); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        LIFO or FIFO?
+                    </div>
+
+                    <!-- Answer: BST/TreeMap -->
+                    <div class="ds-node ds-answer hidden" id="node-bst" data-step="4" style="position: absolute; top: 320px; left: 35%; transform: translateX(-50%); background: linear-gradient(135deg, #4ade80, #22c55e); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(74, 222, 128, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        BST/TreeMap<br><span style="font-size: 0.75rem; opacity: 0.8;">O(log n) sorted</span>
+                    </div>
+
+                    <!-- Answer: LinkedHashMap -->
+                    <div class="ds-node ds-answer hidden" id="node-linkedhashmap" data-step="4" style="position: absolute; top: 320px; left: 55%; transform: translateX(-50%); background: linear-gradient(135deg, #4ade80, #22c55e); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(74, 222, 128, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        LinkedHashMap<br><span style="font-size: 0.75rem; opacity: 0.8;">insertion order</span>
+                    </div>
+
+                    <!-- Answer: Stack -->
+                    <div class="ds-node ds-answer hidden" id="node-stack" data-step="4" style="position: absolute; top: 320px; left: 72%; transform: translateX(-50%); background: linear-gradient(135deg, #4ade80, #22c55e); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(74, 222, 128, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        Stack<br><span style="font-size: 0.75rem; opacity: 0.8;">LIFO</span>
+                    </div>
+
+                    <!-- Answer: Queue -->
+                    <div class="ds-node ds-answer hidden" id="node-queue" data-step="4" style="position: absolute; top: 320px; left: 88%; transform: translateX(-50%); background: linear-gradient(135deg, #4ade80, #22c55e); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(74, 222, 128, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        Queue<br><span style="font-size: 0.75rem; opacity: 0.8;">FIFO</span>
+                    </div>
+
+                    <!-- Question: Fast Random Access? -->
+                    <div class="ds-node ds-question hidden" id="node-randomaccess" data-step="4" style="position: absolute; top: 320px; left: 15%; transform: translateX(-50%); background: linear-gradient(135deg, #f59e0b, #d97706); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        Fast random access?
+                    </div>
+
+                    <!-- Answer: Array -->
+                    <div class="ds-node ds-answer hidden" id="node-array" data-step="5" style="position: absolute; top: 400px; left: 8%; transform: translateX(-50%); background: linear-gradient(135deg, #4ade80, #22c55e); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(74, 222, 128, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        Array<br><span style="font-size: 0.75rem; opacity: 0.8;">O(1) access</span>
+                    </div>
+
+                    <!-- Answer: Linked List -->
+                    <div class="ds-node ds-answer hidden" id="node-linkedlist" data-step="5" style="position: absolute; top: 400px; left: 25%; transform: translateX(-50%); background: linear-gradient(135deg, #4ade80, #22c55e); padding: 15px 20px; border-radius: 12px; color: #fff; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(74, 222, 128, 0.4); text-align: center; z-index: 10; opacity: 0;">
+                        Linked List<br><span style="font-size: 0.75rem; opacity: 0.8;">O(1) insert</span>
+                    </div>
+
+                    <!-- SVG for connecting lines -->
+                    <svg id="ds-lines" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></svg>
+                </div>
+
+                <!-- Controls -->
+                <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                    <button id="ds-reset" style="padding: 10px 25px; background: linear-gradient(135deg, #64748b, #475569); border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease;">Reset</button>
+                    <button id="ds-auto" style="padding: 10px 25px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease;">Auto-Play All</button>
+                </div>
+
+                <!-- Info Panel -->
+                <div id="ds-info" style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; border-left: 3px solid #8b5cf6; min-height: 50px;">
+                    <p style="color: #d0d0d0; margin: 0; font-size: 0.9rem;">Click on the starting node to begin exploring the decision tree. Each choice reveals the next level of decisions.</p>
+                </div>
             </div>
+
+            <style>
+                .ds-node { user-select: none; }
+                .ds-node:hover:not(.ds-answer) { transform: translateX(-50%) scale(1.05); }
+                .ds-node.active { animation: pulse 1s infinite; }
+                .ds-node.hidden { display: block !important; }
+                .ds-answer:hover { transform: translateX(-50%) scale(1.05); }
+                @keyframes pulse { 0%, 100% { box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); } 50% { box-shadow: 0 8px 35px rgba(139, 92, 246, 0.7); } }
+            </style>
+
+            <script>
+            (function() {
+                const nodes = {
+                    start: { next: ['keyvalue'], lines: [['start', 'keyvalue']] },
+                    keyvalue: { yes: ['hashtable'], no: ['ordering'], lines: [['keyvalue', 'hashtable'], ['keyvalue', 'ordering']] },
+                    ordering: { yes: ['byvalue'], no: ['lifofifo', 'randomaccess'], lines: [['ordering', 'byvalue'], ['ordering', 'lifofifo'], ['ordering', 'randomaccess']] },
+                    byvalue: { yes: ['bst'], no: ['linkedhashmap'], lines: [['byvalue', 'bst'], ['byvalue', 'linkedhashmap']] },
+                    lifofifo: { lifo: ['stack'], fifo: ['queue'], lines: [['lifofifo', 'stack'], ['lifofifo', 'queue']] },
+                    randomaccess: { yes: ['array'], no: ['linkedlist'], lines: [['randomaccess', 'array'], ['randomaccess', 'linkedlist']] }
+                };
+
+                const dsInfo = {
+                    hashtable: 'Hash Table: O(1) average for insert, lookup, delete. Best for: frequent lookups, caching, counting frequencies.',
+                    bst: 'BST/TreeMap: O(log n) operations, maintains sorted order. Best for: range queries, finding min/max, ordered iteration.',
+                    linkedhashmap: 'LinkedHashMap: O(1) lookup + insertion order. Best for: LRU cache implementation, maintaining order of access.',
+                    stack: 'Stack (LIFO): O(1) push/pop. Best for: undo operations, bracket matching, DFS, function call tracking.',
+                    queue: 'Queue (FIFO): O(1) enqueue/dequeue. Best for: BFS, task scheduling, message buffers, print queues.',
+                    array: 'Array: O(1) random access, O(n) insert/delete. Best for: indexed data, when size is known, cache-friendly iteration.',
+                    linkedlist: 'Linked List: O(1) insert/delete with reference, O(n) access. Best for: frequent insertions/deletions, unknown size.'
+                };
+
+                let visibleNodes = ['start'];
+                const svg = document.getElementById('ds-lines');
+
+                function showNode(id) {
+                    const node = document.getElementById('node-' + id);
+                    if (node) {
+                        node.style.opacity = '1';
+                        node.style.transform = 'translateX(-50%) scale(1)';
+                    }
+                }
+
+                function hideNode(id) {
+                    const node = document.getElementById('node-' + id);
+                    if (node) {
+                        node.style.opacity = '0';
+                    }
+                }
+
+                function drawLine(fromId, toId) {
+                    const from = document.getElementById('node-' + fromId);
+                    const to = document.getElementById('node-' + toId);
+                    if (!from || !to) return;
+
+                    const container = document.getElementById('ds-tree');
+                    const containerRect = container.getBoundingClientRect();
+                    const fromRect = from.getBoundingClientRect();
+                    const toRect = to.getBoundingClientRect();
+
+                    const x1 = fromRect.left + fromRect.width/2 - containerRect.left;
+                    const y1 = fromRect.bottom - containerRect.top;
+                    const x2 = toRect.left + toRect.width/2 - containerRect.left;
+                    const y2 = toRect.top - containerRect.top;
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    line.setAttribute('stroke', 'rgba(139, 92, 246, 0.5)');
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('stroke-dasharray', '5,5');
+                    line.classList.add('ds-line');
+                    svg.appendChild(line);
+                }
+
+                function clearLines() {
+                    svg.innerHTML = '';
+                }
+
+                function reset() {
+                    clearLines();
+                    document.querySelectorAll('.ds-node').forEach(node => {
+                        if (node.id !== 'node-start') {
+                            node.style.opacity = '0';
+                        }
+                    });
+                    document.getElementById('node-start').style.opacity = '1';
+                    visibleNodes = ['start'];
+                    document.getElementById('ds-info').innerHTML = '<p style="color: #d0d0d0; margin: 0; font-size: 0.9rem;">Click on the starting node to begin exploring the decision tree.</p>';
+                }
+
+                function expandNode(nodeId) {
+                    const nodeConfig = nodes[nodeId];
+                    if (!nodeConfig) return;
+
+                    const allNextNodes = [...(nodeConfig.next || []), ...(nodeConfig.yes || []), ...(nodeConfig.no || []), ...(nodeConfig.lifo || []), ...(nodeConfig.fifo || [])];
+
+                    allNextNodes.forEach(nextId => {
+                        showNode(nextId);
+                        visibleNodes.push(nextId);
+                        setTimeout(() => drawLine(nodeId, nextId), 100);
+                    });
+
+                    // Show info for answer nodes
+                    allNextNodes.forEach(nextId => {
+                        if (dsInfo[nextId]) {
+                            document.getElementById('ds-info').innerHTML = '<p style="color: #d0d0d0; margin: 0; font-size: 0.9rem;"><strong style="color: #4ade80;">' + nextId.charAt(0).toUpperCase() + nextId.slice(1) + ':</strong> ' + dsInfo[nextId] + '</p>';
+                        }
+                    });
+                }
+
+                // Click handlers for nodes
+                document.getElementById('node-start').addEventListener('click', () => expandNode('start'));
+                document.getElementById('node-keyvalue').addEventListener('click', () => expandNode('keyvalue'));
+                document.getElementById('node-ordering').addEventListener('click', () => expandNode('ordering'));
+                document.getElementById('node-byvalue').addEventListener('click', () => expandNode('byvalue'));
+                document.getElementById('node-lifofifo').addEventListener('click', () => expandNode('lifofifo'));
+                document.getElementById('node-randomaccess').addEventListener('click', () => expandNode('randomaccess'));
+
+                // Answer node hover info
+                Object.keys(dsInfo).forEach(id => {
+                    const node = document.getElementById('node-' + id);
+                    if (node) {
+                        node.addEventListener('mouseenter', () => {
+                            document.getElementById('ds-info').innerHTML = '<p style="color: #d0d0d0; margin: 0; font-size: 0.9rem;"><strong style="color: #4ade80;">' + id.charAt(0).toUpperCase() + id.slice(1).replace(/([A-Z])/g, ' $1') + ':</strong> ' + dsInfo[id] + '</p>';
+                        });
+                    }
+                });
+
+                document.getElementById('ds-reset').addEventListener('click', reset);
+
+                document.getElementById('ds-auto').addEventListener('click', () => {
+                    reset();
+                    const sequence = ['start', 'keyvalue', 'ordering', 'byvalue', 'lifofifo', 'randomaccess'];
+                    let i = 0;
+                    const interval = setInterval(() => {
+                        if (i < sequence.length) {
+                            expandNode(sequence[i]);
+                            i++;
+                        } else {
+                            clearInterval(interval);
+                        }
+                    }, 800);
+                });
+
+                // Button hover effects
+                document.querySelectorAll('#ds-selection-animation button').forEach(btn => {
+                    btn.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateY(-2px)';
+                    });
+                    btn.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateY(0)';
+                    });
+                });
+            })();
+            </script>
         </div>
 
         <!-- Real-World Scale Examples -->
