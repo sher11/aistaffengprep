@@ -142,9 +142,15 @@
 }
 
 .glass-nav {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+}
+
+/* Ensure nav links are always interactive */
+.glass-nav .nav-links,
+.glass-nav .nav-links a {
+    pointer-events: auto !important;
 }
 
 /* ============================================
