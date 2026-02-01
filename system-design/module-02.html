@@ -30,42 +30,42 @@
 
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">Core Concepts</div>
-                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                    <a href="module-01.html" class="sidebar-link">
                         <span class="sidebar-link-number">1</span>Scalability Fundamentals
                     </a>
-                    <a href="module-02.html" class="sidebar-link active" data-module="2">
+                    <a href="module-02.html" class="sidebar-link active">
                         <span class="sidebar-link-number">2</span>Database Systems
                     </a>
-                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                    <a href="module-03.html" class="sidebar-link">
                         <span class="sidebar-link-number">3</span>Distributed Systems
                     </a>
-                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                    <a href="module-04.html" class="sidebar-link">
                         <span class="sidebar-link-number">4</span>Storage & Data Processing
                     </a>
-                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                    <a href="module-05.html" class="sidebar-link">
                         <span class="sidebar-link-number">5</span>Seminal Papers
                     </a>
-                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                    <a href="module-09.html" class="sidebar-link">
                         <span class="sidebar-link-number">6</span>API Design
                     </a>
-                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                    <a href="module-10.html" class="sidebar-link">
                         <span class="sidebar-link-number">7</span>Numbers to Know
                     </a>
                 </div>
 
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">Patterns</div>
-                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                    <a href="module-11.html" class="sidebar-link">
                         <span class="sidebar-link-number">8</span>Real-time Updates
                     </a>
-                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                    <a href="module-12.html" class="sidebar-link">
                         <span class="sidebar-link-number">9</span>Rate Limiting
                     </a>
                 </div>
 
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">Problem Breakdowns</div>
-                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                    <a href="module-06.html" class="sidebar-link">
                         <span class="sidebar-link-number">10</span>Common Problems
                     </a>
                     <a href="problems/url-shortener.html" class="sidebar-link">URL Shortener</a>
@@ -76,217 +76,361 @@
 
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">Interview Prep</div>
-                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                    <a href="module-07.html" class="sidebar-link">
                         <span class="sidebar-link-number">11</span>Framework Mastery
                     </a>
-                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                    <a href="module-08.html" class="sidebar-link">
                         <span class="sidebar-link-number">12</span>Mock Interviews
                     </a>
                 </div>
             </nav>
         </aside>
 
-        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <main class="main-content">
             <h1>Module 2: Database Systems</h1>
 
-        <div class="card mt-3">
-            <h3>Learning Objectives</h3>
-            <ul>
-                <li>Understand SQL vs NoSQL trade-offs and selection criteria</li>
-                <li>Master database sharding strategies</li>
-                <li>Learn replication patterns and consistency models</li>
-                <li>Apply indexing strategies for optimal performance</li>
-            </ul>
-        </div>
-
-        <h2 class="mt-4">SQL vs NoSQL Decision</h2>
-
-        <div class="collapsible open">
-            <div class="collapsible-header">
-                <span>When to Choose Each</span>
-                <span class="collapsible-icon">&#9660;</span>
+            <div class="card mt-3">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>When to choose SQL vs NoSQL (and why the answer is usually "it depends")</li>
+                    <li>Database sharding strategies and their real-world trade-offs</li>
+                    <li>Replication patterns: leader-follower, multi-leader, leaderless</li>
+                    <li>Indexing internals: B-trees, LSM-trees, and when to use each</li>
+                </ul>
             </div>
-            <div class="collapsible-content">
-                <div class="diagram-container">
-                    <div class="mermaid">
-flowchart TD
-    A[Data Model?] --> B{Structured with<br>relationships?}
-    B -->|Yes| C{ACID required?}
-    B -->|No| D{Flexible schema?}
 
-    C -->|Yes| E[SQL/RDBMS]
-    C -->|No| F[Consider both]
+            <!-- SQL vs NoSQL -->
+            <h2 class="mt-4">SQL vs NoSQL: The Real Trade-offs</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Understanding the Decision</span>
+                    <span class="collapsible-icon">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>The interview trap:</strong> Many candidates say "NoSQL for scale, SQL for consistency." This is oversimplified. Modern SQL databases (CockroachDB, Spanner) scale horizontally, and NoSQL can provide strong consistency.</p>
+
+                    <p><strong>The real question is:</strong> What are your access patterns?</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TD
+    A[What are your access patterns?] --> B{Need complex joins<br>across entities?}
+    B -->|Yes| C{Data relationships<br>change frequently?}
+    B -->|No| D{Need flexible schema?}
+
+    C -->|Yes| E[SQL with<br>proper indexing]
+    C -->|No| F[Consider<br>denormalization]
 
     D -->|Yes| G{Query patterns?}
-    G -->|Key-Value| H[Redis, DynamoDB]
-    G -->|Document| I[MongoDB]
-    G -->|Wide-Column| J[Cassandra, HBase]
-    G -->|Graph| K[Neo4j]
+    D -->|No| H[SQL often simpler]
+
+    G -->|Key-Value| I[Redis, DynamoDB]
+    G -->|Document| J[MongoDB, Firestore]
+    G -->|Wide-Column| K[Cassandra, HBase]
+    G -->|Graph| L[Neo4j, Neptune]
+                        </div>
+                    </div>
+
+                    <h4>Real-World Examples</h4>
+
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Company</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Use Case</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Choice</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Why</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Uber</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Trip data</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">MySQL → Docstore</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Needed horizontal scale for 100M+ trips/day</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Netflix</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">User profiles</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cassandra</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Multi-region availability, no single point of failure</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Stripe</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Payment records</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">PostgreSQL</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">ACID critical for financial transactions</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Discord</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Messages</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cassandra → ScyllaDB</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Billions of messages, time-series access pattern</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Interview tip:</strong> Don't just pick a database—explain your reasoning based on: (1) Access patterns, (2) Consistency requirements, (3) Scale needs, (4) Team familiarity.
                     </div>
                 </div>
-
-                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
-                    <thead>
-                        <tr style="background: var(--border-color);">
-                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Choose SQL When</th>
-                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Choose NoSQL When</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complex queries needed</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Simple key-value access</td></tr>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">ACID required</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Massive scale needed</td></tr>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Schema stability</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Flexible schema</td></tr>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Joins are common</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Denormalized data OK</td></tr>
-                    </tbody>
-                </table>
             </div>
-        </div>
 
-        <h2 class="mt-4">Sharding Strategies</h2>
+            <!-- Sharding -->
+            <h2 class="mt-4">Database Sharding</h2>
 
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Horizontal Partitioning</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <div class="diagram-container">
-                    <div class="mermaid">
-flowchart TD
-    subgraph "Range-Based"
-        A[Users A-M] --> S1[(Shard 1)]
-        B[Users N-Z] --> S2[(Shard 2)]
-    end
-
-    subgraph "Hash-Based"
-        C[hash user_id mod N] --> S3[(Shard N)]
-    end
-
-    subgraph "Directory-Based"
-        D[Lookup Service] --> S4[(Shards)]
-    end
-                    </div>
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Sharding Strategies Deep Dive</span>
+                    <span class="collapsible-icon">▼</span>
                 </div>
+                <div class="collapsible-content">
+                    <p><strong>Why shard?</strong> When a single database can't handle your read/write load or data volume. Instagram shards because they store 2+ billion photos.</p>
 
-                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
-                    <thead>
-                        <tr style="background: var(--border-color);">
-                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Strategy</th>
-                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pros</th>
-                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Cons</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Range</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Range queries easy</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hotspots possible</td></tr>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hash</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Even distribution</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Range queries hard</td></tr>
-                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Directory</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Flexible</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Additional lookup</td></tr>
-                    </tbody>
-                </table>
+                    <h4>Strategy 1: Range-Based Sharding</h4>
+                    <p>Partition by ranges of a key (e.g., users A-M on shard 1, N-Z on shard 2).</p>
 
-                <h4>Sharding Challenges</h4>
-                <ul>
-                    <li><strong>Cross-shard queries:</strong> Joins across shards are expensive</li>
-                    <li><strong>Rebalancing:</strong> Moving data when adding shards</li>
-                    <li><strong>Hotspots:</strong> Uneven data distribution</li>
-                </ul>
-            </div>
-        </div>
+                    <div class="code-block">
+                        <code>
+-- Range-based sharding by user_id<br>
+-- Shard 1: user_id 1-1,000,000<br>
+-- Shard 2: user_id 1,000,001-2,000,000<br>
+<br>
+def get_shard(user_id):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if user_id <= 1_000_000:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return "shard_1"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;elif user_id <= 2_000_000:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return "shard_2"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;# ...<br>
+                        </code>
+                    </div>
 
-        <h2 class="mt-4">Replication</h2>
+                    <p><strong>Pros:</strong> Range queries are efficient (get all users between X and Y).<br>
+                    <strong>Cons:</strong> Hotspots! If new users are sequential IDs, shard N always gets the load.</p>
 
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Replication Patterns</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <div class="diagram-container">
-                    <div class="mermaid">
+                    <h4>Strategy 2: Hash-Based Sharding</h4>
+                    <p>Hash the key and mod by number of shards.</p>
+
+                    <div class="code-block">
+                        <code>
+import hashlib<br>
+<br>
+def get_shard(user_id, num_shards=4):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;hash_val = int(hashlib.md5(str(user_id).encode()).hexdigest(), 16)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return f"shard_{hash_val % num_shards}"<br>
+<br>
+# user_id=12345 → shard_2<br>
+# user_id=67890 → shard_0<br>
+                        </code>
+                    </div>
+
+                    <p><strong>Pros:</strong> Even distribution, no hotspots.<br>
+                    <strong>Cons:</strong> Range queries require querying all shards. Adding shards requires rehashing (use consistent hashing!).</p>
+
+                    <h4>Strategy 3: Directory-Based Sharding</h4>
+                    <p>A lookup service maps keys to shards. Most flexible but adds a dependency.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
 flowchart LR
-    subgraph "Leader-Follower"
-        L1[Leader] --> F1[Follower 1]
-        L1 --> F2[Follower 2]
-    end
+    Client --> LS[Lookup Service]
+    LS --> |user_123 → shard_2| S2[(Shard 2)]
+    LS --> |user_456 → shard_1| S1[(Shard 1)]
+    LS --> |user_789 → shard_3| S3[(Shard 3)]
+                        </div>
+                    </div>
 
-    subgraph "Multi-Leader"
-        L2[Leader 1] <--> L3[Leader 2]
-    end
+                    <h4>Sharding Challenges (What Interviewers Ask)</h4>
+                    <ul>
+                        <li><strong>Cross-shard joins:</strong> "Get all orders for users in California" requires querying all shards if sharded by user_id. Solution: Denormalize or use a separate analytics database.</li>
+                        <li><strong>Rebalancing:</strong> Adding shards means moving data. With consistent hashing, only K/N keys move (K=keys, N=shards).</li>
+                        <li><strong>Transactions:</strong> ACID across shards is hard. Consider saga pattern or accept eventual consistency.</li>
+                    </ul>
 
-    subgraph "Leaderless"
-        N1[Node 1] <--> N2[Node 2]
-        N2 <--> N3[Node 3]
-        N3 <--> N1
-    end
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Interview tip:</strong> When asked "how would you shard this?", first ask about access patterns. "Are we querying by user_id or by timestamp? Do we need range queries?"
                     </div>
                 </div>
-
-                <h4>Leader-Follower (Most Common)</h4>
-                <ul>
-                    <li>All writes go to leader</li>
-                    <li>Reads from leader or followers</li>
-                    <li>Simple, but leader is bottleneck</li>
-                </ul>
-
-                <h4>Multi-Leader</h4>
-                <ul>
-                    <li>Multiple nodes accept writes</li>
-                    <li>Conflict resolution needed</li>
-                    <li>Good for multi-datacenter</li>
-                </ul>
-
-                <h4>Leaderless (Dynamo-style)</h4>
-                <ul>
-                    <li>Any node accepts writes</li>
-                    <li>Quorum-based consistency</li>
-                    <li>High availability</li>
-                </ul>
             </div>
-        </div>
 
-        <h2 class="mt-4">Indexing</h2>
+            <!-- Replication -->
+            <h2 class="mt-4">Replication Patterns</h2>
 
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Index Types & Trade-offs</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <h4>B-Tree Index</h4>
-                <ul>
-                    <li>Default for most RDBMS</li>
-                    <li>Good for range queries and equality</li>
-                    <li>O(log n) lookup</li>
-                </ul>
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Leader-Follower, Multi-Leader, and Leaderless</span>
+                    <span class="collapsible-icon">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Why replicate?</strong> High availability (survive node failures) and read scalability (distribute read load).</p>
 
-                <h4>Hash Index</h4>
-                <ul>
-                    <li>O(1) for equality lookups</li>
-                    <li>No range query support</li>
-                    <li>Used in memory (Redis)</li>
-                </ul>
+                    <h4>Pattern 1: Leader-Follower (Most Common)</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    W[Writes] --> L[(Leader)]
+    L --> |Replication| F1[(Follower 1)]
+    L --> |Replication| F2[(Follower 2)]
+    R1[Reads] --> L
+    R2[Reads] --> F1
+    R3[Reads] --> F2
+                        </div>
+                    </div>
 
-                <h4>LSM-Tree (Log-Structured Merge)</h4>
-                <ul>
-                    <li>Optimized for writes</li>
-                    <li>Used in Cassandra, RocksDB</li>
-                    <li>Background compaction</li>
-                </ul>
+                    <p><strong>How it works:</strong> All writes go to leader, replicated async (or sync) to followers. Reads can go to any node.</p>
 
-                <div class="card mt-2" style="background: var(--success-bg);">
-                    <strong>Indexing Trade-off:</strong> More indexes = faster reads, slower writes, more storage
+                    <p><strong>Real-world:</strong> PostgreSQL streaming replication, MySQL replication, MongoDB replica sets.</p>
+
+                    <p><strong>Trade-off:</strong> Async replication = potential data loss on leader failure. Sync replication = higher latency.</p>
+
+                    <h4>Pattern 2: Multi-Leader</h4>
+                    <p>Multiple nodes accept writes. Used for multi-datacenter deployments.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph "US-East"
+        L1[(Leader 1)]
+    end
+    subgraph "EU-West"
+        L2[(Leader 2)]
+    end
+    L1 <--> |Async Replication| L2
+    U1[US Users] --> L1
+    U2[EU Users] --> L2
+                        </div>
+                    </div>
+
+                    <p><strong>Challenge:</strong> Conflict resolution. What if US and EU update the same record?</p>
+                    <ul>
+                        <li><strong>Last-write-wins (LWW):</strong> Timestamp decides. Simple but loses data.</li>
+                        <li><strong>Merge:</strong> Application-specific logic (e.g., union sets, max values).</li>
+                        <li><strong>CRDTs:</strong> Conflict-free replicated data types (used by Figma for real-time collaboration).</li>
+                    </ul>
+
+                    <h4>Pattern 3: Leaderless (Dynamo-style)</h4>
+                    <p>Any node accepts reads/writes. Uses quorums for consistency.</p>
+
+                    <div class="code-block">
+                        <code>
+# Quorum formula: R + W > N<br>
+# N = total replicas, W = write quorum, R = read quorum<br>
+<br>
+# Example: N=3, W=2, R=2<br>
+# Write succeeds if 2/3 nodes acknowledge<br>
+# Read succeeds if 2/3 nodes respond<br>
+# Guarantees we read at least one node with latest write<br>
+                        </code>
+                    </div>
+
+                    <p><strong>Real-world:</strong> Amazon DynamoDB, Apache Cassandra, Riak.</p>
+
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Interview tip:</strong> Know when to use each pattern. Leader-follower for most apps. Multi-leader for multi-region with local writes. Leaderless for high availability with tunable consistency.
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <h2 class="mt-4">Self-Check Quiz</h2>
-        <div class="quiz-container" id="module-quiz"></div>
+            <!-- Indexing -->
+            <h2 class="mt-4">Indexing Deep Dive</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>B-Trees vs LSM-Trees</span>
+                    <span class="collapsible-icon">▼</span>
+                </div>
+                <div class="collapsible-content">
+                    <p><strong>Why does this matter?</strong> Index structure affects read/write performance. Choose wrong, and your database becomes a bottleneck.</p>
+
+                    <h4>B-Tree (Default in PostgreSQL, MySQL)</h4>
+                    <p>Balanced tree structure. Updates modify pages in place.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    R[Root: 50] --> L[Left: 25]
+    R --> M[Right: 75]
+    L --> LL[10, 20]
+    L --> LR[30, 40]
+    M --> ML[60, 70]
+    M --> MR[80, 90]
+                        </div>
+                    </div>
+
+                    <p><strong>Pros:</strong> Fast reads O(log n), good for read-heavy workloads.<br>
+                    <strong>Cons:</strong> Random I/O on writes, write amplification.</p>
+
+                    <h4>LSM-Tree (Default in Cassandra, RocksDB, LevelDB)</h4>
+                    <p>Log-structured. Writes go to memory (memtable), then flushed to disk as immutable sorted files (SSTables).</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    W[Write] --> MT[Memtable<br>in memory]
+    MT --> |Flush| L0[Level 0<br>SSTables]
+    L0 --> |Compaction| L1[Level 1]
+    L1 --> |Compaction| L2[Level 2]
+                        </div>
+                    </div>
+
+                    <p><strong>Pros:</strong> Sequential writes (fast!), great for write-heavy workloads.<br>
+                    <strong>Cons:</strong> Reads may check multiple levels, compaction uses CPU/IO.</p>
+
+                    <h4>When to Use Which?</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Workload</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Best Choice</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Example</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Read-heavy (OLTP)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">B-Tree</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">E-commerce product catalog</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Write-heavy</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">LSM-Tree</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Time-series metrics, logs</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Balanced</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Either (tune settings)</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">User profiles</td>
+                        </tr>
+                    </table>
+
+                    <div class="card" style="background: var(--success-bg);">
+                        <strong>Interview tip:</strong> If asked about write performance, mention LSM-trees and why (sequential I/O). If asked about read performance with many indexes, mention B-tree write amplification.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Common Interview Questions -->
+            <h2 class="mt-4">Common Interview Questions</h2>
+
+            <div class="card">
+                <h4>1. "How would you design the database for a social network?"</h4>
+                <p><strong>Key points:</strong> User table (SQL for profile data), follower graph (could be graph DB or adjacency list), posts (could be NoSQL for flexibility), feed (precomputed in cache or fanout on write).</p>
+            </div>
+
+            <div class="card mt-2">
+                <h4>2. "When would you denormalize?"</h4>
+                <p><strong>Key points:</strong> When read performance matters more than write consistency. When joins are expensive (distributed systems). When data is read together frequently.</p>
+            </div>
+
+            <div class="card mt-2">
+                <h4>3. "How do you handle database migrations at scale?"</h4>
+                <p><strong>Key points:</strong> Dual-write pattern, expand-contract migrations, online schema changes (gh-ost, pt-online-schema-change), feature flags.</p>
+            </div>
 
             <div class="flex flex-between mt-4">
-                <a href="module-01.html" class="btn btn-secondary">&larr; Previous Module</a>
-                <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+                <a href="module-01.html" class="btn btn-secondary">← Scalability Fundamentals</a>
+                <a href="module-03.html" class="btn btn-primary">Distributed Systems →</a>
             </div>
         </main>
     </div>
@@ -307,38 +451,6 @@ flowchart LR
             sidebar.classList.remove('open');
             sidebarOverlay.classList.remove('open');
         });
-
-        // Update sidebar links based on completion status
-        document.querySelectorAll('.sidebar-link[data-module]').forEach(link => {
-            const moduleNum = parseInt(link.dataset.module);
-            if (StaffEngPrep.ProgressTracker.isModuleComplete('systemDesign', moduleNum)) {
-                link.classList.add('completed');
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const quizQuestions = [
-                {
-                    question: "When should you choose a NoSQL database over SQL?",
-                    options: ["Complex joins are needed", "ACID transactions required", "Massive horizontal scaling needed", "Schema is very stable"],
-                    correct: 2,
-                    explanation: "NoSQL excels at horizontal scaling and flexible schemas, while SQL is better for complex queries and ACID requirements."
-                },
-                {
-                    question: "What is the main disadvantage of hash-based sharding?",
-                    options: ["Uneven distribution", "Range queries are difficult", "Too complex to implement", "Requires more storage"],
-                    correct: 1,
-                    explanation: "Hash-based sharding distributes data evenly but makes range queries difficult since related data may be on different shards."
-                }
-            ];
-            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
-            quiz.render();
-        });
-        function completeModule() {
-            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 2);
-            alert('Module 2 marked as complete!');
-            window.location.href = 'module-03.html';
-        }
     </script>
 </body>
 </html>
