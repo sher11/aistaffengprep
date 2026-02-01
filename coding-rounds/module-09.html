@@ -95,16 +95,397 @@
 
         <h2 class="mt-4">The UMPIRE Method</h2>
 
-        <div class="diagram-container">
-            <div class="mermaid">
-flowchart LR
-    U["<strong>U</strong>nderstand<br>2-3 min"] --> M["<strong>M</strong>atch<br>1-2 min"]
-    M --> P["<strong>P</strong>lan<br>3-5 min"]
-    P --> I["<strong>I</strong>mplement<br>15-20 min"]
-    I --> R["<strong>R</strong>eview<br>3-5 min"]
-    R --> E["<strong>E</strong>valuate<br>2-3 min"]
+        <!-- Interactive UMPIRE Method Animation -->
+        <style>
+            .umpire-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 2rem;
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                border-radius: 16px;
+                margin: 1.5rem 0;
+                overflow: hidden;
+                position: relative;
+            }
+
+            .umpire-flow {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                width: 100%;
+                max-width: 1000px;
+            }
+
+            .umpire-step {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                cursor: pointer;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                position: relative;
+                opacity: 0;
+                transform: scale(0.5) translateY(30px);
+            }
+
+            .umpire-step.visible {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+
+            .umpire-step.active {
+                transform: scale(1.15) translateY(-5px);
+                z-index: 10;
+            }
+
+            .umpire-step:nth-child(1) { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4); }
+            .umpire-step:nth-child(3) { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); box-shadow: 0 8px 30px rgba(245, 87, 108, 0.4); }
+            .umpire-step:nth-child(5) { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); box-shadow: 0 8px 30px rgba(79, 172, 254, 0.4); }
+            .umpire-step:nth-child(7) { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); box-shadow: 0 8px 30px rgba(67, 233, 123, 0.4); }
+            .umpire-step:nth-child(9) { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); box-shadow: 0 8px 30px rgba(250, 112, 154, 0.4); }
+            .umpire-step:nth-child(11) { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); box-shadow: 0 8px 30px rgba(168, 237, 234, 0.4); }
+
+            .umpire-step:nth-child(11) .step-letter,
+            .umpire-step:nth-child(11) .step-time {
+                color: #1a1a2e;
+            }
+
+            .umpire-step:hover {
+                transform: scale(1.1) translateY(-3px);
+            }
+
+            .umpire-step.active:hover {
+                transform: scale(1.2) translateY(-8px);
+            }
+
+            .step-letter {
+                font-size: 2.5rem;
+                font-weight: 800;
+                color: white;
+                text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            }
+
+            .step-time {
+                font-size: 0.75rem;
+                color: rgba(255,255,255,0.9);
+                margin-top: 0.25rem;
+                font-weight: 600;
+            }
+
+            .umpire-arrow {
+                font-size: 1.5rem;
+                color: rgba(255,255,255,0.5);
+                opacity: 0;
+                transform: translateX(-10px);
+                transition: all 0.3s ease;
+            }
+
+            .umpire-arrow.visible {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            .umpire-arrow.pulse {
+                animation: arrowPulse 1s ease-in-out infinite;
+            }
+
+            @keyframes arrowPulse {
+                0%, 100% { transform: translateX(0); opacity: 0.5; }
+                50% { transform: translateX(5px); opacity: 1; }
+            }
+
+            .umpire-details {
+                margin-top: 1.5rem;
+                padding: 1.5rem;
+                background: rgba(255,255,255,0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 12px;
+                width: 100%;
+                max-width: 600px;
+                min-height: 120px;
+                opacity: 0;
+                transform: translateY(20px);
+                transition: all 0.4s ease;
+            }
+
+            .umpire-details.visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            .umpire-details h4 {
+                color: white;
+                font-size: 1.25rem;
+                margin-bottom: 0.75rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .umpire-details p {
+                color: rgba(255,255,255,0.85);
+                font-size: 0.95rem;
+                line-height: 1.6;
+                margin: 0;
+            }
+
+            .umpire-details .tip {
+                margin-top: 0.75rem;
+                padding: 0.75rem;
+                background: rgba(255,255,255,0.1);
+                border-radius: 8px;
+                font-style: italic;
+                color: rgba(255,255,255,0.9);
+            }
+
+            .umpire-controls {
+                display: flex;
+                gap: 1rem;
+                margin-top: 1.5rem;
+            }
+
+            .umpire-btn {
+                padding: 0.6rem 1.5rem;
+                border: none;
+                border-radius: 25px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                font-size: 0.9rem;
+            }
+
+            .umpire-btn-primary {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+
+            .umpire-btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+            }
+
+            .umpire-btn-secondary {
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: 1px solid rgba(255,255,255,0.3);
+            }
+
+            .umpire-btn-secondary:hover {
+                background: rgba(255,255,255,0.3);
+            }
+
+            .progress-bar {
+                width: 100%;
+                max-width: 600px;
+                height: 6px;
+                background: rgba(255,255,255,0.2);
+                border-radius: 3px;
+                margin-top: 1.5rem;
+                overflow: hidden;
+            }
+
+            .progress-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #4facfe, #43e97b, #fa709a);
+                background-size: 300% 100%;
+                border-radius: 3px;
+                transition: width 0.5s ease;
+                animation: gradientShift 3s ease infinite;
+            }
+
+            @keyframes gradientShift {
+                0%, 100% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+            }
+
+            @media (max-width: 768px) {
+                .umpire-step {
+                    width: 80px;
+                    height: 80px;
+                }
+                .step-letter {
+                    font-size: 1.75rem;
+                }
+                .step-time {
+                    font-size: 0.65rem;
+                }
+                .umpire-arrow {
+                    font-size: 1rem;
+                }
+            }
+        </style>
+
+        <div class="umpire-container" id="umpireContainer">
+            <div class="umpire-flow">
+                <div class="umpire-step" data-step="0" onclick="selectUmpireStep(0)">
+                    <span class="step-letter">U</span>
+                    <span class="step-time">2-3 min</span>
+                </div>
+                <span class="umpire-arrow">&#8594;</span>
+                <div class="umpire-step" data-step="1" onclick="selectUmpireStep(1)">
+                    <span class="step-letter">M</span>
+                    <span class="step-time">1-2 min</span>
+                </div>
+                <span class="umpire-arrow">&#8594;</span>
+                <div class="umpire-step" data-step="2" onclick="selectUmpireStep(2)">
+                    <span class="step-letter">P</span>
+                    <span class="step-time">3-5 min</span>
+                </div>
+                <span class="umpire-arrow">&#8594;</span>
+                <div class="umpire-step" data-step="3" onclick="selectUmpireStep(3)">
+                    <span class="step-letter">I</span>
+                    <span class="step-time">15-20 min</span>
+                </div>
+                <span class="umpire-arrow">&#8594;</span>
+                <div class="umpire-step" data-step="4" onclick="selectUmpireStep(4)">
+                    <span class="step-letter">R</span>
+                    <span class="step-time">3-5 min</span>
+                </div>
+                <span class="umpire-arrow">&#8594;</span>
+                <div class="umpire-step" data-step="5" onclick="selectUmpireStep(5)">
+                    <span class="step-letter">E</span>
+                    <span class="step-time">2-3 min</span>
+                </div>
+            </div>
+
+            <div class="umpire-details" id="umpireDetails">
+                <h4 id="detailsTitle">Click a step to learn more</h4>
+                <p id="detailsContent">Each step in the UMPIRE method is crucial for interview success. Click on any circle above to see detailed guidance.</p>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="umpireProgress" style="width: 0%"></div>
+            </div>
+
+            <div class="umpire-controls">
+                <button class="umpire-btn umpire-btn-primary" onclick="playUmpireAnimation()">Play Animation</button>
+                <button class="umpire-btn umpire-btn-secondary" onclick="resetUmpireAnimation()">Reset</button>
             </div>
         </div>
+
+        <script>
+            const umpireData = [
+                {
+                    title: "U - Understand",
+                    content: "Restate the problem in your own words. Clarify inputs, outputs, and constraints. Ask about edge cases and confirm with examples. This prevents solving the wrong problem!",
+                    tip: '"Let me make sure I understand correctly..."'
+                },
+                {
+                    title: "M - Match",
+                    content: "Identify problem patterns (sliding window, two pointers, BFS/DFS, etc.). Consider similar problems you've solved. Think about which data structures might help.",
+                    tip: '"This reminds me of the two-sum pattern..."'
+                },
+                {
+                    title: "P - Plan",
+                    content: "Start with brute force, then optimize. Explain your approach clearly. Discuss time/space complexity BEFORE coding. Get interviewer buy-in!",
+                    tip: '"Before I code, here\'s my approach..."'
+                },
+                {
+                    title: "I - Implement",
+                    content: "Write clean, readable code. Narrate as you code - explain your thinking. Use meaningful variable names. Handle edge cases as you go.",
+                    tip: '"I\'m creating a hashmap here to store..."'
+                },
+                {
+                    title: "R - Review",
+                    content: "Walk through your code with a concrete example. Check for off-by-one errors, null checks, and edge cases. Fix any bugs you find.",
+                    tip: '"Let me trace through with input [1,2,3]..."'
+                },
+                {
+                    title: "E - Evaluate",
+                    content: "State final time and space complexity. Mention potential optimizations. Ask if the interviewer wants to explore alternatives or edge cases.",
+                    tip: '"This runs in O(n) time and O(1) space. We could optimize further by..."'
+                }
+            ];
+
+            let currentUmpireStep = -1;
+            let umpireAnimationInterval = null;
+
+            function initUmpireAnimation() {
+                const steps = document.querySelectorAll('.umpire-step');
+                const arrows = document.querySelectorAll('.umpire-arrow');
+
+                steps.forEach((step, index) => {
+                    setTimeout(() => {
+                        step.classList.add('visible');
+                        if (arrows[index]) {
+                            setTimeout(() => arrows[index].classList.add('visible'), 200);
+                        }
+                    }, index * 150);
+                });
+
+                setTimeout(() => {
+                    document.getElementById('umpireDetails').classList.add('visible');
+                }, steps.length * 150 + 300);
+            }
+
+            function selectUmpireStep(index) {
+                const steps = document.querySelectorAll('.umpire-step');
+                const arrows = document.querySelectorAll('.umpire-arrow');
+
+                steps.forEach(s => s.classList.remove('active'));
+                arrows.forEach(a => a.classList.remove('pulse'));
+
+                steps[index].classList.add('active');
+                if (arrows[index]) arrows[index].classList.add('pulse');
+
+                currentUmpireStep = index;
+
+                document.getElementById('detailsTitle').textContent = umpireData[index].title;
+                document.getElementById('detailsContent').innerHTML =
+                    umpireData[index].content +
+                    '<div class="tip">' + umpireData[index].tip + '</div>';
+
+                document.getElementById('umpireProgress').style.width = ((index + 1) / 6 * 100) + '%';
+            }
+
+            function playUmpireAnimation() {
+                if (umpireAnimationInterval) {
+                    clearInterval(umpireAnimationInterval);
+                }
+
+                currentUmpireStep = -1;
+                let step = 0;
+
+                umpireAnimationInterval = setInterval(() => {
+                    if (step >= 6) {
+                        clearInterval(umpireAnimationInterval);
+                        umpireAnimationInterval = null;
+                        return;
+                    }
+                    selectUmpireStep(step);
+                    step++;
+                }, 2000);
+
+                selectUmpireStep(0);
+            }
+
+            function resetUmpireAnimation() {
+                if (umpireAnimationInterval) {
+                    clearInterval(umpireAnimationInterval);
+                    umpireAnimationInterval = null;
+                }
+
+                const steps = document.querySelectorAll('.umpire-step');
+                const arrows = document.querySelectorAll('.umpire-arrow');
+
+                steps.forEach(s => s.classList.remove('active'));
+                arrows.forEach(a => a.classList.remove('pulse'));
+
+                currentUmpireStep = -1;
+                document.getElementById('detailsTitle').textContent = 'Click a step to learn more';
+                document.getElementById('detailsContent').textContent = 'Each step in the UMPIRE method is crucial for interview success. Click on any circle above to see detailed guidance.';
+                document.getElementById('umpireProgress').style.width = '0%';
+            }
+
+            // Initialize on page load
+            setTimeout(initUmpireAnimation, 500);
+        </script>
 
         <div class="collapsible open">
             <div class="collapsible-header">

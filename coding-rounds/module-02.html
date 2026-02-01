@@ -106,20 +106,484 @@
                 <p>Two pointers technique uses two indices to traverse data, often reducing O(n²) to O(n).</p>
 
                 <div class="diagram-container">
-                    <div class="mermaid">
-flowchart LR
-    subgraph "Opposite Ends"
-        A["[1, 2, 3, 4, 5]"]
-        L1((L)) -.-> A
-        R1((R)) -.-> A
-    end
+                    <!-- Interactive Two Pointer Animation -->
+                    <div class="two-pointer-animation" id="twoPointerDemo">
+                        <style>
+                            .two-pointer-animation {
+                                font-family: 'Segoe UI', system-ui, sans-serif;
+                                padding: 30px;
+                                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                                border-radius: 16px;
+                                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                            }
+                            .tp-section {
+                                margin-bottom: 30px;
+                                padding: 20px;
+                                background: rgba(255,255,255,0.05);
+                                border-radius: 12px;
+                                border: 1px solid rgba(255,255,255,0.1);
+                                transition: all 0.3s ease;
+                            }
+                            .tp-section:hover {
+                                background: rgba(255,255,255,0.08);
+                                border-color: rgba(99, 102, 241, 0.3);
+                            }
+                            .tp-section-title {
+                                font-size: 14px;
+                                font-weight: 600;
+                                color: #a5b4fc;
+                                text-transform: uppercase;
+                                letter-spacing: 1.5px;
+                                margin-bottom: 20px;
+                                display: flex;
+                                align-items: center;
+                                gap: 10px;
+                            }
+                            .tp-section-title::before {
+                                content: '';
+                                width: 4px;
+                                height: 20px;
+                                background: linear-gradient(180deg, #6366f1, #8b5cf6);
+                                border-radius: 2px;
+                            }
+                            .tp-array-container {
+                                display: flex;
+                                justify-content: center;
+                                gap: 8px;
+                                margin: 25px 0;
+                                position: relative;
+                                padding: 40px 0;
+                            }
+                            .tp-cell {
+                                width: 55px;
+                                height: 55px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 20px;
+                                font-weight: 600;
+                                color: #e2e8f0;
+                                background: linear-gradient(145deg, #2d3748, #1a202c);
+                                border-radius: 10px;
+                                border: 2px solid #4a5568;
+                                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                                position: relative;
+                            }
+                            .tp-cell:hover {
+                                transform: translateY(-3px);
+                                box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+                            }
+                            .tp-cell.left-active {
+                                background: linear-gradient(145deg, #059669, #047857);
+                                border-color: #10b981;
+                                box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+                                transform: scale(1.1);
+                            }
+                            .tp-cell.right-active {
+                                background: linear-gradient(145deg, #dc2626, #b91c1c);
+                                border-color: #ef4444;
+                                box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+                                transform: scale(1.1);
+                            }
+                            .tp-cell.slow-active {
+                                background: linear-gradient(145deg, #7c3aed, #6d28d9);
+                                border-color: #8b5cf6;
+                                box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+                                transform: scale(1.1);
+                            }
+                            .tp-cell.fast-active {
+                                background: linear-gradient(145deg, #f59e0b, #d97706);
+                                border-color: #fbbf24;
+                                box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+                                transform: scale(1.1);
+                            }
+                            .tp-cell.both-active {
+                                background: linear-gradient(145deg, #ec4899, #be185d);
+                                border-color: #f472b6;
+                                box-shadow: 0 0 25px rgba(236, 72, 153, 0.6);
+                                transform: scale(1.15);
+                            }
+                            .tp-pointer {
+                                position: absolute;
+                                font-size: 11px;
+                                font-weight: 700;
+                                padding: 4px 10px;
+                                border-radius: 6px;
+                                white-space: nowrap;
+                                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                                z-index: 10;
+                            }
+                            .tp-pointer.left {
+                                top: 0;
+                                background: linear-gradient(135deg, #10b981, #059669);
+                                color: white;
+                                box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+                            }
+                            .tp-pointer.right {
+                                bottom: 0;
+                                background: linear-gradient(135deg, #ef4444, #dc2626);
+                                color: white;
+                                box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+                            }
+                            .tp-pointer.slow {
+                                top: 0;
+                                background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+                                color: white;
+                                box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+                            }
+                            .tp-pointer.fast {
+                                bottom: 0;
+                                background: linear-gradient(135deg, #fbbf24, #f59e0b);
+                                color: #1a1a2e;
+                                box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+                            }
+                            .tp-pointer::after {
+                                content: '';
+                                position: absolute;
+                                left: 50%;
+                                transform: translateX(-50%);
+                                border: 6px solid transparent;
+                            }
+                            .tp-pointer.left::after, .tp-pointer.slow::after {
+                                bottom: -10px;
+                                border-top-color: inherit;
+                            }
+                            .tp-pointer.right::after, .tp-pointer.fast::after {
+                                top: -10px;
+                                border-bottom-color: inherit;
+                            }
+                            .tp-controls {
+                                display: flex;
+                                justify-content: center;
+                                gap: 12px;
+                                margin-top: 20px;
+                                flex-wrap: wrap;
+                            }
+                            .tp-btn {
+                                padding: 10px 20px;
+                                font-size: 13px;
+                                font-weight: 600;
+                                border: none;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                transition: all 0.3s ease;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                            }
+                            .tp-btn-primary {
+                                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                                color: white;
+                            }
+                            .tp-btn-primary:hover {
+                                transform: translateY(-2px);
+                                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+                            }
+                            .tp-btn-primary:disabled {
+                                opacity: 0.5;
+                                cursor: not-allowed;
+                                transform: none;
+                            }
+                            .tp-btn-secondary {
+                                background: rgba(255,255,255,0.1);
+                                color: #e2e8f0;
+                                border: 1px solid rgba(255,255,255,0.2);
+                            }
+                            .tp-btn-secondary:hover {
+                                background: rgba(255,255,255,0.15);
+                            }
+                            .tp-status {
+                                text-align: center;
+                                margin-top: 15px;
+                                padding: 12px;
+                                background: rgba(99, 102, 241, 0.1);
+                                border-radius: 8px;
+                                color: #c7d2fe;
+                                font-size: 14px;
+                                border: 1px solid rgba(99, 102, 241, 0.2);
+                                min-height: 44px;
+                            }
+                            .tp-legend {
+                                display: flex;
+                                justify-content: center;
+                                gap: 20px;
+                                margin-top: 15px;
+                                flex-wrap: wrap;
+                            }
+                            .tp-legend-item {
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                                font-size: 12px;
+                                color: #94a3b8;
+                            }
+                            .tp-legend-dot {
+                                width: 12px;
+                                height: 12px;
+                                border-radius: 50%;
+                            }
+                            .tp-legend-dot.left { background: #10b981; }
+                            .tp-legend-dot.right { background: #ef4444; }
+                            .tp-legend-dot.slow { background: #8b5cf6; }
+                            .tp-legend-dot.fast { background: #fbbf24; }
+                            @keyframes pulse {
+                                0%, 100% { opacity: 1; }
+                                50% { opacity: 0.7; }
+                            }
+                            .tp-cell.active-pulse {
+                                animation: pulse 1s ease-in-out infinite;
+                            }
+                        </style>
 
-    subgraph "Same Direction"
-        B["[1, 2, 3, 4, 5]"]
-        S((Slow)) -.-> B
-        F((Fast)) -.-> B
-    end
+                        <!-- Opposite Ends Section -->
+                        <div class="tp-section">
+                            <div class="tp-section-title">Opposite Ends Pattern</div>
+                            <div class="tp-array-container" id="oppositeEndsArray">
+                                <div class="tp-pointer left" id="leftPointer">L (left)</div>
+                                <div class="tp-cell" data-index="0">1</div>
+                                <div class="tp-cell" data-index="1">2</div>
+                                <div class="tp-cell" data-index="2">3</div>
+                                <div class="tp-cell" data-index="3">4</div>
+                                <div class="tp-cell" data-index="4">5</div>
+                                <div class="tp-pointer right" id="rightPointer">R (right)</div>
+                            </div>
+                            <div class="tp-controls">
+                                <button class="tp-btn tp-btn-primary" id="animateOpposite">Animate</button>
+                                <button class="tp-btn tp-btn-secondary" id="resetOpposite">Reset</button>
+                                <button class="tp-btn tp-btn-secondary" id="stepOpposite">Step</button>
+                            </div>
+                            <div class="tp-status" id="oppositeStatus">Click "Animate" to see pointers converge toward the center</div>
+                            <div class="tp-legend">
+                                <div class="tp-legend-item"><div class="tp-legend-dot left"></div> Left Pointer</div>
+                                <div class="tp-legend-item"><div class="tp-legend-dot right"></div> Right Pointer</div>
+                            </div>
+                        </div>
+
+                        <!-- Same Direction Section -->
+                        <div class="tp-section">
+                            <div class="tp-section-title">Same Direction (Fast/Slow) Pattern</div>
+                            <div class="tp-array-container" id="sameDirectionArray">
+                                <div class="tp-pointer slow" id="slowPointer">Slow</div>
+                                <div class="tp-cell" data-index="0">1</div>
+                                <div class="tp-cell" data-index="1">2</div>
+                                <div class="tp-cell" data-index="2">3</div>
+                                <div class="tp-cell" data-index="3">4</div>
+                                <div class="tp-cell" data-index="4">5</div>
+                                <div class="tp-pointer fast" id="fastPointer">Fast</div>
+                            </div>
+                            <div class="tp-controls">
+                                <button class="tp-btn tp-btn-primary" id="animateSame">Animate</button>
+                                <button class="tp-btn tp-btn-secondary" id="resetSame">Reset</button>
+                                <button class="tp-btn tp-btn-secondary" id="stepSame">Step</button>
+                            </div>
+                            <div class="tp-status" id="sameDirectionStatus">Click "Animate" to see fast pointer move 2x speed of slow</div>
+                            <div class="tp-legend">
+                                <div class="tp-legend-item"><div class="tp-legend-dot slow"></div> Slow Pointer</div>
+                                <div class="tp-legend-item"><div class="tp-legend-dot fast"></div> Fast Pointer</div>
+                            </div>
+                        </div>
                     </div>
+
+                    <script>
+                    (function() {
+                        // Two Pointer Animation State
+                        const tpState = {
+                            opposite: { left: 0, right: 4, animating: false, target: 6 },
+                            same: { slow: 0, fast: 0, animating: false }
+                        };
+
+                        function getPointerPosition(container, index) {
+                            const cells = container.querySelectorAll('.tp-cell');
+                            if (cells[index]) {
+                                const containerRect = container.getBoundingClientRect();
+                                const cellRect = cells[index].getBoundingClientRect();
+                                return cellRect.left - containerRect.left + cellRect.width / 2;
+                            }
+                            return 0;
+                        }
+
+                        function updateOppositeEndsUI() {
+                            const container = document.getElementById('oppositeEndsArray');
+                            const cells = container.querySelectorAll('.tp-cell');
+                            const leftPtr = document.getElementById('leftPointer');
+                            const rightPtr = document.getElementById('rightPointer');
+
+                            cells.forEach((cell, idx) => {
+                                cell.classList.remove('left-active', 'right-active', 'both-active', 'active-pulse');
+                                if (idx === tpState.opposite.left && idx === tpState.opposite.right) {
+                                    cell.classList.add('both-active', 'active-pulse');
+                                } else if (idx === tpState.opposite.left) {
+                                    cell.classList.add('left-active', 'active-pulse');
+                                } else if (idx === tpState.opposite.right) {
+                                    cell.classList.add('right-active', 'active-pulse');
+                                }
+                            });
+
+                            const leftPos = getPointerPosition(container, tpState.opposite.left);
+                            const rightPos = getPointerPosition(container, tpState.opposite.right);
+                            leftPtr.style.left = (leftPos - leftPtr.offsetWidth / 2) + 'px';
+                            rightPtr.style.left = (rightPos - rightPtr.offsetWidth / 2) + 'px';
+                        }
+
+                        function animateOppositeEnds() {
+                            if (tpState.opposite.animating) return;
+                            tpState.opposite.animating = true;
+                            tpState.opposite.left = 0;
+                            tpState.opposite.right = 4;
+                            document.getElementById('animateOpposite').disabled = true;
+
+                            const animate = () => {
+                                if (tpState.opposite.left >= tpState.opposite.right) {
+                                    document.getElementById('oppositeStatus').textContent =
+                                        'Pointers have met! Target found or search complete.';
+                                    tpState.opposite.animating = false;
+                                    document.getElementById('animateOpposite').disabled = false;
+                                    return;
+                                }
+
+                                updateOppositeEndsUI();
+                                const leftVal = tpState.opposite.left + 1;
+                                const rightVal = tpState.opposite.right + 1;
+                                const sum = leftVal + rightVal;
+                                document.getElementById('oppositeStatus').textContent =
+                                    'Checking: arr[' + tpState.opposite.left + '] + arr[' + tpState.opposite.right + '] = ' + leftVal + ' + ' + rightVal + ' = ' + sum;
+
+                                setTimeout(() => {
+                                    if (sum < tpState.opposite.target) {
+                                        tpState.opposite.left++;
+                                        document.getElementById('oppositeStatus').textContent += ' < ' + tpState.opposite.target + ' - Move LEFT pointer right';
+                                    } else if (sum > tpState.opposite.target) {
+                                        tpState.opposite.right--;
+                                        document.getElementById('oppositeStatus').textContent += ' > ' + tpState.opposite.target + ' - Move RIGHT pointer left';
+                                    } else {
+                                        document.getElementById('oppositeStatus').textContent += ' = ' + tpState.opposite.target + ' - Found target!';
+                                        tpState.opposite.animating = false;
+                                        document.getElementById('animateOpposite').disabled = false;
+                                        return;
+                                    }
+                                    setTimeout(animate, 1000);
+                                }, 800);
+                            };
+
+                            animate();
+                        }
+
+                        function stepOppositeEnds() {
+                            if (tpState.opposite.left >= tpState.opposite.right) {
+                                resetOppositeEnds();
+                                return;
+                            }
+                            const leftVal = tpState.opposite.left + 1;
+                            const rightVal = tpState.opposite.right + 1;
+                            const sum = leftVal + rightVal;
+
+                            if (sum < tpState.opposite.target) {
+                                tpState.opposite.left++;
+                            } else {
+                                tpState.opposite.right--;
+                            }
+                            updateOppositeEndsUI();
+                            document.getElementById('oppositeStatus').textContent =
+                                'L=' + tpState.opposite.left + ', R=' + tpState.opposite.right + ' | Sum=' + sum;
+                        }
+
+                        function resetOppositeEnds() {
+                            tpState.opposite = { left: 0, right: 4, animating: false, target: 6 };
+                            tpState.opposite.animating = false;
+                            document.getElementById('animateOpposite').disabled = false;
+                            updateOppositeEndsUI();
+                            document.getElementById('oppositeStatus').textContent = 'Click "Animate" to see pointers converge toward the center';
+                        }
+
+                        function updateSameDirectionUI() {
+                            const container = document.getElementById('sameDirectionArray');
+                            const cells = container.querySelectorAll('.tp-cell');
+                            const slowPtr = document.getElementById('slowPointer');
+                            const fastPtr = document.getElementById('fastPointer');
+
+                            cells.forEach((cell, idx) => {
+                                cell.classList.remove('slow-active', 'fast-active', 'both-active', 'active-pulse');
+                                if (idx === tpState.same.slow && idx === tpState.same.fast) {
+                                    cell.classList.add('both-active', 'active-pulse');
+                                } else if (idx === tpState.same.slow) {
+                                    cell.classList.add('slow-active', 'active-pulse');
+                                } else if (idx === tpState.same.fast) {
+                                    cell.classList.add('fast-active', 'active-pulse');
+                                }
+                            });
+
+                            const slowPos = getPointerPosition(container, tpState.same.slow);
+                            const fastPos = getPointerPosition(container, tpState.same.fast);
+                            slowPtr.style.left = (slowPos - slowPtr.offsetWidth / 2) + 'px';
+                            fastPtr.style.left = (fastPos - fastPtr.offsetWidth / 2) + 'px';
+                        }
+
+                        function animateSameDirection() {
+                            if (tpState.same.animating) return;
+                            tpState.same.animating = true;
+                            tpState.same.slow = 0;
+                            tpState.same.fast = 0;
+                            document.getElementById('animateSame').disabled = true;
+
+                            const animate = () => {
+                                if (tpState.same.fast >= 4) {
+                                    document.getElementById('sameDirectionStatus').textContent =
+                                        'Fast pointer reached end. Pattern complete!';
+                                    tpState.same.animating = false;
+                                    document.getElementById('animateSame').disabled = false;
+                                    return;
+                                }
+
+                                updateSameDirectionUI();
+                                document.getElementById('sameDirectionStatus').textContent =
+                                    'Slow at index ' + tpState.same.slow + ', Fast at index ' + tpState.same.fast;
+
+                                setTimeout(() => {
+                                    tpState.same.slow = Math.min(tpState.same.slow + 1, 4);
+                                    tpState.same.fast = Math.min(tpState.same.fast + 2, 4);
+                                    setTimeout(animate, 1000);
+                                }, 800);
+                            };
+
+                            animate();
+                        }
+
+                        function stepSameDirection() {
+                            if (tpState.same.fast >= 4) {
+                                resetSameDirection();
+                                return;
+                            }
+                            tpState.same.slow = Math.min(tpState.same.slow + 1, 4);
+                            tpState.same.fast = Math.min(tpState.same.fast + 2, 4);
+                            updateSameDirectionUI();
+                            document.getElementById('sameDirectionStatus').textContent =
+                                'Slow=' + tpState.same.slow + ', Fast=' + tpState.same.fast;
+                        }
+
+                        function resetSameDirection() {
+                            tpState.same = { slow: 0, fast: 0, animating: false };
+                            document.getElementById('animateSame').disabled = false;
+                            updateSameDirectionUI();
+                            document.getElementById('sameDirectionStatus').textContent = 'Click "Animate" to see fast pointer move 2x speed of slow';
+                        }
+
+                        // Initialize after DOM is ready
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Set up event listeners
+                            document.getElementById('animateOpposite').addEventListener('click', animateOppositeEnds);
+                            document.getElementById('resetOpposite').addEventListener('click', resetOppositeEnds);
+                            document.getElementById('stepOpposite').addEventListener('click', stepOppositeEnds);
+                            document.getElementById('animateSame').addEventListener('click', animateSameDirection);
+                            document.getElementById('resetSame').addEventListener('click', resetSameDirection);
+                            document.getElementById('stepSame').addEventListener('click', stepSameDirection);
+
+                            // Initial render with a small delay to ensure layout is complete
+                            setTimeout(() => {
+                                updateOppositeEndsUI();
+                                updateSameDirectionUI();
+                            }, 100);
+                        });
+                    })();
+                    </script>
                 </div>
 
                 <h4>When to Use</h4>

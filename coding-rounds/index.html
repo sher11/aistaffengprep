@@ -103,30 +103,452 @@
                 <span style="color: var(--primary-color); font-weight: 500;">View Cheat Sheet &rarr;</span>
             </div>
 
-            <!-- Learning Path Diagram -->
+            <!-- Learning Path Diagram - Interactive Animation -->
             <div class="diagram-container mt-3">
-                <div class="mermaid">
-flowchart LR
-    subgraph "Beginner"
-        M1[Foundations]
-        M2[Arrays & Two Pointers]
-    end
+                <style>
+                    .learning-path-container {
+                        padding: 30px 20px;
+                        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                        border-radius: 16px;
+                        overflow-x: auto;
+                        position: relative;
+                    }
 
-    subgraph "Intermediate"
-        M3[Trees & Binary Search]
-        M4[Graphs]
-        M5[Dynamic Programming]
-    end
+                    .learning-path-title {
+                        text-align: center;
+                        color: #fff;
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                        margin-bottom: 30px;
+                        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                    }
 
-    subgraph "Advanced"
-        M6[Backtracking]
-        M7[Heaps & Sorting]
-        M8[Non-LeetCode]
-        M9[Interview Simulation]
-    end
+                    .learning-path {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 20px;
+                        min-width: 900px;
+                    }
 
-    M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7 --> M8 --> M9
+                    .path-section {
+                        display: flex;
+                        align-items: center;
+                        gap: 15px;
+                    }
+
+                    .section-label {
+                        min-width: 120px;
+                        padding: 10px 15px;
+                        border-radius: 25px;
+                        font-weight: 600;
+                        font-size: 0.85rem;
+                        text-align: center;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    }
+
+                    .section-label.beginner {
+                        background: linear-gradient(135deg, #11998e, #38ef7d);
+                        color: #fff;
+                    }
+
+                    .section-label.intermediate {
+                        background: linear-gradient(135deg, #f093fb, #f5576c);
+                        color: #fff;
+                    }
+
+                    .section-label.advanced {
+                        background: linear-gradient(135deg, #5f2c82, #49a09d);
+                        color: #fff;
+                    }
+
+                    .modules-row {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        flex: 1;
+                    }
+
+                    .module-node {
+                        position: relative;
+                        padding: 15px 20px;
+                        background: rgba(255,255,255,0.1);
+                        border: 2px solid rgba(255,255,255,0.2);
+                        border-radius: 12px;
+                        color: #fff;
+                        font-size: 0.9rem;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        backdrop-filter: blur(10px);
+                        min-width: 140px;
+                        text-align: center;
+                        opacity: 0;
+                        transform: translateY(20px) scale(0.9);
+                    }
+
+                    .module-node.visible {
+                        opacity: 1;
+                        transform: translateY(0) scale(1);
+                    }
+
+                    .module-node:hover {
+                        transform: translateY(-5px) scale(1.05);
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                        border-color: rgba(255,255,255,0.5);
+                    }
+
+                    .module-node.beginner:hover {
+                        background: linear-gradient(135deg, rgba(17, 153, 142, 0.4), rgba(56, 239, 125, 0.4));
+                        border-color: #38ef7d;
+                    }
+
+                    .module-node.intermediate:hover {
+                        background: linear-gradient(135deg, rgba(240, 147, 251, 0.4), rgba(245, 87, 108, 0.4));
+                        border-color: #f5576c;
+                    }
+
+                    .module-node.advanced:hover {
+                        background: linear-gradient(135deg, rgba(95, 44, 130, 0.4), rgba(73, 160, 157, 0.4));
+                        border-color: #49a09d;
+                    }
+
+                    .module-node.active {
+                        animation: pulse 2s infinite;
+                    }
+
+                    @keyframes pulse {
+                        0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+                        50% { box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+                    }
+
+                    .module-number {
+                        position: absolute;
+                        top: -10px;
+                        left: -10px;
+                        width: 24px;
+                        height: 24px;
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 0.75rem;
+                        font-weight: 700;
+                        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.5);
+                    }
+
+                    .connector {
+                        width: 30px;
+                        height: 3px;
+                        background: linear-gradient(90deg, rgba(255,255,255,0.3), rgba(255,255,255,0.6));
+                        border-radius: 2px;
+                        position: relative;
+                        opacity: 0;
+                        transition: opacity 0.5s ease;
+                    }
+
+                    .connector.visible {
+                        opacity: 1;
+                    }
+
+                    .connector::after {
+                        content: '';
+                        position: absolute;
+                        right: -5px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        border: 5px solid transparent;
+                        border-left-color: rgba(255,255,255,0.6);
+                    }
+
+                    .connector.animated::before {
+                        content: '';
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: linear-gradient(90deg, transparent, #fff, transparent);
+                        animation: flowAnimation 1.5s infinite;
+                        border-radius: 2px;
+                    }
+
+                    @keyframes flowAnimation {
+                        0% { transform: translateX(-100%); }
+                        100% { transform: translateX(100%); }
+                    }
+
+                    .section-connector {
+                        width: 100%;
+                        height: 30px;
+                        position: relative;
+                        margin-left: 135px;
+                    }
+
+                    .section-connector::before {
+                        content: '';
+                        position: absolute;
+                        left: 50px;
+                        top: 0;
+                        width: 3px;
+                        height: 100%;
+                        background: linear-gradient(180deg, rgba(255,255,255,0.3), rgba(255,255,255,0.6));
+                        border-radius: 2px;
+                    }
+
+                    .tooltip {
+                        position: absolute;
+                        bottom: calc(100% + 10px);
+                        left: 50%;
+                        transform: translateX(-50%) scale(0.9);
+                        background: rgba(0,0,0,0.9);
+                        color: #fff;
+                        padding: 10px 15px;
+                        border-radius: 8px;
+                        font-size: 0.8rem;
+                        white-space: nowrap;
+                        opacity: 0;
+                        pointer-events: none;
+                        transition: all 0.3s ease;
+                        z-index: 100;
+                        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+                    }
+
+                    .tooltip::after {
+                        content: '';
+                        position: absolute;
+                        top: 100%;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        border: 6px solid transparent;
+                        border-top-color: rgba(0,0,0,0.9);
+                    }
+
+                    .module-node:hover .tooltip {
+                        opacity: 1;
+                        transform: translateX(-50%) scale(1);
+                    }
+
+                    .path-controls {
+                        display: flex;
+                        justify-content: center;
+                        gap: 15px;
+                        margin-top: 25px;
+                    }
+
+                    .path-btn {
+                        padding: 10px 25px;
+                        border: none;
+                        border-radius: 25px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        font-size: 0.9rem;
+                    }
+
+                    .path-btn.primary {
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        color: #fff;
+                    }
+
+                    .path-btn.primary:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+                    }
+
+                    .path-btn.secondary {
+                        background: rgba(255,255,255,0.1);
+                        color: #fff;
+                        border: 1px solid rgba(255,255,255,0.3);
+                    }
+
+                    .path-btn.secondary:hover {
+                        background: rgba(255,255,255,0.2);
+                    }
+
+                    .progress-indicator {
+                        text-align: center;
+                        color: rgba(255,255,255,0.7);
+                        font-size: 0.85rem;
+                        margin-top: 15px;
+                    }
+
+                    @media (prefers-reduced-motion: reduce) {
+                        .module-node, .connector, .tooltip {
+                            transition: none;
+                        }
+                        .connector.animated::before {
+                            animation: none;
+                        }
+                        .module-node.active {
+                            animation: none;
+                        }
+                    }
+                </style>
+
+                <div class="learning-path-container">
+                    <div class="learning-path-title">Your Learning Journey</div>
+
+                    <div class="learning-path" id="learningPath">
+                        <!-- Beginner Section -->
+                        <div class="path-section">
+                            <div class="section-label beginner">Beginner</div>
+                            <div class="modules-row">
+                                <div class="module-node beginner" data-module="1" onclick="window.location.href='module-01.html'">
+                                    <span class="module-number">1</span>
+                                    Foundations
+                                    <div class="tooltip">Big-O, Arrays, Strings basics</div>
+                                </div>
+                                <div class="connector"></div>
+                                <div class="module-node beginner" data-module="2" onclick="window.location.href='module-02.html'">
+                                    <span class="module-number">2</span>
+                                    Arrays & Two Pointers
+                                    <div class="tooltip">Sliding window, prefix sums</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-connector"></div>
+
+                        <!-- Intermediate Section -->
+                        <div class="path-section">
+                            <div class="section-label intermediate">Intermediate</div>
+                            <div class="modules-row">
+                                <div class="module-node intermediate" data-module="3" onclick="window.location.href='module-03.html'">
+                                    <span class="module-number">3</span>
+                                    Trees & Binary Search
+                                    <div class="tooltip">BST, traversals, search patterns</div>
+                                </div>
+                                <div class="connector"></div>
+                                <div class="module-node intermediate" data-module="4" onclick="window.location.href='module-04.html'">
+                                    <span class="module-number">4</span>
+                                    Graphs
+                                    <div class="tooltip">BFS, DFS, shortest paths</div>
+                                </div>
+                                <div class="connector"></div>
+                                <div class="module-node intermediate" data-module="5" onclick="window.location.href='module-05.html'">
+                                    <span class="module-number">5</span>
+                                    Dynamic Programming
+                                    <div class="tooltip">Memoization, tabulation patterns</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-connector"></div>
+
+                        <!-- Advanced Section -->
+                        <div class="path-section">
+                            <div class="section-label advanced">Advanced</div>
+                            <div class="modules-row">
+                                <div class="module-node advanced" data-module="6" onclick="window.location.href='module-06.html'">
+                                    <span class="module-number">6</span>
+                                    Backtracking
+                                    <div class="tooltip">Permutations, combinations, pruning</div>
+                                </div>
+                                <div class="connector"></div>
+                                <div class="module-node advanced" data-module="7" onclick="window.location.href='module-07.html'">
+                                    <span class="module-number">7</span>
+                                    Heaps & Sorting
+                                    <div class="tooltip">Priority queues, custom sorting</div>
+                                </div>
+                                <div class="connector"></div>
+                                <div class="module-node advanced" data-module="8" onclick="window.location.href='module-08.html'">
+                                    <span class="module-number">8</span>
+                                    Non-LeetCode
+                                    <div class="tooltip">Real-world coding challenges</div>
+                                </div>
+                                <div class="connector"></div>
+                                <div class="module-node advanced" data-module="9" onclick="window.location.href='module-09.html'">
+                                    <span class="module-number">9</span>
+                                    Interview Simulation
+                                    <div class="tooltip">Mock interviews, time pressure</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="path-controls">
+                        <button class="path-btn primary" onclick="animatePath()">Replay Animation</button>
+                        <button class="path-btn secondary" onclick="highlightCurrentProgress()">Show My Progress</button>
+                    </div>
+
+                    <div class="progress-indicator" id="pathProgress">Click on any module to start learning</div>
                 </div>
+
+                <script>
+                    (function() {
+                        // Animate path on load
+                        function animatePath() {
+                            const nodes = document.querySelectorAll('.module-node');
+                            const connectors = document.querySelectorAll('.connector');
+
+                            // Reset all
+                            nodes.forEach(node => {
+                                node.classList.remove('visible', 'active');
+                            });
+                            connectors.forEach(conn => {
+                                conn.classList.remove('visible', 'animated');
+                            });
+
+                            // Animate nodes sequentially
+                            nodes.forEach((node, index) => {
+                                setTimeout(() => {
+                                    node.classList.add('visible');
+
+                                    // Animate connector after node
+                                    if (connectors[index]) {
+                                        setTimeout(() => {
+                                            connectors[index].classList.add('visible', 'animated');
+                                        }, 200);
+                                    }
+                                }, index * 250);
+                            });
+                        }
+
+                        // Highlight completed modules based on progress
+                        function highlightCurrentProgress() {
+                            const nodes = document.querySelectorAll('.module-node');
+                            nodes.forEach(node => node.classList.remove('active'));
+
+                            // Find first incomplete module
+                            let foundIncomplete = false;
+                            nodes.forEach(node => {
+                                const moduleNum = parseInt(node.dataset.module);
+                                if (typeof StaffEngPrep !== 'undefined' &&
+                                    StaffEngPrep.ProgressTracker &&
+                                    StaffEngPrep.ProgressTracker.isModuleComplete('coding', moduleNum)) {
+                                    node.style.background = 'linear-gradient(135deg, rgba(56, 239, 125, 0.3), rgba(17, 153, 142, 0.3))';
+                                    node.style.borderColor = '#38ef7d';
+                                } else if (!foundIncomplete) {
+                                    node.classList.add('active');
+                                    foundIncomplete = true;
+                                    document.getElementById('pathProgress').textContent =
+                                        'Continue with: ' + node.textContent.trim().replace(/^\d+/, '').trim();
+                                }
+                            });
+
+                            if (!foundIncomplete) {
+                                document.getElementById('pathProgress').textContent =
+                                    'Congratulations! All modules completed!';
+                            }
+                        }
+
+                        // Make functions globally available
+                        window.animatePath = animatePath;
+                        window.highlightCurrentProgress = highlightCurrentProgress;
+
+                        // Run animation on page load
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', function() {
+                                setTimeout(animatePath, 500);
+                            });
+                        } else {
+                            setTimeout(animatePath, 500);
+                        }
+                    })();
+                </script>
             </div>
 
             <!-- Quick Quiz -->

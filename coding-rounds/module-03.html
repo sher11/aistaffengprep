@@ -104,15 +104,402 @@
             </div>
             <div class="collapsible-content">
                 <div class="diagram-container">
-                    <div class="mermaid">
-graph TD
-    A((1)) --> B((2))
-    A --> C((3))
-    B --> D((4))
-    B --> E((5))
-    C --> F((6))
-    C --> G((7))
+                    <!-- Interactive Tree Traversal Animation -->
+                    <style>
+                        .tree-animation-container {
+                            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                            border-radius: 16px;
+                            padding: 30px;
+                            position: relative;
+                            overflow: hidden;
+                            box-shadow: 0 20px 60px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+                        }
+                        .tree-animation-container::before {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: radial-gradient(circle at 20% 80%, rgba(94, 234, 212, 0.1) 0%, transparent 50%),
+                                        radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.1) 0%, transparent 50%);
+                            pointer-events: none;
+                        }
+                        .tree-svg-container {
+                            position: relative;
+                            z-index: 1;
+                        }
+                        .tree-node {
+                            cursor: pointer;
+                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        }
+                        .tree-node:hover .node-circle {
+                            filter: drop-shadow(0 0 20px rgba(94, 234, 212, 0.8));
+                            transform: scale(1.15);
+                        }
+                        .tree-node:hover .node-text {
+                            fill: #fff;
+                        }
+                        .node-circle {
+                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                            transform-origin: center;
+                        }
+                        .node-circle.visiting {
+                            fill: url(#visitingGradient) !important;
+                            filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.9));
+                            animation: pulse-glow 0.6s ease-in-out;
+                        }
+                        .node-circle.visited {
+                            fill: url(#visitedGradient) !important;
+                            filter: drop-shadow(0 0 15px rgba(34, 197, 94, 0.7));
+                        }
+                        @keyframes pulse-glow {
+                            0%, 100% { transform: scale(1); }
+                            50% { transform: scale(1.2); }
+                        }
+                        .tree-edge {
+                            stroke: rgba(148, 163, 184, 0.4);
+                            stroke-width: 3;
+                            fill: none;
+                            transition: all 0.4s ease;
+                        }
+                        .tree-edge.active {
+                            stroke: url(#edgeGradient);
+                            stroke-width: 4;
+                            filter: drop-shadow(0 0 8px rgba(94, 234, 212, 0.6));
+                        }
+                        .tree-controls {
+                            display: flex;
+                            justify-content: center;
+                            gap: 12px;
+                            margin-top: 25px;
+                            flex-wrap: wrap;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        .tree-btn {
+                            padding: 12px 24px;
+                            border: none;
+                            border-radius: 12px;
+                            font-weight: 600;
+                            font-size: 14px;
+                            cursor: pointer;
+                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        .tree-btn::before {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            left: -100%;
+                            width: 100%;
+                            height: 100%;
+                            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                            transition: left 0.5s;
+                        }
+                        .tree-btn:hover::before {
+                            left: 100%;
+                        }
+                        .tree-btn-preorder {
+                            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+                            color: white;
+                            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+                        }
+                        .tree-btn-preorder:hover {
+                            transform: translateY(-3px);
+                            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
+                        }
+                        .tree-btn-inorder {
+                            background: linear-gradient(135deg, #06b6d4, #0891b2);
+                            color: white;
+                            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+                        }
+                        .tree-btn-inorder:hover {
+                            transform: translateY(-3px);
+                            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.5);
+                        }
+                        .tree-btn-postorder {
+                            background: linear-gradient(135deg, #f59e0b, #d97706);
+                            color: white;
+                            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+                        }
+                        .tree-btn-postorder:hover {
+                            transform: translateY(-3px);
+                            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.5);
+                        }
+                        .tree-btn-levelorder {
+                            background: linear-gradient(135deg, #10b981, #059669);
+                            color: white;
+                            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+                        }
+                        .tree-btn-levelorder:hover {
+                            transform: translateY(-3px);
+                            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+                        }
+                        .tree-btn-reset {
+                            background: linear-gradient(135deg, #64748b, #475569);
+                            color: white;
+                            box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
+                        }
+                        .tree-btn-reset:hover {
+                            transform: translateY(-3px);
+                            box-shadow: 0 8px 25px rgba(100, 116, 139, 0.5);
+                        }
+                        .tree-btn:disabled {
+                            opacity: 0.5;
+                            cursor: not-allowed;
+                            transform: none !important;
+                        }
+                        .traversal-output {
+                            margin-top: 20px;
+                            padding: 20px;
+                            background: rgba(0, 0, 0, 0.3);
+                            border-radius: 12px;
+                            font-family: 'Fira Code', 'Monaco', monospace;
+                            font-size: 18px;
+                            text-align: center;
+                            color: #e2e8f0;
+                            min-height: 30px;
+                            border: 1px solid rgba(148, 163, 184, 0.2);
+                            position: relative;
+                            z-index: 1;
+                        }
+                        .traversal-output .step-label {
+                            display: block;
+                            font-size: 12px;
+                            color: #94a3b8;
+                            margin-bottom: 8px;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                        }
+                        .traversal-output .values {
+                            display: flex;
+                            justify-content: center;
+                            gap: 8px;
+                            flex-wrap: wrap;
+                        }
+                        .traversal-output .value-item {
+                            background: linear-gradient(135deg, #3b82f6, #2563eb);
+                            padding: 8px 16px;
+                            border-radius: 8px;
+                            animation: pop-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                        }
+                        @keyframes pop-in {
+                            0% { transform: scale(0); opacity: 0; }
+                            100% { transform: scale(1); opacity: 1; }
+                        }
+                        .speed-control {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 15px;
+                            margin-top: 15px;
+                            color: #94a3b8;
+                            font-size: 14px;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        .speed-control input[type="range"] {
+                            width: 120px;
+                            accent-color: #8b5cf6;
+                        }
+                    </style>
+                    <div class="tree-animation-container" id="treeAnimationContainer">
+                        <svg width="100%" height="280" viewBox="0 0 500 280" class="tree-svg-container">
+                            <defs>
+                                <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#3b82f6"/>
+                                    <stop offset="100%" style="stop-color:#1d4ed8"/>
+                                </linearGradient>
+                                <linearGradient id="visitingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#fbbf24"/>
+                                    <stop offset="100%" style="stop-color:#f59e0b"/>
+                                </linearGradient>
+                                <linearGradient id="visitedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#22c55e"/>
+                                    <stop offset="100%" style="stop-color:#16a34a"/>
+                                </linearGradient>
+                                <linearGradient id="edgeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#5eead4"/>
+                                    <stop offset="100%" style="stop-color:#2dd4bf"/>
+                                </linearGradient>
+                                <filter id="glow">
+                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                    <feMerge>
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
+                            <!-- Edges -->
+                            <path class="tree-edge" id="edge-1-2" d="M250,50 Q175,90 125,110"/>
+                            <path class="tree-edge" id="edge-1-3" d="M250,50 Q325,90 375,110"/>
+                            <path class="tree-edge" id="edge-2-4" d="M125,130 Q90,165 75,190"/>
+                            <path class="tree-edge" id="edge-2-5" d="M125,130 Q160,165 175,190"/>
+                            <path class="tree-edge" id="edge-3-6" d="M375,130 Q340,165 325,190"/>
+                            <path class="tree-edge" id="edge-3-7" d="M375,130 Q410,165 425,190"/>
+                            <!-- Nodes -->
+                            <g class="tree-node" id="node-1" data-value="1">
+                                <circle class="node-circle" cx="250" cy="40" r="28" fill="url(#nodeGradient)" filter="url(#glow)"/>
+                                <text class="node-text" x="250" y="46" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="bold">1</text>
+                            </g>
+                            <g class="tree-node" id="node-2" data-value="2">
+                                <circle class="node-circle" cx="125" cy="120" r="28" fill="url(#nodeGradient)" filter="url(#glow)"/>
+                                <text class="node-text" x="125" y="126" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="bold">2</text>
+                            </g>
+                            <g class="tree-node" id="node-3" data-value="3">
+                                <circle class="node-circle" cx="375" cy="120" r="28" fill="url(#nodeGradient)" filter="url(#glow)"/>
+                                <text class="node-text" x="375" y="126" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="bold">3</text>
+                            </g>
+                            <g class="tree-node" id="node-4" data-value="4">
+                                <circle class="node-circle" cx="75" cy="210" r="28" fill="url(#nodeGradient)" filter="url(#glow)"/>
+                                <text class="node-text" x="75" y="216" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="bold">4</text>
+                            </g>
+                            <g class="tree-node" id="node-5" data-value="5">
+                                <circle class="node-circle" cx="175" cy="210" r="28" fill="url(#nodeGradient)" filter="url(#glow)"/>
+                                <text class="node-text" x="175" y="216" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="bold">5</text>
+                            </g>
+                            <g class="tree-node" id="node-6" data-value="6">
+                                <circle class="node-circle" cx="325" cy="210" r="28" fill="url(#nodeGradient)" filter="url(#glow)"/>
+                                <text class="node-text" x="325" y="216" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="bold">6</text>
+                            </g>
+                            <g class="tree-node" id="node-7" data-value="7">
+                                <circle class="node-circle" cx="425" cy="210" r="28" fill="url(#nodeGradient)" filter="url(#glow)"/>
+                                <text class="node-text" x="425" y="216" text-anchor="middle" fill="#e2e8f0" font-size="18" font-weight="bold">7</text>
+                            </g>
+                        </svg>
+                        <div class="tree-controls">
+                            <button class="tree-btn tree-btn-preorder" onclick="runTraversal('preorder')">Preorder</button>
+                            <button class="tree-btn tree-btn-inorder" onclick="runTraversal('inorder')">Inorder</button>
+                            <button class="tree-btn tree-btn-postorder" onclick="runTraversal('postorder')">Postorder</button>
+                            <button class="tree-btn tree-btn-levelorder" onclick="runTraversal('levelorder')">Level Order</button>
+                            <button class="tree-btn tree-btn-reset" onclick="resetTree()">Reset</button>
+                        </div>
+                        <div class="speed-control">
+                            <label>Speed:</label>
+                            <input type="range" id="traversalSpeed" min="200" max="1500" value="700" step="100">
+                            <span id="speedLabel">Medium</span>
+                        </div>
+                        <div class="traversal-output" id="traversalOutput">
+                            <span class="step-label">Click a traversal button to begin</span>
+                            <div class="values" id="outputValues"></div>
+                        </div>
                     </div>
+                    <script>
+                        (function() {
+                            const tree = {
+                                1: { left: 2, right: 3 },
+                                2: { left: 4, right: 5 },
+                                3: { left: 6, right: 7 },
+                                4: { left: null, right: null },
+                                5: { left: null, right: null },
+                                6: { left: null, right: null },
+                                7: { left: null, right: null }
+                            };
+
+                            let isAnimating = false;
+                            let animationSpeed = 700;
+
+                            const speedSlider = document.getElementById('traversalSpeed');
+                            const speedLabel = document.getElementById('speedLabel');
+
+                            speedSlider.addEventListener('input', function() {
+                                animationSpeed = parseInt(this.value);
+                                const labels = { 200: 'Very Fast', 400: 'Fast', 700: 'Medium', 1000: 'Slow', 1500: 'Very Slow' };
+                                speedLabel.textContent = labels[animationSpeed] || 'Medium';
+                            });
+
+                            function getTraversalOrder(type, nodeId = 1) {
+                                if (!nodeId) return [];
+                                const node = tree[nodeId];
+                                switch(type) {
+                                    case 'preorder':
+                                        return [nodeId, ...getTraversalOrder(type, node.left), ...getTraversalOrder(type, node.right)];
+                                    case 'inorder':
+                                        return [...getTraversalOrder(type, node.left), nodeId, ...getTraversalOrder(type, node.right)];
+                                    case 'postorder':
+                                        return [...getTraversalOrder(type, node.left), ...getTraversalOrder(type, node.right), nodeId];
+                                    case 'levelorder':
+                                        return [1, 2, 3, 4, 5, 6, 7];
+                                    default:
+                                        return [];
+                                }
+                            }
+
+                            function getEdgeId(from, to) {
+                                return `edge-${from}-${to}`;
+                            }
+
+                            window.runTraversal = async function(type) {
+                                if (isAnimating) return;
+                                isAnimating = true;
+
+                                document.querySelectorAll('.tree-btn').forEach(btn => btn.disabled = true);
+                                resetTree();
+
+                                const order = getTraversalOrder(type);
+                                const outputEl = document.getElementById('traversalOutput');
+                                const valuesEl = document.getElementById('outputValues');
+
+                                const typeLabels = {
+                                    preorder: 'Preorder: Root -> Left -> Right',
+                                    inorder: 'Inorder: Left -> Root -> Right',
+                                    postorder: 'Postorder: Left -> Right -> Root',
+                                    levelorder: 'Level Order: BFS by level'
+                                };
+
+                                outputEl.querySelector('.step-label').textContent = typeLabels[type];
+                                valuesEl.innerHTML = '';
+
+                                for (let i = 0; i < order.length; i++) {
+                                    const nodeId = order[i];
+                                    const nodeEl = document.getElementById(`node-${nodeId}`);
+                                    const circle = nodeEl.querySelector('.node-circle');
+
+                                    // Mark as visiting
+                                    circle.classList.add('visiting');
+
+                                    // Highlight edge from parent
+                                    if (nodeId !== 1) {
+                                        const parent = nodeId <= 3 ? 1 : (nodeId <= 5 ? 2 : 3);
+                                        const edgeEl = document.getElementById(getEdgeId(parent, nodeId));
+                                        if (edgeEl) edgeEl.classList.add('active');
+                                    }
+
+                                    await new Promise(r => setTimeout(r, animationSpeed));
+
+                                    // Mark as visited
+                                    circle.classList.remove('visiting');
+                                    circle.classList.add('visited');
+
+                                    // Add to output
+                                    const valueSpan = document.createElement('span');
+                                    valueSpan.className = 'value-item';
+                                    valueSpan.textContent = nodeId;
+                                    valuesEl.appendChild(valueSpan);
+
+                                    await new Promise(r => setTimeout(r, animationSpeed / 2));
+                                }
+
+                                isAnimating = false;
+                                document.querySelectorAll('.tree-btn').forEach(btn => btn.disabled = false);
+                            };
+
+                            window.resetTree = function() {
+                                document.querySelectorAll('.node-circle').forEach(circle => {
+                                    circle.classList.remove('visiting', 'visited');
+                                });
+                                document.querySelectorAll('.tree-edge').forEach(edge => {
+                                    edge.classList.remove('active');
+                                });
+                                const outputEl = document.getElementById('traversalOutput');
+                                outputEl.querySelector('.step-label').textContent = 'Click a traversal button to begin';
+                                document.getElementById('outputValues').innerHTML = '';
+                            };
+                        })();
+                    </script>
                 </div>
 
                 <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">

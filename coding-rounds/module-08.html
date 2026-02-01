@@ -116,15 +116,215 @@
                 <p><strong>Requirements:</strong> O(1) get and put operations, evict least recently used when at capacity.</p>
 
                 <div class="diagram-container">
-                    <div class="mermaid">
-flowchart LR
-    subgraph "HashMap"
-        H["key → Node ref"]
-    end
+                    <!-- Interactive LRU Cache Animation -->
+                    <div id="lru-cache-animation" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 24px; margin: 20px 0; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                        <style>
+                            #lru-cache-animation * { box-sizing: border-box; }
+                            .lru-title { color: #fff; font-size: 1.2em; font-weight: 600; margin-bottom: 20px; text-align: center; }
+                            .lru-structures { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+                            .lru-hashmap { background: linear-gradient(145deg, #2d3a4f, #1f2937); border-radius: 12px; padding: 16px; min-width: 180px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+                            .lru-hashmap-title { color: #60a5fa; font-weight: 600; margin-bottom: 12px; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
+                            .lru-hashmap-entry { display: flex; justify-content: space-between; padding: 8px 12px; margin: 6px 0; background: rgba(96, 165, 250, 0.1); border-radius: 6px; color: #e2e8f0; font-family: 'Consolas', monospace; font-size: 0.85em; transition: all 0.3s ease; border: 1px solid transparent; }
+                            .lru-hashmap-entry:hover { background: rgba(96, 165, 250, 0.25); border-color: #60a5fa; transform: translateX(4px); }
+                            .lru-hashmap-entry.highlight { background: rgba(34, 197, 94, 0.3); border-color: #22c55e; animation: pulse-green 0.5s ease; }
+                            .lru-hashmap-entry.removing { background: rgba(239, 68, 68, 0.3); border-color: #ef4444; animation: shake 0.3s ease; }
+                            .lru-dll { background: linear-gradient(145deg, #2d3a4f, #1f2937); border-radius: 12px; padding: 16px; min-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+                            .lru-dll-title { color: #a78bfa; font-weight: 600; margin-bottom: 12px; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
+                            .lru-dll-container { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 60px; flex-wrap: wrap; padding: 10px 0; }
+                            .lru-node { display: flex; align-items: center; justify-content: center; width: 60px; height: 45px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 0.8em; font-weight: 600; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; position: relative; }
+                            .lru-node.sentinel { background: linear-gradient(145deg, #6366f1, #4f46e5); color: white; border: 2px solid #818cf8; width: 50px; font-size: 0.7em; }
+                            .lru-node.data-node { background: linear-gradient(145deg, #10b981, #059669); color: white; border: 2px solid #34d399; }
+                            .lru-node.data-node:hover { transform: scale(1.1) translateY(-4px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4); }
+                            .lru-node.mru { background: linear-gradient(145deg, #f59e0b, #d97706); border-color: #fbbf24; }
+                            .lru-node.lru-item { background: linear-gradient(145deg, #ef4444, #dc2626); border-color: #f87171; }
+                            .lru-node.new-node { animation: slide-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+                            .lru-node.removing-node { animation: fade-out 0.4s ease forwards; }
+                            .lru-arrow { color: #64748b; font-size: 1.2em; transition: color 0.3s; }
+                            .lru-arrow.active { color: #22c55e; }
+                            .lru-controls { display: flex; gap: 10px; margin-top: 20px; justify-content: center; flex-wrap: wrap; }
+                            .lru-btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 0.85em; }
+                            .lru-btn-get { background: linear-gradient(145deg, #3b82f6, #2563eb); color: white; }
+                            .lru-btn-get:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4); }
+                            .lru-btn-put { background: linear-gradient(145deg, #10b981, #059669); color: white; }
+                            .lru-btn-put:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+                            .lru-btn-reset { background: linear-gradient(145deg, #6b7280, #4b5563); color: white; }
+                            .lru-btn-reset:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4); }
+                            .lru-status { text-align: center; color: #94a3b8; margin-top: 16px; font-size: 0.9em; min-height: 24px; }
+                            .lru-status.success { color: #22c55e; }
+                            .lru-status.warning { color: #f59e0b; }
+                            .lru-status.error { color: #ef4444; }
+                            .lru-legend { display: flex; gap: 16px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+                            .lru-legend-item { display: flex; align-items: center; gap: 6px; color: #94a3b8; font-size: 0.75em; }
+                            .lru-legend-color { width: 14px; height: 14px; border-radius: 4px; }
+                            .lru-input-group { display: flex; gap: 8px; align-items: center; }
+                            .lru-input { width: 60px; padding: 8px; border: 2px solid #4b5563; border-radius: 6px; background: #1f2937; color: #e2e8f0; font-family: 'Consolas', monospace; text-align: center; }
+                            .lru-input:focus { outline: none; border-color: #60a5fa; }
+                            .lru-capacity-info { color: #94a3b8; font-size: 0.8em; text-align: center; margin-bottom: 10px; }
+                            @keyframes pulse-green { 0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); } }
+                            @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+                            @keyframes slide-in { 0% { opacity: 0; transform: scale(0.5) translateY(-20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+                            @keyframes fade-out { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.5); } }
+                        </style>
 
-    subgraph "Doubly Linked List"
-        HEAD((Head)) --> N1[MRU] --> N2[...] --> N3[LRU] --> TAIL((Tail))
-    end
+                        <div class="lru-title">LRU Cache: HashMap + Doubly Linked List</div>
+                        <div class="lru-capacity-info">Capacity: 3 | Click nodes to access them (simulates GET)</div>
+
+                        <div class="lru-structures">
+                            <div class="lru-hashmap">
+                                <div class="lru-hashmap-title">HashMap</div>
+                                <div id="lru-hashmap-entries"></div>
+                            </div>
+
+                            <div class="lru-dll">
+                                <div class="lru-dll-title">Doubly Linked List</div>
+                                <div class="lru-dll-container" id="lru-dll-nodes"></div>
+                            </div>
+                        </div>
+
+                        <div class="lru-controls">
+                            <div class="lru-input-group">
+                                <input type="text" id="lru-key-input" class="lru-input" placeholder="Key" maxlength="3">
+                                <input type="text" id="lru-val-input" class="lru-input" placeholder="Val" maxlength="3">
+                                <button class="lru-btn lru-btn-put" onclick="lruPut()">PUT</button>
+                            </div>
+                            <div class="lru-input-group">
+                                <input type="text" id="lru-get-input" class="lru-input" placeholder="Key" maxlength="3">
+                                <button class="lru-btn lru-btn-get" onclick="lruGet()">GET</button>
+                            </div>
+                            <button class="lru-btn lru-btn-reset" onclick="lruReset()">Reset</button>
+                        </div>
+
+                        <div class="lru-status" id="lru-status"></div>
+
+                        <div class="lru-legend">
+                            <div class="lru-legend-item"><div class="lru-legend-color" style="background: linear-gradient(145deg, #6366f1, #4f46e5);"></div>Sentinel (Head/Tail)</div>
+                            <div class="lru-legend-item"><div class="lru-legend-color" style="background: linear-gradient(145deg, #f59e0b, #d97706);"></div>Most Recently Used</div>
+                            <div class="lru-legend-item"><div class="lru-legend-color" style="background: linear-gradient(145deg, #10b981, #059669);"></div>Data Node</div>
+                            <div class="lru-legend-item"><div class="lru-legend-color" style="background: linear-gradient(145deg, #ef4444, #dc2626);"></div>Least Recently Used</div>
+                        </div>
+
+                        <script>
+                            (function() {
+                                const LRU_CAPACITY = 3;
+                                let lruCache = new Map();
+                                let lruOrder = []; // front = MRU, back = LRU
+
+                                function updateLRUDisplay(highlightKey = null, removingKey = null) {
+                                    // Update HashMap
+                                    const hashDiv = document.getElementById('lru-hashmap-entries');
+                                    if (lruCache.size === 0) {
+                                        hashDiv.innerHTML = '<div style="color: #64748b; font-size: 0.85em; padding: 8px;">Empty</div>';
+                                    } else {
+                                        hashDiv.innerHTML = Array.from(lruCache.entries()).map(([k, v]) => {
+                                            let classes = 'lru-hashmap-entry';
+                                            if (k === highlightKey) classes += ' highlight';
+                                            if (k === removingKey) classes += ' removing';
+                                            return '<div class="' + classes + '"><span>' + k + '</span><span>-> Node(' + v + ')</span></div>';
+                                        }).join('');
+                                    }
+
+                                    // Update DLL
+                                    const dllDiv = document.getElementById('lru-dll-nodes');
+                                    let html = '<div class="lru-node sentinel">HEAD</div>';
+
+                                    lruOrder.forEach((key, idx) => {
+                                        html += '<span class="lru-arrow">-></span>';
+                                        let nodeClass = 'lru-node data-node';
+                                        if (idx === 0) nodeClass += ' mru';
+                                        if (idx === lruOrder.length - 1 && lruOrder.length > 1) nodeClass += ' lru-item';
+                                        if (key === highlightKey) nodeClass += ' new-node';
+                                        if (key === removingKey) nodeClass += ' removing-node';
+                                        html += '<div class="' + nodeClass + '" onclick="lruAccessNode(\'' + key + '\')" title="Click to access (GET)">' + key + ':' + lruCache.get(key) + '</div>';
+                                    });
+
+                                    html += '<span class="lru-arrow">-></span>';
+                                    html += '<div class="lru-node sentinel">TAIL</div>';
+                                    dllDiv.innerHTML = html;
+                                }
+
+                                function setLRUStatus(msg, type) {
+                                    type = type || '';
+                                    const status = document.getElementById('lru-status');
+                                    status.textContent = msg;
+                                    status.className = 'lru-status ' + type;
+                                }
+
+                                window.lruAccessNode = function(key) {
+                                    if (lruCache.has(key)) {
+                                        // Move to front (MRU)
+                                        lruOrder = lruOrder.filter(function(k) { return k !== key; });
+                                        lruOrder.unshift(key);
+                                        updateLRUDisplay(key);
+                                        setLRUStatus('GET(' + key + ') = ' + lruCache.get(key) + ' - Moved to MRU position', 'success');
+                                    }
+                                };
+
+                                window.lruGet = function() {
+                                    var key = document.getElementById('lru-get-input').value.trim();
+                                    if (!key) { setLRUStatus('Please enter a key', 'warning'); return; }
+
+                                    if (lruCache.has(key)) {
+                                        lruOrder = lruOrder.filter(function(k) { return k !== key; });
+                                        lruOrder.unshift(key);
+                                        updateLRUDisplay(key);
+                                        setLRUStatus('GET(' + key + ') = ' + lruCache.get(key) + ' - O(1) lookup, moved to MRU', 'success');
+                                    } else {
+                                        setLRUStatus('GET(' + key + ') = -1 - Key not found', 'error');
+                                    }
+                                    document.getElementById('lru-get-input').value = '';
+                                };
+
+                                window.lruPut = function() {
+                                    var key = document.getElementById('lru-key-input').value.trim();
+                                    var val = document.getElementById('lru-val-input').value.trim();
+                                    if (!key || !val) { setLRUStatus('Please enter both key and value', 'warning'); return; }
+
+                                    var evicted = null;
+
+                                    if (lruCache.has(key)) {
+                                        // Update existing
+                                        lruCache.set(key, val);
+                                        lruOrder = lruOrder.filter(function(k) { return k !== key; });
+                                        lruOrder.unshift(key);
+                                        setLRUStatus('PUT(' + key + ', ' + val + ') - Updated existing key, moved to MRU', 'success');
+                                    } else {
+                                        // Check capacity
+                                        if (lruCache.size >= LRU_CAPACITY) {
+                                            evicted = lruOrder.pop();
+                                            lruCache.delete(evicted);
+                                        }
+
+                                        lruCache.set(key, val);
+                                        lruOrder.unshift(key);
+
+                                        if (evicted) {
+                                            setLRUStatus('PUT(' + key + ', ' + val + ') - Evicted LRU key "' + evicted + '"', 'warning');
+                                        } else {
+                                            setLRUStatus('PUT(' + key + ', ' + val + ') - Added new key', 'success');
+                                        }
+                                    }
+
+                                    updateLRUDisplay(key, evicted);
+                                    document.getElementById('lru-key-input').value = '';
+                                    document.getElementById('lru-val-input').value = '';
+                                };
+
+                                window.lruReset = function() {
+                                    lruCache = new Map();
+                                    lruOrder = [];
+                                    updateLRUDisplay();
+                                    setLRUStatus('Cache cleared', '');
+                                };
+
+                                // Initialize with sample data
+                                lruCache.set('A', '1');
+                                lruCache.set('B', '2');
+                                lruCache.set('C', '3');
+                                lruOrder = ['C', 'B', 'A']; // C is MRU, A is LRU
+                                updateLRUDisplay();
+                                setLRUStatus('Try PUT/GET operations or click nodes to access them');
+                            })();
+                        </script>
                     </div>
                 </div>
 

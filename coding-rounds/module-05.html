@@ -105,15 +105,349 @@
             <div class="collapsible-content">
                 <p>A problem can be solved with DP if it has:</p>
 
-                <div class="diagram-container">
-                    <div class="mermaid">
-flowchart TD
-    A[DP Problem] --> B[Overlapping Subproblems]
-    A --> C[Optimal Substructure]
-    B --> D["Same subproblems<br>solved multiple times"]
-    C --> E["Optimal solution built from<br>optimal sub-solutions"]
+                <!-- Interactive DP Properties Animation -->
+                <div class="dp-properties-animation" id="dp-properties-viz">
+                    <style>
+                        .dp-properties-animation {
+                            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+                            border-radius: 16px;
+                            padding: 2rem;
+                            margin: 1.5rem 0;
+                            position: relative;
+                            overflow: hidden;
+                            min-height: 420px;
+                        }
+                        .dp-properties-animation::before {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                                        radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 50%);
+                            pointer-events: none;
+                        }
+                        .dp-center-node {
+                            position: absolute;
+                            top: 30px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+                            color: white;
+                            padding: 1rem 2rem;
+                            border-radius: 12px;
+                            font-weight: 600;
+                            font-size: 1.1rem;
+                            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            z-index: 10;
+                        }
+                        .dp-center-node:hover {
+                            transform: translateX(-50%) scale(1.05);
+                            box-shadow: 0 15px 50px rgba(99, 102, 241, 0.5);
+                        }
+                        .dp-branch {
+                            position: absolute;
+                            top: 120px;
+                            width: 44%;
+                            opacity: 0;
+                            transform: translateY(-20px);
+                            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                        }
+                        .dp-branch.visible {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                        .dp-branch-left { left: 3%; }
+                        .dp-branch-right { right: 3%; }
+                        .dp-branch-node {
+                            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                            color: white;
+                            padding: 0.875rem 1.25rem;
+                            border-radius: 10px;
+                            font-weight: 600;
+                            text-align: center;
+                            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.35);
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            margin-bottom: 1rem;
+                        }
+                        .dp-branch-node:hover {
+                            transform: scale(1.03);
+                            box-shadow: 0 12px 40px rgba(16, 185, 129, 0.45);
+                        }
+                        .dp-branch-node.right-color {
+                            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                            box-shadow: 0 8px 30px rgba(245, 158, 11, 0.35);
+                        }
+                        .dp-branch-node.right-color:hover {
+                            box-shadow: 0 12px 40px rgba(245, 158, 11, 0.45);
+                        }
+                        .dp-detail-card {
+                            background: rgba(255, 255, 255, 0.08);
+                            backdrop-filter: blur(10px);
+                            border: 1px solid rgba(255, 255, 255, 0.1);
+                            border-radius: 10px;
+                            padding: 1rem;
+                            color: #e2e8f0;
+                            font-size: 0.9rem;
+                            line-height: 1.6;
+                            opacity: 0;
+                            transform: translateY(10px);
+                            transition: all 0.4s ease 0.2s;
+                        }
+                        .dp-branch.visible .dp-detail-card {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                        .dp-connector-svg {
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 120px;
+                            pointer-events: none;
+                        }
+                        .dp-connector-svg path {
+                            fill: none;
+                            stroke-width: 3;
+                            stroke-linecap: round;
+                            stroke-dasharray: 200;
+                            stroke-dashoffset: 200;
+                            transition: stroke-dashoffset 0.6s ease;
+                        }
+                        .dp-connector-svg path.active {
+                            stroke-dashoffset: 0;
+                        }
+                        .dp-connector-svg .left-path { stroke: url(#grad-left); }
+                        .dp-connector-svg .right-path { stroke: url(#grad-right); }
+                        .dp-example-viz {
+                            position: absolute;
+                            bottom: 20px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            display: flex;
+                            gap: 0.5rem;
+                            opacity: 0;
+                            transition: opacity 0.5s ease;
+                        }
+                        .dp-example-viz.visible { opacity: 1; }
+                        .dp-example-cell {
+                            width: 44px;
+                            height: 44px;
+                            background: rgba(99, 102, 241, 0.2);
+                            border: 2px solid rgba(99, 102, 241, 0.5);
+                            border-radius: 8px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: #a5b4fc;
+                            font-weight: 600;
+                            font-size: 0.8rem;
+                            transition: all 0.3s ease;
+                        }
+                        .dp-example-cell.highlight {
+                            background: rgba(16, 185, 129, 0.3);
+                            border-color: #10b981;
+                            color: #10b981;
+                            transform: scale(1.1);
+                        }
+                        .dp-example-cell.reused {
+                            background: rgba(245, 158, 11, 0.3);
+                            border-color: #f59e0b;
+                            color: #f59e0b;
+                            animation: pulse-reuse 1s ease-in-out infinite;
+                        }
+                        @keyframes pulse-reuse {
+                            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+                            50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+                        }
+                        .dp-props-controls {
+                            position: absolute;
+                            bottom: 80px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            display: flex;
+                            gap: 0.75rem;
+                            z-index: 10;
+                        }
+                        .dp-props-btn {
+                            background: rgba(255, 255, 255, 0.1);
+                            border: 1px solid rgba(255, 255, 255, 0.2);
+                            color: white;
+                            padding: 0.5rem 1rem;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 0.85rem;
+                            transition: all 0.2s ease;
+                        }
+                        .dp-props-btn:hover {
+                            background: rgba(255, 255, 255, 0.2);
+                        }
+                        .dp-props-btn.active-btn {
+                            background: rgba(99, 102, 241, 0.5);
+                            border-color: #6366f1;
+                        }
+                    </style>
+
+                    <svg class="dp-connector-svg">
+                        <defs>
+                            <linearGradient id="grad-left" x1="50%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#6366f1"/>
+                                <stop offset="100%" style="stop-color:#10b981"/>
+                            </linearGradient>
+                            <linearGradient id="grad-right" x1="50%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#6366f1"/>
+                                <stop offset="100%" style="stop-color:#f59e0b"/>
+                            </linearGradient>
+                        </defs>
+                        <path class="left-path" id="dp-path-left" d="M 50% 70 Q 30% 90 25% 120"/>
+                        <path class="right-path" id="dp-path-right" d="M 50% 70 Q 70% 90 75% 120"/>
+                    </svg>
+
+                    <div class="dp-center-node" onclick="toggleDPProperties()">
+                        DP Problem
+                    </div>
+
+                    <div class="dp-branch dp-branch-left" id="dp-branch-left">
+                        <div class="dp-branch-node" onclick="highlightOverlapping()">
+                            Overlapping Subproblems
+                        </div>
+                        <div class="dp-detail-card">
+                            <strong>Same subproblems solved multiple times</strong>
+                            <p style="margin-top: 0.5rem; color: #94a3b8;">
+                                Example: In Fibonacci, fib(3) is calculated multiple times in the naive recursion tree.
+                                DP stores results to avoid redundant computation.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="dp-branch dp-branch-right" id="dp-branch-right">
+                        <div class="dp-branch-node right-color" onclick="highlightOptimal()">
+                            Optimal Substructure
+                        </div>
+                        <div class="dp-detail-card">
+                            <strong>Optimal solution built from optimal sub-solutions</strong>
+                            <p style="margin-top: 0.5rem; color: #94a3b8;">
+                                Example: Shortest path A to C via B = shortest(A to B) + shortest(B to C).
+                                The optimal whole is composed of optimal parts.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="dp-props-controls">
+                        <button class="dp-props-btn" onclick="toggleDPProperties()">Show Properties</button>
+                        <button class="dp-props-btn" onclick="showOverlapDemo()">Demo Overlap</button>
+                        <button class="dp-props-btn" onclick="resetDPProps()">Reset</button>
+                    </div>
+
+                    <div class="dp-example-viz" id="dp-example-viz">
+                        <div class="dp-example-cell" id="fib-0">f(0)</div>
+                        <div class="dp-example-cell" id="fib-1">f(1)</div>
+                        <div class="dp-example-cell" id="fib-2">f(2)</div>
+                        <div class="dp-example-cell" id="fib-3">f(3)</div>
+                        <div class="dp-example-cell" id="fib-4">f(4)</div>
+                        <div class="dp-example-cell" id="fib-5">f(5)</div>
                     </div>
                 </div>
+
+                <script>
+                    let dpPropsVisible = false;
+                    let overlapDemoInterval = null;
+
+                    function toggleDPProperties() {
+                        dpPropsVisible = !dpPropsVisible;
+                        const pathLeft = document.getElementById('dp-path-left');
+                        const pathRight = document.getElementById('dp-path-right');
+                        const branchLeft = document.getElementById('dp-branch-left');
+                        const branchRight = document.getElementById('dp-branch-right');
+
+                        if (dpPropsVisible) {
+                            pathLeft.classList.add('active');
+                            pathRight.classList.add('active');
+                            setTimeout(() => {
+                                branchLeft.classList.add('visible');
+                                branchRight.classList.add('visible');
+                            }, 400);
+                        } else {
+                            resetDPProps();
+                        }
+                    }
+
+                    function resetDPProps() {
+                        dpPropsVisible = false;
+                        if (overlapDemoInterval) {
+                            clearInterval(overlapDemoInterval);
+                            overlapDemoInterval = null;
+                        }
+                        document.getElementById('dp-path-left').classList.remove('active');
+                        document.getElementById('dp-path-right').classList.remove('active');
+                        document.getElementById('dp-branch-left').classList.remove('visible');
+                        document.getElementById('dp-branch-right').classList.remove('visible');
+                        document.getElementById('dp-example-viz').classList.remove('visible');
+                        document.querySelectorAll('.dp-example-cell').forEach(cell => {
+                            cell.classList.remove('highlight', 'reused');
+                        });
+                    }
+
+                    function highlightOverlapping() {
+                        showOverlapDemo();
+                    }
+
+                    function highlightOptimal() {
+                        const exampleViz = document.getElementById('dp-example-viz');
+                        exampleViz.classList.add('visible');
+                        const cells = document.querySelectorAll('.dp-example-cell');
+                        cells.forEach(cell => cell.classList.remove('highlight', 'reused'));
+
+                        let step = 0;
+                        if (overlapDemoInterval) clearInterval(overlapDemoInterval);
+                        overlapDemoInterval = setInterval(() => {
+                            cells.forEach(cell => cell.classList.remove('highlight'));
+                            if (step < 6) {
+                                cells[step].classList.add('highlight');
+                                step++;
+                            } else {
+                                clearInterval(overlapDemoInterval);
+                            }
+                        }, 400);
+                    }
+
+                    function showOverlapDemo() {
+                        const exampleViz = document.getElementById('dp-example-viz');
+                        exampleViz.classList.add('visible');
+                        const cells = document.querySelectorAll('.dp-example-cell');
+                        cells.forEach(cell => cell.classList.remove('highlight', 'reused'));
+
+                        let step = 0;
+                        const sequence = [
+                            {idx: 5, action: 'highlight'},
+                            {idx: 4, action: 'highlight'},
+                            {idx: 3, action: 'highlight'},
+                            {idx: 3, action: 'reused'},
+                            {idx: 2, action: 'highlight'},
+                            {idx: 2, action: 'reused'},
+                        ];
+
+                        if (overlapDemoInterval) clearInterval(overlapDemoInterval);
+                        overlapDemoInterval = setInterval(() => {
+                            if (step < sequence.length) {
+                                const {idx, action} = sequence[step];
+                                if (action === 'highlight') {
+                                    cells[idx].classList.add('highlight');
+                                } else {
+                                    cells[idx].classList.add('reused');
+                                    cells[idx].classList.remove('highlight');
+                                }
+                                step++;
+                            } else {
+                                clearInterval(overlapDemoInterval);
+                            }
+                        }, 600);
+                    }
+                </script>
 
                 <h4>Common DP Signals</h4>
                 <ul>

@@ -103,17 +103,171 @@
             </div>
             <div class="collapsible-content">
                 <div class="diagram-container">
-                    <div class="mermaid">
-flowchart TD
-    A[Start] --> B{Base case?}
-    B -->|Yes| C[Add to result]
-    B -->|No| D[For each choice]
-    D --> E{Valid choice?}
-    E -->|Yes| F[Make choice]
-    F --> G[Recurse]
-    G --> H[Undo choice]
-    H --> D
-    E -->|No| D
+                    <!-- Interactive Backtracking Flow Animation -->
+                    <div id="backtracking-flow-animation" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 30px; position: relative; overflow: hidden; min-height: 480px;">
+                        <style>
+                            #backtracking-flow-animation .flow-node {
+                                position: absolute;
+                                padding: 12px 20px;
+                                border-radius: 12px;
+                                font-weight: 600;
+                                font-size: 14px;
+                                cursor: pointer;
+                                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                                text-align: center;
+                                z-index: 2;
+                                white-space: nowrap;
+                            }
+                            #backtracking-flow-animation .flow-node:hover {
+                                transform: scale(1.1);
+                                box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+                            }
+                            #backtracking-flow-animation .flow-node.active {
+                                animation: pulse-glow-bt 1.5s ease-in-out infinite;
+                            }
+                            @keyframes pulse-glow-bt {
+                                0%, 100% { box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+                                50% { box-shadow: 0 4px 30px rgba(102, 126, 234, 0.8); }
+                            }
+                            #backtracking-flow-animation .node-start { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; left: 50%; top: 15px; transform: translateX(-50%); }
+                            #backtracking-flow-animation .node-base { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; left: 50%; top: 80px; transform: translateX(-50%); border-radius: 50%; width: 110px; height: 45px; display: flex; align-items: center; justify-content: center; padding: 0; }
+                            #backtracking-flow-animation .node-result { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; left: 12%; top: 160px; }
+                            #backtracking-flow-animation .node-foreach { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #1a1a2e; left: 60%; top: 160px; }
+                            #backtracking-flow-animation .node-valid { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: #1a1a2e; left: 60%; top: 240px; transform: translateX(-50%); border-radius: 50%; width: 100px; height: 45px; display: flex; align-items: center; justify-content: center; padding: 0; }
+                            #backtracking-flow-animation .node-make { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #1a1a2e; left: 25%; top: 320px; }
+                            #backtracking-flow-animation .node-recurse { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; left: 25%; top: 390px; }
+                            #backtracking-flow-animation .node-undo { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #1a1a2e; left: 60%; top: 320px; }
+                            #backtracking-flow-animation svg.flow-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+                            #backtracking-flow-animation .flow-line { stroke: rgba(255,255,255,0.4); stroke-width: 2; fill: none; }
+                            #backtracking-flow-animation .flow-line.active { stroke: #38ef7d; stroke-width: 3; filter: drop-shadow(0 0 6px #38ef7d); }
+                            #backtracking-flow-animation .flow-arrow { fill: rgba(255,255,255,0.6); }
+                            #backtracking-flow-animation .flow-label { fill: rgba(255,255,255,0.9); font-size: 11px; font-weight: 600; }
+                            #backtracking-flow-animation .control-panel { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 3; }
+                            #backtracking-flow-animation .control-btn { padding: 10px 20px; border: none; border-radius: 25px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s; }
+                            #backtracking-flow-animation .control-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5); }
+                            #backtracking-flow-animation .bt-tooltip { position: absolute; background: rgba(0,0,0,0.95); color: white; padding: 12px 16px; border-radius: 10px; font-size: 12px; max-width: 220px; z-index: 10; opacity: 0; pointer-events: none; transition: opacity 0.3s; border: 1px solid rgba(102, 126, 234, 0.5); }
+                            #backtracking-flow-animation .bt-tooltip.visible { opacity: 1; }
+                            #backtracking-flow-animation .step-indicator { position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; color: white; font-size: 12px; }
+                        </style>
+                        <div class="step-indicator" id="bt-step-indicator">Click Play to animate</div>
+                        <svg class="flow-lines" viewBox="0 0 400 450" preserveAspectRatio="xMidYMid meet">
+                            <defs>
+                                <marker id="arrowhead-bt" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" class="flow-arrow"/>
+                                </marker>
+                            </defs>
+                            <!-- Start to Base case -->
+                            <path class="flow-line" id="bt-line-0" d="M200,42 L200,70" marker-end="url(#arrowhead-bt)"/>
+                            <!-- Base case Yes to Result -->
+                            <path class="flow-line" id="bt-line-1" d="M155,102 L85,150" marker-end="url(#arrowhead-bt)"/>
+                            <text class="flow-label" x="100" y="120">Yes</text>
+                            <!-- Base case No to For each -->
+                            <path class="flow-line" id="bt-line-2" d="M245,102 L280,150" marker-end="url(#arrowhead-bt)"/>
+                            <text class="flow-label" x="275" y="120">No</text>
+                            <!-- For each to Valid -->
+                            <path class="flow-line" id="bt-line-3" d="M280,190 L260,230" marker-end="url(#arrowhead-bt)"/>
+                            <!-- Valid Yes to Make -->
+                            <path class="flow-line" id="bt-line-4" d="M210,262 L150,310" marker-end="url(#arrowhead-bt)"/>
+                            <text class="flow-label" x="160" y="285">Yes</text>
+                            <!-- Valid No back to For each -->
+                            <path class="flow-line" id="bt-line-5" d="M310,262 L320,200 L310,190" marker-end="url(#arrowhead-bt)" stroke-dasharray="4,4"/>
+                            <text class="flow-label" x="330" y="230">No</text>
+                            <!-- Make to Recurse -->
+                            <path class="flow-line" id="bt-line-6" d="M145,350 L145,380" marker-end="url(#arrowhead-bt)"/>
+                            <!-- Recurse to Undo -->
+                            <path class="flow-line" id="bt-line-7" d="M185,410 L280,360" marker-end="url(#arrowhead-bt)"/>
+                            <!-- Undo back to For each -->
+                            <path class="flow-line" id="bt-line-8" d="M310,320 L320,180 L310,175" marker-end="url(#arrowhead-bt)" stroke-dasharray="4,4"/>
+                        </svg>
+                        <div class="flow-node node-start" data-info="Entry point: Begin exploring the solution space with initial empty state">Start</div>
+                        <div class="flow-node node-base" data-info="Check termination: Have we built a complete solution? (e.g., path length reached, all positions filled)">Base case?</div>
+                        <div class="flow-node node-result" data-info="Solution found! Add a COPY of current state to results (not a reference, or it will change)">Add to result</div>
+                        <div class="flow-node node-foreach" data-info="Iterate through all possible choices at the current decision point">For each choice</div>
+                        <div class="flow-node node-valid" data-info="Constraint check: Does this choice satisfy all requirements? (pruning happens here)">Valid?</div>
+                        <div class="flow-node node-make" data-info="Commit to choice: Update state, mark element as used, add to current path">Make choice</div>
+                        <div class="flow-node node-recurse" data-info="Recursive call: Explore deeper from the new state (depth-first search)">Recurse</div>
+                        <div class="flow-node node-undo" data-info="BACKTRACK: Undo the choice, restore previous state, then try the next option">Undo choice</div>
+                        <div class="bt-tooltip" id="bt-tooltip"></div>
+                        <div class="control-panel">
+                            <button class="control-btn" onclick="animateBacktrackingFlow()">Play Animation</button>
+                            <button class="control-btn" onclick="resetBacktrackingFlow()">Reset</button>
+                        </div>
+                        <script>
+                            (function() {
+                                const container = document.getElementById('backtracking-flow-animation');
+                                const nodes = container.querySelectorAll('.flow-node');
+                                const tooltip = document.getElementById('bt-tooltip');
+
+                                nodes.forEach(node => {
+                                    node.addEventListener('mouseenter', (e) => {
+                                        const rect = container.getBoundingClientRect();
+                                        tooltip.textContent = node.dataset.info;
+                                        tooltip.style.left = Math.min(e.clientX - rect.left + 10, rect.width - 240) + 'px';
+                                        tooltip.style.top = (e.clientY - rect.top - 50) + 'px';
+                                        tooltip.classList.add('visible');
+                                    });
+                                    node.addEventListener('mouseleave', () => {
+                                        tooltip.classList.remove('visible');
+                                    });
+                                });
+                            })();
+
+                            let btAnimationInterval;
+                            function animateBacktrackingFlow() {
+                                const container = document.getElementById('backtracking-flow-animation');
+                                const nodes = container.querySelectorAll('.flow-node');
+                                const lines = container.querySelectorAll('.flow-line');
+                                const indicator = document.getElementById('bt-step-indicator');
+                                const steps = [
+                                    {node: 0, line: null, text: 'Start: Begin backtracking'},
+                                    {node: 1, line: 0, text: 'Check: Is this a complete solution?'},
+                                    {node: 3, line: 2, text: 'Not yet - try each available choice'},
+                                    {node: 4, line: 3, text: 'Is choice [1] valid?'},
+                                    {node: 5, line: 4, text: 'Yes! Make the choice'},
+                                    {node: 6, line: 6, text: 'Recurse with new state...'},
+                                    {node: 1, line: null, text: 'Check: Is this complete?'},
+                                    {node: 3, line: 2, text: 'Try next choice'},
+                                    {node: 4, line: 3, text: 'Is choice [2] valid?'},
+                                    {node: 5, line: 4, text: 'Yes! Make the choice'},
+                                    {node: 6, line: 6, text: 'Recurse deeper...'},
+                                    {node: 1, line: null, text: 'Base case reached!'},
+                                    {node: 2, line: 1, text: 'Add solution to results'},
+                                    {node: 7, line: 7, text: 'Undo last choice (backtrack)'},
+                                    {node: 3, line: 8, text: 'Try remaining choices...'},
+                                ];
+                                let step = 0;
+
+                                clearInterval(btAnimationInterval);
+                                nodes.forEach(n => n.classList.remove('active'));
+                                lines.forEach(l => l.classList.remove('active'));
+
+                                btAnimationInterval = setInterval(() => {
+                                    nodes.forEach(n => n.classList.remove('active'));
+                                    lines.forEach(l => l.classList.remove('active'));
+
+                                    if (step < steps.length) {
+                                        nodes[steps[step].node].classList.add('active');
+                                        if (steps[step].line !== null) {
+                                            lines[steps[step].line].classList.add('active');
+                                        }
+                                        indicator.textContent = steps[step].text;
+                                        step++;
+                                    } else {
+                                        clearInterval(btAnimationInterval);
+                                        indicator.textContent = 'Animation complete - Click Play to restart';
+                                    }
+                                }, 1200);
+                            }
+
+                            function resetBacktrackingFlow() {
+                                clearInterval(btAnimationInterval);
+                                const container = document.getElementById('backtracking-flow-animation');
+                                container.querySelectorAll('.flow-node').forEach(n => n.classList.remove('active'));
+                                container.querySelectorAll('.flow-line').forEach(l => l.classList.remove('active'));
+                                document.getElementById('bt-step-indicator').textContent = 'Click Play to animate';
+                            }
+                        </script>
                     </div>
                 </div>
 

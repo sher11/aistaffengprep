@@ -336,18 +336,151 @@ def two_sum(nums, target):
                 <span class="collapsible-icon">&#9660;</span>
             </div>
             <div class="collapsible-content">
-                <div class="diagram-container">
-                    <div class="mermaid">
-flowchart LR
-    subgraph "Stack (LIFO)"
-        S1[Push] --> S2[Top]
-        S2 --> S3[Pop]
-    end
+                <div class="diagram-container interactive">
+                    <!-- Interactive Stack & Queue Animation -->
+                    <div id="stack-queue-animation" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                            <!-- Stack Section -->
+                            <div style="text-align: center;">
+                                <h4 style="color: #4ade80; margin-bottom: 15px; font-size: 1.1rem;">Stack (LIFO)</h4>
+                                <p style="color: #a0a0a0; font-size: 0.8rem; margin-bottom: 15px;">Last In, First Out</p>
 
-    subgraph "Queue (FIFO)"
-        Q1[Enqueue] --> Q2["..."] --> Q3[Dequeue]
-    end
+                                <div id="stack-container" style="display: flex; flex-direction: column-reverse; align-items: center; min-height: 200px; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px dashed rgba(74, 222, 128, 0.3);">
+                                    <!-- Stack items will be added here -->
+                                </div>
+
+                                <div style="display: flex; gap: 10px; justify-content: center;">
+                                    <button id="stack-push" style="padding: 10px 20px; background: linear-gradient(135deg, #4ade80, #22c55e); border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease;">Push</button>
+                                    <button id="stack-pop" style="padding: 10px 20px; background: linear-gradient(135deg, #f87171, #ef4444); border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease;">Pop</button>
+                                </div>
+                                <p id="stack-message" style="color: #60a5fa; font-size: 0.85rem; margin-top: 10px; min-height: 20px;"></p>
+                            </div>
+
+                            <!-- Queue Section -->
+                            <div style="text-align: center;">
+                                <h4 style="color: #60a5fa; margin-bottom: 15px; font-size: 1.1rem;">Queue (FIFO)</h4>
+                                <p style="color: #a0a0a0; font-size: 0.8rem; margin-bottom: 15px;">First In, First Out</p>
+
+                                <div style="position: relative; min-height: 200px; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px dashed rgba(96, 165, 250, 0.3);">
+                                    <div style="position: absolute; top: 10px; left: 15px; color: #4ade80; font-size: 0.75rem;">Enqueue</div>
+                                    <div style="position: absolute; top: 10px; right: 15px; color: #f87171; font-size: 0.75rem;">Dequeue</div>
+                                    <div id="queue-container" style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; min-height: 60px; margin-top: 30px; gap: 8px; overflow-x: auto; padding: 10px;">
+                                        <!-- Queue items will be added here -->
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 10px; justify-content: center;">
+                                    <button id="queue-enqueue" style="padding: 10px 20px; background: linear-gradient(135deg, #4ade80, #22c55e); border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease;">Enqueue</button>
+                                    <button id="queue-dequeue" style="padding: 10px 20px; background: linear-gradient(135deg, #f87171, #ef4444); border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; transition: all 0.3s ease;">Dequeue</button>
+                                </div>
+                                <p id="queue-message" style="color: #60a5fa; font-size: 0.85rem; margin-top: 10px; min-height: 20px;"></p>
+                            </div>
+                        </div>
+
+                        <!-- Comparison Info -->
+                        <div style="margin-top: 25px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="border-left: 3px solid #4ade80; padding-left: 15px;">
+                                <p style="color: #4ade80; margin: 0 0 5px 0; font-weight: bold; font-size: 0.9rem;">Stack Use Cases</p>
+                                <p style="color: #a0a0a0; margin: 0; font-size: 0.85rem;">Undo/redo, function calls, bracket matching, DFS</p>
+                            </div>
+                            <div style="border-left: 3px solid #60a5fa; padding-left: 15px;">
+                                <p style="color: #60a5fa; margin: 0 0 5px 0; font-weight: bold; font-size: 0.9rem;">Queue Use Cases</p>
+                                <p style="color: #a0a0a0; margin: 0; font-size: 0.85rem;">Task scheduling, BFS, message queues, print spooling</p>
+                            </div>
+                        </div>
                     </div>
+
+                    <script>
+                    (function() {
+                        let stackCounter = 0;
+                        let queueCounter = 0;
+                        const stackContainer = document.getElementById('stack-container');
+                        const queueContainer = document.getElementById('queue-container');
+                        const stackMessage = document.getElementById('stack-message');
+                        const queueMessage = document.getElementById('queue-message');
+
+                        function createItem(value, color) {
+                            const item = document.createElement('div');
+                            item.style.cssText = 'padding: 12px 25px; background: linear-gradient(135deg, ' + color + '); border-radius: 8px; color: #fff; font-weight: bold; font-size: 0.9rem; animation: slideIn 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3);';
+                            item.textContent = value;
+                            item.dataset.value = value;
+                            return item;
+                        }
+
+                        // Add CSS animation
+                        const style = document.createElement('style');
+                        style.textContent = '@keyframes slideIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } } @keyframes slideOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.8); } }';
+                        document.head.appendChild(style);
+
+                        // Stack operations
+                        document.getElementById('stack-push').addEventListener('click', function() {
+                            if (stackContainer.children.length >= 5) {
+                                stackMessage.textContent = 'Stack full! (max 5 for demo)';
+                                stackMessage.style.color = '#f87171';
+                                return;
+                            }
+                            stackCounter++;
+                            const item = createItem(stackCounter, '#4ade80, #22c55e');
+                            stackContainer.appendChild(item);
+                            stackMessage.textContent = 'Pushed: ' + stackCounter + ' (now on top)';
+                            stackMessage.style.color = '#4ade80';
+                        });
+
+                        document.getElementById('stack-pop').addEventListener('click', function() {
+                            if (stackContainer.children.length === 0) {
+                                stackMessage.textContent = 'Stack empty!';
+                                stackMessage.style.color = '#f87171';
+                                return;
+                            }
+                            const item = stackContainer.lastChild;
+                            const value = item.dataset.value;
+                            item.style.animation = 'slideOut 0.3s ease forwards';
+                            setTimeout(() => item.remove(), 300);
+                            stackMessage.textContent = 'Popped: ' + value + ' (was on top)';
+                            stackMessage.style.color = '#f87171';
+                        });
+
+                        // Queue operations
+                        document.getElementById('queue-enqueue').addEventListener('click', function() {
+                            if (queueContainer.children.length >= 5) {
+                                queueMessage.textContent = 'Queue full! (max 5 for demo)';
+                                queueMessage.style.color = '#f87171';
+                                return;
+                            }
+                            queueCounter++;
+                            const item = createItem(queueCounter, '#60a5fa, #3b82f6');
+                            queueContainer.appendChild(item);
+                            queueMessage.textContent = 'Enqueued: ' + queueCounter + ' (added to back)';
+                            queueMessage.style.color = '#4ade80';
+                        });
+
+                        document.getElementById('queue-dequeue').addEventListener('click', function() {
+                            if (queueContainer.children.length === 0) {
+                                queueMessage.textContent = 'Queue empty!';
+                                queueMessage.style.color = '#f87171';
+                                return;
+                            }
+                            const item = queueContainer.firstChild;
+                            const value = item.dataset.value;
+                            item.style.animation = 'slideOut 0.3s ease forwards';
+                            setTimeout(() => item.remove(), 300);
+                            queueMessage.textContent = 'Dequeued: ' + value + ' (was at front)';
+                            queueMessage.style.color = '#f87171';
+                        });
+
+                        // Add hover effects to buttons
+                        document.querySelectorAll('#stack-queue-animation button').forEach(btn => {
+                            btn.addEventListener('mouseenter', function() {
+                                this.style.transform = 'translateY(-2px)';
+                                this.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
+                            });
+                            btn.addEventListener('mouseleave', function() {
+                                this.style.transform = 'translateY(0)';
+                                this.style.boxShadow = 'none';
+                            });
+                        });
+                    })();
+                    </script>
                 </div>
 
                 <div class="code-block">
