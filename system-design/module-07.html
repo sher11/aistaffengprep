@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 7: Interview Framework - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to System Design</a></nav>
+
+        <h1>Module 7: Interview Framework Mastery</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Master the RESHADE framework for system design interviews</li>
+                <li>Learn capacity estimation techniques</li>
+                <li>Develop effective communication strategies</li>
+                <li>Practice structured problem-solving approach</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">The RESHADE Framework</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart LR
+    R[Requirements<br>5-8 min] --> E[Estimation<br>3-5 min]
+    E --> S[Storage Schema<br>3-5 min]
+    S --> H[High-Level Design<br>10-15 min]
+    H --> A[API Design<br>3-5 min]
+    A --> D[Deep Dive<br>15-20 min]
+    D --> E2[Edge Cases<br>5-10 min]
+            </div>
+        </div>
+
+        <h2 class="mt-4">Phase 1: Requirements</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Clarifying Requirements (5-8 min)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>Functional Requirements</h4>
+                <ul>
+                    <li>What are the core features?</li>
+                    <li>Who are the users?</li>
+                    <li>What operations are supported?</li>
+                </ul>
+
+                <h4>Non-Functional Requirements</h4>
+                <ul>
+                    <li><strong>Scale:</strong> How many users? How much data?</li>
+                    <li><strong>Performance:</strong> Latency requirements?</li>
+                    <li><strong>Availability:</strong> What's acceptable downtime?</li>
+                    <li><strong>Consistency:</strong> Strong or eventual?</li>
+                </ul>
+
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>Template Questions:</strong>
+                    <ol>
+                        <li>"What are the most important features to focus on?"</li>
+                        <li>"How many daily active users should we design for?"</li>
+                        <li>"What's the read/write ratio?"</li>
+                        <li>"Are there any latency requirements?"</li>
+                        <li>"Should we prioritize consistency or availability?"</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Phase 2: Estimation</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Capacity Planning (3-5 min)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>Storage Estimation</h4>
+                <div class="code-block">
+                    <code>
+Users: X million
+Items per user: Y
+Size per item: Z bytes
+
+Total storage = X × Y × Z
+Growth rate = % per year
+5-year storage = Total × (1 + growth)^5
+                    </code>
+                </div>
+
+                <h4>Traffic Estimation</h4>
+                <div class="code-block">
+                    <code>
+DAU: X million
+Actions per user: Y
+Total daily actions: X × Y
+
+QPS = Total / 86,400
+Peak QPS = QPS × 3 (typical peak)
+                    </code>
+                </div>
+
+                <h4>Quick Reference Numbers</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Metric</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Seconds per day</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">86,400 (~100K)</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">1 million × 1KB</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">1 GB</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">1 billion × 1KB</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">1 TB</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Network round trip (same DC)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">0.5 ms</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">SSD random read</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">150 μs</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Phase 3: High-Level Design</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Component Architecture (10-15 min)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TB
+    C[Clients] --> LB[Load Balancer]
+    LB --> API[API Servers]
+    API --> Cache[Cache Layer]
+    API --> DB[(Database)]
+    API --> Queue[Message Queue]
+    Queue --> Workers[Background Workers]
+    API --> Storage[Object Storage]
+                    </div>
+                </div>
+
+                <h4>Component Checklist</h4>
+                <ul>
+                    <li>☐ Load Balancer (for high availability)</li>
+                    <li>☐ API Servers (stateless, horizontally scalable)</li>
+                    <li>☐ Cache Layer (for read-heavy workloads)</li>
+                    <li>☐ Database (SQL vs NoSQL decision)</li>
+                    <li>☐ Message Queue (for async processing)</li>
+                    <li>☐ CDN (for static content)</li>
+                    <li>☐ Object Storage (for files, images)</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Communication Tips</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h3>Think Aloud</h3>
+                <p>Verbalize your thought process. Interviewers want to understand HOW you think.</p>
+            </div>
+            <div class="card">
+                <h3>Draw Diagrams</h3>
+                <p>Visual communication is clearer. Use boxes, arrows, and labels.</p>
+            </div>
+            <div class="card">
+                <h3>Discuss Trade-offs</h3>
+                <p>There's no perfect solution. Explain why you chose option A over B.</p>
+            </div>
+            <div class="card">
+                <h3>Ask Questions</h3>
+                <p>Clarify before diving in. Shows you understand requirements matter.</p>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-06.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "How much time should you spend on requirements clarification?",
+                    options: ["1-2 minutes", "5-8 minutes", "15-20 minutes", "Skip it entirely"],
+                    correct: 1,
+                    explanation: "Spend 5-8 minutes on requirements. Rushing this phase leads to designing the wrong system."
+                },
+                {
+                    question: "What's the typical peak QPS multiplier over average?",
+                    options: ["1.5x", "2-3x", "10x", "100x"],
+                    correct: 1,
+                    explanation: "Peak traffic is typically 2-3x average. Some systems may have higher spikes during special events."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 7);
+            alert('Module 7 marked as complete!');
+            window.location.href = 'module-08.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 8: Mock Interviews - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to System Design</a></nav>
+
+        <h1>Module 8: Mock Interviews and Feedback</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Practice system design interviews in realistic conditions</li>
+                <li>Identify and address weak areas</li>
+                <li>Develop time management skills</li>
+                <li>Build confidence through repetition</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Practice Problems</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Classic Problems (Start Here)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul class="module-list">
+                    <li class="module-item">
+                        <div class="module-number">1</div>
+                        <div class="module-info">
+                            <div class="module-title">URL Shortener (TinyURL)</div>
+                            <div class="module-desc">ID generation, base62 encoding, caching, analytics</div>
+                        </div>
+                    </li>
+                    <li class="module-item">
+                        <div class="module-number">2</div>
+                        <div class="module-info">
+                            <div class="module-title">Rate Limiter</div>
+                            <div class="module-desc">Token bucket, sliding window, distributed implementation</div>
+                        </div>
+                    </li>
+                    <li class="module-item">
+                        <div class="module-number">3</div>
+                        <div class="module-info">
+                            <div class="module-title">Web Crawler</div>
+                            <div class="module-desc">Politeness, URL frontier, distributed crawling</div>
+                        </div>
+                    </li>
+                    <li class="module-item">
+                        <div class="module-number">4</div>
+                        <div class="module-info">
+                            <div class="module-title">Chat System (WhatsApp)</div>
+                            <div class="module-desc">WebSocket, presence, message delivery, group chat</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Intermediate Problems</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul class="module-list">
+                    <li class="module-item">
+                        <div class="module-number">5</div>
+                        <div class="module-info">
+                            <div class="module-title">News Feed (Facebook/Twitter)</div>
+                            <div class="module-desc">Fan-out strategies, ranking, caching</div>
+                        </div>
+                    </li>
+                    <li class="module-item">
+                        <div class="module-number">6</div>
+                        <div class="module-info">
+                            <div class="module-title">Notification System</div>
+                            <div class="module-desc">Push vs pull, prioritization, rate limiting</div>
+                        </div>
+                    </li>
+                    <li class="module-item">
+                        <div class="module-number">7</div>
+                        <div class="module-info">
+                            <div class="module-title">YouTube / Netflix</div>
+                            <div class="module-desc">Video streaming, CDN, transcoding, recommendations</div>
+                        </div>
+                    </li>
+                    <li class="module-item">
+                        <div class="module-number">8</div>
+                        <div class="module-info">
+                            <div class="module-title">Google Drive / Dropbox</div>
+                            <div class="module-desc">File sync, chunking, deduplication, conflict resolution</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Advanced Problems</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul class="module-list">
+                    <li class="module-item">
+                        <div class="module-number">9</div>
+                        <div class="module-info">
+                            <div class="module-title">Distributed Cache</div>
+                            <div class="module-desc">Consistent hashing, replication, eviction</div>
+                        </div>
+                    </li>
+                    <li class="module-item">
+                        <div class="module-number">10</div>
+                        <div class="module-info">
+                            <div class="module-title">Search Autocomplete</div>
+                            <div class="module-desc">Trie, ranking, personalization, real-time updates</div>
+                        </div>
+                    </li>
+                    <li class="module-item">
+                        <div class="module-number">11</div>
+                        <div class="module-info">
+                            <div class="module-title">Uber / Lyft</div>
+                            <div class="module-desc">Location tracking, matching, pricing, ETA</div>
+                        </div>
+                    </li>
+                    <li class="module-item">
+                        <div class="module-number">12</div>
+                        <div class="module-info">
+                            <div class="module-title">Distributed Key-Value Store</div>
+                            <div class="module-desc">Partitioning, replication, consistency, failure handling</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Evaluation Rubric</h2>
+
+        <div class="card">
+            <h4>Rate yourself after each practice (1-5)</h4>
+            <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                <thead>
+                    <tr style="background: var(--border-color);">
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Criteria</th>
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Requirements Clarification</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);"><input type="number" min="1" max="5" style="width: 50px;"></td></tr>
+                    <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Capacity Estimation</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);"><input type="number" min="1" max="5" style="width: 50px;"></td></tr>
+                    <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">High-Level Design</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);"><input type="number" min="1" max="5" style="width: 50px;"></td></tr>
+                    <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Deep Dive / Trade-offs</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);"><input type="number" min="1" max="5" style="width: 50px;"></td></tr>
+                    <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Communication</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);"><input type="number" min="1" max="5" style="width: 50px;"></td></tr>
+                    <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Time Management</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);"><input type="number" min="1" max="5" style="width: 50px;"></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="mt-4">Mock Interview Tips</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h3>Time Yourself</h3>
+                <p>Use a 45-minute timer. Practice under realistic conditions.</p>
+            </div>
+            <div class="card">
+                <h3>Record Yourself</h3>
+                <p>Watch recordings to identify verbal tics and unclear explanations.</p>
+            </div>
+            <div class="card">
+                <h3>Practice with Others</h3>
+                <p>Find a study partner. Take turns as interviewer and candidate.</p>
+            </div>
+            <div class="card">
+                <h3>Use Platforms</h3>
+                <p>Pramp, Interviewing.io, HelloInterview for mock sessions.</p>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Common Mistakes to Avoid</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Anti-Patterns in System Design Interviews</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li><strong>Diving into details too early:</strong> Always start with requirements and high-level design</li>
+                    <li><strong>Not discussing trade-offs:</strong> Every choice has pros and cons - mention them</li>
+                    <li><strong>Over-engineering:</strong> Start simple, add complexity only when justified</li>
+                    <li><strong>Ignoring non-functional requirements:</strong> Scale, latency, availability matter</li>
+                    <li><strong>Monologue mode:</strong> Engage with the interviewer, ask questions</li>
+                    <li><strong>No estimation:</strong> Always do back-of-envelope calculations</li>
+                    <li><strong>Single point of failure:</strong> Always discuss redundancy</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-07.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Complete Course!</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What's the most important thing to do at the START of a system design interview?",
+                    options: ["Draw a diagram", "Clarify requirements", "Estimate capacity", "Discuss database choices"],
+                    correct: 1,
+                    explanation: "Always start by clarifying requirements. You need to understand what you're building before designing it."
+                },
+                {
+                    question: "Which is a common anti-pattern in system design interviews?",
+                    options: ["Discussing trade-offs", "Drawing diagrams", "Over-engineering from the start", "Asking clarifying questions"],
+                    correct: 2,
+                    explanation: "Over-engineering is a common mistake. Start simple and add complexity only when the requirements justify it."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 8);
+            alert('Congratulations! You have completed the System Design course!');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

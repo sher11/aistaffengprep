@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 2: Database Systems - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to System Design</a></nav>
+
+        <h1>Module 2: Database Systems</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Understand SQL vs NoSQL trade-offs and selection criteria</li>
+                <li>Master database sharding strategies</li>
+                <li>Learn replication patterns and consistency models</li>
+                <li>Apply indexing strategies for optimal performance</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">SQL vs NoSQL Decision</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>When to Choose Each</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TD
+    A[Data Model?] --> B{Structured with<br>relationships?}
+    B -->|Yes| C{ACID required?}
+    B -->|No| D{Flexible schema?}
+
+    C -->|Yes| E[SQL/RDBMS]
+    C -->|No| F[Consider both]
+
+    D -->|Yes| G{Query patterns?}
+    G -->|Key-Value| H[Redis, DynamoDB]
+    G -->|Document| I[MongoDB]
+    G -->|Wide-Column| J[Cassandra, HBase]
+    G -->|Graph| K[Neo4j]
+                    </div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Choose SQL When</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Choose NoSQL When</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Complex queries needed</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Simple key-value access</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">ACID required</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Massive scale needed</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Schema stability</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Flexible schema</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Joins are common</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Denormalized data OK</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Sharding Strategies</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Horizontal Partitioning</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TD
+    subgraph "Range-Based"
+        A[Users A-M] --> S1[(Shard 1)]
+        B[Users N-Z] --> S2[(Shard 2)]
+    end
+
+    subgraph "Hash-Based"
+        C[hash user_id mod N] --> S3[(Shard N)]
+    end
+
+    subgraph "Directory-Based"
+        D[Lookup Service] --> S4[(Shards)]
+    end
+                    </div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Strategy</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pros</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Cons</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Range</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Range queries easy</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hotspots possible</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hash</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Even distribution</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Range queries hard</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Directory</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Flexible</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Additional lookup</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Sharding Challenges</h4>
+                <ul>
+                    <li><strong>Cross-shard queries:</strong> Joins across shards are expensive</li>
+                    <li><strong>Rebalancing:</strong> Moving data when adding shards</li>
+                    <li><strong>Hotspots:</strong> Uneven data distribution</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Replication</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Replication Patterns</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    subgraph "Leader-Follower"
+        L1[Leader] --> F1[Follower 1]
+        L1 --> F2[Follower 2]
+    end
+
+    subgraph "Multi-Leader"
+        L2[Leader 1] <--> L3[Leader 2]
+    end
+
+    subgraph "Leaderless"
+        N1[Node 1] <--> N2[Node 2]
+        N2 <--> N3[Node 3]
+        N3 <--> N1
+    end
+                    </div>
+                </div>
+
+                <h4>Leader-Follower (Most Common)</h4>
+                <ul>
+                    <li>All writes go to leader</li>
+                    <li>Reads from leader or followers</li>
+                    <li>Simple, but leader is bottleneck</li>
+                </ul>
+
+                <h4>Multi-Leader</h4>
+                <ul>
+                    <li>Multiple nodes accept writes</li>
+                    <li>Conflict resolution needed</li>
+                    <li>Good for multi-datacenter</li>
+                </ul>
+
+                <h4>Leaderless (Dynamo-style)</h4>
+                <ul>
+                    <li>Any node accepts writes</li>
+                    <li>Quorum-based consistency</li>
+                    <li>High availability</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Indexing</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Index Types & Trade-offs</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>B-Tree Index</h4>
+                <ul>
+                    <li>Default for most RDBMS</li>
+                    <li>Good for range queries and equality</li>
+                    <li>O(log n) lookup</li>
+                </ul>
+
+                <h4>Hash Index</h4>
+                <ul>
+                    <li>O(1) for equality lookups</li>
+                    <li>No range query support</li>
+                    <li>Used in memory (Redis)</li>
+                </ul>
+
+                <h4>LSM-Tree (Log-Structured Merge)</h4>
+                <ul>
+                    <li>Optimized for writes</li>
+                    <li>Used in Cassandra, RocksDB</li>
+                    <li>Background compaction</li>
+                </ul>
+
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>Indexing Trade-off:</strong> More indexes = faster reads, slower writes, more storage
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-01.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "When should you choose a NoSQL database over SQL?",
+                    options: ["Complex joins are needed", "ACID transactions required", "Massive horizontal scaling needed", "Schema is very stable"],
+                    correct: 2,
+                    explanation: "NoSQL excels at horizontal scaling and flexible schemas, while SQL is better for complex queries and ACID requirements."
+                },
+                {
+                    question: "What is the main disadvantage of hash-based sharding?",
+                    options: ["Uneven distribution", "Range queries are difficult", "Too complex to implement", "Requires more storage"],
+                    correct: 1,
+                    explanation: "Hash-based sharding distributes data evenly but makes range queries difficult since related data may be on different shards."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 2);
+            alert('Module 2 marked as complete!');
+            window.location.href = 'module-03.html';
+        }
+    </script>
+</body>
+</html>

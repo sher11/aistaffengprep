@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 4: Storage & Data Processing - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to System Design</a></nav>
+
+        <h1>Module 4: Storage and Data Processing</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Understand distributed file systems (GFS, HDFS)</li>
+                <li>Learn message queue patterns and use cases</li>
+                <li>Master stream vs batch processing trade-offs</li>
+                <li>Apply async processing patterns in system design</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Message Queues</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Async Communication Patterns</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    P[Producers] --> Q[Message Queue]
+    Q --> C[Consumers]
+
+    subgraph "Benefits"
+        A[Decoupling]
+        B[Async Processing]
+        C2[Load Leveling]
+        D[Durability]
+    end
+                    </div>
+                </div>
+
+                <h4>Use Cases</h4>
+                <ul>
+                    <li><strong>Async task processing:</strong> Email sending, image processing</li>
+                    <li><strong>Event-driven architecture:</strong> Microservices communication</li>
+                    <li><strong>Rate limiting / smoothing:</strong> Handle traffic spikes</li>
+                    <li><strong>Cross-service communication:</strong> Loose coupling</li>
+                </ul>
+
+                <h4>Popular Systems</h4>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">System</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Kafka</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">High throughput, log-based, replay</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">RabbitMQ</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Feature-rich, traditional queue</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">SQS</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Managed, simple, AWS native</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Redis Pub/Sub</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fast, in-memory, ephemeral</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Kafka Deep Dive</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Log-Based Messaging</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TB
+    subgraph "Topic: orders"
+        subgraph "Partition 0"
+            P0[0 1 2 3 4 5]
+        end
+        subgraph "Partition 1"
+            P1[0 1 2 3]
+        end
+        subgraph "Partition 2"
+            P2[0 1 2 3 4]
+        end
+    end
+
+    Producer --> P0
+    Producer --> P1
+    Producer --> P2
+                    </div>
+                </div>
+
+                <h4>Key Design Decisions</h4>
+                <ul>
+                    <li><strong>Why Log-Based?</strong> Sequential writes (fast), consumers track own offset, replay capability</li>
+                    <li><strong>Partition Design:</strong> Ordering within partition, parallel consumption across partitions</li>
+                    <li><strong>Consumer Groups:</strong> Each partition consumed by one consumer in group</li>
+                </ul>
+
+                <h4>Guarantees</h4>
+                <ul>
+                    <li><strong>At-least-once:</strong> Default, may have duplicates</li>
+                    <li><strong>At-most-once:</strong> May lose messages</li>
+                    <li><strong>Exactly-once:</strong> With idempotent producers + transactions</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Stream vs Batch Processing</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Processing Paradigms</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Aspect</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Batch</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Stream</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Latency</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Minutes to hours</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Milliseconds to seconds</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Data</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Bounded (finite)</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Unbounded (infinite)</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Use case</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Reports, ETL, ML training</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Real-time analytics, alerts</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Tools</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Spark, Hadoop</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Kafka Streams, Flink</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Lambda Architecture</h4>
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TB
+    Data[Data] --> Batch[Batch Layer<br>Complete, accurate]
+    Data --> Speed[Speed Layer<br>Low latency, approximate]
+    Batch --> Serving[Serving Layer]
+    Speed --> Serving
+    Serving --> Query[Query]
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Distributed File Systems</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>GFS / HDFS Architecture</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart TB
+    Client[Client] --> Master[Master/NameNode]
+    Master --> C1[Chunk Server 1]
+    Master --> C2[Chunk Server 2]
+    Master --> C3[Chunk Server 3]
+
+    C1 <--> C2
+    C2 <--> C3
+                    </div>
+                </div>
+
+                <h4>Key Concepts</h4>
+                <ul>
+                    <li><strong>Chunks:</strong> Files split into large chunks (64-128 MB)</li>
+                    <li><strong>Replication:</strong> Each chunk stored on multiple servers (typically 3)</li>
+                    <li><strong>Master:</strong> Manages metadata, chunk locations</li>
+                    <li><strong>Append-optimized:</strong> Designed for large sequential writes</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-03.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What is the main advantage of using Kafka over traditional queues?",
+                    options: ["Simpler API", "Log-based with replay capability", "Lower cost", "Better security"],
+                    correct: 1,
+                    explanation: "Kafka's log-based design allows consumers to replay messages and track their own offsets."
+                },
+                {
+                    question: "When should you choose stream processing over batch?",
+                    options: ["When accuracy is critical", "When latency must be low", "When data is finite", "When simplicity is priority"],
+                    correct: 1,
+                    explanation: "Stream processing is ideal when you need low-latency, real-time results rather than waiting for batch jobs."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 4);
+            alert('Module 4 marked as complete!');
+            window.location.href = 'module-05.html';
+        }
+    </script>
+</body>
+</html>

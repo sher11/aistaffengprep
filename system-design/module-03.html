@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 3: Distributed Systems - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to System Design</a></nav>
+
+        <h1>Module 3: Distributed Systems Fundamentals</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Understand CAP theorem and its practical implications</li>
+                <li>Learn consensus algorithms (Paxos, Raft)</li>
+                <li>Master consistency models and their trade-offs</li>
+                <li>Apply distributed systems patterns in design</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">CAP Theorem</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>The CAP Trade-off</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph TD
+    subgraph "Pick Two"
+        C((Consistency))
+        A((Availability))
+        P((Partition Tolerance))
+    end
+
+    C --- CA[CA Systems<br>Traditional RDBMS]
+    C --- CP[CP Systems<br>MongoDB, HBase]
+    A --- AP[AP Systems<br>Cassandra, DynamoDB]
+                    </div>
+                </div>
+
+                <h4>Definitions</h4>
+                <ul>
+                    <li><strong>Consistency:</strong> Every read receives the most recent write</li>
+                    <li><strong>Availability:</strong> Every request receives a response</li>
+                    <li><strong>Partition Tolerance:</strong> System continues despite network failures</li>
+                </ul>
+
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>Reality:</strong> In distributed systems, partition tolerance is required. The real choice is between CP and AP during a partition.
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Choose Consistency (CP)</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Choose Availability (AP)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Financial transactions</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Social media feeds</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Inventory management</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Content delivery</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">User authentication</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Analytics / Logging</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Consistency Models</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Types of Consistency</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>Strong Consistency</h4>
+                <p>Read always returns the latest write. All nodes see the same data at the same time.</p>
+
+                <h4>Eventual Consistency</h4>
+                <p>Reads may return stale data, but eventually all replicas converge to the same value.</p>
+
+                <h4>Causal Consistency</h4>
+                <p>Preserves cause-effect relationships. If A causes B, everyone sees A before B.</p>
+
+                <h4>Read-Your-Writes</h4>
+                <p>User always sees their own writes immediately, even if other users see stale data.</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    Strong[Strong<br>Linearizable] --> Causal[Causal]
+    Causal --> RYW[Read-Your-Writes]
+    RYW --> Eventual[Eventual]
+
+    style Strong fill:#d1fae5
+    style Eventual fill:#fee2e2
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Consensus Algorithms</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Paxos and Raft</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>Why Consensus?</h4>
+                <p>Multiple nodes must agree on a value even if some nodes fail.</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+sequenceDiagram
+    participant L as Leader
+    participant R1 as Replica 1
+    participant R2 as Replica 2
+
+    L->>R1: Prepare(n)
+    L->>R2: Prepare(n)
+    R1-->>L: Promise(n)
+    R2-->>L: Promise(n)
+    L->>R1: Accept(n, v)
+    L->>R2: Accept(n, v)
+    R1-->>L: Accepted
+    R2-->>L: Accepted
+    L->>L: Commit
+                    </div>
+                </div>
+
+                <h4>Raft (Simpler Alternative)</h4>
+                <ul>
+                    <li><strong>Leader Election:</strong> One node becomes leader</li>
+                    <li><strong>Log Replication:</strong> Leader replicates entries to followers</li>
+                    <li><strong>Safety:</strong> Committed entries are durable</li>
+                </ul>
+
+                <div class="card mt-2">
+                    <strong>Used in:</strong> etcd, Consul, CockroachDB, TiDB
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Consistent Hashing</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Distributed Data Placement</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+graph TD
+    subgraph "Hash Ring"
+        N1((Node A))
+        N2((Node B))
+        N3((Node C))
+    end
+                    </div>
+                </div>
+
+                <h4>How It Works</h4>
+                <ol>
+                    <li>Hash nodes and keys onto a ring (0 to 2^n)</li>
+                    <li>Key belongs to first node clockwise</li>
+                    <li>Virtual nodes: Each physical node has multiple positions</li>
+                </ol>
+
+                <h4>Benefits</h4>
+                <ul>
+                    <li>Minimal remapping when nodes added/removed</li>
+                    <li>Even distribution with virtual nodes</li>
+                    <li>No central directory needed</li>
+                </ul>
+
+                <div class="card mt-2">
+                    <strong>Used in:</strong> Cassandra, DynamoDB, Memcached, Chord
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-02.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What does CAP theorem state?",
+                    options: [
+                        "You can have all three: Consistency, Availability, Partition tolerance",
+                        "You can only have two of: Consistency, Availability, Partition tolerance",
+                        "Consistency always beats Availability",
+                        "Partitions never happen in modern systems"
+                    ],
+                    correct: 1,
+                    explanation: "CAP theorem states that in the presence of network partitions, you must choose between consistency and availability."
+                },
+                {
+                    question: "What is the main benefit of consistent hashing?",
+                    options: ["Faster lookups", "Minimal remapping on node changes", "Better security", "Simpler implementation"],
+                    correct: 1,
+                    explanation: "Consistent hashing minimizes the amount of data that needs to be remapped when nodes are added or removed."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 3);
+            alert('Module 3 marked as complete!');
+            window.location.href = 'module-04.html';
+        }
+    </script>
+</body>
+</html>

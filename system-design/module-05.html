@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 5: Seminal Papers - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to System Design</a></nav>
+
+        <h1>Module 5: Seminal Papers Study</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Understand key concepts from foundational distributed systems papers</li>
+                <li>Learn how academic papers influenced real-world systems</li>
+                <li>Apply lessons from GFS, Dynamo, Kafka, Spanner</li>
+                <li>Connect paper concepts to interview discussions</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Paper Influence Map</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart TD
+    GFS[Google File System] --> HDFS[Hadoop HDFS]
+    GFS --> Colossus[Google Colossus]
+
+    Dynamo[Amazon Dynamo] --> Cassandra
+    Dynamo --> Riak
+    Dynamo --> DynamoDB[AWS DynamoDB]
+
+    BigTable[Google BigTable] --> HBase
+    BigTable --> Cassandra
+
+    Chubby[Google Chubby] --> ZK[Apache ZooKeeper]
+    ZK --> etcd
+
+    Spanner --> CockroachDB
+    Spanner --> YugabyteDB
+            </div>
+        </div>
+
+        <h2 class="mt-4">Amazon Dynamo</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Highly Available Key-Value Store</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>Problem Statement</h4>
+                <p>Build a highly available key-value store where availability trumps consistency.</p>
+
+                <h4>Design Principles</h4>
+                <ul>
+                    <li><strong>Always writable:</strong> Never reject writes</li>
+                    <li><strong>Incremental scalability:</strong> Add nodes without downtime</li>
+                    <li><strong>Symmetry:</strong> All nodes have equal responsibilities</li>
+                    <li><strong>Decentralization:</strong> No master/leader</li>
+                </ul>
+
+                <h4>Key Techniques</h4>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>Consistent Hashing</h3>
+                        <p>Virtual nodes for even distribution and faster rebalancing</p>
+                    </div>
+                    <div class="card">
+                        <h3>Quorum (N, W, R)</h3>
+                        <p>W + R > N for strong consistency; tune for availability</p>
+                    </div>
+                    <div class="card">
+                        <h3>Vector Clocks</h3>
+                        <p>Track causality, detect conflicts, client reconciliation</p>
+                    </div>
+                    <div class="card">
+                        <h3>Merkle Trees</h3>
+                        <p>Anti-entropy protocol for replica synchronization</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Google Spanner</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Globally Distributed Database</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>Innovation: TrueTime API</h4>
+                <p>GPS receivers + atomic clocks provide bounded time uncertainty (1-7ms).</p>
+
+                <div class="code-block">
+                    <code>
+now() -> TTInterval(earliest, latest)
+// Actual time is guaranteed within [earliest, latest]
+
+// Commit Wait:
+// 1. Assign commit timestamp
+// 2. Wait out uncertainty
+// 3. Commit is visible
+                    </code>
+                </div>
+
+                <h4>Key Features</h4>
+                <ul>
+                    <li><strong>External consistency:</strong> Transactions appear in timestamp order globally</li>
+                    <li><strong>Paxos-based replication:</strong> Strong consistency across datacenters</li>
+                    <li><strong>SQL support:</strong> Full relational features at scale</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Apache Kafka</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Distributed Log-Based Messaging</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>Why Log-Based?</h4>
+                <ul>
+                    <li>Sequential writes (extremely fast on disk)</li>
+                    <li>Consumers track their own offset</li>
+                    <li>Replay capability for reprocessing</li>
+                    <li>Multiple consumer groups independently</li>
+                </ul>
+
+                <h4>Partition Design</h4>
+                <ul>
+                    <li>Ordering guaranteed within partition</li>
+                    <li>Parallel consumption across partitions</li>
+                    <li>Key-based partitioning for related messages</li>
+                </ul>
+
+                <h4>Exactly-Once Semantics</h4>
+                <ul>
+                    <li><strong>Idempotent producers:</strong> Sequence numbers detect duplicates</li>
+                    <li><strong>Transactional writes:</strong> Atomic writes across partitions</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Facebook Memcache</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Scaling Memcached</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <h4>Challenge: Thundering Herd</h4>
+                <p>Cache miss causes many concurrent DB queries.</p>
+                <p><strong>Solution: Leases</strong> - Only one client fetches from DB, others wait.</p>
+
+                <h4>Challenge: Stale Sets</h4>
+                <p>Race between set and delete operations.</p>
+                <p><strong>Solution: Lease tokens</strong> - Delete invalidates outstanding leases.</p>
+
+                <h4>Challenge: Cold Cluster</h4>
+                <p>New cluster has empty cache.</p>
+                <p><strong>Solution:</strong> Cold cluster fetches from warm cluster first.</p>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Key Insights from Papers</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h3>Trade-offs are Fundamental</h3>
+                <p>Every design decision involves trade-offs. Be explicit about what you're giving up.</p>
+            </div>
+            <div class="card">
+                <h3>Simple Often Wins</h3>
+                <p>Start simple, add complexity only when needed. GFS used a single master for years.</p>
+            </div>
+            <div class="card">
+                <h3>Embrace Eventual Consistency</h3>
+                <p>For many use cases, it's acceptable and enables much better availability.</p>
+            </div>
+            <div class="card">
+                <h3>Idempotency is Key</h3>
+                <p>In distributed systems, operations should be safe to retry.</p>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-04.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What problem does Dynamo's 'always writable' design solve?",
+                    options: ["Better consistency", "Higher availability", "Lower latency", "Simpler code"],
+                    correct: 1,
+                    explanation: "Dynamo prioritizes availability - the system should never reject a write, even during failures."
+                },
+                {
+                    question: "What is TrueTime in Google Spanner?",
+                    options: ["A caching layer", "An API providing bounded time uncertainty", "A consensus algorithm", "A query optimizer"],
+                    correct: 1,
+                    explanation: "TrueTime uses GPS and atomic clocks to provide bounded time uncertainty, enabling external consistency."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 5);
+            alert('Module 5 marked as complete!');
+            window.location.href = 'module-06.html';
+        }
+    </script>
+</body>
+</html>
