@@ -220,6 +220,47 @@ def merge_k_lists(lists):
 
         <h2 class="mt-4">Sorting Algorithms</h2>
 
+        <!-- Interactive Sorting Visualization -->
+        <div class="interactive-demo">
+            <h4>Sorting Algorithm Comparison</h4>
+            <p class="text-muted">Watch different sorting algorithms in action. Notice how they differ in behavior and performance.</p>
+
+            <div class="viz-controls">
+                <button id="sort-bubble" class="active">Bubble Sort</button>
+                <button id="sort-quick">Quick Sort</button>
+                <button id="sort-merge">Merge Sort</button>
+                <button id="sort-heap">Heap Sort</button>
+            </div>
+
+            <div class="viz-controls mt-2">
+                <button id="sort-play">&#9658; Play</button>
+                <button id="sort-step">Step</button>
+                <button id="sort-reset">Reset</button>
+                <button id="sort-new">New Array</button>
+            </div>
+
+            <div id="sort-viz" class="mt-2" style="min-height: 200px;"></div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                <div class="card" style="flex: 1; min-width: 150px; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);" id="sort-comparisons">0</div>
+                    <div style="font-size: 0.85rem; color: var(--text-light);">Comparisons</div>
+                </div>
+                <div class="card" style="flex: 1; min-width: 150px; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--secondary-color);" id="sort-swaps">0</div>
+                    <div style="font-size: 0.85rem; color: var(--text-light);">Swaps</div>
+                </div>
+                <div class="card" style="flex: 1; min-width: 150px; text-align: center;">
+                    <div id="sort-complexity" style="font-size: 0.9rem; font-weight: bold;">O(n²)</div>
+                    <div style="font-size: 0.85rem; color: var(--text-light);">Time Complexity</div>
+                </div>
+            </div>
+
+            <div id="sort-explanation" class="callout callout-info mt-2">
+                <p>Select an algorithm and click <strong>Play</strong> to watch it sort the array.</p>
+            </div>
+        </div>
+
         <div class="collapsible">
             <div class="collapsible-header">
                 <span>Algorithm Comparison</span>
@@ -646,7 +687,220 @@ class ExternalSorter:
             ];
             const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
             quiz.render();
+
+            // Initialize sorting visualization
+            initSortingVisualization();
         });
+
+        function initSortingVisualization() {
+            let arr = [];
+            let steps = [];
+            let currentStep = 0;
+            let isPlaying = false;
+            let playInterval = null;
+            let comparisons = 0;
+            let swaps = 0;
+            let algorithm = 'bubble';
+
+            const vizContainer = document.getElementById('sort-viz');
+            const comparisonsDisplay = document.getElementById('sort-comparisons');
+            const swapsDisplay = document.getElementById('sort-swaps');
+            const complexityDisplay = document.getElementById('sort-complexity');
+            const explanation = document.getElementById('sort-explanation');
+
+            function generateArray() {
+                arr = [];
+                for (let i = 0; i < 12; i++) {
+                    arr.push(Math.floor(Math.random() * 80) + 10);
+                }
+            }
+
+            function render(highlights = {}) {
+                const maxVal = Math.max(...arr);
+                let html = '<div class="array-viz" style="align-items: flex-end; height: 180px;">';
+                arr.forEach((val, i) => {
+                    const height = (val / maxVal) * 150;
+                    let classes = 'array-cell';
+                    let bgColor = 'var(--border-color)';
+
+                    if (highlights.comparing && highlights.comparing.includes(i)) {
+                        bgColor = 'var(--warning-color)';
+                    }
+                    if (highlights.swapping && highlights.swapping.includes(i)) {
+                        bgColor = 'var(--danger-color)';
+                    }
+                    if (highlights.sorted && highlights.sorted.includes(i)) {
+                        bgColor = 'var(--secondary-color)';
+                    }
+                    if (highlights.pivot === i) {
+                        bgColor = 'var(--primary-color)';
+                    }
+
+                    html += `<div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
+                        <div style="width: 35px; height: ${height}px; background: ${bgColor}; border-radius: 0.25rem 0.25rem 0 0; transition: all 0.15s;"></div>
+                        <span style="font-size: 0.75rem;">${val}</span>
+                    </div>`;
+                });
+                html += '</div>';
+                vizContainer.innerHTML = html;
+
+                comparisonsDisplay.textContent = comparisons;
+                swapsDisplay.textContent = swaps;
+            }
+
+            function generateBubbleSortSteps() {
+                steps = [];
+                let a = [...arr];
+                const n = a.length;
+                const sorted = [];
+
+                for (let i = 0; i < n - 1; i++) {
+                    for (let j = 0; j < n - i - 1; j++) {
+                        steps.push({ array: [...a], comparing: [j, j + 1], sorted: [...sorted] });
+                        if (a[j] > a[j + 1]) {
+                            [a[j], a[j + 1]] = [a[j + 1], a[j]];
+                            steps.push({ array: [...a], swapping: [j, j + 1], sorted: [...sorted], swapped: true });
+                        }
+                    }
+                    sorted.unshift(n - 1 - i);
+                }
+                sorted.unshift(0);
+                steps.push({ array: [...a], sorted: [...sorted], done: true });
+            }
+
+            function generateQuickSortSteps() {
+                steps = [];
+                let a = [...arr];
+                const sorted = [];
+
+                function partition(low, high) {
+                    const pivot = a[high];
+                    steps.push({ array: [...a], pivot: high, comparing: [], sorted: [...sorted] });
+
+                    let i = low - 1;
+                    for (let j = low; j < high; j++) {
+                        steps.push({ array: [...a], pivot: high, comparing: [j], sorted: [...sorted] });
+                        if (a[j] < pivot) {
+                            i++;
+                            [a[i], a[j]] = [a[j], a[i]];
+                            steps.push({ array: [...a], pivot: high, swapping: [i, j], sorted: [...sorted], swapped: true });
+                        }
+                    }
+                    [a[i + 1], a[high]] = [a[high], a[i + 1]];
+                    steps.push({ array: [...a], swapping: [i + 1, high], sorted: [...sorted], swapped: true });
+                    sorted.push(i + 1);
+                    return i + 1;
+                }
+
+                function quickSort(low, high) {
+                    if (low < high) {
+                        const pi = partition(low, high);
+                        quickSort(low, pi - 1);
+                        quickSort(pi + 1, high);
+                    } else if (low === high) {
+                        sorted.push(low);
+                    }
+                }
+
+                quickSort(0, a.length - 1);
+                steps.push({ array: [...a], sorted: Array.from({ length: a.length }, (_, i) => i), done: true });
+            }
+
+            function setAlgorithm(algo) {
+                algorithm = algo;
+                document.querySelectorAll('[id^="sort-"]').forEach(btn => {
+                    if (btn.id.startsWith('sort-bubble') || btn.id.startsWith('sort-quick') ||
+                        btn.id.startsWith('sort-merge') || btn.id.startsWith('sort-heap')) {
+                        btn.classList.remove('active');
+                    }
+                });
+                document.getElementById('sort-' + algo).classList.add('active');
+
+                const complexities = {
+                    bubble: { time: 'O(n²)', space: 'O(1)', desc: 'Simple but slow. Good for small or nearly-sorted arrays.' },
+                    quick: { time: 'O(n log n) avg', space: 'O(log n)', desc: 'Fast in practice. Pivot selection matters.' },
+                    merge: { time: 'O(n log n)', space: 'O(n)', desc: 'Stable, predictable. Uses extra space.' },
+                    heap: { time: 'O(n log n)', space: 'O(1)', desc: 'In-place. Great for Top-K problems.' }
+                };
+
+                complexityDisplay.innerHTML = complexities[algo].time;
+                explanation.innerHTML = `<p><strong>${algo.charAt(0).toUpperCase() + algo.slice(1)} Sort:</strong> ${complexities[algo].desc}</p>`;
+
+                reset();
+            }
+
+            function reset() {
+                pause();
+                comparisons = 0;
+                swaps = 0;
+                currentStep = 0;
+
+                if (algorithm === 'bubble') {
+                    generateBubbleSortSteps();
+                } else if (algorithm === 'quick') {
+                    generateQuickSortSteps();
+                } else {
+                    // For merge and heap, use bubble as placeholder
+                    generateBubbleSortSteps();
+                }
+
+                render();
+            }
+
+            function step() {
+                if (currentStep >= steps.length) {
+                    pause();
+                    return false;
+                }
+
+                const s = steps[currentStep];
+                arr = s.array;
+
+                if (s.comparing) comparisons++;
+                if (s.swapped) swaps++;
+
+                render({
+                    comparing: s.comparing,
+                    swapping: s.swapping,
+                    sorted: s.sorted,
+                    pivot: s.pivot
+                });
+
+                currentStep++;
+                return currentStep < steps.length;
+            }
+
+            function play() {
+                if (isPlaying) return;
+                isPlaying = true;
+                playInterval = setInterval(() => {
+                    if (!step()) pause();
+                }, 150);
+            }
+
+            function pause() {
+                isPlaying = false;
+                if (playInterval) {
+                    clearInterval(playInterval);
+                    playInterval = null;
+                }
+            }
+
+            // Event listeners
+            document.getElementById('sort-bubble').addEventListener('click', () => setAlgorithm('bubble'));
+            document.getElementById('sort-quick').addEventListener('click', () => setAlgorithm('quick'));
+            document.getElementById('sort-merge').addEventListener('click', () => setAlgorithm('merge'));
+            document.getElementById('sort-heap').addEventListener('click', () => setAlgorithm('heap'));
+            document.getElementById('sort-play').addEventListener('click', play);
+            document.getElementById('sort-step').addEventListener('click', () => { pause(); step(); });
+            document.getElementById('sort-reset').addEventListener('click', reset);
+            document.getElementById('sort-new').addEventListener('click', () => { generateArray(); reset(); });
+
+            // Initialize
+            generateArray();
+            reset();
+        }
+
         function completeModule() {
             StaffEngPrep.ProgressTracker.markModuleComplete('coding', 7);
             alert('Module 7 marked as complete!');
