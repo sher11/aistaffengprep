@@ -167,6 +167,41 @@ def build_graph(edges, directed=False):
             </div>
         </div>
 
+        <!-- Interactive BFS vs DFS Visualization -->
+        <h2 class="mt-4">Interactive: BFS vs DFS Visualization</h2>
+
+        <div class="interactive-demo">
+            <h4>Watch BFS and DFS in Action</h4>
+            <p class="text-muted">See the difference between breadth-first and depth-first traversal on the same graph.</p>
+
+            <div class="viz-controls">
+                <button id="graph-bfs" class="active">BFS</button>
+                <button id="graph-dfs">DFS</button>
+                <button id="graph-play">&#9658; Play</button>
+                <button id="graph-step">Step</button>
+                <button id="graph-reset">Reset</button>
+            </div>
+
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap; margin-top: 1rem;">
+                <div id="graph-viz" style="flex: 1; min-width: 300px; min-height: 250px; background: var(--card-bg); border-radius: 0.5rem; padding: 1rem;"></div>
+                <div style="flex: 1; min-width: 200px;">
+                    <div class="card">
+                        <h5>Traversal Order</h5>
+                        <div id="traversal-order" style="font-family: monospace; min-height: 30px;"></div>
+                    </div>
+                    <div class="card mt-2">
+                        <h5>Queue/Stack</h5>
+                        <div id="traversal-queue" style="font-family: monospace; min-height: 30px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="graph-explanation" class="callout callout-info mt-2">
+                <p><strong>BFS</strong> explores neighbors first (level by level), using a <strong>queue</strong>.</p>
+                <p><strong>DFS</strong> explores as deep as possible first, using a <strong>stack</strong> (or recursion).</p>
+            </div>
+        </div>
+
         <!-- DFS Section -->
         <h2 class="mt-4">Depth-First Search (DFS)</h2>
 
@@ -771,7 +806,182 @@ class GraphPartitioner:
 
             const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
             quiz.render();
+
+            // Initialize BFS/DFS visualization
+            initGraphVisualization();
         });
+
+        function initGraphVisualization() {
+            // Sample graph
+            const nodes = ['A', 'B', 'C', 'D', 'E', 'F'];
+            const edges = [
+                ['A', 'B'], ['A', 'C'], ['B', 'D'], ['B', 'E'], ['C', 'F'], ['D', 'F']
+            ];
+
+            // Build adjacency list
+            const graph = {};
+            nodes.forEach(n => graph[n] = []);
+            edges.forEach(([u, v]) => {
+                graph[u].push(v);
+                graph[v].push(u);
+            });
+
+            let mode = 'bfs';
+            let visited = new Set();
+            let order = [];
+            let queue = [];
+            let isPlaying = false;
+            let playInterval = null;
+
+            const vizContainer = document.getElementById('graph-viz');
+            const orderDisplay = document.getElementById('traversal-order');
+            const queueDisplay = document.getElementById('traversal-queue');
+            const explanation = document.getElementById('graph-explanation');
+
+            // Node positions (pre-computed for nice layout)
+            const positions = {
+                'A': { x: 60, y: 60 },
+                'B': { x: 180, y: 40 },
+                'C': { x: 180, y: 140 },
+                'D': { x: 300, y: 40 },
+                'E': { x: 300, y: 100 },
+                'F': { x: 300, y: 160 }
+            };
+
+            function render() {
+                let svg = '<svg width="100%" height="200" viewBox="0 0 380 200">';
+
+                // Draw edges
+                edges.forEach(([u, v]) => {
+                    const p1 = positions[u];
+                    const p2 = positions[v];
+                    svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}"
+                            stroke="#ddd" stroke-width="2"/>`;
+                });
+
+                // Draw nodes
+                nodes.forEach(node => {
+                    const pos = positions[node];
+                    let fill = '#f0f0f0';
+                    let stroke = '#ccc';
+
+                    if (visited.has(node)) {
+                        fill = 'rgba(16, 185, 129, 0.3)';
+                        stroke = '#10b981';
+                    }
+                    if (queue.includes(node) && !visited.has(node)) {
+                        fill = 'rgba(245, 158, 11, 0.3)';
+                        stroke = '#f59e0b';
+                    }
+                    if (order.length > 0 && order[order.length - 1] === node) {
+                        fill = 'rgba(37, 99, 235, 0.3)';
+                        stroke = '#2563eb';
+                    }
+
+                    svg += `<circle cx="${pos.x}" cy="${pos.y}" r="25" fill="${fill}" stroke="${stroke}" stroke-width="3"/>`;
+                    svg += `<text x="${pos.x}" y="${pos.y}" text-anchor="middle" dominant-baseline="central" font-weight="bold" font-size="16">${node}</text>`;
+                });
+
+                svg += '</svg>';
+                vizContainer.innerHTML = svg;
+
+                orderDisplay.textContent = order.join(' → ') || '(empty)';
+                queueDisplay.textContent = queue.join(', ') || '(empty)';
+            }
+
+            function reset() {
+                pause();
+                visited = new Set();
+                order = [];
+                queue = ['A'];
+                render();
+            }
+
+            function step() {
+                if (queue.length === 0) {
+                    pause();
+                    explanation.innerHTML = '<p><strong>Complete!</strong> All reachable nodes have been visited.</p>';
+                    return false;
+                }
+
+                let current;
+                if (mode === 'bfs') {
+                    current = queue.shift();
+                } else {
+                    current = queue.pop();
+                }
+
+                if (visited.has(current)) {
+                    return true; // Skip already visited, continue
+                }
+
+                visited.add(current);
+                order.push(current);
+
+                // Add neighbors
+                const neighbors = graph[current].filter(n => !visited.has(n));
+                if (mode === 'bfs') {
+                    neighbors.forEach(n => {
+                        if (!queue.includes(n)) queue.push(n);
+                    });
+                } else {
+                    neighbors.reverse().forEach(n => {
+                        if (!queue.includes(n)) queue.push(n);
+                    });
+                }
+
+                render();
+
+                explanation.innerHTML = `<p>Visiting <strong>${current}</strong>. ${mode === 'bfs' ? 'Queue' : 'Stack'}: [${queue.join(', ')}]</p>`;
+
+                return queue.length > 0;
+            }
+
+            function play() {
+                if (isPlaying) return;
+                isPlaying = true;
+                playInterval = setInterval(() => {
+                    if (!step()) {
+                        pause();
+                    }
+                }, 800);
+            }
+
+            function pause() {
+                isPlaying = false;
+                if (playInterval) {
+                    clearInterval(playInterval);
+                    playInterval = null;
+                }
+            }
+
+            // Event listeners
+            document.getElementById('graph-bfs').addEventListener('click', function() {
+                mode = 'bfs';
+                document.getElementById('graph-bfs').classList.add('active');
+                document.getElementById('graph-dfs').classList.remove('active');
+                reset();
+                explanation.innerHTML = '<p><strong>BFS</strong> uses a <strong>queue</strong> (FIFO). It explores all neighbors at depth d before moving to depth d+1.</p>';
+            });
+
+            document.getElementById('graph-dfs').addEventListener('click', function() {
+                mode = 'dfs';
+                document.getElementById('graph-dfs').classList.add('active');
+                document.getElementById('graph-bfs').classList.remove('active');
+                reset();
+                explanation.innerHTML = '<p><strong>DFS</strong> uses a <strong>stack</strong> (LIFO). It goes as deep as possible before backtracking.</p>';
+            });
+
+            document.getElementById('graph-play').addEventListener('click', play);
+            document.getElementById('graph-step').addEventListener('click', () => {
+                pause();
+                step();
+            });
+            document.getElementById('graph-reset').addEventListener('click', reset);
+
+            // Initial render
+            reset();
+        }
 
         function completeModule() {
             StaffEngPrep.ProgressTracker.markModuleComplete('coding', 4);
