@@ -251,6 +251,62 @@
                 </div>
             </div>
 
+            <!-- Interactive Capacity Calculator -->
+            <h2 class="mt-4">Interactive: Capacity Estimation Calculator</h2>
+
+            <div class="interactive-demo">
+                <h4>Back-of-Envelope Calculator</h4>
+                <p class="text-muted">Enter your requirements and see instant calculations for storage, bandwidth, and QPS.</p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0;">
+                    <div class="form-group">
+                        <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Daily Active Users</label>
+                        <input type="number" id="calc-dau" value="100000000" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.25rem;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Actions per User per Day</label>
+                        <input type="number" id="calc-actions" value="10" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.25rem;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Avg Object Size (bytes)</label>
+                        <input type="number" id="calc-size" value="1000" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.25rem;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Read:Write Ratio</label>
+                        <input type="number" id="calc-ratio" value="10" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.25rem;">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="calculateCapacity()">Calculate</button>
+
+                <div id="calc-results" class="mt-3" style="display: none;">
+                    <h5>Results</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                        <div class="card" style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);" id="result-write-qps">0</div>
+                            <div style="font-size: 0.85rem; color: var(--text-light);">Write QPS</div>
+                        </div>
+                        <div class="card" style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);" id="result-read-qps">0</div>
+                            <div style="font-size: 0.85rem; color: var(--text-light);">Read QPS</div>
+                        </div>
+                        <div class="card" style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--secondary-color);" id="result-daily-storage">0</div>
+                            <div style="font-size: 0.85rem; color: var(--text-light);">Daily Storage</div>
+                        </div>
+                        <div class="card" style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--secondary-color);" id="result-yearly-storage">0</div>
+                            <div style="font-size: 0.85rem; color: var(--text-light);">Yearly Storage</div>
+                        </div>
+                        <div class="card" style="text-align: center; padding: 1rem;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning-color);" id="result-bandwidth">0</div>
+                            <div style="font-size: 0.85rem; color: var(--text-light);">Peak Bandwidth</div>
+                        </div>
+                    </div>
+                    <div class="callout callout-info mt-2" id="calc-breakdown"></div>
+                </div>
+            </div>
+
             <h2 class="mt-4">Example: Twitter Capacity Estimation</h2>
 
             <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
@@ -276,6 +332,11 @@
                 - Write: 200 TB / 86,400s ≈ 2.3 GB/s<br>
                 - Read (10:1 ratio): ~23 GB/s
             </div>
+
+            <!-- Flashcards for Memorization -->
+            <h2 class="mt-4">Flashcards: Numbers to Memorize</h2>
+            <p class="text-muted">Flip through these cards regularly to internalize key numbers.</p>
+            <div id="numbers-flashcards" class="mt-2"></div>
 
             <h2 class="mt-4">Self-Check Quiz</h2>
             <div class="quiz-container" id="module-quiz"></div>
@@ -333,7 +394,123 @@
             ];
             const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
             quiz.render();
+
+            // Flashcards for key numbers
+            const flashcards = new StaffEngPrep.Flashcards('numbers-flashcards', [
+                {
+                    question: "Network latency within same datacenter?",
+                    answer: "~0.5 ms (500 microseconds)",
+                    explanation: "This is crucial for microservices communication estimates."
+                },
+                {
+                    question: "Network latency across regions (e.g., US East to US West)?",
+                    answer: "~150 ms",
+                    explanation: "Limited by speed of light. This is why geo-replication matters."
+                },
+                {
+                    question: "How many seconds in a day?",
+                    answer: "86,400 seconds (~100K for estimation)",
+                    explanation: "24 × 60 × 60 = 86,400. Round to 100K for quick math."
+                },
+                {
+                    question: "1 million requests per day = ? QPS",
+                    answer: "~12 QPS",
+                    explanation: "1M / 86,400 ≈ 12. Remember: 1M/day ≈ 12/sec"
+                },
+                {
+                    question: "Redis throughput?",
+                    answer: "100,000+ ops/sec",
+                    explanation: "Redis is extremely fast for in-memory operations."
+                },
+                {
+                    question: "MySQL throughput (simple queries)?",
+                    answer: "1,000 - 5,000 QPS",
+                    explanation: "Depends on query complexity and hardware. Plan for lower end."
+                },
+                {
+                    question: "SSD vs HDD speed ratio?",
+                    answer: "SSD is ~100x faster than HDD",
+                    explanation: "SSD random read: 150μs, HDD seek: 10ms"
+                },
+                {
+                    question: "Memory vs SSD speed ratio?",
+                    answer: "Memory is ~1000x faster than SSD",
+                    explanation: "Main memory: 100ns, SSD: 150μs"
+                }
+            ]);
+            flashcards.render();
         });
+
+        // Capacity Calculator
+        function calculateCapacity() {
+            const dau = parseInt(document.getElementById('calc-dau').value) || 0;
+            const actions = parseInt(document.getElementById('calc-actions').value) || 0;
+            const size = parseInt(document.getElementById('calc-size').value) || 0;
+            const ratio = parseInt(document.getElementById('calc-ratio').value) || 1;
+
+            const secondsPerDay = 86400;
+
+            // Calculate QPS
+            const totalDailyActions = dau * actions;
+            const writeQps = Math.round(totalDailyActions / secondsPerDay);
+            const peakWriteQps = Math.round(writeQps * 2); // 2x for peak
+            const readQps = Math.round(writeQps * ratio);
+            const peakReadQps = Math.round(readQps * 2);
+
+            // Calculate Storage
+            const dailyStorageBytes = totalDailyActions * size;
+            const yearlyStorageBytes = dailyStorageBytes * 365;
+
+            // Calculate Bandwidth (peak)
+            const peakBandwidthBps = (peakWriteQps + peakReadQps) * size;
+
+            // Format results
+            document.getElementById('result-write-qps').textContent = formatNumber(peakWriteQps);
+            document.getElementById('result-read-qps').textContent = formatNumber(peakReadQps);
+            document.getElementById('result-daily-storage').textContent = formatBytes(dailyStorageBytes);
+            document.getElementById('result-yearly-storage').textContent = formatBytes(yearlyStorageBytes);
+            document.getElementById('result-bandwidth').textContent = formatBytes(peakBandwidthBps) + '/s';
+
+            // Breakdown
+            document.getElementById('calc-breakdown').innerHTML = `
+                <strong>Calculation Breakdown:</strong><br>
+                <br>
+                <strong>Write Operations:</strong><br>
+                - Daily actions = ${formatNumber(dau)} users × ${actions} actions = ${formatNumber(totalDailyActions)}/day<br>
+                - Average write QPS = ${formatNumber(totalDailyActions)} / 86,400 = ${formatNumber(writeQps)} QPS<br>
+                - Peak write QPS (2x) = ${formatNumber(peakWriteQps)} QPS<br>
+                <br>
+                <strong>Read Operations:</strong><br>
+                - Read QPS = Write QPS × ${ratio} = ${formatNumber(readQps)} QPS<br>
+                - Peak read QPS (2x) = ${formatNumber(peakReadQps)} QPS<br>
+                <br>
+                <strong>Storage:</strong><br>
+                - Daily = ${formatNumber(totalDailyActions)} × ${formatBytes(size)} = ${formatBytes(dailyStorageBytes)}<br>
+                - Yearly = ${formatBytes(dailyStorageBytes)} × 365 = ${formatBytes(yearlyStorageBytes)}<br>
+                <br>
+                <strong>Servers Needed (rough estimate):</strong><br>
+                - Web servers (at 5K RPS each): ~${Math.ceil((peakWriteQps + peakReadQps) / 5000)} servers<br>
+                - DB replicas (at 3K QPS each): ~${Math.ceil(peakReadQps / 3000)} read replicas
+            `;
+
+            document.getElementById('calc-results').style.display = 'block';
+        }
+
+        function formatNumber(num) {
+            if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        function formatBytes(bytes) {
+            if (bytes >= 1e15) return (bytes / 1e15).toFixed(1) + ' PB';
+            if (bytes >= 1e12) return (bytes / 1e12).toFixed(1) + ' TB';
+            if (bytes >= 1e9) return (bytes / 1e9).toFixed(1) + ' GB';
+            if (bytes >= 1e6) return (bytes / 1e6).toFixed(1) + ' MB';
+            if (bytes >= 1e3) return (bytes / 1e3).toFixed(1) + ' KB';
+            return bytes + ' B';
+        }
 
         function completeModule() {
             StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 10);
