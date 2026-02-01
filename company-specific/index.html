@@ -24,6 +24,102 @@
         <h1>Company-Specific Preparation</h1>
         <p class="text-muted mb-3">Targeted preparation for top tech companies with unique interview styles.</p>
 
+        <!-- Progress -->
+        <div class="progress-container">
+            <div class="progress-header">
+                <span><strong>Course Progress</strong></span>
+                <span class="progress-label" id="progress-label">0% Complete</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Learning Path Diagram -->
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart LR
+    subgraph "Foundation"
+        M1[Research Framework]
+        M2[Interview Patterns]
+    end
+
+    subgraph "Style Groups"
+        M3[Non-LeetCode]
+        M4[Assessment-First]
+        M5[Systems-Heavy]
+    end
+
+    subgraph "Application"
+        M6[Value Alignment]
+    end
+
+    M1 --> M2
+    M2 --> M3
+    M2 --> M4
+    M2 --> M5
+    M3 --> M6
+    M4 --> M6
+    M5 --> M6
+            </div>
+        </div>
+
+        <!-- Modules List -->
+        <h2 class="mt-4 mb-3">Modules</h2>
+
+        <div class="card">
+            <ul class="module-list">
+                <li class="module-item" onclick="window.location='module-01.html'">
+                    <div class="module-number">1</div>
+                    <div class="module-info">
+                        <div class="module-title">Company Research Framework</div>
+                        <div class="module-desc">How to research any company effectively</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item" onclick="window.location='module-02.html'">
+                    <div class="module-number">2</div>
+                    <div class="module-info">
+                        <div class="module-title">Interview Process Patterns</div>
+                        <div class="module-desc">Understanding different interview styles</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item" onclick="window.location='module-03.html'">
+                    <div class="module-number">3</div>
+                    <div class="module-info">
+                        <div class="module-title">Non-LeetCode Companies</div>
+                        <div class="module-desc">Stripe, Netflix, OpenAI preparation</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item" onclick="window.location='module-04.html'">
+                    <div class="module-number">4</div>
+                    <div class="module-info">
+                        <div class="module-title">Assessment-First Companies</div>
+                        <div class="module-desc">Anthropic, CodeSignal prep</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item" onclick="window.location='module-05.html'">
+                    <div class="module-number">5</div>
+                    <div class="module-info">
+                        <div class="module-title">Systems-Heavy Companies</div>
+                        <div class="module-desc">Databricks, Snowflake preparation</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item" onclick="window.location='module-06.html'">
+                    <div class="module-number">6</div>
+                    <div class="module-info">
+                        <div class="module-title">Culture & Value Alignment</div>
+                        <div class="module-desc">Mapping stories to company values</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+            </ul>
+        </div>
+
         <!-- Company Style Groups -->
         <h2 class="mt-4 mb-3">Interview Style Groups</h2>
 
@@ -47,167 +143,39 @@ flowchart TD
             </div>
         </div>
 
-        <!-- Company Cards -->
-        <h2 class="mt-4 mb-3">Company Profiles</h2>
+        <!-- Company Quick Cards -->
+        <h2 class="mt-4 mb-3">Company Quick Reference</h2>
 
         <div class="card-grid">
-            <!-- Stripe -->
             <div class="card">
                 <h3>Stripe</h3>
-                <p><strong>Style:</strong> Practical, real-world problems</p>
-                <p class="text-muted">Unique rounds: Integration, Bug Squash</p>
-                <div class="collapsible mt-2">
-                    <div class="collapsible-header">
-                        <span>Key Topics</span>
-                        <span class="collapsible-icon">&#9660;</span>
-                    </div>
-                    <div class="collapsible-content">
-                        <ul>
-                            <li>Currency conversion systems</li>
-                            <li>JSON/HTTP handling</li>
-                            <li>Ledger API design</li>
-                            <li>Code debugging</li>
-                        </ul>
-                    </div>
-                </div>
+                <p><strong>Style:</strong> Practical, non-LeetCode</p>
+                <p class="text-muted">Unique: Integration, Bug Squash rounds</p>
             </div>
-
-            <!-- Netflix -->
             <div class="card">
                 <h3>Netflix</h3>
-                <p><strong>Style:</strong> Code hygiene, articulation focus</p>
-                <p class="text-muted">Team-specific interviews</p>
-                <div class="collapsible mt-2">
-                    <div class="collapsible-header">
-                        <span>Key Topics</span>
-                        <span class="collapsible-icon">&#9660;</span>
-                    </div>
-                    <div class="collapsible-content">
-                        <ul>
-                            <li>Duplicate detection</li>
-                            <li>Latency percentiles</li>
-                            <li>Cache implementations</li>
-                            <li>Culture deck alignment</li>
-                        </ul>
-                    </div>
-                </div>
+                <p><strong>Style:</strong> Code hygiene focus</p>
+                <p class="text-muted">Key: Freedom & Responsibility culture</p>
             </div>
-
-            <!-- OpenAI -->
             <div class="card">
                 <h3>OpenAI</h3>
-                <p><strong>Style:</strong> Multi-part questions, high throughput</p>
-                <p class="text-muted">Complete more parts = better</p>
-                <div class="collapsible mt-2">
-                    <div class="collapsible-header">
-                        <span>Key Topics</span>
-                        <span class="collapsible-icon">&#9660;</span>
-                    </div>
-                    <div class="collapsible-content">
-                        <ul>
-                            <li>Resumable iterators</li>
-                            <li>In-memory SQL database</li>
-                            <li>Versioned KV store</li>
-                            <li>Thread-safe implementations</li>
-                        </ul>
-                    </div>
-                </div>
+                <p><strong>Style:</strong> Multi-part questions</p>
+                <p class="text-muted">Focus: Completion rate, clean code</p>
             </div>
-
-            <!-- Anthropic -->
             <div class="card">
                 <h3>Anthropic</h3>
-                <p><strong>Style:</strong> CodeSignal 4-level challenges</p>
-                <p class="text-muted">Target score: 520+ / 600</p>
-                <div class="collapsible mt-2">
-                    <div class="collapsible-header">
-                        <span>Key Topics</span>
-                        <span class="collapsible-icon">&#9660;</span>
-                    </div>
-                    <div class="collapsible-content">
-                        <ul>
-                            <li>Inventory management</li>
-                            <li>Chat message history</li>
-                            <li>Multi-level progression</li>
-                            <li>Clean, modular code</li>
-                        </ul>
-                    </div>
-                </div>
+                <p><strong>Style:</strong> CodeSignal first</p>
+                <p class="text-muted">Target: 520+/600 to advance</p>
             </div>
-
-            <!-- Databricks -->
             <div class="card">
                 <h3>Databricks</h3>
-                <p><strong>Style:</strong> Deep systems understanding</p>
-                <p class="text-muted">High technical bar</p>
-                <div class="collapsible mt-2">
-                    <div class="collapsible-header">
-                        <span>Key Topics</span>
-                        <span class="collapsible-icon">&#9660;</span>
-                    </div>
-                    <div class="collapsible-content">
-                        <ul>
-                            <li>Multi-modal pathfinding</li>
-                            <li>Snapshot data structures</li>
-                            <li>Concurrent file writing</li>
-                            <li>KV store design</li>
-                        </ul>
-                    </div>
-                </div>
+                <p><strong>Style:</strong> Systems-heavy</p>
+                <p class="text-muted">Focus: Deep technical knowledge</p>
             </div>
-
-            <!-- Snowflake -->
             <div class="card">
                 <h3>Snowflake</h3>
-                <p><strong>Style:</strong> DB/Transaction focus + Panel</p>
-                <p class="text-muted">30-min presentation round</p>
-                <div class="collapsible mt-2">
-                    <div class="collapsible-header">
-                        <span>Key Topics</span>
-                        <span class="collapsible-icon">&#9660;</span>
-                    </div>
-                    <div class="collapsible-content">
-                        <ul>
-                            <li>KV store with transactions</li>
-                            <li>Cron expression parser</li>
-                            <li>Access control systems</li>
-                            <li>Panel presentation skills</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Research Checklist -->
-        <h2 class="mt-4 mb-3">Company Research Checklist</h2>
-
-        <div class="card">
-            <h4>Before Your Interview</h4>
-            <div class="review-schedule">
-                <div class="review-item">
-                    <input type="checkbox" class="review-checkbox">
-                    <span class="review-concept">Read company engineering blog (5-10 posts)</span>
-                </div>
-                <div class="review-item">
-                    <input type="checkbox" class="review-checkbox">
-                    <span class="review-concept">Review recent interview experiences (Glassdoor, Blind)</span>
-                </div>
-                <div class="review-item">
-                    <input type="checkbox" class="review-checkbox">
-                    <span class="review-concept">Understand company values and culture</span>
-                </div>
-                <div class="review-item">
-                    <input type="checkbox" class="review-checkbox">
-                    <span class="review-concept">Practice 10+ company-specific questions</span>
-                </div>
-                <div class="review-item">
-                    <input type="checkbox" class="review-checkbox">
-                    <span class="review-concept">Prepare stories aligned with company values</span>
-                </div>
-                <div class="review-item">
-                    <input type="checkbox" class="review-checkbox">
-                    <span class="review-concept">Research recent news and product updates</span>
-                </div>
+                <p><strong>Style:</strong> DB focus + Panel</p>
+                <p class="text-muted">Unique: 30-min presentation round</p>
             </div>
         </div>
 
@@ -216,41 +184,25 @@ flowchart TD
 
         <div class="quiz-container" id="company-quiz"></div>
 
-        <!-- Resources -->
-        <h2 class="mt-4 mb-3">Research Resources</h2>
+        <!-- Key Concepts to Review -->
+        <h2 class="mt-4 mb-3">Key Concepts to Review</h2>
 
-        <div class="card-grid">
-            <div class="card">
-                <h3>Blind / Glassdoor</h3>
-                <p>Recent interview experiences and company discussions</p>
-            </div>
-            <div class="card">
-                <h3>LeetCode Discuss</h3>
-                <p>Company-tagged questions and solutions</p>
-            </div>
-            <div class="card">
-                <h3>Levels.fyi</h3>
-                <p>Compensation data and interview tips</p>
-            </div>
-            <div class="card">
-                <h3>Engineering Blogs</h3>
-                <p>Technical deep dives from each company</p>
-            </div>
-        </div>
+        <div class="review-schedule" id="company-review"></div>
 
     </div>
 
     <script src="../assets/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize collapsibles
-            document.querySelectorAll('.collapsible-header').forEach(header => {
-                header.addEventListener('click', () => {
-                    header.parentElement.classList.toggle('open');
-                });
-            });
+            // Update progress
+            const progress = StaffEngPrep.ProgressTracker.getOverallProgress('companySpecific');
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('progress-label').textContent = progress + '% Complete';
 
-            // Quiz
+            // Initialize module navigation
+            StaffEngPrep.initModuleNavigation('companySpecific');
+
+            // Initialize quiz
             const quizQuestions = [
                 {
                     question: "Which company is known for 'Bug Squash' rounds?",
@@ -274,6 +226,16 @@ flowchart TD
 
             const quiz = new StaffEngPrep.Quiz('company-quiz', quizQuestions);
             quiz.render();
+
+            // Initialize review schedule
+            const concepts = [
+                { id: 'research-framework', name: 'CORE Research Method' },
+                { id: 'interview-styles', name: 'Interview Style Groups' },
+                { id: 'company-values', name: 'Company Values' },
+                { id: 'unique-rounds', name: 'Unique Round Types' },
+                { id: 'value-alignment', name: 'Value-Story Mapping' }
+            ];
+            StaffEngPrep.renderReviewSchedule('company-review', concepts);
         });
     </script>
 </body>

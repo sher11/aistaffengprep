@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 9: API Design - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">
+                        Introduction
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Core Concepts</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>
+                        Scalability Fundamentals
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>
+                        Database Systems
+                    </a>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>
+                        Distributed Systems
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>
+                        Storage & Data Processing
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>
+                        Seminal Papers
+                    </a>
+                    <a href="module-09.html" class="sidebar-link active" data-module="9">
+                        <span class="sidebar-link-number">6</span>
+                        API Design
+                    </a>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">7</span>
+                        Numbers to Know
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Patterns</div>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">8</span>
+                        Real-time Updates
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">9</span>
+                        Rate Limiting
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Problem Breakdowns</div>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">10</span>
+                        Common Problems
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Interview Prep</div>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">11</span>
+                        Framework Mastery
+                    </a>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">12</span>
+                        Mock Interviews
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Mobile sidebar toggle -->
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Module 9: API Design</h1>
+
+            <div class="card mt-3">
+                <h3>Learning Objectives</h3>
+                <ul>
+                    <li>Understand REST vs GraphQL vs gRPC trade-offs</li>
+                    <li>Design clean, consistent API interfaces</li>
+                    <li>Handle versioning and backward compatibility</li>
+                    <li>Implement proper error handling and pagination</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">API Paradigms Comparison</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>REST vs GraphQL vs gRPC</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Aspect</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">REST</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">GraphQL</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">gRPC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Protocol</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">HTTP/1.1</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">HTTP/1.1</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">HTTP/2</td></tr>
+                            <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Data Format</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">JSON/XML</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">JSON</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Protobuf (binary)</td></tr>
+                            <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Over/Under Fetching</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Common issue</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Client controls</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fixed schema</td></tr>
+                            <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Best For</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Public APIs</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Flexible clients</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Internal services</td></tr>
+                            <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Learning Curve</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Medium</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">High</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="mt-4">REST API Best Practices</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Resource Naming & HTTP Methods</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Resource Naming Conventions</h4>
+                    <ul>
+                        <li>Use <strong>nouns</strong>, not verbs: <code>/users</code> not <code>/getUsers</code></li>
+                        <li>Use <strong>plural</strong> form: <code>/users</code> not <code>/user</code></li>
+                        <li>Use <strong>hierarchical</strong> structure: <code>/users/{id}/posts</code></li>
+                        <li>Use <strong>lowercase</strong> with hyphens: <code>/user-profiles</code></li>
+                    </ul>
+
+                    <h4 class="mt-3">HTTP Methods</h4>
+                    <div class="code-block">
+                        <code>
+GET    /users       - List all users<br>
+GET    /users/{id}  - Get single user<br>
+POST   /users       - Create new user<br>
+PUT    /users/{id}  - Replace user (full update)<br>
+PATCH  /users/{id}  - Partial update user<br>
+DELETE /users/{id}  - Delete user
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">HTTP Status Codes</h4>
+                    <ul>
+                        <li><strong>200 OK</strong> - Successful GET/PUT/PATCH</li>
+                        <li><strong>201 Created</strong> - Successful POST (include Location header)</li>
+                        <li><strong>204 No Content</strong> - Successful DELETE</li>
+                        <li><strong>400 Bad Request</strong> - Invalid request format</li>
+                        <li><strong>401 Unauthorized</strong> - Missing/invalid authentication</li>
+                        <li><strong>403 Forbidden</strong> - Authenticated but not authorized</li>
+                        <li><strong>404 Not Found</strong> - Resource doesn't exist</li>
+                        <li><strong>409 Conflict</strong> - Resource state conflict</li>
+                        <li><strong>429 Too Many Requests</strong> - Rate limited</li>
+                        <li><strong>500 Internal Server Error</strong> - Server-side error</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Pagination Strategies</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Offset-based Pagination</h4>
+                    <div class="code-block">
+                        <code>
+GET /users?offset=20&limit=10<br><br>
+Response:<br>
+{<br>
+  "data": [...],<br>
+  "pagination": {<br>
+    "offset": 20,<br>
+    "limit": 10,<br>
+    "total": 150<br>
+  }<br>
+}
+                        </code>
+                    </div>
+                    <p><strong>Pros:</strong> Simple, allows jumping to any page</p>
+                    <p><strong>Cons:</strong> Inconsistent results if data changes, slow for large offsets</p>
+
+                    <h4 class="mt-3">Cursor-based Pagination</h4>
+                    <div class="code-block">
+                        <code>
+GET /users?cursor=abc123&limit=10<br><br>
+Response:<br>
+{<br>
+  "data": [...],<br>
+  "pagination": {<br>
+    "next_cursor": "def456",<br>
+    "has_more": true<br>
+  }<br>
+}
+                        </code>
+                    </div>
+                    <p><strong>Pros:</strong> Consistent results, efficient for large datasets</p>
+                    <p><strong>Cons:</strong> Can't jump to arbitrary page, more complex</p>
+
+                    <div class="card mt-3" style="background: var(--success-bg);">
+                        <strong>When to use which:</strong>
+                        <ul>
+                            <li>Offset: Small datasets, need page numbers (e.g., admin dashboards)</li>
+                            <li>Cursor: Large datasets, infinite scroll (e.g., social feeds)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>API Versioning</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Versioning Strategies</h4>
+
+                    <p><strong>1. URL Path Versioning</strong> (Most common)</p>
+                    <div class="code-block">
+                        <code>GET /api/v1/users<br>GET /api/v2/users</code>
+                    </div>
+
+                    <p class="mt-2"><strong>2. Query Parameter</strong></p>
+                    <div class="code-block">
+                        <code>GET /api/users?version=1</code>
+                    </div>
+
+                    <p class="mt-2"><strong>3. Header-based</strong></p>
+                    <div class="code-block">
+                        <code>GET /api/users<br>Accept: application/vnd.api+json;version=1</code>
+                    </div>
+
+                    <div class="card mt-3" style="background: var(--success-bg);">
+                        <strong>Recommendation:</strong> Use URL path versioning for public APIs - it's most visible and cacheable.
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Error Response Design</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Consistent Error Format</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+{<br>
+  "error": {<br>
+    "code": "VALIDATION_ERROR",<br>
+    "message": "Request validation failed",<br>
+    "details": [<br>
+      {<br>
+        "field": "email",<br>
+        "message": "Invalid email format"<br>
+      },<br>
+      {<br>
+        "field": "age",<br>
+        "message": "Must be a positive integer"<br>
+      }<br>
+    ],<br>
+    "request_id": "req_abc123",<br>
+    "documentation_url": "https://api.example.com/docs/errors#VALIDATION_ERROR"<br>
+  }<br>
+}
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">Error Response Best Practices</h4>
+                    <ul>
+                        <li>Use consistent structure across all endpoints</li>
+                        <li>Include machine-readable error codes</li>
+                        <li>Provide human-readable messages</li>
+                        <li>Include request ID for debugging</li>
+                        <li>Link to documentation when helpful</li>
+                        <li>Never expose internal stack traces in production</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Self-Check Quiz</h2>
+            <div class="quiz-container" id="module-quiz"></div>
+
+            <div class="flex flex-between mt-4">
+                <a href="module-05.html" class="btn btn-secondary">&larr; Previous Module</a>
+                <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle for mobile
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            // Update sidebar links based on completion status
+            document.querySelectorAll('.sidebar-link[data-module]').forEach(link => {
+                const moduleNum = parseInt(link.dataset.module);
+                if (StaffEngPrep.ProgressTracker.isModuleComplete('systemDesign', moduleNum)) {
+                    link.classList.add('completed');
+                }
+            });
+
+            const quizQuestions = [
+                {
+                    question: "Which pagination method is best for infinite scroll?",
+                    options: ["Offset-based", "Cursor-based", "Page-based", "No pagination"],
+                    correct: 1,
+                    explanation: "Cursor-based pagination provides consistent results and is efficient for large datasets used in infinite scroll."
+                },
+                {
+                    question: "What HTTP status code should you return for a successful POST that creates a resource?",
+                    options: ["200 OK", "201 Created", "204 No Content", "202 Accepted"],
+                    correct: 1,
+                    explanation: "201 Created is the correct status for successful resource creation. Include a Location header pointing to the new resource."
+                },
+                {
+                    question: "When is gRPC preferred over REST?",
+                    options: ["Public-facing APIs", "Internal microservices", "Browser clients", "Simple CRUD applications"],
+                    correct: 1,
+                    explanation: "gRPC excels for internal service-to-service communication due to its efficiency, strong typing, and HTTP/2 support."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 9);
+            alert('Module 9 marked as complete!');
+            window.location.href = 'module-10.html';
+        }
+    </script>
+</body>
+</html>

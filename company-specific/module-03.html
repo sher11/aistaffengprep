@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 3: Non-LeetCode Companies - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Companies</a></nav>
+
+        <h1>Module 3: Non-LeetCode Companies</h1>
+        <p class="text-muted">Stripe, Netflix, OpenAI Preparation</p>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Excel at practical coding problems</li>
+                <li>Handle multi-part questions</li>
+                <li>Demonstrate code quality focus</li>
+                <li>Navigate unique rounds (integration, bug squash)</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Stripe</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Interview Process</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    A[Recruiter] --> B[Tech Screen]
+    B --> C[Onsite 4-5 rounds]
+    C --> D[Hiring Committee]
+                    </div>
+                </div>
+                <p><strong>Round Types:</strong></p>
+                <ul>
+                    <li>Coding: Real-life practical problems</li>
+                    <li>Integration: Work with existing codebase</li>
+                    <li>Bug Squash: Debug failing tests</li>
+                    <li>System Design: Payment/financial focus</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Stripe Question Examples</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li>Currency conversion with exchange rates</li>
+                    <li>Credit card validation (Luhn algorithm)</li>
+                    <li>HTTP header parsing</li>
+                    <li>Transaction ledger with balance tracking</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Netflix</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Interview Focus</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Key Evaluation:</strong></p>
+                <ul>
+                    <li>Code hygiene and clean abstractions</li>
+                    <li>Articulation of your approach</li>
+                    <li>Cultural alignment (Freedom & Responsibility)</li>
+                </ul>
+                <p><strong>MUST READ:</strong> Netflix Culture Deck at jobs.netflix.com/culture</p>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Netflix Question Examples</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li>Duplicate detection with time windows</li>
+                    <li>Movie viewing history management</li>
+                    <li>Latency percentile tracking</li>
+                    <li>LRU cache with weights</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">OpenAI</h2>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Multi-Part Question Strategy</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Question Structure:</strong></p>
+                <ul>
+                    <li>Part A: Basic functionality (10-15 min)</li>
+                    <li>Part B: Add complexity (15-20 min)</li>
+                    <li>Part C: Edge cases (20-25 min)</li>
+                    <li>Part D: Optimize/extend (bonus)</li>
+                </ul>
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>Key insight:</strong> Better to complete A, B, C cleanly than A, B, C, D with bugs.
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>OpenAI Question Examples</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li>Resumable iterator with state capture</li>
+                    <li>In-memory SQL database</li>
+                    <li>Versioned key-value store</li>
+                    <li>Unix cd command implementation</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-02.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What unique round does Stripe have?",
+                    options: ["Whiteboard", "Bug Squash", "Live coding", "Take-home"],
+                    correct: 1,
+                    explanation: "Stripe's Bug Squash round involves debugging failing tests in an existing codebase."
+                },
+                {
+                    question: "What's the key strategy for OpenAI multi-part questions?",
+                    options: ["Rush through all parts", "Complete A-C cleanly before D", "Start with the hardest part", "Skip Part A"],
+                    correct: 1,
+                    explanation: "It's better to complete Parts A, B, C cleanly than to attempt D and introduce bugs."
+                },
+                {
+                    question: "What must you read before a Netflix interview?",
+                    options: ["Their stock price", "Netflix Culture Deck", "Recent movies", "Technical papers"],
+                    correct: 1,
+                    explanation: "The Netflix Culture Deck outlines their Freedom & Responsibility values that are heavily evaluated."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('companySpecific', 3);
+            alert('Module 3 marked as complete!');
+            window.location.href = 'module-04.html';
+        }
+    </script>
+</body>
+</html>

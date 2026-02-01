@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 5: Systems-Heavy Companies - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Companies</a></nav>
+
+        <h1>Module 5: Systems-Heavy Companies</h1>
+        <p class="text-muted">Databricks, Snowflake Preparation</p>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Demonstrate deep systems knowledge</li>
+                <li>Handle panel presentation format</li>
+                <li>Discuss trade-offs effectively</li>
+                <li>Show domain expertise</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Databricks</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Focus Areas</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li>Deep understanding of coding and systems</li>
+                    <li>Practical, non-LeetCode problems</li>
+                    <li>Distributed systems knowledge</li>
+                    <li>Data processing concepts</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Databricks Question Examples</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li>Shortest path with multiple transport modes</li>
+                    <li>Snapshot set (HashSet with versioning)</li>
+                    <li>Concurrent data writer (thread-safe)</li>
+                    <li>Key-value store with locking</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Snowflake</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Interview Structure</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="diagram-container">
+                    <div class="mermaid">
+flowchart LR
+    A[Tech Screen<br>2 questions] --> B[Onsite]
+    B --> C[Panel Presentation<br>30 min, 5-6 interviewers]
+    C --> D[Decision]
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Panel Presentation Guide</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Slide Structure (10-12 slides):</strong></p>
+                <ol>
+                    <li>Title and intro</li>
+                    <li>Context/problem space</li>
+                    <li>Requirements/constraints</li>
+                    <li>Solution overview</li>
+                    <li>Architecture diagram</li>
+                    <li>Key technical decisions</li>
+                    <li>Trade-offs considered</li>
+                    <li>Implementation challenges</li>
+                    <li>Results/metrics</li>
+                    <li>Learnings</li>
+                </ol>
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>Tips:</strong> Know exact numbers, be honest about unknowns, practice timing (30 min strict).
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Systems Knowledge Required</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h4>Distributed Systems</h4>
+                <ul>
+                    <li>CAP theorem</li>
+                    <li>Consistency models</li>
+                    <li>Consensus algorithms</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>Data Systems</h4>
+                <ul>
+                    <li>LSM trees vs B-trees</li>
+                    <li>Write-ahead logging</li>
+                    <li>Indexing approaches</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>Concurrency</h4>
+                <ul>
+                    <li>Thread synchronization</li>
+                    <li>Lock strategies</li>
+                    <li>Deadlock prevention</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>Databases</h4>
+                <ul>
+                    <li>Transaction isolation</li>
+                    <li>Query optimization</li>
+                    <li>Storage engines</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-04.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What unique round does Snowflake have?",
+                    options: ["Bug Squash", "Take-home project", "Panel Presentation", "CodeSignal"],
+                    correct: 2,
+                    explanation: "Snowflake has a 30-minute panel presentation before 5-6 interviewers."
+                },
+                {
+                    question: "What knowledge is critical for systems-heavy companies?",
+                    options: ["Frontend frameworks", "Distributed systems fundamentals", "Marketing strategy", "Design patterns only"],
+                    correct: 1,
+                    explanation: "Systems-heavy companies expect deep understanding of distributed systems."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('companySpecific', 5);
+            alert('Module 5 marked as complete!');
+            window.location.href = 'module-06.html';
+        }
+    </script>
+</body>
+</html>

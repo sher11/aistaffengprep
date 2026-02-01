@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 4: Assessment-First Companies - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Companies</a></nav>
+
+        <h1>Module 4: Assessment-First Companies</h1>
+        <p class="text-muted">Anthropic, CodeSignal Preparation</p>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Maximize completion rate in timed assessments</li>
+                <li>Write clean, modular code quickly</li>
+                <li>Manage time across multi-level problems</li>
+                <li>Achieve target scores (520+/600)</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Anthropic Interview Process</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart LR
+    A[CodeSignal OA<br>520+ target] --> B[Tech Screen]
+    B --> C[Onsite]
+    C --> D[Decision]
+            </div>
+        </div>
+
+        <h2 class="mt-4">CodeSignal Assessment</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Assessment Structure</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li><strong>Duration:</strong> 70-90 minutes</li>
+                    <li><strong>Format:</strong> 4 levels of increasing difficulty</li>
+                    <li><strong>Target:</strong> 520+ out of 600 to advance</li>
+                </ul>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Level</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Points</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Time</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Level 1</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~100</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">10-15 min</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Must complete</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Level 2</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~150</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">15-20 min</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Must complete</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Level 3</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~175</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">20-25 min</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Should complete</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Level 4</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">~175</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">20-25 min</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Nice to have</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Scoring Factors</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li><strong>Correctness:</strong> Tests pass</li>
+                    <li><strong>Cleanliness:</strong> Formatting, naming</li>
+                    <li><strong>Modularity:</strong> Function decomposition</li>
+                    <li><strong>Efficiency:</strong> Reasonable complexity</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Sample Problem: Inventory System</h2>
+
+        <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+            <pre style="white-space: pre-wrap; font-family: monospace;">
+Level 1-2: Basic CRUD
+- add_item(id, quantity)
+- remove_item(id, quantity)
+- get_quantity(id)
+- search_by_prefix(prefix)
+
+Level 3: Multi-user with capacity
+- reserve_for_user(user_id, item_id, qty)
+- set_capacity_limit(item_id, limit)
+
+Level 4: Duplicate handling
+- merge_duplicates()
+- resolve_over_capacity()
+            </pre>
+        </div>
+
+        <h2 class="mt-4">Time Management Strategy</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h4>First Pass (Levels 1-2)</h4>
+                <p class="text-muted">Complete quickly, don't over-engineer. These are foundation points.</p>
+            </div>
+            <div class="card">
+                <h4>Second Pass (Level 3)</h4>
+                <p class="text-muted">Build on existing code. Add new methods carefully.</p>
+            </div>
+            <div class="card">
+                <h4>Final Push (Level 4)</h4>
+                <p class="text-muted">Only if time allows. Don't break earlier levels.</p>
+            </div>
+            <div class="card">
+                <h4>Buffer Time</h4>
+                <p class="text-muted">Keep 5-10 min for testing and debugging.</p>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-03.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What's the target CodeSignal score for Anthropic?",
+                    options: ["400+", "450+", "520+", "580+"],
+                    correct: 2,
+                    explanation: "Target 520+ out of 600 to advance past the online assessment."
+                },
+                {
+                    question: "What's most important in CodeSignal assessments?",
+                    options: ["Perfect optimization", "Completion rate", "Algorithm complexity", "Code comments"],
+                    correct: 1,
+                    explanation: "Completion rate is critical - complete more levels cleanly."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('companySpecific', 4);
+            alert('Module 4 marked as complete!');
+            window.location.href = 'module-05.html';
+        }
+    </script>
+</body>
+</html>

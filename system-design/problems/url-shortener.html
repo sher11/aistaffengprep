@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design URL Shortener - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Problem Breakdowns</div>
+                    <a href="url-shortener.html" class="sidebar-link active">URL Shortener</a>
+                    <a href="news-feed.html" class="sidebar-link">News Feed</a>
+                    <a href="chat-system.html" class="sidebar-link">Chat System</a>
+                    <a href="video-streaming.html" class="sidebar-link">Video Streaming</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                    <a href="../module-06.html" class="sidebar-link">Common Problems</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Design: URL Shortener</h1>
+            <p class="text-muted">Examples: bit.ly, TinyURL, t.co</p>
+
+            <div class="card mt-3" style="background: var(--success-bg);">
+                <strong>Difficulty:</strong> Easy-Medium | <strong>Time:</strong> 35-45 minutes
+            </div>
+
+            <h2 class="mt-4">1. Requirements Clarification</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Functional Requirements</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li>Given a URL, generate a shorter unique alias</li>
+                        <li>Redirect short URL to original URL</li>
+                        <li>Custom short URLs (optional)</li>
+                        <li>Expiration time (optional)</li>
+                        <li>Analytics (click count, referrers)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Non-Functional Requirements</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li><strong>High availability:</strong> Service must always be up</li>
+                        <li><strong>Low latency:</strong> Redirect should be fast (~100ms)</li>
+                        <li><strong>High throughput:</strong> Handle millions of redirects/day</li>
+                        <li><strong>Not guessable:</strong> Short URLs shouldn't be predictable</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">2. Capacity Estimation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Scale Numbers</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                        <strong>Assumptions:</strong><br>
+                        - 100M new URLs/month<br>
+                        - Read:Write ratio = 100:1<br>
+                        - URL storage = 500 bytes avg<br>
+                        - Keep data for 5 years<br><br>
+
+                        <strong>Write QPS:</strong><br>
+                        100M / (30 * 24 * 3600) ≈ 40 URLs/second<br><br>
+
+                        <strong>Read QPS:</strong><br>
+                        40 * 100 = 4,000 redirects/second<br><br>
+
+                        <strong>Storage (5 years):</strong><br>
+                        100M * 12 * 5 = 6B URLs<br>
+                        6B * 500 bytes = 3 TB<br><br>
+
+                        <strong>URL Length:</strong><br>
+                        Base62 (a-z, A-Z, 0-9) = 62 chars<br>
+                        62^7 = 3.5 trillion combinations (enough for 6B)
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">3. API Design</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>REST APIs</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+POST /api/v1/shorten<br>
+Request: { "long_url": "https://...", "custom_alias": "optional" }<br>
+Response: { "short_url": "https://short.url/abc1234" }<br><br>
+
+GET /{short_code}<br>
+Response: HTTP 301/302 Redirect to long_url<br><br>
+
+DELETE /api/v1/url/{short_code}<br>
+Response: { "success": true }
+                        </code>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>301 vs 302 Redirect:</strong><br>
+                        - <strong>301 (Permanent):</strong> Better for SEO, browser caches<br>
+                        - <strong>302 (Temporary):</strong> Better for analytics tracking
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">4. Database Design</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Schema</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+URLs Table:<br>
+- id (PK, auto-increment)<br>
+- short_code (unique index, varchar(7))<br>
+- long_url (varchar(2048))<br>
+- user_id (FK, nullable)<br>
+- created_at (timestamp)<br>
+- expires_at (timestamp, nullable)<br>
+- click_count (int, default 0)
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">Database Choice</h4>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Option</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Pros</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Cons</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">MySQL/PostgreSQL</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">ACID, mature</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Scaling complexity</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">DynamoDB</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Scalable, managed</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cost at scale</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cassandra</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">High write throughput</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Operational complexity</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="mt-4">5. High-Level Design</h2>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart TB
+    subgraph "Clients"
+        C[Web/Mobile]
+    end
+
+    subgraph "CDN/LB"
+        CDN[CDN]
+        LB[Load Balancer]
+    end
+
+    subgraph "Application"
+        API1[API Server]
+        API2[API Server]
+    end
+
+    subgraph "Cache"
+        RC[(Redis Cache)]
+    end
+
+    subgraph "Database"
+        DB[(Primary DB)]
+        DBR[(Read Replicas)]
+    end
+
+    subgraph "ID Generation"
+        ZK[Zookeeper/Counter]
+    end
+
+    C --> CDN --> LB
+    LB --> API1 & API2
+    API1 & API2 --> RC
+    API1 & API2 --> DB
+    DB --> DBR
+    API1 & API2 --> ZK
+                </div>
+            </div>
+
+            <h2 class="mt-4">6. Short URL Generation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Approach 1: Base62 Encoding</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+def encode_base62(num):<br>
+    chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"<br>
+    result = []<br>
+    while num > 0:<br>
+        result.append(chars[num % 62])<br>
+        num //= 62<br>
+    return ''.join(reversed(result))<br><br>
+
+# Example: encode_base62(11157) → "2TX"
+                        </code>
+                    </div>
+                    <p><strong>Source of unique number:</strong> Auto-increment ID, distributed counter, or snowflake ID</p>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Approach 2: Hash + Collision Check</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+def generate_short_url(long_url):<br>
+    hash = md5(long_url).hexdigest()[:7]<br>
+    while db.exists(hash):<br>
+        hash = md5(hash + random_salt()).hexdigest()[:7]<br>
+    return hash
+                        </code>
+                    </div>
+                    <p><strong>Pros:</strong> Same URL always gets same short code</p>
+                    <p><strong>Cons:</strong> Collision handling, slower</p>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Approach 3: Pre-generated Keys</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Generate all possible 7-char keys in advance and store in a key database.</p>
+                    <ul>
+                        <li>Two tables: unused_keys, used_keys</li>
+                        <li>App servers fetch batch of keys (e.g., 1000)</li>
+                        <li>No collision checking needed</li>
+                    </ul>
+                    <p><strong>Pros:</strong> Fast, no collisions</p>
+                    <p><strong>Cons:</strong> Key management complexity, storage for unused keys</p>
+                </div>
+            </div>
+
+            <h2 class="mt-4">7. Deep Dive Topics</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Caching Strategy</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li><strong>Cache hot URLs:</strong> Use Redis/Memcached</li>
+                        <li><strong>Cache ratio:</strong> 20% URLs = 80% traffic (Pareto)</li>
+                        <li><strong>Memory:</strong> 0.2 * 6B * 500 bytes ≈ 600 GB</li>
+                        <li><strong>Eviction:</strong> LRU policy</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Analytics</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li>Log clicks to Kafka/Kinesis</li>
+                        <li>Process with Spark/Flink for aggregations</li>
+                        <li>Store in time-series DB (InfluxDB) or analytics DB</li>
+                        <li>Track: timestamp, referrer, user-agent, geo</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Database Scaling</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Sharding Strategy</h4>
+                    <ul>
+                        <li><strong>By short_code:</strong> Hash first char → shard</li>
+                        <li><strong>Range-based:</strong> 'a-g' → shard 1, 'h-n' → shard 2</li>
+                    </ul>
+                    <p><strong>Replication:</strong> Master-slave for read scaling</p>
+                </div>
+            </div>
+
+            <h2 class="mt-4">8. Summary</h2>
+
+            <div class="card">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Write QPS</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">~40/sec</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Read QPS</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">~4,000/sec</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Storage</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">3 TB (5 years)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Cache</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">~600 GB Redis</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>URL Length</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">7 chars (Base62)</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="../module-06.html" class="btn btn-secondary">&larr; Back to Problems</a>
+                <a href="news-feed.html" class="btn btn-primary">Next: News Feed &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

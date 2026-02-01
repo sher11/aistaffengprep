@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 3: Technical Leadership Stories - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Behavioral</a></nav>
+
+        <h1>Module 3: Technical Leadership Stories</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Craft compelling technical decision stories</li>
+                <li>Demonstrate mentorship and guidance</li>
+                <li>Show code quality leadership</li>
+                <li>Balance technical depth with accessibility</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">What Technical Leadership Means at Staff Level</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+mindmap
+    root((Technical<br>Leadership))
+        Direction Setting
+            Architecture decisions
+            Technology selection
+            Technical strategy
+        People Growth
+            Mentoring
+            Code reviews
+            Knowledge sharing
+        Quality
+            Standards
+            Best practices
+            Technical debt
+        Execution
+            Unblocking teams
+            Risk management
+            Delivery
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <h4>Not Just:</h4>
+            <ul>
+                <li>Writing good code</li>
+                <li>Knowing technical answers</li>
+            </ul>
+            <h4>But Also:</h4>
+            <ul>
+                <li>Setting technical direction</li>
+                <li>Making difficult trade-offs</li>
+                <li>Building team capabilities</li>
+                <li>Balancing short and long-term</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Technical Decision Stories</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Story Structure for Decisions</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ol>
+                    <li><strong>Context (15%):</strong> What decision needed to be made, constraints, stakeholders</li>
+                    <li><strong>Analysis (25%):</strong> Options considered, trade-offs evaluated, data gathered</li>
+                    <li><strong>Decision (20%):</strong> What you decided, why, how you communicated</li>
+                    <li><strong>Execution (20%):</strong> Implementation, challenges, adjustments</li>
+                    <li><strong>Outcome (20%):</strong> Results (quantified), learnings, what you'd do differently</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Staff-Level Signals to Demonstrate</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li>"I proposed a new architecture because..."</li>
+                    <li>"After analyzing three approaches, I recommended..."</li>
+                    <li>"I documented the decision in an RFC and gathered feedback..."</li>
+                    <li>"I considered the long-term maintenance implications..."</li>
+                    <li>"Six months later, we saw a 40% improvement in..."</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Common Questions</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h4>"Tell me about a technical decision you drove"</h4>
+                <p class="text-muted">Focus on: analysis process, trade-offs, consensus building, outcome</p>
+            </div>
+            <div class="card">
+                <h4>"Describe improving code quality on your team"</h4>
+                <p class="text-muted">Focus on: identifying the problem, implementing solutions, measuring impact</p>
+            </div>
+            <div class="card">
+                <h4>"How have you mentored junior engineers?"</h4>
+                <p class="text-muted">Focus on: tailored approach, specific guidance, their growth</p>
+            </div>
+            <div class="card">
+                <h4>"Tell me about a decision you later regretted"</h4>
+                <p class="text-muted">Focus on: owning it, what you learned, how you've changed</p>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Mentorship Stories</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Mentorship Story Framework</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <ul>
+                    <li>Who you mentored and context</li>
+                    <li>Your mentoring approach</li>
+                    <li>Specific examples of guidance</li>
+                    <li>Their growth and outcomes</li>
+                </ul>
+                <p><strong>Staff-level signals:</strong></p>
+                <ul>
+                    <li>Tailored approach to individual</li>
+                    <li>Balanced teaching with enabling autonomy</li>
+                    <li>Celebrated their wins</li>
+                    <li>Long-term investment in their growth</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Example: Technical Decision Story</h2>
+
+        <div class="card" style="background: var(--success-bg);">
+            <h4>Good Response</h4>
+            <p><strong>Situation:</strong> "Our payment service was hitting scalability limits. We were processing 50K transactions daily but projected 200K within 6 months."</p>
+            <p><strong>Task:</strong> "As the senior engineer, I was responsible for proposing and driving the architectural solution."</p>
+            <p><strong>Action:</strong> "First, I analyzed three options: vertical scaling, microservices, and event-driven architecture. I created a decision matrix weighing cost, complexity, and timeline. I then presented to stakeholders and gathered feedback through an RFC process. After incorporating team concerns about operational complexity, I modified the proposal to include a phased rollout. I led the implementation of the first phase myself to validate assumptions."</p>
+            <p><strong>Result:</strong> "We successfully migrated in 3 months with zero downtime. The system now handles 300K daily transactions. I learned the importance of phased rollouts for risk mitigation."</p>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-02.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What should technical decision stories include?",
+                    options: ["Only the technical details", "Options considered and trade-offs", "Code examples", "Just the outcome"],
+                    correct: 1,
+                    explanation: "Staff-level decision stories should show your analysis process and trade-off evaluation."
+                },
+                {
+                    question: "When mentoring, what's a staff-level signal?",
+                    options: ["Giving all the answers", "Taking credit for their work", "Tailoring approach to the individual", "Doing their work for them"],
+                    correct: 2,
+                    explanation: "Effective mentorship adapts to each person's needs and learning style."
+                },
+                {
+                    question: "When discussing a decision you regret, what's essential?",
+                    options: ["Blame external factors", "Minimize the impact", "Own it and show what you learned", "Focus on why it wasn't your fault"],
+                    correct: 2,
+                    explanation: "Owning mistakes and showing growth demonstrates maturity and self-awareness."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('behavioral', 3);
+            alert('Module 3 marked as complete!');
+            window.location.href = 'module-04.html';
+        }
+    </script>
+</body>
+</html>

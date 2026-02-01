@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Video Streaming - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Problem Breakdowns</div>
+                    <a href="url-shortener.html" class="sidebar-link">URL Shortener</a>
+                    <a href="news-feed.html" class="sidebar-link">News Feed</a>
+                    <a href="chat-system.html" class="sidebar-link">Chat System</a>
+                    <a href="video-streaming.html" class="sidebar-link active">Video Streaming</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Design: Video Streaming Platform</h1>
+            <p class="text-muted">Examples: YouTube, Netflix, Twitch</p>
+
+            <div class="card mt-3" style="background: var(--success-bg);">
+                <strong>Difficulty:</strong> Hard | <strong>Time:</strong> 50-60 minutes
+            </div>
+
+            <h2 class="mt-4">1. Requirements</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Functional Requirements</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li>Upload videos</li>
+                        <li>Stream videos with adaptive bitrate</li>
+                        <li>Search and discover videos</li>
+                        <li>Video recommendations</li>
+                        <li>Comments, likes, subscriptions</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Non-Functional Requirements</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li><strong>Low latency:</strong> Fast video start (~2 sec)</li>
+                        <li><strong>High availability:</strong> 99.9%+</li>
+                        <li><strong>Smooth playback:</strong> No buffering</li>
+                        <li><strong>Global scale:</strong> CDN distribution</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">2. Capacity Estimation</h2>
+
+            <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                <strong>Assumptions:</strong><br>
+                - 1B DAU, 5 videos/day average<br>
+                - 1M video uploads/day<br>
+                - Average video: 5 min, 500MB raw<br><br>
+
+                <strong>Storage (per day):</strong><br>
+                1M * 500MB = 500 TB raw<br>
+                Encoded (multiple resolutions): ~1.5 PB/day<br><br>
+
+                <strong>Bandwidth:</strong><br>
+                5B views * 100MB (avg) = 500 PB/day outgoing
+            </div>
+
+            <h2 class="mt-4">3. High-Level Architecture</h2>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart TB
+    subgraph "Upload Flow"
+        UC[Upload Client] --> US[Upload Service]
+        US --> OS[(Object Storage)]
+        US --> MQ[Transcoding Queue]
+        MQ --> TS[Transcoding Service]
+        TS --> OS
+    end
+
+    subgraph "Streaming Flow"
+        SC[Stream Client] --> CDN[CDN]
+        CDN --> Origin[(Origin Storage)]
+        SC --> API[API Server]
+        API --> DB[(Metadata DB)]
+        API --> Cache[(Redis)]
+    end
+                </div>
+            </div>
+
+            <h2 class="mt-4">4. Video Processing Pipeline</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Transcoding</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Convert source video to multiple formats/resolutions:</p>
+                    <ul>
+                        <li>360p, 480p, 720p, 1080p, 4K</li>
+                        <li>Different codecs: H.264, H.265, VP9, AV1</li>
+                        <li>Segment into small chunks (2-10 sec)</li>
+                    </ul>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    Raw[Raw Video] --> Split[Split into chunks]
+    Split --> T1[Transcode 360p]
+    Split --> T2[Transcode 720p]
+    Split --> T3[Transcode 1080p]
+    T1 & T2 & T3 --> Manifest[Generate Manifest]
+    Manifest --> Store[Store to CDN]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Adaptive Bitrate Streaming</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Client automatically switches quality based on bandwidth:</p>
+                    <ul>
+                        <li><strong>HLS (HTTP Live Streaming):</strong> Apple, widely supported</li>
+                        <li><strong>DASH:</strong> Open standard, more flexible</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+#EXTM3U<br>
+#EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360<br>
+360p/playlist.m3u8<br>
+#EXT-X-STREAM-INF:BANDWIDTH=1400000,RESOLUTION=1280x720<br>
+720p/playlist.m3u8<br>
+#EXT-X-STREAM-INF:BANDWIDTH=2800000,RESOLUTION=1920x1080<br>
+1080p/playlist.m3u8
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">5. CDN Strategy</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Content Distribution</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li><strong>Push popular content</strong> to edge servers proactively</li>
+                        <li><strong>Pull on demand</strong> for long-tail content</li>
+                        <li><strong>Geo-based routing</strong> to nearest edge</li>
+                        <li><strong>Cache hot segments</strong> (first few seconds)</li>
+                    </ul>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>YouTube fact:</strong> 70%+ of views come from recommendations, so popular videos are very cacheable!
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">6. Summary</h2>
+
+            <div class="card">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Streaming Protocol</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">HLS/DASH</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Video Storage</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Object storage (S3-like)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Delivery</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Global CDN</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Key Challenge</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Transcoding at scale, CDN costs</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="chat-system.html" class="btn btn-secondary">&larr; Chat System</a>
+                <a href="../module-06.html" class="btn btn-primary">Back to Problems &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

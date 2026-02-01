@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 11: Real-time Updates - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Core Concepts</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Scalability Fundamentals
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Database Systems
+                    </a>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>Distributed Systems
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Storage & Data Processing
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>Seminal Papers
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">6</span>API Design
+                    </a>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">7</span>Numbers to Know
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Patterns</div>
+                    <a href="module-11.html" class="sidebar-link active" data-module="11">
+                        <span class="sidebar-link-number">8</span>Real-time Updates
+                    </a>
+                    <a href="module-12.html" class="sidebar-link" data-module="12">
+                        <span class="sidebar-link-number">9</span>Rate Limiting
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Problem Breakdowns</div>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">10</span>Common Problems
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Interview Prep</div>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">11</span>Framework Mastery
+                    </a>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">12</span>Mock Interviews
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 11: Real-time Updates Pattern</h1>
+
+            <div class="card mt-3">
+                <h3>Learning Objectives</h3>
+                <ul>
+                    <li>Compare polling, long polling, SSE, and WebSockets</li>
+                    <li>Choose the right approach for different use cases</li>
+                    <li>Understand scaling challenges for real-time systems</li>
+                    <li>Design notification and live update systems</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Real-time Communication Methods</h2>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart LR
+    subgraph "Polling"
+        C1[Client] -->|Request| S1[Server]
+        S1 -->|Response| C1
+        C1 -->|Request again| S1
+    end
+
+    subgraph "Long Polling"
+        C2[Client] -->|Request| S2[Server]
+        S2 -.->|Wait...| S2
+        S2 -->|Response when data| C2
+    end
+
+    subgraph "WebSocket"
+        C3[Client] <-->|Bidirectional| S3[Server]
+    end
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>1. Short Polling</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Client repeatedly requests updates at fixed intervals.</p>
+
+                    <div class="code-block">
+                        <code>
+// Client polls every 5 seconds<br>
+setInterval(() => {<br>
+  fetch('/api/updates')<br>
+    .then(res => res.json())<br>
+    .then(data => updateUI(data));<br>
+}, 5000);
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">Pros</h4>
+                    <ul>
+                        <li>Simple to implement</li>
+                        <li>Works with any HTTP server</li>
+                        <li>Easy to scale (stateless)</li>
+                    </ul>
+
+                    <h4>Cons</h4>
+                    <ul>
+                        <li>High latency (up to polling interval)</li>
+                        <li>Wasteful - many empty responses</li>
+                        <li>High server load at scale</li>
+                    </ul>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Best for:</strong> Low-frequency updates, simple dashboards, data that changes infrequently
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>2. Long Polling</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Server holds the request open until new data is available.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    C->>S: GET /updates
+    Note over S: Hold connection...
+    Note over S: Data arrives!
+    S->>C: Response with data
+    C->>S: GET /updates (immediately)
+    Note over S: Hold connection...
+                        </div>
+                    </div>
+
+                    <h4>Pros</h4>
+                    <ul>
+                        <li>Near real-time updates</li>
+                        <li>Less wasteful than polling</li>
+                        <li>Works through most firewalls/proxies</li>
+                    </ul>
+
+                    <h4>Cons</h4>
+                    <ul>
+                        <li>Holds server connections open (resource intensive)</li>
+                        <li>Connection timeouts require reconnection</li>
+                        <li>Server-to-client only</li>
+                    </ul>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Best for:</strong> Chat applications, notifications where WebSocket isn't feasible
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>3. Server-Sent Events (SSE)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Server pushes updates over a persistent HTTP connection.</p>
+
+                    <div class="code-block">
+                        <code>
+// Client<br>
+const eventSource = new EventSource('/api/stream');<br>
+eventSource.onmessage = (event) => {<br>
+  const data = JSON.parse(event.data);<br>
+  updateUI(data);<br>
+};<br><br>
+
+// Server response format<br>
+data: {"message": "Hello"}\n\n<br>
+data: {"message": "World"}\n\n
+                        </code>
+                    </div>
+
+                    <h4>Pros</h4>
+                    <ul>
+                        <li>Built-in reconnection</li>
+                        <li>Works over HTTP/1.1</li>
+                        <li>Simpler than WebSockets</li>
+                        <li>Automatic event ID tracking</li>
+                    </ul>
+
+                    <h4>Cons</h4>
+                    <ul>
+                        <li>Server-to-client only (no bidirectional)</li>
+                        <li>Limited to ~6 connections per browser (HTTP/1.1)</li>
+                        <li>Text-only (no binary data)</li>
+                    </ul>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Best for:</strong> Live feeds, stock tickers, news updates, social media timelines
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>4. WebSockets</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Full-duplex communication over a single TCP connection.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    C->>S: HTTP Upgrade Request
+    S->>C: 101 Switching Protocols
+    Note over C,S: WebSocket Connection Established
+    C->>S: Message
+    S->>C: Message
+    S->>C: Push notification
+    C->>S: Acknowledgment
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <code>
+// Client<br>
+const ws = new WebSocket('wss://api.example.com/ws');<br>
+ws.onmessage = (event) => handleMessage(event.data);<br>
+ws.send(JSON.stringify({ type: 'subscribe', channel: 'updates' }));
+                        </code>
+                    </div>
+
+                    <h4>Pros</h4>
+                    <ul>
+                        <li>True bidirectional communication</li>
+                        <li>Low latency</li>
+                        <li>Efficient for high-frequency updates</li>
+                        <li>Supports binary data</li>
+                    </ul>
+
+                    <h4>Cons</h4>
+                    <ul>
+                        <li>Stateful - harder to scale</li>
+                        <li>Requires WebSocket servers</li>
+                        <li>Connection management complexity</li>
+                        <li>May have proxy/firewall issues</li>
+                    </ul>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Best for:</strong> Real-time gaming, collaborative editing, chat, live trading
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Comparison Table</h2>
+
+            <div class="card">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Method</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Latency</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Direction</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Scalability</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Complexity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Short Polling</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">High</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Client→Server</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Easy</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Long Polling</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Medium</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Server→Client</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Medium</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Medium</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">SSE</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Server→Client</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Medium</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">WebSockets</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Bidirectional</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hard</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">High</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 class="mt-4">Scaling WebSockets</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Architecture for Scale</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Clients"
+        C1[Client 1]
+        C2[Client 2]
+        C3[Client 3]
+    end
+
+    subgraph "Load Balancer"
+        LB[Sticky Sessions / IP Hash]
+    end
+
+    subgraph "WebSocket Servers"
+        WS1[WS Server 1]
+        WS2[WS Server 2]
+    end
+
+    subgraph "Pub/Sub"
+        Redis[(Redis Pub/Sub)]
+    end
+
+    C1 --> LB --> WS1
+    C2 --> LB --> WS1
+    C3 --> LB --> WS2
+    WS1 <--> Redis
+    WS2 <--> Redis
+                        </div>
+                    </div>
+
+                    <h4>Key Strategies</h4>
+                    <ul>
+                        <li><strong>Sticky Sessions:</strong> Route same client to same server</li>
+                        <li><strong>Pub/Sub Layer:</strong> Redis/Kafka for cross-server messaging</li>
+                        <li><strong>Connection State:</strong> Store in Redis for failover</li>
+                        <li><strong>Horizontal Scaling:</strong> Add servers behind load balancer</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Self-Check Quiz</h2>
+            <div class="quiz-container" id="module-quiz"></div>
+
+            <div class="flex flex-between mt-4">
+                <a href="module-10.html" class="btn btn-secondary">&larr; Previous Module</a>
+                <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            document.querySelectorAll('.sidebar-link[data-module]').forEach(link => {
+                const moduleNum = parseInt(link.dataset.module);
+                if (StaffEngPrep.ProgressTracker.isModuleComplete('systemDesign', moduleNum)) {
+                    link.classList.add('completed');
+                }
+            });
+
+            const quizQuestions = [
+                {
+                    question: "Which method is best for a live stock ticker that only needs server-to-client updates?",
+                    options: ["Short Polling", "WebSockets", "Server-Sent Events (SSE)", "Long Polling"],
+                    correct: 2,
+                    explanation: "SSE is ideal for server-to-client streaming with built-in reconnection and simpler than WebSockets."
+                },
+                {
+                    question: "What is the main challenge when scaling WebSocket servers?",
+                    options: ["CPU usage", "Memory limits", "Stateful connections", "Network bandwidth"],
+                    correct: 2,
+                    explanation: "WebSocket connections are stateful, requiring sticky sessions and pub/sub for cross-server messaging."
+                },
+                {
+                    question: "Which real-time method supports bidirectional communication?",
+                    options: ["SSE", "Long Polling", "WebSockets", "Short Polling"],
+                    correct: 2,
+                    explanation: "WebSockets provide full-duplex bidirectional communication over a single TCP connection."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 11);
+            alert('Module 11 marked as complete!');
+            window.location.href = 'module-12.html';
+        }
+    </script>
+</body>
+</html>

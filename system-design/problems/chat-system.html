@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Chat System - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Problem Breakdowns</div>
+                    <a href="url-shortener.html" class="sidebar-link">URL Shortener</a>
+                    <a href="news-feed.html" class="sidebar-link">News Feed</a>
+                    <a href="chat-system.html" class="sidebar-link active">Chat System</a>
+                    <a href="video-streaming.html" class="sidebar-link">Video Streaming</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Design: Chat System</h1>
+            <p class="text-muted">Examples: WhatsApp, Slack, Discord, Facebook Messenger</p>
+
+            <div class="card mt-3" style="background: var(--success-bg);">
+                <strong>Difficulty:</strong> Medium-Hard | <strong>Time:</strong> 45-50 minutes
+            </div>
+
+            <h2 class="mt-4">1. Requirements</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Functional Requirements</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li>1:1 messaging</li>
+                        <li>Group messaging (up to 100 members)</li>
+                        <li>Online/offline status</li>
+                        <li>Message read receipts</li>
+                        <li>Push notifications</li>
+                        <li>Media sharing (images, files)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Non-Functional Requirements</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li><strong>Low latency:</strong> Real-time delivery (~100ms)</li>
+                        <li><strong>High availability:</strong> 99.99% uptime</li>
+                        <li><strong>Ordering:</strong> Messages in correct sequence</li>
+                        <li><strong>At-least-once delivery</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">2. High-Level Design</h2>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart TB
+    subgraph "Clients"
+        C1[User A]
+        C2[User B]
+    end
+
+    subgraph "Connection Layer"
+        WS1[WebSocket Server 1]
+        WS2[WebSocket Server 2]
+    end
+
+    subgraph "Services"
+        MS[Message Service]
+        PS[Presence Service]
+        NS[Notification Service]
+    end
+
+    subgraph "Data"
+        MQ[Message Queue]
+        DB[(Message DB)]
+        Cache[(Redis)]
+    end
+
+    C1 <-->|WebSocket| WS1
+    C2 <-->|WebSocket| WS2
+    WS1 & WS2 --> MS
+    MS --> MQ --> DB
+    MS --> Cache
+    WS1 & WS2 <--> Cache
+    PS --> Cache
+    NS --> C1 & C2
+                </div>
+            </div>
+
+            <h2 class="mt-4">3. Key Components</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>WebSocket Connection Management</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li>Use WebSockets for bidirectional real-time communication</li>
+                        <li>Store user → WebSocket server mapping in Redis</li>
+                        <li>Heartbeat to detect disconnections</li>
+                        <li>Reconnection logic with message sync</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Message Flow</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ol>
+                        <li>User A sends message via WebSocket</li>
+                        <li>Message Service assigns message ID (monotonic)</li>
+                        <li>Message persisted to database</li>
+                        <li>Look up User B's WebSocket server</li>
+                        <li>Route message to User B's server</li>
+                        <li>Deliver to User B (or queue for offline)</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Presence (Online Status)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li>Update status on connect/disconnect</li>
+                        <li>Heartbeat every 30 seconds</li>
+                        <li>Store in Redis with TTL</li>
+                        <li>Pub/Sub to notify friends of status changes</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">4. Message Storage</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Database Choice</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Option</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Best For</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Cassandra</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">High write throughput, time-series data</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">HBase</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Wide column, message history</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">PostgreSQL</td>
+                            <td style="padding: 0.75rem; border: 1px solid var(--border-color);">ACID, smaller scale</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="mt-4">5. Summary</h2>
+
+            <div class="card">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Protocol</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">WebSocket</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Message ID</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Snowflake ID (monotonic)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Presence</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Redis with TTL</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Key Challenge</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Message ordering, offline delivery</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="news-feed.html" class="btn btn-secondary">&larr; News Feed</a>
+                <a href="video-streaming.html" class="btn btn-primary">Next: Video Streaming &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

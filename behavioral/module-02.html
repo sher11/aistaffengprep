@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 2: Story Mining - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Behavioral</a></nav>
+
+        <h1>Module 2: Story Mining & Preparation</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Systematically mine experiences for interview stories</li>
+                <li>Create a categorized story matrix</li>
+                <li>Write and refine 10-15 polished stories</li>
+                <li>Adapt stories for different question types</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Story Mining Process</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart TD
+    A[All Career Experiences] --> B[Filter: Last 3-5 Years]
+    B --> C[Identify: 30+ Potential Stories]
+    C --> D[Develop: 15-20 Drafted Stories]
+    D --> E[Polish: 10-15 Final Stories]
+    E --> F[Practice Until Natural]
+            </div>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Step 1: Career Timeline Review</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Review your last 3-5 years and list:</p>
+                <ul>
+                    <li>Projects you worked on</li>
+                    <li>Challenges you faced</li>
+                    <li>Achievements you're proud of</li>
+                    <li>Mistakes and learnings</li>
+                    <li>Key relationships and conflicts</li>
+                    <li>Times you influenced others</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Step 2: Category Brainstorm</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>For each category, identify 3-5 potential stories:</p>
+                <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Category</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Example Questions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Technical Leadership</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Decisions, mentoring, code quality</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Conflict Resolution</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Disagreements, difficult stakeholders</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Failure & Learning</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Mistakes, missed deadlines, feedback</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Influence</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Leading without authority, alignment</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Delivery</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Pressure, complex projects, prioritization</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Growth</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Self-improvement, learning, weaknesses</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Step 3: Selection Criteria</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p>Choose stories that are:</p>
+                <ul>
+                    <li><strong>Recent:</strong> Last 3-5 years</li>
+                    <li><strong>Resolved:</strong> Complete with outcome</li>
+                    <li><strong>Impactful:</strong> Staff-level significance</li>
+                    <li><strong>Specific:</strong> Concrete details available</li>
+                    <li><strong>Varied:</strong> Different contexts/challenges</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">The Story Matrix</h2>
+
+        <div class="card">
+            <p>Create a matrix to track coverage. Each story should cover 2-3 categories:</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem;">
+                <thead>
+                    <tr style="background: var(--border-color);">
+                        <th style="padding: 0.5rem; border: 1px solid var(--border-color);">Story</th>
+                        <th style="padding: 0.5rem; border: 1px solid var(--border-color);">Tech Lead</th>
+                        <th style="padding: 0.5rem; border: 1px solid var(--border-color);">Conflict</th>
+                        <th style="padding: 0.5rem; border: 1px solid var(--border-color);">Failure</th>
+                        <th style="padding: 0.5rem; border: 1px solid var(--border-color);">Influence</th>
+                        <th style="padding: 0.5rem; border: 1px solid var(--border-color);">Delivery</th>
+                        <th style="padding: 0.5rem; border: 1px solid var(--border-color);">Growth</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td style="padding: 0.5rem; border: 1px solid var(--border-color);">Migration project</td><td style="padding: 0.5rem; border: 1px solid var(--border-color); text-align: center;">X</td><td style="padding: 0.5rem; border: 1px solid var(--border-color);"></td><td style="padding: 0.5rem; border: 1px solid var(--border-color);"></td><td style="padding: 0.5rem; border: 1px solid var(--border-color); text-align: center;">X</td><td style="padding: 0.5rem; border: 1px solid var(--border-color); text-align: center;">X</td><td style="padding: 0.5rem; border: 1px solid var(--border-color);"></td></tr>
+                    <tr><td style="padding: 0.5rem; border: 1px solid var(--border-color);">Team disagreement</td><td style="padding: 0.5rem; border: 1px solid var(--border-color);"></td><td style="padding: 0.5rem; border: 1px solid var(--border-color); text-align: center;">X</td><td style="padding: 0.5rem; border: 1px solid var(--border-color);"></td><td style="padding: 0.5rem; border: 1px solid var(--border-color); text-align: center;">X</td><td style="padding: 0.5rem; border: 1px solid var(--border-color);"></td><td style="padding: 0.5rem; border: 1px solid var(--border-color);"></td></tr>
+                    <tr><td style="padding: 0.5rem; border: 1px solid var(--border-color);">Missed deadline</td><td style="padding: 0.5rem; border: 1px solid var(--border-color);"></td><td style="padding: 0.5rem; border: 1px solid var(--border-color);"></td><td style="padding: 0.5rem; border: 1px solid var(--border-color); text-align: center;">X</td><td style="padding: 0.5rem; border: 1px solid var(--border-color);"></td><td style="padding: 0.5rem; border: 1px solid var(--border-color);"></td><td style="padding: 0.5rem; border: 1px solid var(--border-color); text-align: center;">X</td></tr>
+                </tbody>
+            </table>
+            <p class="text-muted">Goal: 10-15 stories covering all categories with some overlap.</p>
+        </div>
+
+        <h2 class="mt-4">Quantifying Impact</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h4>With Metrics</h4>
+                <ul>
+                    <li>"Reduced load time by 40%"</li>
+                    <li>"Increased conversion by 15%"</li>
+                    <li>"Saved $200K annually"</li>
+                    <li>"Reduced incidents from 5/month to 1/quarter"</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>Without Metrics</h4>
+                <ul>
+                    <li>"Affected 10,000 daily users"</li>
+                    <li>"Cut processing time in half"</li>
+                    <li>"Received commendation from VP"</li>
+                    <li>"Approach adopted by 3 other teams"</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Story Versatility</h2>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Same Story, Different Angles</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Example:</strong> Led migration from monolith to microservices</p>
+                <ul>
+                    <li><strong>Technical Leadership:</strong> Focus on architecture analysis, trade-off evaluation</li>
+                    <li><strong>Influence:</strong> Focus on getting buy-in from reluctant teams</li>
+                    <li><strong>Delivery:</strong> Focus on planning, risk management, execution</li>
+                    <li><strong>Failure:</strong> Focus on challenges, what went wrong, recovery</li>
+                </ul>
+                <p><strong>Technique:</strong> Keep situation/task similar, emphasize different actions, tailor result to question.</p>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Story Template</h2>
+
+        <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+            <pre style="white-space: pre-wrap; font-family: monospace;">
+## Story Title: [Descriptive Name]
+
+### Categories
+Primary: [main category]
+Secondary: [additional categories]
+
+### STAR Breakdown
+
+**Situation** (2 sentences max):
+[Context and stakes]
+
+**Task** (2 sentences max):
+[Your specific role and challenge]
+
+**Action** (4-6 bullet points):
+1. First, I...
+2. Then, I...
+3. Next, I...
+4. Finally, I...
+
+**Result** (2-3 sentences):
+[Quantified outcome]
+[What I learned]
+            </pre>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-01.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "How many core stories should you prepare?",
+                    options: ["3-5", "5-8", "10-15", "20+"],
+                    correct: 2,
+                    explanation: "10-15 well-prepared stories give you flexibility to answer any behavioral question."
+                },
+                {
+                    question: "What timeframe should stories come from?",
+                    options: ["Entire career", "Current job only", "Last 3-5 years", "Last year only"],
+                    correct: 2,
+                    explanation: "Last 3-5 years keeps stories relevant while giving enough range."
+                },
+                {
+                    question: "Why should each story cover multiple categories?",
+                    options: ["To seem more impressive", "To adapt to different questions", "Interviewers prefer it", "It's easier to remember"],
+                    correct: 1,
+                    explanation: "Versatile stories let you answer different question types with the same core experience."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('behavioral', 2);
+            alert('Module 2 marked as complete!');
+            window.location.href = 'module-03.html';
+        }
+    </script>
+</body>
+</html>

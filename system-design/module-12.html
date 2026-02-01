@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 12: Rate Limiting - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Core Concepts</div>
+                    <a href="module-01.html" class="sidebar-link" data-module="1">
+                        <span class="sidebar-link-number">1</span>Scalability Fundamentals
+                    </a>
+                    <a href="module-02.html" class="sidebar-link" data-module="2">
+                        <span class="sidebar-link-number">2</span>Database Systems
+                    </a>
+                    <a href="module-03.html" class="sidebar-link" data-module="3">
+                        <span class="sidebar-link-number">3</span>Distributed Systems
+                    </a>
+                    <a href="module-04.html" class="sidebar-link" data-module="4">
+                        <span class="sidebar-link-number">4</span>Storage & Data Processing
+                    </a>
+                    <a href="module-05.html" class="sidebar-link" data-module="5">
+                        <span class="sidebar-link-number">5</span>Seminal Papers
+                    </a>
+                    <a href="module-09.html" class="sidebar-link" data-module="9">
+                        <span class="sidebar-link-number">6</span>API Design
+                    </a>
+                    <a href="module-10.html" class="sidebar-link" data-module="10">
+                        <span class="sidebar-link-number">7</span>Numbers to Know
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Patterns</div>
+                    <a href="module-11.html" class="sidebar-link" data-module="11">
+                        <span class="sidebar-link-number">8</span>Real-time Updates
+                    </a>
+                    <a href="module-12.html" class="sidebar-link active" data-module="12">
+                        <span class="sidebar-link-number">9</span>Rate Limiting
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Problem Breakdowns</div>
+                    <a href="module-06.html" class="sidebar-link" data-module="6">
+                        <span class="sidebar-link-number">10</span>Common Problems
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Interview Prep</div>
+                    <a href="module-07.html" class="sidebar-link" data-module="7">
+                        <span class="sidebar-link-number">11</span>Framework Mastery
+                    </a>
+                    <a href="module-08.html" class="sidebar-link" data-module="8">
+                        <span class="sidebar-link-number">12</span>Mock Interviews
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Module 12: Rate Limiting Pattern</h1>
+
+            <div class="card mt-3">
+                <h3>Learning Objectives</h3>
+                <ul>
+                    <li>Understand why rate limiting is essential</li>
+                    <li>Compare different rate limiting algorithms</li>
+                    <li>Design distributed rate limiters</li>
+                    <li>Handle rate limiting in API design</li>
+                </ul>
+            </div>
+
+            <h2 class="mt-4">Why Rate Limiting?</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h4>Prevent Abuse</h4>
+                    <p>Stop malicious users from overwhelming your system with requests.</p>
+                </div>
+                <div class="card">
+                    <h4>Protect Resources</h4>
+                    <p>Ensure fair usage and prevent any single user from monopolizing resources.</p>
+                </div>
+                <div class="card">
+                    <h4>Control Costs</h4>
+                    <p>Manage infrastructure costs by limiting expensive operations.</p>
+                </div>
+                <div class="card">
+                    <h4>Ensure Stability</h4>
+                    <p>Prevent cascading failures during traffic spikes.</p>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Rate Limiting Algorithms</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>1. Token Bucket</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph "Token Bucket"
+        R[Refill Rate] -->|Add tokens| B[(Bucket)]
+        B -->|Take token| P[Process Request]
+    end
+                        </div>
+                    </div>
+
+                    <h4>How It Works</h4>
+                    <ul>
+                        <li>Bucket holds tokens (max = bucket size)</li>
+                        <li>Tokens added at fixed rate (refill rate)</li>
+                        <li>Each request consumes one token</li>
+                        <li>Request rejected if bucket is empty</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+class TokenBucket:<br>
+    def __init__(self, capacity, refill_rate):<br>
+        self.capacity = capacity<br>
+        self.tokens = capacity<br>
+        self.refill_rate = refill_rate  # tokens per second<br>
+        self.last_refill = time.time()<br>
+<br>
+    def allow_request(self):<br>
+        self._refill()<br>
+        if self.tokens >= 1:<br>
+            self.tokens -= 1<br>
+            return True<br>
+        return False<br>
+<br>
+    def _refill(self):<br>
+        now = time.time()<br>
+        tokens_to_add = (now - self.last_refill) * self.refill_rate<br>
+        self.tokens = min(self.capacity, self.tokens + tokens_to_add)<br>
+        self.last_refill = now
+                        </code>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Pros:</strong> Allows bursts, memory efficient, widely used<br>
+                        <strong>Cons:</strong> May be harder to tune<br>
+                        <strong>Used by:</strong> AWS, Stripe
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>2. Leaky Bucket</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    R[Requests] -->|Queue| B[(Bucket/Queue)]
+    B -->|Fixed rate| P[Process]
+    B -->|Overflow| D[Drop]
+                        </div>
+                    </div>
+
+                    <h4>How It Works</h4>
+                    <ul>
+                        <li>Requests added to a queue (bucket)</li>
+                        <li>Processed at a fixed rate (leak rate)</li>
+                        <li>If queue full, new requests dropped</li>
+                        <li>Smooths out bursty traffic</li>
+                    </ul>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Pros:</strong> Smooth output rate, prevents bursts<br>
+                        <strong>Cons:</strong> Doesn't allow bursts, may increase latency<br>
+                        <strong>Used by:</strong> Network traffic shaping
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>3. Fixed Window Counter</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Divide time into fixed windows and count requests per window.</p>
+
+                    <div class="code-block">
+                        <code>
+Window: [0:00 - 1:00] → Count: 100 requests<br>
+Window: [1:00 - 2:00] → Count: 0 requests (new window)<br>
+<br>
+# Problem: Boundary burst<br>
+[0:59] → 100 requests (allowed)<br>
+[1:01] → 100 requests (allowed)<br>
+# Result: 200 requests in 2 seconds!
+                        </code>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--error-bg);">
+                        <strong>Problem:</strong> Requests at window boundaries can exceed limit (2x burst)
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>4. Sliding Window Log</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Keep timestamps of all requests in the current window.</p>
+
+                    <div class="code-block">
+                        <code>
+class SlidingWindowLog:<br>
+    def __init__(self, limit, window_seconds):<br>
+        self.limit = limit<br>
+        self.window = window_seconds<br>
+        self.timestamps = []<br>
+<br>
+    def allow_request(self):<br>
+        now = time.time()<br>
+        cutoff = now - self.window<br>
+        # Remove old timestamps<br>
+        self.timestamps = [t for t in self.timestamps if t > cutoff]<br>
+        if len(self.timestamps) < self.limit:<br>
+            self.timestamps.append(now)<br>
+            return True<br>
+        return False
+                        </code>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Pros:</strong> Very accurate<br>
+                        <strong>Cons:</strong> Memory intensive (stores all timestamps)
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>5. Sliding Window Counter</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Combines fixed window with weighted previous window for smooth transitions.</p>
+
+                    <div class="code-block">
+                        <code>
+# Current window: 30% through<br>
+# Previous window count: 84<br>
+# Current window count: 36<br>
+<br>
+# Weighted count = prev * (1 - position) + current<br>
+# = 84 * 0.7 + 36 = 58.8 + 36 = 94.8<br>
+<br>
+# If limit is 100, request allowed (94.8 < 100)
+                        </code>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Pros:</strong> Memory efficient, smooths boundary issue<br>
+                        <strong>Cons:</strong> Not 100% accurate but good enough<br>
+                        <strong>Recommended:</strong> Best balance of accuracy and memory
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Algorithm Comparison</h2>
+
+            <div class="card">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--border-color);">
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Algorithm</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Memory</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Accuracy</th>
+                            <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Burst</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Token Bucket</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Good</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Allows</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Leaky Bucket</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Good</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Prevents</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fixed Window</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Poor</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">2x burst</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Sliding Log</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">High</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Exact</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">None</td></tr>
+                        <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Sliding Counter</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Low</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Good</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Minimal</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 class="mt-4">Distributed Rate Limiting</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Architecture</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Clients"
+        C1[Client]
+        C2[Client]
+    end
+
+    subgraph "API Gateway"
+        GW[Rate Limiter]
+    end
+
+    subgraph "Storage"
+        Redis[(Redis)]
+    end
+
+    subgraph "Backend"
+        S1[Server 1]
+        S2[Server 2]
+    end
+
+    C1 --> GW
+    C2 --> GW
+    GW <--> Redis
+    GW --> S1
+    GW --> S2
+                        </div>
+                    </div>
+
+                    <h4>Key Considerations</h4>
+                    <ul>
+                        <li><strong>Centralized counter:</strong> Use Redis for atomic operations</li>
+                        <li><strong>Race conditions:</strong> Use Lua scripts or Redis MULTI/EXEC</li>
+                        <li><strong>Latency:</strong> Each request adds Redis RTT (~1ms)</li>
+                        <li><strong>Failure handling:</strong> Fail open or closed?</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+-- Redis Lua script for atomic rate limiting<br>
+local key = KEYS[1]<br>
+local limit = tonumber(ARGV[1])<br>
+local window = tonumber(ARGV[2])<br>
+<br>
+local current = redis.call('INCR', key)<br>
+if current == 1 then<br>
+    redis.call('EXPIRE', key, window)<br>
+end<br>
+<br>
+if current > limit then<br>
+    return 0  -- Rate limited<br>
+end<br>
+return 1  -- Allowed
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">HTTP Response Headers</h2>
+
+            <div class="card">
+                <div class="code-block">
+                    <code>
+HTTP/1.1 429 Too Many Requests<br>
+X-RateLimit-Limit: 100<br>
+X-RateLimit-Remaining: 0<br>
+X-RateLimit-Reset: 1640000000<br>
+Retry-After: 60<br>
+<br>
+{<br>
+  "error": {<br>
+    "code": "RATE_LIMIT_EXCEEDED",<br>
+    "message": "Rate limit exceeded. Try again in 60 seconds."<br>
+  }<br>
+}
+                    </code>
+                </div>
+            </div>
+
+            <h2 class="mt-4">Self-Check Quiz</h2>
+            <div class="quiz-container" id="module-quiz"></div>
+
+            <div class="flex flex-between mt-4">
+                <a href="module-11.html" class="btn btn-secondary">&larr; Previous Module</a>
+                <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            document.querySelectorAll('.sidebar-link[data-module]').forEach(link => {
+                const moduleNum = parseInt(link.dataset.module);
+                if (StaffEngPrep.ProgressTracker.isModuleComplete('systemDesign', moduleNum)) {
+                    link.classList.add('completed');
+                }
+            });
+
+            const quizQuestions = [
+                {
+                    question: "Which rate limiting algorithm allows bursts of traffic?",
+                    options: ["Leaky Bucket", "Token Bucket", "Fixed Window", "Sliding Log"],
+                    correct: 1,
+                    explanation: "Token Bucket allows bursts up to the bucket capacity while maintaining long-term rate limits."
+                },
+                {
+                    question: "What's the main problem with Fixed Window rate limiting?",
+                    options: ["High memory usage", "Boundary burst (2x limit)", "Complex implementation", "Slow performance"],
+                    correct: 1,
+                    explanation: "Fixed Window can allow up to 2x the limit at window boundaries when requests cluster."
+                },
+                {
+                    question: "Which HTTP status code indicates rate limiting?",
+                    options: ["403 Forbidden", "429 Too Many Requests", "503 Service Unavailable", "400 Bad Request"],
+                    correct: 1,
+                    explanation: "429 Too Many Requests is the standard HTTP status code for rate limiting."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('systemDesign', 12);
+            alert('Module 12 marked as complete!');
+            window.location.href = 'module-06.html';
+        }
+    </script>
+</body>
+</html>

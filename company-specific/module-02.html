@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 2: Interview Patterns - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Companies</a></nav>
+
+        <h1>Module 2: Interview Process Patterns</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Recognize three main interview style groups</li>
+                <li>Understand evaluation criteria differences</li>
+                <li>Adapt preparation strategy by style</li>
+                <li>Manage different round types</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">Three Interview Style Groups</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart TD
+    subgraph "Group A: Non-LeetCode Practical"
+        A1[Stripe]
+        A2[Netflix]
+        A3[OpenAI]
+    end
+
+    subgraph "Group B: Assessment First"
+        B1[Anthropic]
+    end
+
+    subgraph "Group C: Systems Heavy"
+        C1[Databricks]
+        C2[Snowflake]
+    end
+            </div>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>Group A: Non-LeetCode Practical</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Companies:</strong> Stripe, Netflix, OpenAI</p>
+                <p><strong>Characteristics:</strong></p>
+                <ul>
+                    <li>Real-world problem scenarios</li>
+                    <li>Multi-part questions common</li>
+                    <li>Code quality over algorithmic complexity</li>
+                    <li>Testing and edge cases evaluated</li>
+                </ul>
+                <p><strong>Preparation Focus:</strong></p>
+                <ul>
+                    <li>Build actual systems (parsers, caches)</li>
+                    <li>Practice writing production-quality code</li>
+                    <li>Focus on code organization</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Group B: Assessment First</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Companies:</strong> Anthropic</p>
+                <p><strong>Characteristics:</strong></p>
+                <ul>
+                    <li>Automated initial screen</li>
+                    <li>Timed multi-level challenges</li>
+                    <li>Completion rate critical</li>
+                    <li>Clean code rewarded</li>
+                </ul>
+                <p><strong>Preparation Focus:</strong></p>
+                <ul>
+                    <li>Practice timed coding sessions</li>
+                    <li>Prioritize working solution over perfection</li>
+                    <li>Build modular, reusable patterns</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>Group C: Systems Heavy</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Companies:</strong> Databricks, Snowflake</p>
+                <p><strong>Characteristics:</strong></p>
+                <ul>
+                    <li>Deep technical knowledge expected</li>
+                    <li>Database/distributed systems focus</li>
+                    <li>Presentation rounds possible</li>
+                    <li>Trade-off discussions important</li>
+                </ul>
+                <p><strong>Preparation Focus:</strong></p>
+                <ul>
+                    <li>Review distributed systems concepts</li>
+                    <li>Understand database internals</li>
+                    <li>Practice technical presentations</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Comparison Table</h2>
+
+        <div class="card">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: var(--border-color);">
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Aspect</th>
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Non-LeetCode</th>
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Assessment First</th>
+                        <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Systems Heavy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Primary Focus</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Code quality</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Completion rate</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Technical depth</td></tr>
+                    <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Question Style</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Practical/multi-part</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Timed levels</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Deep dive</td></tr>
+                    <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Prep Time</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Build systems</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Speed practice</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Study fundamentals</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="module-01.html" class="btn btn-secondary">&larr; Previous Module</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "Which group focuses on code quality over algorithmic complexity?",
+                    options: ["Assessment First", "Systems Heavy", "Non-LeetCode Practical", "None"],
+                    correct: 2,
+                    explanation: "Non-LeetCode practical companies (Stripe, Netflix, OpenAI) prioritize code quality."
+                },
+                {
+                    question: "What's critical for Assessment First companies?",
+                    options: ["Deep technical knowledge", "Completion rate", "Presentation skills", "Algorithm complexity"],
+                    correct: 1,
+                    explanation: "Assessment First companies like Anthropic heavily weight completion rate."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('companySpecific', 2);
+            alert('Module 2 marked as complete!');
+            window.location.href = 'module-03.html';
+        }
+    </script>
+</body>
+</html>

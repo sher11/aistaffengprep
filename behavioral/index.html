@@ -24,8 +24,103 @@
         <h1>Behavioral Rounds</h1>
         <p class="text-muted mb-3">Master the STAR method and prepare compelling stories for staff-level behavioral interviews.</p>
 
-        <!-- STAR Framework -->
-        <h2 class="mt-4 mb-3">The STAR Framework</h2>
+        <!-- Progress -->
+        <div class="progress-container">
+            <div class="progress-header">
+                <span><strong>Course Progress</strong></span>
+                <span class="progress-label" id="progress-label">0% Complete</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Learning Path Diagram -->
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart LR
+    subgraph "Foundation"
+        M1[STAR Framework]
+        M2[Story Mining]
+    end
+
+    subgraph "Categories"
+        M3[Technical Leadership]
+        M4[Conflict Resolution]
+        M5[Failure & Growth]
+    end
+
+    subgraph "Advanced"
+        M6[Influence]
+        M7[Company Alignment]
+        M8[Delivery Practice]
+    end
+
+    M1 --> M2 --> M3 --> M6
+    M2 --> M4 --> M6
+    M2 --> M5 --> M6
+    M6 --> M7 --> M8
+            </div>
+        </div>
+
+        <!-- Modules List -->
+        <h2 class="mt-4 mb-3">Modules</h2>
+
+        <div class="card">
+            <ul class="module-list">
+                <li class="module-item" onclick="window.location='module-01.html'">
+                    <div class="module-number">1</div>
+                    <div class="module-info">
+                        <div class="module-title">STAR Framework Mastery</div>
+                        <div class="module-desc">Core framework, time allocation, common mistakes</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item" onclick="window.location='module-02.html'">
+                    <div class="module-number">2</div>
+                    <div class="module-info">
+                        <div class="module-title">Story Mining & Preparation</div>
+                        <div class="module-desc">Building your story bank, categorization, templates</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item" onclick="window.location='module-03.html'">
+                    <div class="module-number">3</div>
+                    <div class="module-info">
+                        <div class="module-title">Technical Leadership Stories</div>
+                        <div class="module-desc">Decisions, mentoring, code quality leadership</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item" onclick="window.location='module-04.html'">
+                    <div class="module-number">4</div>
+                    <div class="module-info">
+                        <div class="module-title">Conflict & Collaboration</div>
+                        <div class="module-desc">Handling disagreements, difficult conversations</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item" onclick="window.location='module-05.html'">
+                    <div class="module-number">5</div>
+                    <div class="module-info">
+                        <div class="module-title">Failure & Growth Mindset</div>
+                        <div class="module-desc">Owning failures, demonstrating learning</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+                <li class="module-item" onclick="window.location='module-06.html'">
+                    <div class="module-number">6</div>
+                    <div class="module-info">
+                        <div class="module-title">Influence Without Authority</div>
+                        <div class="module-desc">Staff-level leadership, building coalitions</div>
+                    </div>
+                    <span class="module-status">Not Started</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- STAR Framework Quick Reference -->
+        <h2 class="mt-4 mb-3">STAR Framework Quick Reference</h2>
 
         <div class="diagram-container">
             <div class="mermaid">
@@ -77,171 +172,30 @@ mindmap
             </div>
         </div>
 
-        <!-- Question Categories -->
-        <h2 class="mt-4 mb-3">Question Categories</h2>
-
-        <div class="collapsible open">
-            <div class="collapsible-header">
-                <span>Technical Leadership</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <ul>
-                    <li>"Tell me about a technical decision you drove"</li>
-                    <li>"Describe improving code quality on your team"</li>
-                    <li>"How have you mentored junior engineers?"</li>
-                    <li>"Tell me about learning a new technology quickly"</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Conflict & Collaboration</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <ul>
-                    <li>"Tell me about a disagreement with a colleague"</li>
-                    <li>"Describe working with a difficult stakeholder"</li>
-                    <li>"How do you handle pushback on your ideas?"</li>
-                    <li>"Tell me about giving difficult feedback"</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Failure & Growth</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <ul>
-                    <li>"Tell me about a project that failed"</li>
-                    <li>"Describe your biggest mistake"</li>
-                    <li>"What's the toughest feedback you've received?"</li>
-                    <li>"Tell me about missing a deadline"</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Influence & Leadership</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <ul>
-                    <li>"How have you influenced without authority?"</li>
-                    <li>"Tell me about leading a cross-team initiative"</li>
-                    <li>"Describe changing someone's mind on a technical approach"</li>
-                    <li>"Tell me about rallying a team through difficulty"</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="collapsible">
-            <div class="collapsible-header">
-                <span>Delivery & Execution</span>
-                <span class="collapsible-icon">&#9660;</span>
-            </div>
-            <div class="collapsible-content">
-                <ul>
-                    <li>"Tell me about delivering under pressure"</li>
-                    <li>"Describe managing a complex project"</li>
-                    <li>"How do you prioritize when everything is urgent?"</li>
-                    <li>"Tell me about unblocking a stuck project"</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Story Builder -->
-        <h2 class="mt-4 mb-3">Story Preparation Template</h2>
-
-        <div class="card">
-            <form id="story-builder">
-                <div style="margin-bottom: 1rem;">
-                    <label><strong>Story Title:</strong></label>
-                    <input type="text" style="width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid var(--border-color); border-radius: 0.25rem;">
-                </div>
-
-                <div style="margin-bottom: 1rem;">
-                    <label><strong>Category:</strong></label>
-                    <select style="width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid var(--border-color); border-radius: 0.25rem;">
-                        <option>Technical Leadership</option>
-                        <option>Conflict & Collaboration</option>
-                        <option>Failure & Growth</option>
-                        <option>Influence & Leadership</option>
-                        <option>Delivery & Execution</option>
-                    </select>
-                </div>
-
-                <div style="margin-bottom: 1rem;">
-                    <label><strong>Situation (1-2 sentences):</strong></label>
-                    <textarea style="width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid var(--border-color); border-radius: 0.25rem; min-height: 60px;" placeholder="Context and stakes..."></textarea>
-                </div>
-
-                <div style="margin-bottom: 1rem;">
-                    <label><strong>Task (1-2 sentences):</strong></label>
-                    <textarea style="width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid var(--border-color); border-radius: 0.25rem; min-height: 60px;" placeholder="Your role and challenge..."></textarea>
-                </div>
-
-                <div style="margin-bottom: 1rem;">
-                    <label><strong>Action (3-5 bullet points):</strong></label>
-                    <textarea style="width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid var(--border-color); border-radius: 0.25rem; min-height: 120px;" placeholder="Specific steps YOU took..."></textarea>
-                </div>
-
-                <div style="margin-bottom: 1rem;">
-                    <label><strong>Result (1-2 sentences with metrics):</strong></label>
-                    <textarea style="width: 100%; padding: 0.5rem; margin-top: 0.25rem; border: 1px solid var(--border-color); border-radius: 0.25rem; min-height: 60px;" placeholder="Outcomes, metrics, learnings..."></textarea>
-                </div>
-
-                <button type="button" class="btn btn-primary" onclick="saveStory()">Save Story</button>
-            </form>
-        </div>
-
-        <!-- Story Bank -->
-        <h2 class="mt-4 mb-3">Your Story Bank</h2>
-
-        <div class="card">
-            <div id="story-bank">
-                <p class="text-muted">No stories saved yet. Use the template above to prepare your stories.</p>
-            </div>
-        </div>
-
         <!-- Quick Quiz -->
-        <h2 class="mt-4 mb-3">Self-Check</h2>
+        <h2 class="mt-4 mb-3">Quick Assessment</h2>
 
-        <div class="quiz-container" id="behavioral-quiz"></div>
+        <div class="quiz-container" id="quick-quiz"></div>
 
-        <!-- Tips -->
-        <h2 class="mt-4 mb-3">Staff-Level Tips</h2>
+        <!-- Key Concepts to Review -->
+        <h2 class="mt-4 mb-3">Key Concepts to Review</h2>
 
-        <div class="card-grid">
-            <div class="card">
-                <h3>Be Specific</h3>
-                <p>Vague answers hurt you. Use specific examples with metrics and outcomes.</p>
-            </div>
-            <div class="card">
-                <h3>Own Failures</h3>
-                <p>Everyone expects failures. Show self-awareness and what you learned.</p>
-            </div>
-            <div class="card">
-                <h3>Focus on YOU</h3>
-                <p>Use "I" not "we". Clarify your specific contribution to team successes.</p>
-            </div>
-            <div class="card">
-                <h3>Practice Aloud</h3>
-                <p>Time yourself. Each story should be 2-3 minutes. Practice until natural.</p>
-            </div>
-        </div>
+        <div class="review-schedule" id="behavioral-review"></div>
 
     </div>
 
     <script src="../assets/js/app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Quiz
+            // Update progress
+            const progress = StaffEngPrep.ProgressTracker.getOverallProgress('behavioral');
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('progress-label').textContent = progress + '% Complete';
+
+            // Initialize module navigation
+            StaffEngPrep.initModuleNavigation('behavioral');
+
+            // Initialize quick quiz
             const quizQuestions = [
                 {
                     question: "How much time should you spend on the Action portion of STAR?",
@@ -261,7 +215,7 @@ mindmap
                     explanation: "Show self-awareness by focusing on learnings and changes you made."
                 },
                 {
-                    question: "What's key when demonstrating leadership without formal authority?",
+                    question: "What's key when demonstrating leadership without authority?",
                     options: [
                         "Forcing decisions",
                         "Influencing through expertise and relationships",
@@ -273,89 +227,20 @@ mindmap
                 }
             ];
 
-            const quiz = new StaffEngPrep.Quiz('behavioral-quiz', quizQuestions);
+            const quiz = new StaffEngPrep.Quiz('quick-quiz', quizQuestions);
             quiz.render();
 
-            // Load saved stories
-            loadStories();
+            // Initialize review schedule
+            const concepts = [
+                { id: 'star-framework', name: 'STAR Framework' },
+                { id: 'story-preparation', name: 'Story Preparation' },
+                { id: 'conflict-resolution', name: 'Conflict Resolution' },
+                { id: 'failure-ownership', name: 'Failure Ownership' },
+                { id: 'influence-tactics', name: 'Influence Tactics' },
+                { id: 'company-alignment', name: 'Company Alignment' }
+            ];
+            StaffEngPrep.renderReviewSchedule('behavioral-review', concepts);
         });
-
-        function saveStory() {
-            const form = document.getElementById('story-builder');
-            const inputs = form.querySelectorAll('input, textarea, select');
-
-            const story = {
-                id: Date.now(),
-                title: inputs[0].value || 'Untitled Story',
-                category: inputs[1].value,
-                situation: inputs[2].value,
-                task: inputs[3].value,
-                action: inputs[4].value,
-                result: inputs[5].value
-            };
-
-            if (!story.situation && !story.action) {
-                alert('Please fill in at least the Situation and Action fields.');
-                return;
-            }
-
-            // Save to localStorage
-            const stories = JSON.parse(localStorage.getItem('behavioral_stories') || '[]');
-            stories.push(story);
-            localStorage.setItem('behavioral_stories', JSON.stringify(stories));
-
-            // Clear form
-            inputs.forEach(input => {
-                if (input.tagName === 'TEXTAREA' || input.type === 'text') {
-                    input.value = '';
-                }
-            });
-
-            loadStories();
-            alert('Story saved!');
-        }
-
-        function loadStories() {
-            const stories = JSON.parse(localStorage.getItem('behavioral_stories') || '[]');
-            const container = document.getElementById('story-bank');
-
-            if (stories.length === 0) {
-                container.innerHTML = '<p class="text-muted">No stories saved yet.</p>';
-                return;
-            }
-
-            container.innerHTML = stories.map(story => `
-                <div class="collapsible">
-                    <div class="collapsible-header">
-                        <span><strong>${story.title}</strong> <span class="text-muted">(${story.category})</span></span>
-                        <span class="collapsible-icon">&#9660;</span>
-                    </div>
-                    <div class="collapsible-content">
-                        <p><strong>Situation:</strong> ${story.situation}</p>
-                        <p><strong>Task:</strong> ${story.task}</p>
-                        <p><strong>Action:</strong> ${story.action}</p>
-                        <p><strong>Result:</strong> ${story.result}</p>
-                        <button class="btn btn-secondary mt-2" onclick="deleteStory(${story.id})">Delete</button>
-                    </div>
-                </div>
-            `).join('');
-
-            // Reinitialize collapsibles
-            document.querySelectorAll('#story-bank .collapsible-header').forEach(header => {
-                header.addEventListener('click', () => {
-                    header.parentElement.classList.toggle('open');
-                });
-            });
-        }
-
-        function deleteStory(id) {
-            if (!confirm('Delete this story?')) return;
-
-            const stories = JSON.parse(localStorage.getItem('behavioral_stories') || '[]');
-            const filtered = stories.filter(s => s.id !== id);
-            localStorage.setItem('behavioral_stories', JSON.stringify(filtered));
-            loadStories();
-        }
     </script>
 </body>
 </html>

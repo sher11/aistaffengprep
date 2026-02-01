@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design News Feed - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Problem Breakdowns</div>
+                    <a href="url-shortener.html" class="sidebar-link">URL Shortener</a>
+                    <a href="news-feed.html" class="sidebar-link active">News Feed</a>
+                    <a href="chat-system.html" class="sidebar-link">Chat System</a>
+                    <a href="video-streaming.html" class="sidebar-link">Video Streaming</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                    <a href="../module-06.html" class="sidebar-link">Common Problems</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Design: News Feed System</h1>
+            <p class="text-muted">Examples: Facebook, Twitter, Instagram, LinkedIn Feed</p>
+
+            <div class="card mt-3" style="background: var(--success-bg);">
+                <strong>Difficulty:</strong> Medium-Hard | <strong>Time:</strong> 45-50 minutes
+            </div>
+
+            <h2 class="mt-4">1. Requirements Clarification</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Functional Requirements</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li>Users can create posts (text, images, videos)</li>
+                        <li>Users can follow other users</li>
+                        <li>News feed shows posts from followed users</li>
+                        <li>Feed should be personalized and relevant</li>
+                        <li>Support likes, comments, shares</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Non-Functional Requirements</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li><strong>Low latency:</strong> Feed loads in < 200ms</li>
+                        <li><strong>High availability:</strong> 99.9% uptime</li>
+                        <li><strong>Scalability:</strong> Handle 500M+ DAU</li>
+                        <li><strong>Eventually consistent:</strong> OK if feed slightly delayed</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h2 class="mt-4">2. Capacity Estimation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Scale Numbers</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="card" style="background: var(--code-bg); color: #e2e8f0;">
+                        <strong>Assumptions:</strong><br>
+                        - 500M DAU<br>
+                        - Each user follows avg 200 people<br>
+                        - Each user creates 2 posts/day<br>
+                        - Each user checks feed 10 times/day<br><br>
+
+                        <strong>Posts Created:</strong><br>
+                        500M * 2 = 1B posts/day ≈ 12,000/sec<br><br>
+
+                        <strong>Feed Requests:</strong><br>
+                        500M * 10 = 5B/day ≈ 60,000/sec<br><br>
+
+                        <strong>Storage per post:</strong><br>
+                        Text: 500 bytes, Metadata: 200 bytes<br>
+                        1B posts * 700 bytes ≈ 700 GB/day
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">3. High-Level Design</h2>
+
+            <div class="diagram-container">
+                <div class="mermaid">
+flowchart TB
+    subgraph "Clients"
+        C[Mobile/Web]
+    end
+
+    subgraph "Load Balancing"
+        LB[Load Balancer]
+    end
+
+    subgraph "Services"
+        PS[Post Service]
+        FS[Feed Service]
+        US[User Service]
+        NS[Notification Service]
+    end
+
+    subgraph "Data"
+        Cache[(Redis Cache)]
+        PostDB[(Posts DB)]
+        UserDB[(User/Graph DB)]
+        FeedCache[(Feed Cache)]
+    end
+
+    subgraph "Async"
+        MQ[Message Queue]
+        FG[Feed Generator]
+    end
+
+    C --> LB
+    LB --> PS & FS & US
+    PS --> PostDB
+    PS --> MQ
+    MQ --> FG
+    FG --> FeedCache
+    FS --> FeedCache
+    FS --> Cache
+    US --> UserDB
+                </div>
+            </div>
+
+            <h2 class="mt-4">4. Feed Generation Approaches</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Pull Model (Fan-out on Read)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Generate feed when user requests it.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant F as Feed Service
+    participant G as Graph DB
+    participant P as Posts DB
+
+    U->>F: Get Feed
+    F->>G: Get followed users
+    G-->>F: User IDs
+    F->>P: Get recent posts from users
+    P-->>F: Posts
+    F->>F: Rank & merge
+    F-->>U: Feed
+                        </div>
+                    </div>
+
+                    <div class="card-grid">
+                        <div class="card" style="background: var(--success-bg);">
+                            <strong>Pros:</strong>
+                            <ul>
+                                <li>No wasted computation</li>
+                                <li>Always fresh content</li>
+                                <li>Simple for inactive users</li>
+                            </ul>
+                        </div>
+                        <div class="card" style="background: var(--error-bg);">
+                            <strong>Cons:</strong>
+                            <ul>
+                                <li>Slow for users with many followings</li>
+                                <li>High read latency</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Push Model (Fan-out on Write)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Pre-compute and push posts to followers' feeds when created.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant A as Author
+    participant P as Post Service
+    participant Q as Queue
+    participant W as Workers
+    participant FC as Feed Cache
+
+    A->>P: Create Post
+    P->>Q: Post event
+    Q->>W: Process
+    W->>W: Get all followers
+    W->>FC: Add to each follower's feed
+                        </div>
+                    </div>
+
+                    <div class="card-grid">
+                        <div class="card" style="background: var(--success-bg);">
+                            <strong>Pros:</strong>
+                            <ul>
+                                <li>Fast read (pre-computed)</li>
+                                <li>Consistent user experience</li>
+                            </ul>
+                        </div>
+                        <div class="card" style="background: var(--error-bg);">
+                            <strong>Cons:</strong>
+                            <ul>
+                                <li>Celebrity problem (millions of followers)</li>
+                                <li>Wasted work for inactive users</li>
+                                <li>Delay in seeing own posts</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Hybrid Model (Recommended)</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Combine both approaches based on user type.</p>
+
+                    <ul>
+                        <li><strong>Regular users:</strong> Push model (fan-out on write)</li>
+                        <li><strong>Celebrities (>10K followers):</strong> Pull model at read time</li>
+                        <li><strong>Inactive users:</strong> Compute on demand</li>
+                    </ul>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>This is what Facebook/Twitter actually use!</strong>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">5. Feed Ranking</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Ranking Signals</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <ul>
+                        <li><strong>Recency:</strong> Newer posts ranked higher</li>
+                        <li><strong>Engagement:</strong> Likes, comments, shares</li>
+                        <li><strong>Relationship:</strong> Close friends vs acquaintances</li>
+                        <li><strong>Content type:</strong> User preferences</li>
+                        <li><strong>Author popularity:</strong> Verified, influencer status</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <code>
+score = (recency_weight * recency_score) +<br>
+        (engagement_weight * engagement_score) +<br>
+        (relationship_weight * relationship_score) +<br>
+        (relevance_weight * ml_relevance_score)
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">6. Database Schema</h2>
+
+            <div class="collapsible">
+                <div class="collapsible-header">
+                    <span>Data Model</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="code-block">
+                        <code>
+Users:<br>
+- user_id (PK)<br>
+- name, email, profile_pic<br>
+- created_at<br><br>
+
+Posts:<br>
+- post_id (PK)<br>
+- author_id (FK → Users)<br>
+- content, media_urls<br>
+- created_at<br>
+- like_count, comment_count<br><br>
+
+Followers (Graph):<br>
+- follower_id (FK → Users)<br>
+- followee_id (FK → Users)<br>
+- created_at<br><br>
+
+FeedCache (Redis):<br>
+- Key: user:{user_id}:feed<br>
+- Value: List of post_ids (sorted by rank)
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="mt-4">7. Caching Strategy</h2>
+
+            <div class="card">
+                <ul>
+                    <li><strong>Feed Cache:</strong> Store top 500 post IDs per user</li>
+                    <li><strong>Post Cache:</strong> LRU cache for hot posts</li>
+                    <li><strong>Social Graph Cache:</strong> User's followings/followers</li>
+                    <li><strong>Session Cache:</strong> User preferences, scroll position</li>
+                </ul>
+
+                <div class="code-block" style="margin-top: 1rem;">
+                    <code>
+// Redis feed structure<br>
+ZADD user:123:feed 1640000000 "post:456"<br>
+ZADD user:123:feed 1640001000 "post:789"<br><br>
+
+// Get feed (newest first)<br>
+ZREVRANGE user:123:feed 0 19
+                    </code>
+                </div>
+            </div>
+
+            <h2 class="mt-4">8. Summary</h2>
+
+            <div class="card">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Feed Generation</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Hybrid (Push + Pull)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Read QPS</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">~60,000/sec</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Write QPS</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">~12,000/sec</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Latency Target</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><200ms</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);"><strong>Key Challenge</strong></td>
+                        <td style="padding: 0.5rem; border: 1px solid var(--border-color);">Celebrity problem, ranking</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="url-shortener.html" class="btn btn-secondary">&larr; URL Shortener</a>
+                <a href="chat-system.html" class="btn btn-primary">Next: Chat System &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 1: STAR Framework - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="index.html" style="color: var(--primary-color);">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <nav style="margin-bottom: 1rem;"><a href="index.html">&larr; Back to Behavioral</a></nav>
+
+        <h1>Module 1: STAR Framework Mastery</h1>
+
+        <div class="card mt-3">
+            <h3>Learning Objectives</h3>
+            <ul>
+                <li>Understand each component of the STAR framework</li>
+                <li>Apply correct time allocation (15/15/50/20)</li>
+                <li>Identify and avoid common STAR mistakes</li>
+                <li>Construct effective STAR responses</li>
+            </ul>
+        </div>
+
+        <h2 class="mt-4">What is STAR?</h2>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart LR
+    S["<strong>S</strong>ituation<br>15%"] --> T["<strong>T</strong>ask<br>15%"]
+    T --> A["<strong>A</strong>ction<br>50%"]
+    A --> R["<strong>R</strong>esult<br>20%"]
+            </div>
+        </div>
+
+        <div class="collapsible open">
+            <div class="collapsible-header">
+                <span>S - Situation (15%)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Purpose:</strong> Set the context briefly</p>
+                <p><strong>Include:</strong></p>
+                <ul>
+                    <li>Where/when (company, team, project)</li>
+                    <li>What was happening</li>
+                    <li>Why it mattered (stakes)</li>
+                </ul>
+                <p><strong>Time:</strong> 15-20 seconds</p>
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>Good example:</strong>
+                    <p>"At my previous company, we were launching a new payment service with aggressive deadlines. The success of this launch would determine our Q4 revenue targets."</p>
+                </div>
+                <div class="card mt-2" style="background: var(--error-bg);">
+                    <strong>Bad example:</strong>
+                    <p>"So it was about two years ago, maybe 2021, when I was working at Acme Corp. We had this project that started maybe in March or April..."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>T - Task (15%)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Purpose:</strong> Clarify YOUR specific role</p>
+                <p><strong>Include:</strong></p>
+                <ul>
+                    <li>Your responsibility</li>
+                    <li>What was expected of you</li>
+                    <li>Specific challenges you faced</li>
+                </ul>
+                <p><strong>Time:</strong> 15-20 seconds</p>
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>Good example:</strong>
+                    <p>"As the senior engineer, I was responsible for designing the payment reconciliation system and ensuring we integrated with three external providers."</p>
+                </div>
+                <div class="card mt-2" style="background: var(--error-bg);">
+                    <strong>Bad example:</strong>
+                    <p>"We needed to build the system and make it work."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>A - Action (50%)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Purpose:</strong> The heart of your response - what YOU did</p>
+                <p><strong>Structure as steps:</strong></p>
+                <ol>
+                    <li>First, I [action]...</li>
+                    <li>Then, I [action]...</li>
+                    <li>Next, I [action]...</li>
+                    <li>Finally, I [action]...</li>
+                </ol>
+                <p><strong>Time:</strong> 60-90 seconds</p>
+                <p><strong>Key:</strong> Use "I" consistently, not "we"</p>
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>Good example:</strong>
+                    <p>"First, I analyzed the requirements from each provider and identified compatibility issues. Then, I proposed an adapter pattern and presented it to the team. Next, I implemented the core interface and paired with junior engineers on provider-specific adapters. When we hit rate limit issues, I negotiated directly with the provider and designed a request queuing system."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapsible">
+            <div class="collapsible-header">
+                <span>R - Result (20%)</span>
+                <span class="collapsible-icon">&#9660;</span>
+            </div>
+            <div class="collapsible-content">
+                <p><strong>Purpose:</strong> Demonstrate impact and learning</p>
+                <p><strong>Include:</strong></p>
+                <ul>
+                    <li>Quantified outcomes when possible</li>
+                    <li>Business impact</li>
+                    <li>What you learned</li>
+                    <li>What you might do differently</li>
+                </ul>
+                <p><strong>Time:</strong> 20-30 seconds</p>
+                <div class="card mt-2" style="background: var(--success-bg);">
+                    <strong>Good example:</strong>
+                    <p>"We launched on schedule. The system processed over 10,000 transactions daily with 99.9% accuracy. I learned the importance of early vendor engagement - starting those conversations earlier would have prevented the rate limit issue."</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Time Allocation</h2>
+
+        <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+            <thead>
+                <tr style="background: var(--border-color);">
+                    <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Component</th>
+                    <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Percentage</th>
+                    <th style="padding: 0.75rem; border: 1px solid var(--border-color);">2 min response</th>
+                    <th style="padding: 0.75rem; border: 1px solid var(--border-color);">3 min response</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Situation</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">15%</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">18 sec</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">27 sec</td></tr>
+                <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Task</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">15%</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">18 sec</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">27 sec</td></tr>
+                <tr style="background: rgba(37, 99, 235, 0.1);"><td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Action</strong></td><td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>50%</strong></td><td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>60 sec</strong></td><td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>90 sec</strong></td></tr>
+                <tr><td style="padding: 0.75rem; border: 1px solid var(--border-color);">Result</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">20%</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">24 sec</td><td style="padding: 0.75rem; border: 1px solid var(--border-color);">36 sec</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="mt-4">Common Mistakes</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h4>Too Long on Situation</h4>
+                <p class="text-muted">Spending 1+ minutes on context loses the interviewer's attention.</p>
+                <p><strong>Fix:</strong> Practice a 2-sentence limit.</p>
+            </div>
+            <div class="card">
+                <h4>"We" Instead of "I"</h4>
+                <p class="text-muted">Using team language makes your contribution unclear.</p>
+                <p><strong>Fix:</strong> Replace every "we" with "I" and your specific action.</p>
+            </div>
+            <div class="card">
+                <h4>Vague Actions</h4>
+                <p class="text-muted">"I helped the team" doesn't show capability.</p>
+                <p><strong>Fix:</strong> Add specific details - what exactly did you do?</p>
+            </div>
+            <div class="card">
+                <h4>No Quantified Results</h4>
+                <p class="text-muted">Without numbers, impact is unclear.</p>
+                <p><strong>Fix:</strong> Find or estimate metrics. "Improved by ~30%" is better than nothing.</p>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Self-Check Quiz</h2>
+        <div class="quiz-container" id="module-quiz"></div>
+
+        <div class="flex flex-between mt-4">
+            <a href="index.html" class="btn btn-secondary">&larr; Back to Overview</a>
+            <button class="btn btn-primary" onclick="completeModule()">Mark Complete &rarr;</button>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const quizQuestions = [
+                {
+                    question: "What percentage of time should Action receive?",
+                    options: ["20%", "35%", "50%", "65%"],
+                    correct: 2,
+                    explanation: "Action is where you demonstrate your capabilities - it gets 50% of your response time."
+                },
+                {
+                    question: "Which is a common STAR mistake?",
+                    options: ["Providing specific examples", "Using 'we' instead of 'I'", "Quantifying results", "Mentioning what you learned"],
+                    correct: 1,
+                    explanation: "Using 'we' makes your individual contribution unclear. Always use 'I' and specify your actions."
+                },
+                {
+                    question: "How long should a typical STAR response be?",
+                    options: ["30-60 seconds", "2-3 minutes", "5-7 minutes", "As long as needed"],
+                    correct: 1,
+                    explanation: "A well-structured STAR response should be 2-3 minutes. Any shorter lacks detail, any longer loses attention."
+                }
+            ];
+            const quiz = new StaffEngPrep.Quiz('module-quiz', quizQuestions);
+            quiz.render();
+        });
+
+        function completeModule() {
+            StaffEngPrep.ProgressTracker.markModuleComplete('behavioral', 1);
+            alert('Module 1 marked as complete!');
+            window.location.href = 'module-02.html';
+        }
+    </script>
+</body>
+</html>
