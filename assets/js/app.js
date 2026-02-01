@@ -805,7 +805,13 @@
     // ============================================
     function initCollapsibles() {
         document.querySelectorAll('.collapsible-header').forEach(header => {
-            header.addEventListener('click', () => {
+            // Prevent duplicate event listeners
+            if (header.dataset.collapsibleInit) return;
+            header.dataset.collapsibleInit = 'true';
+
+            header.addEventListener('click', (e) => {
+                // Prevent event from bubbling if clicking on elements inside header
+                e.stopPropagation();
                 const collapsible = header.parentElement;
                 collapsible.classList.toggle('open');
             });
@@ -963,11 +969,19 @@
     // ============================================
     // AUTO-INITIALIZE ON DOM READY
     // ============================================
-    document.addEventListener('DOMContentLoaded', () => {
+    function initAll() {
         initCollapsibles();
         initMermaid();
         initSidebar();
         initCodeBlocks();
-    });
+    }
+
+    // Handle case where DOM is already loaded (script at end of body)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAll);
+    } else {
+        // DOM already loaded, initialize immediately
+        initAll();
+    }
 
 })();
