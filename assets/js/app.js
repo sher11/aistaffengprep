@@ -97,6 +97,31 @@
             return due;
         },
 
+        // Alias for getDueForReview (used in some pages)
+        getDueReviews() {
+            return this.getDueForReview();
+        },
+
+        // Get overall progress percentage for a course
+        getOverallProgress(course) {
+            const totalModules = {
+                'coding': 9,
+                'systemDesign': 12,
+                'companySpecific': 6,
+                'behavioral': 6
+            };
+            const progress = this._getProgress();
+            const moduleProgress = progress.modules[course] || {};
+            const completed = Object.values(moduleProgress).filter(m => m && m.completed).length;
+            const total = totalModules[course] || 9;
+            return Math.round((completed / total) * 100);
+        },
+
+        // Public getter for progress data
+        getProgress() {
+            return this._getProgress();
+        },
+
         _addDays(date, days) {
             const result = new Date(date);
             result.setDate(result.getDate() + days);
