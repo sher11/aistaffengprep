@@ -305,13 +305,31 @@ body {
     margin: 1rem 0;
 }
 
-.code-block code {
+.code-block pre,
+.code-block-pre {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.code-block code,
+.code-block pre code {
     color: #e2e8f0;
     font-family: 'Fira Code', 'Consolas', monospace;
     font-size: 0.9rem;
-    line-height: 1.5;
-    white-space: pre-wrap;
+    line-height: 1.6;
+    white-space: pre;
     display: block;
+    overflow-x: auto;
+}
+
+/* Prism.js overrides for consistent styling */
+.code-block pre[class*="language-"],
+.code-block code[class*="language-"] {
+    background: transparent;
+    text-shadow: none;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9rem;
 }
 
 /* Collapsible Sections */

@@ -17,6 +17,7 @@
                 <li><a href="../system-design/index.html">System Design</a></li>
                 <li><a href="../company-specific/index.html">Companies</a></li>
                 <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="../generative-ai/index.html">Gen AI</a></li>
             </ul>
         </div>
     </nav>
@@ -105,20 +106,135 @@
             <div class="collapsible-content">
                 <p>Big-O describes the upper bound of algorithm growth rate as input size increases.</p>
 
-                <div class="diagram-container">
-                    <div class="mermaid">
-graph TD
-    subgraph "Common Complexities"
-        A["O(1) - Constant"]
-        B["O(log n) - Logarithmic"]
-        C["O(n) - Linear"]
-        D["O(n log n) - Linearithmic"]
-        E["O(n²) - Quadratic"]
-        F["O(2ⁿ) - Exponential"]
-    end
+                <div class="diagram-container interactive">
+                    <!-- Interactive Big-O Complexity Visualization -->
+                    <div id="complexity-animation" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                        <h4 style="color: #fff; text-align: center; margin-bottom: 20px; font-size: 1.2rem;">Interactive Big-O Complexity Comparison</h4>
 
-    A --> B --> C --> D --> E --> F
+                        <!-- Input Size Slider -->
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <label style="color: #a0a0a0; font-size: 0.9rem;">Input Size (n): <span id="n-value" style="color: #00d4ff; font-weight: bold;">10</span></label>
+                            <br>
+                            <input type="range" id="n-slider" min="1" max="20" value="10" style="width: 80%; margin-top: 10px; accent-color: #00d4ff;">
+                        </div>
+
+                        <!-- Complexity Bars -->
+                        <div id="complexity-bars" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div class="complexity-row" data-complexity="O(1)" data-calc="constant" style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 140px; color: #4ade80; font-family: monospace; font-weight: bold; font-size: 0.95rem;">O(1)</div>
+                                <div style="flex: 1; height: 28px; background: rgba(255,255,255,0.1); border-radius: 14px; overflow: hidden; position: relative;">
+                                    <div class="bar" style="height: 100%; background: linear-gradient(90deg, #4ade80, #22c55e); border-radius: 14px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); width: 5%;"></div>
+                                </div>
+                                <div class="operations" style="width: 80px; color: #a0a0a0; font-size: 0.85rem; text-align: right;">1 op</div>
+                            </div>
+                            <div class="complexity-row" data-complexity="O(log n)" data-calc="logarithmic" style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 140px; color: #60a5fa; font-family: monospace; font-weight: bold; font-size: 0.95rem;">O(log n)</div>
+                                <div style="flex: 1; height: 28px; background: rgba(255,255,255,0.1); border-radius: 14px; overflow: hidden; position: relative;">
+                                    <div class="bar" style="height: 100%; background: linear-gradient(90deg, #60a5fa, #3b82f6); border-radius: 14px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); width: 10%;"></div>
+                                </div>
+                                <div class="operations" style="width: 80px; color: #a0a0a0; font-size: 0.85rem; text-align: right;">3 ops</div>
+                            </div>
+                            <div class="complexity-row" data-complexity="O(n)" data-calc="linear" style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 140px; color: #facc15; font-family: monospace; font-weight: bold; font-size: 0.95rem;">O(n)</div>
+                                <div style="flex: 1; height: 28px; background: rgba(255,255,255,0.1); border-radius: 14px; overflow: hidden; position: relative;">
+                                    <div class="bar" style="height: 100%; background: linear-gradient(90deg, #facc15, #eab308); border-radius: 14px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); width: 20%;"></div>
+                                </div>
+                                <div class="operations" style="width: 80px; color: #a0a0a0; font-size: 0.85rem; text-align: right;">10 ops</div>
+                            </div>
+                            <div class="complexity-row" data-complexity="O(n log n)" data-calc="linearithmic" style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 140px; color: #fb923c; font-family: monospace; font-weight: bold; font-size: 0.95rem;">O(n log n)</div>
+                                <div style="flex: 1; height: 28px; background: rgba(255,255,255,0.1); border-radius: 14px; overflow: hidden; position: relative;">
+                                    <div class="bar" style="height: 100%; background: linear-gradient(90deg, #fb923c, #f97316); border-radius: 14px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); width: 35%;"></div>
+                                </div>
+                                <div class="operations" style="width: 80px; color: #a0a0a0; font-size: 0.85rem; text-align: right;">33 ops</div>
+                            </div>
+                            <div class="complexity-row" data-complexity="O(n^2)" data-calc="quadratic" style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 140px; color: #f87171; font-family: monospace; font-weight: bold; font-size: 0.95rem;">O(n^2)</div>
+                                <div style="flex: 1; height: 28px; background: rgba(255,255,255,0.1); border-radius: 14px; overflow: hidden; position: relative;">
+                                    <div class="bar" style="height: 100%; background: linear-gradient(90deg, #f87171, #ef4444); border-radius: 14px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); width: 60%;"></div>
+                                </div>
+                                <div class="operations" style="width: 80px; color: #a0a0a0; font-size: 0.85rem; text-align: right;">100 ops</div>
+                            </div>
+                            <div class="complexity-row" data-complexity="O(2^n)" data-calc="exponential" style="display: flex; align-items: center; gap: 15px;">
+                                <div style="width: 140px; color: #e879f9; font-family: monospace; font-weight: bold; font-size: 0.95rem;">O(2^n)</div>
+                                <div style="flex: 1; height: 28px; background: rgba(255,255,255,0.1); border-radius: 14px; overflow: hidden; position: relative;">
+                                    <div class="bar" style="height: 100%; background: linear-gradient(90deg, #e879f9, #d946ef); border-radius: 14px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); width: 100%;"></div>
+                                </div>
+                                <div class="operations" style="width: 80px; color: #a0a0a0; font-size: 0.85rem; text-align: right;">1024 ops</div>
+                            </div>
+                        </div>
+
+                        <!-- Real-World Examples on Hover -->
+                        <div id="complexity-tooltip" style="margin-top: 25px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; border-left: 3px solid #00d4ff; min-height: 60px;">
+                            <p style="color: #d0d0d0; margin: 0; font-size: 0.9rem;"><strong style="color: #00d4ff;">Hover over a complexity</strong> to see real-world examples and when each is acceptable.</p>
+                        </div>
                     </div>
+
+                    <script>
+                    (function() {
+                        const slider = document.getElementById('n-slider');
+                        const nValue = document.getElementById('n-value');
+                        const tooltip = document.getElementById('complexity-tooltip');
+
+                        const examples = {
+                            'O(1)': { example: 'Array access, hash table lookup', acceptable: 'Always preferred. Used in: HashMap get/put, array indexing.' },
+                            'O(log n)': { example: 'Binary search, balanced BST operations', acceptable: 'Excellent for large datasets. Used in: Database indexes, binary search.' },
+                            'O(n)': { example: 'Linear search, single loop', acceptable: 'Acceptable for most cases. Used in: Finding max/min, simple iterations.' },
+                            'O(n log n)': { example: 'Efficient sorting (mergesort, quicksort)', acceptable: 'Standard for sorting. Used in: Most sorting libraries, divide-and-conquer.' },
+                            'O(n^2)': { example: 'Nested loops, bubble sort', acceptable: 'Avoid for n > 10,000. Used in: Small datasets, some graph algorithms.' },
+                            'O(2^n)': { example: 'Recursive fibonacci, subset generation', acceptable: 'Only for n < 25. Used in: Brute force, exhaustive search (use DP instead!).' }
+                        };
+
+                        function updateBars(n) {
+                            const maxOps = Math.pow(2, Math.min(n, 20));
+                            const rows = document.querySelectorAll('#complexity-bars .complexity-row');
+
+                            rows.forEach(row => {
+                                const calc = row.dataset.calc;
+                                let ops;
+                                switch(calc) {
+                                    case 'constant': ops = 1; break;
+                                    case 'logarithmic': ops = Math.max(1, Math.log2(n)); break;
+                                    case 'linear': ops = n; break;
+                                    case 'linearithmic': ops = n * Math.log2(Math.max(2, n)); break;
+                                    case 'quadratic': ops = n * n; break;
+                                    case 'exponential': ops = Math.pow(2, n); break;
+                                }
+
+                                const bar = row.querySelector('.bar');
+                                const opsDisplay = row.querySelector('.operations');
+                                const percentage = Math.min(100, (Math.log(ops + 1) / Math.log(maxOps + 1)) * 100);
+
+                                bar.style.width = Math.max(3, percentage) + '%';
+                                opsDisplay.textContent = ops >= 1000000 ? (ops/1000000).toFixed(1) + 'M ops' :
+                                                        ops >= 1000 ? (ops/1000).toFixed(1) + 'K ops' :
+                                                        Math.round(ops) + ' ops';
+                            });
+                        }
+
+                        slider.addEventListener('input', function() {
+                            const n = parseInt(this.value);
+                            nValue.textContent = n;
+                            updateBars(n);
+                        });
+
+                        document.querySelectorAll('#complexity-bars .complexity-row').forEach(row => {
+                            row.style.cursor = 'pointer';
+                            row.addEventListener('mouseenter', function() {
+                                const complexity = this.dataset.complexity;
+                                const info = examples[complexity];
+                                tooltip.innerHTML = '<p style="color: #d0d0d0; margin: 0 0 8px 0; font-size: 0.9rem;"><strong style="color: #00d4ff;">' + complexity + '</strong>: ' + info.example + '</p><p style="color: #a0a0a0; margin: 0; font-size: 0.85rem;">' + info.acceptable + '</p>';
+                                this.style.transform = 'scale(1.02)';
+                                this.style.transition = 'transform 0.2s ease';
+                            });
+                            row.addEventListener('mouseleave', function() {
+                                this.style.transform = 'scale(1)';
+                            });
+                        });
+
+                        updateBars(10);
+                    })();
+                    </script>
                 </div>
 
                 <h4>Key Rules</h4>

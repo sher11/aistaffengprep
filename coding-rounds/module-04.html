@@ -17,6 +17,7 @@
                 <li><a href="../system-design/index.html">System Design</a></li>
                 <li><a href="../company-specific/index.html">Companies</a></li>
                 <li><a href="../behavioral/index.html">Behavioral</a></li>
+                <li><a href="../generative-ai/index.html">Gen AI</a></li>
             </ul>
         </div>
     </nav>
@@ -103,13 +104,264 @@
             </div>
             <div class="collapsible-content">
                 <div class="diagram-container">
-                    <div class="mermaid">
-graph LR
-    0((0)) --- 1((1))
-    0 --- 2((2))
-    1 --- 3((3))
-    2 --- 3
+                    <!-- Interactive Graph Representation Animation -->
+                    <div id="graph-representation-viz" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 12px; padding: 24px; min-height: 320px; position: relative; overflow: hidden;">
+                        <style>
+                            #graph-representation-viz {
+                                font-family: 'Segoe UI', system-ui, sans-serif;
+                            }
+                            .graph-rep-node {
+                                position: absolute;
+                                width: 56px;
+                                height: 56px;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-weight: bold;
+                                font-size: 20px;
+                                color: white;
+                                cursor: pointer;
+                                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 30px rgba(99, 102, 241, 0.2);
+                                z-index: 10;
+                            }
+                            .graph-rep-node:hover {
+                                transform: scale(1.15);
+                                box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4), 0 0 40px rgba(99, 102, 241, 0.4);
+                            }
+                            .graph-rep-node.highlighted {
+                                animation: pulse-glow 1s ease-in-out infinite;
+                            }
+                            @keyframes pulse-glow {
+                                0%, 100% { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 30px rgba(16, 185, 129, 0.3); }
+                                50% { box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4), 0 0 50px rgba(16, 185, 129, 0.6); }
+                            }
+                            .graph-rep-controls {
+                                display: flex;
+                                gap: 10px;
+                                margin-bottom: 16px;
+                                flex-wrap: wrap;
+                            }
+                            .graph-rep-btn {
+                                padding: 8px 16px;
+                                border: none;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-weight: 600;
+                                font-size: 13px;
+                                transition: all 0.2s ease;
+                            }
+                            .graph-rep-btn-primary {
+                                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                                color: white;
+                            }
+                            .graph-rep-btn-primary:hover {
+                                transform: translateY(-2px);
+                                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+                            }
+                            .graph-rep-btn-secondary {
+                                background: rgba(255, 255, 255, 0.1);
+                                color: white;
+                                border: 1px solid rgba(255, 255, 255, 0.2);
+                            }
+                            .graph-rep-btn-secondary:hover {
+                                background: rgba(255, 255, 255, 0.2);
+                            }
+                            .graph-rep-btn.active {
+                                background: linear-gradient(135deg, #10b981, #34d399);
+                            }
+                            .graph-rep-info {
+                                position: absolute;
+                                bottom: 16px;
+                                left: 16px;
+                                right: 16px;
+                                background: rgba(0, 0, 0, 0.6);
+                                backdrop-filter: blur(10px);
+                                border-radius: 8px;
+                                padding: 12px 16px;
+                                color: white;
+                                font-size: 14px;
+                                transition: all 0.3s ease;
+                            }
+                            .graph-rep-canvas {
+                                position: relative;
+                                height: 180px;
+                                margin-top: 8px;
+                            }
+                            @media (prefers-reduced-motion: reduce) {
+                                .graph-rep-node { transition: none; }
+                                .graph-rep-node.highlighted { animation: none; }
+                            }
+                        </style>
+
+                        <div class="graph-rep-controls">
+                            <button class="graph-rep-btn graph-rep-btn-primary" onclick="animateGraphBuilding()">&#9658; Animate Building</button>
+                            <button class="graph-rep-btn graph-rep-btn-secondary" onclick="highlightNode(0)">Highlight Node 0</button>
+                            <button class="graph-rep-btn graph-rep-btn-secondary" onclick="highlightNeighbors(0)">Show Neighbors of 0</button>
+                            <button class="graph-rep-btn graph-rep-btn-secondary" onclick="resetGraphHighlights()">Reset</button>
+                        </div>
+
+                        <div class="graph-rep-canvas" id="graph-rep-canvas">
+                            <!-- Edges will be drawn here -->
+                            <svg id="graph-rep-svg" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5;">
+                                <defs>
+                                    <linearGradient id="edge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#6366f1" />
+                                        <stop offset="100%" style="stop-color:#8b5cf6" />
+                                    </linearGradient>
+                                    <linearGradient id="edge-gradient-active" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#10b981" />
+                                        <stop offset="100%" style="stop-color:#34d399" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <!-- Nodes -->
+                            <div class="graph-rep-node" id="grn-0" style="left: 50px; top: 60px; background: linear-gradient(135deg, #ef4444, #f97316);" onclick="highlightNode(0)">0</div>
+                            <div class="graph-rep-node" id="grn-1" style="left: 160px; top: 20px; background: linear-gradient(135deg, #3b82f6, #6366f1);" onclick="highlightNode(1)">1</div>
+                            <div class="graph-rep-node" id="grn-2" style="left: 160px; top: 100px; background: linear-gradient(135deg, #10b981, #14b8a6);" onclick="highlightNode(2)">2</div>
+                            <div class="graph-rep-node" id="grn-3" style="left: 280px; top: 60px; background: linear-gradient(135deg, #f59e0b, #eab308);" onclick="highlightNode(3)">3</div>
+                        </div>
+
+                        <div class="graph-rep-info" id="graph-rep-info">
+                            <strong>Interactive Graph:</strong> Click on nodes to highlight them. This undirected graph has 4 nodes and 4 edges. Each edge connects two nodes bidirectionally.
+                        </div>
                     </div>
+
+                    <script>
+                        (function() {
+                            const graphNodes = {
+                                0: { x: 78, y: 88 },
+                                1: { x: 188, y: 48 },
+                                2: { x: 188, y: 128 },
+                                3: { x: 308, y: 88 }
+                            };
+                            const graphEdges = [[0, 1], [0, 2], [1, 3], [2, 3]];
+                            const adjacencyList = {
+                                0: [1, 2],
+                                1: [0, 3],
+                                2: [0, 3],
+                                3: [1, 2]
+                            };
+
+                            function drawEdges() {
+                                const svg = document.getElementById('graph-rep-svg');
+                                if (!svg) return;
+                                svg.innerHTML = svg.innerHTML.split('</defs>')[0] + '</defs>';
+
+                                graphEdges.forEach(([a, b], idx) => {
+                                    const x1 = graphNodes[a].x;
+                                    const y1 = graphNodes[a].y;
+                                    const x2 = graphNodes[b].x;
+                                    const y2 = graphNodes[b].y;
+
+                                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                                    line.setAttribute('x1', x1);
+                                    line.setAttribute('y1', y1);
+                                    line.setAttribute('x2', x2);
+                                    line.setAttribute('y2', y2);
+                                    line.setAttribute('stroke', 'url(#edge-gradient)');
+                                    line.setAttribute('stroke-width', '3');
+                                    line.setAttribute('stroke-linecap', 'round');
+                                    line.setAttribute('id', `gre-${a}-${b}`);
+                                    line.style.transition = 'all 0.3s ease';
+                                    svg.appendChild(line);
+                                });
+                            }
+
+                            window.highlightNode = function(nodeId) {
+                                resetGraphHighlights();
+                                const node = document.getElementById(`grn-${nodeId}`);
+                                if (node) {
+                                    node.classList.add('highlighted');
+                                }
+                                document.getElementById('graph-rep-info').innerHTML =
+                                    `<strong>Node ${nodeId}:</strong> Connected to nodes [${adjacencyList[nodeId].join(', ')}]. In adjacency list: graph[${nodeId}] = [${adjacencyList[nodeId].join(', ')}]`;
+                            };
+
+                            window.highlightNeighbors = function(nodeId) {
+                                resetGraphHighlights();
+                                const node = document.getElementById(`grn-${nodeId}`);
+                                if (node) node.classList.add('highlighted');
+
+                                adjacencyList[nodeId].forEach(neighbor => {
+                                    const neighborNode = document.getElementById(`grn-${neighbor}`);
+                                    if (neighborNode) neighborNode.classList.add('highlighted');
+
+                                    // Highlight edges
+                                    const edge1 = document.getElementById(`gre-${nodeId}-${neighbor}`);
+                                    const edge2 = document.getElementById(`gre-${neighbor}-${nodeId}`);
+                                    if (edge1) {
+                                        edge1.setAttribute('stroke', 'url(#edge-gradient-active)');
+                                        edge1.setAttribute('stroke-width', '5');
+                                    }
+                                    if (edge2) {
+                                        edge2.setAttribute('stroke', 'url(#edge-gradient-active)');
+                                        edge2.setAttribute('stroke-width', '5');
+                                    }
+                                });
+
+                                document.getElementById('graph-rep-info').innerHTML =
+                                    `<strong>Neighbors of ${nodeId}:</strong> Nodes ${adjacencyList[nodeId].join(' and ')} are directly connected to node ${nodeId}. This takes O(1) to access with adjacency list!`;
+                            };
+
+                            window.resetGraphHighlights = function() {
+                                document.querySelectorAll('.graph-rep-node').forEach(n => n.classList.remove('highlighted'));
+                                document.querySelectorAll('#graph-rep-svg line').forEach(e => {
+                                    e.setAttribute('stroke', 'url(#edge-gradient)');
+                                    e.setAttribute('stroke-width', '3');
+                                });
+                                document.getElementById('graph-rep-info').innerHTML =
+                                    '<strong>Interactive Graph:</strong> Click on nodes to highlight them. This undirected graph has 4 nodes and 4 edges.';
+                            };
+
+                            window.animateGraphBuilding = function() {
+                                // Hide all nodes and edges first
+                                document.querySelectorAll('.graph-rep-node').forEach(n => {
+                                    n.style.opacity = '0';
+                                    n.style.transform = 'scale(0)';
+                                });
+                                document.querySelectorAll('#graph-rep-svg line').forEach(e => {
+                                    e.style.opacity = '0';
+                                });
+
+                                const info = document.getElementById('graph-rep-info');
+
+                                // Animate nodes appearing
+                                [0, 1, 2, 3].forEach((nodeId, idx) => {
+                                    setTimeout(() => {
+                                        const node = document.getElementById(`grn-${nodeId}`);
+                                        if (node) {
+                                            node.style.opacity = '1';
+                                            node.style.transform = 'scale(1)';
+                                        }
+                                        info.innerHTML = `<strong>Building Graph:</strong> Adding node ${nodeId}...`;
+                                    }, idx * 400);
+                                });
+
+                                // Animate edges appearing
+                                graphEdges.forEach(([a, b], idx) => {
+                                    setTimeout(() => {
+                                        const edge = document.getElementById(`gre-${a}-${b}`);
+                                        if (edge) edge.style.opacity = '1';
+                                        info.innerHTML = `<strong>Building Graph:</strong> Adding edge ${a} -- ${b}...`;
+                                    }, 1600 + idx * 400);
+                                });
+
+                                // Final message
+                                setTimeout(() => {
+                                    info.innerHTML = '<strong>Graph Complete!</strong> 4 nodes, 4 edges. This undirected graph uses O(V + E) = O(8) space with adjacency list.';
+                                }, 1600 + graphEdges.length * 400 + 200);
+                            };
+
+                            // Initialize on load
+                            if (document.readyState === 'loading') {
+                                document.addEventListener('DOMContentLoaded', drawEdges);
+                            } else {
+                                drawEdges();
+                            }
+                        })();
+                    </script>
                 </div>
 
                 <div class="code-block">

@@ -885,8 +885,80 @@
         updateProgressBar,
         initCollapsibles,
         initMermaid,
-        initSidebar
+        initSidebar,
+        initCodeBlocks
     };
+
+    // ============================================
+    // CODE BLOCK FORMATTER - Fix whitespace and add syntax highlighting
+    // ============================================
+    function initCodeBlocks() {
+        // Load Prism.js CSS
+        if (!document.querySelector('link[href*="prism"]')) {
+            const prismCSS = document.createElement('link');
+            prismCSS.rel = 'stylesheet';
+            prismCSS.href = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css';
+            document.head.appendChild(prismCSS);
+        }
+
+        // Load Prism.js
+        if (typeof Prism === 'undefined') {
+            const prismJS = document.createElement('script');
+            prismJS.src = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js';
+            prismJS.onload = () => {
+                // Load common language components
+                const languages = ['python', 'java', 'javascript', 'go', 'sql', 'bash', 'json'];
+                languages.forEach(lang => {
+                    const langScript = document.createElement('script');
+                    langScript.src = `https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-${lang}.min.js`;
+                    document.head.appendChild(langScript);
+                });
+
+                // Re-highlight after languages load
+                setTimeout(() => {
+                    if (typeof Prism !== 'undefined') {
+                        Prism.highlightAll();
+                    }
+                }, 500);
+            };
+            document.head.appendChild(prismJS);
+        }
+
+        // Fix code blocks that don't have <pre> wrapper
+        document.querySelectorAll('.code-block').forEach(block => {
+            const codeEl = block.querySelector('code');
+            if (codeEl && block.tagName !== 'PRE' && !block.querySelector('pre')) {
+                // Wrap the code element in a pre tag
+                const pre = document.createElement('pre');
+                pre.className = 'code-block-pre';
+                codeEl.parentNode.insertBefore(pre, codeEl);
+                pre.appendChild(codeEl);
+
+                // Detect language from content if not specified
+                const content = codeEl.textContent;
+                if (!codeEl.className.includes('language-')) {
+                    if (content.includes('def ') || content.includes('import ') || content.match(/:\s*$/m)) {
+                        codeEl.className = 'language-python';
+                    } else if (content.includes('func ') || content.includes('package ')) {
+                        codeEl.className = 'language-go';
+                    } else if (content.includes('public class') || content.includes('private ')) {
+                        codeEl.className = 'language-java';
+                    } else if (content.includes('const ') || content.includes('function ') || content.includes('=>')) {
+                        codeEl.className = 'language-javascript';
+                    } else if (content.includes('SELECT ') || content.includes('INSERT ') || content.includes('CREATE TABLE')) {
+                        codeEl.className = 'language-sql';
+                    } else if (content.match(/^\s*[\$#]/m) || content.includes('#!/bin/')) {
+                        codeEl.className = 'language-bash';
+                    }
+                }
+            }
+        });
+
+        // Trigger Prism highlighting
+        if (typeof Prism !== 'undefined') {
+            Prism.highlightAll();
+        }
+    }
 
     // ============================================
     // AUTO-INITIALIZE ON DOM READY
@@ -895,6 +967,7 @@
         initCollapsibles();
         initMermaid();
         initSidebar();
+        initCodeBlocks();
     });
 
 })();
