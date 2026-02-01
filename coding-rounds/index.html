@@ -27,6 +27,7 @@
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">Getting Started</div>
                     <a href="index.html" class="sidebar-link active">Introduction</a>
+                    <a href="cheat-sheet.html" class="sidebar-link">Cheat Sheet</a>
                 </div>
 
                 <div class="sidebar-section">
@@ -94,8 +95,15 @@
                 </div>
             </div>
 
+            <!-- Quick Access Card -->
+            <div class="card mt-3" onclick="window.location.href='cheat-sheet.html'" style="cursor: pointer; background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border: 2px solid var(--primary-color);">
+                <h3 style="color: var(--primary-color);">Algorithm Pattern Cheat Sheet</h3>
+                <p>Quick reference for all common patterns: Two Pointers, Sliding Window, BFS/DFS, DP, Backtracking, and more with code templates.</p>
+                <span style="color: var(--primary-color); font-weight: 500;">View Cheat Sheet &rarr;</span>
+            </div>
+
             <!-- Learning Path Diagram -->
-            <div class="diagram-container">
+            <div class="diagram-container mt-3">
                 <div class="mermaid">
 flowchart LR
     subgraph "Beginner"

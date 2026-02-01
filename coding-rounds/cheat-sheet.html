@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithm Cheat Sheet - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        .pattern-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .pattern-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .pattern-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pattern-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .pattern-header .complexity {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .pattern-body {
+            padding: 1.5rem;
+            display: none;
+        }
+
+        .pattern-card.open .pattern-body {
+            display: block;
+        }
+
+        .pattern-section {
+            margin-bottom: 1rem;
+        }
+
+        .pattern-section h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .use-cases {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .use-case-tag {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .quick-code {
+            background: var(--code-bg);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .quick-code code {
+            color: #e2e8f0;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 2rem;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .filter-tab:hover {
+            border-color: var(--primary-color);
+        }
+
+        .filter-tab.active {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .problem-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        .problem-link:hover {
+            text-decoration: underline;
+        }
+
+        .complexity-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .complexity-table th,
+        .complexity-table td {
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .complexity-table th {
+            background: var(--border-color);
+        }
+
+        .key-insight-inline {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid var(--warning-color);
+            padding: 0.5rem 1rem;
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="index.html" style="color: var(--primary-color);">Coding</a></li>
+                <li><a href="../system-design/index.html">System Design</a></li>
+                <li><a href="../company-specific/index.html">Companies</a></li>
+                <li><a href="../behavioral/index.html">Behavioral</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Getting Started</div>
+                    <a href="index.html" class="sidebar-link">Introduction</a>
+                    <a href="cheat-sheet.html" class="sidebar-link active">Cheat Sheet</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Fundamentals</div>
+                    <a href="module-01.html" class="sidebar-link">
+                        <span class="sidebar-link-number">1</span>Foundations
+                    </a>
+                    <a href="module-02.html" class="sidebar-link">
+                        <span class="sidebar-link-number">2</span>Arrays & Two Pointers
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Core Patterns</div>
+                    <a href="module-03.html" class="sidebar-link">
+                        <span class="sidebar-link-number">3</span>Trees & Binary Search
+                    </a>
+                    <a href="module-04.html" class="sidebar-link">
+                        <span class="sidebar-link-number">4</span>Graphs
+                    </a>
+                    <a href="module-05.html" class="sidebar-link">
+                        <span class="sidebar-link-number">5</span>Dynamic Programming
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Advanced</div>
+                    <a href="module-06.html" class="sidebar-link">
+                        <span class="sidebar-link-number">6</span>Backtracking
+                    </a>
+                    <a href="module-07.html" class="sidebar-link">
+                        <span class="sidebar-link-number">7</span>Heaps & Sorting
+                    </a>
+                    <a href="module-08.html" class="sidebar-link">
+                        <span class="sidebar-link-number">8</span>Non-LeetCode Problems
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Interview Prep</div>
+                    <a href="module-09.html" class="sidebar-link">
+                        <span class="sidebar-link-number">9</span>Interview Simulation
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <h1>Algorithm Pattern Cheat Sheet</h1>
+            <p class="text-muted">Quick reference for common algorithm patterns. Click any pattern to expand.</p>
+
+            <input type="text" class="search-box" id="pattern-search" placeholder="Search patterns... (e.g., 'two sum', 'tree', 'O(n)')">
+
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">All Patterns</button>
+                <button class="filter-tab" data-filter="array">Arrays</button>
+                <button class="filter-tab" data-filter="string">Strings</button>
+                <button class="filter-tab" data-filter="tree">Trees</button>
+                <button class="filter-tab" data-filter="graph">Graphs</button>
+                <button class="filter-tab" data-filter="dp">Dynamic Programming</button>
+            </div>
+
+            <div id="patterns-container">
+                <!-- Two Pointers -->
+                <div class="pattern-card" data-tags="array string">
+                    <div class="pattern-header">
+                        <h3>Two Pointers</h3>
+                        <span class="complexity">O(n)</span>
+                    </div>
+                    <div class="pattern-body">
+                        <div class="pattern-section">
+                            <h4>When to Use</h4>
+                            <p>Sorted arrays, finding pairs, palindromes, container problems</p>
+                            <div class="use-cases">
+                                <span class="use-case-tag">Two Sum (sorted)</span>
+                                <span class="use-case-tag">Container With Most Water</span>
+                                <span class="use-case-tag">Valid Palindrome</span>
+                                <span class="use-case-tag">3Sum</span>
+                            </div>
+                        </div>
+                        <div class="pattern-section">
+                            <h4>Template</h4>
+                            <div class="quick-code">
+                                <pre><code class="language-python">def two_pointers(arr):
+    left, right = 0, len(arr) - 1
+    while left < right:
+        if condition_met:
+            return result
+        elif need_bigger:
+            left += 1
+        else:
+            right -= 1</code></pre>
+                            </div>
+                        </div>
+                        <div class="key-insight-inline">
+                            <strong>Key:</strong> Works on sorted arrays. Move pointers based on comparison with target.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sliding Window -->
+                <div class="pattern-card" data-tags="array string">
+                    <div class="pattern-header">
+                        <h3>Sliding Window</h3>
+                        <span class="complexity">O(n)</span>
+                    </div>
+                    <div class="pattern-body">
+                        <div class="pattern-section">
+                            <h4>When to Use</h4>
+                            <p>Subarray/substring problems, contiguous sequences, max/min in window</p>
+                            <div class="use-cases">
+                                <span class="use-case-tag">Max Sum Subarray</span>
+                                <span class="use-case-tag">Longest Substring Without Repeats</span>
+                                <span class="use-case-tag">Minimum Window Substring</span>
+                                <span class="use-case-tag">Sliding Window Maximum</span>
+                            </div>
+                        </div>
+                        <div class="pattern-section">
+                            <h4>Template (Variable Size)</h4>
+                            <div class="quick-code">
+                                <pre><code class="language-python">def sliding_window(s):
+    left = 0
+    window = {}  # or other state
+    result = 0
+
+    for right in range(len(s)):
+        # Expand window
+        window[s[right]] = window.get(s[right], 0) + 1
+
+        # Contract window while invalid
+        while window_invalid():
+            window[s[left]] -= 1
+            left += 1
+
+        # Update result
+        result = max(result, right - left + 1)
+
+    return result</code></pre>
+                            </div>
+                        </div>
+                        <div class="key-insight-inline">
+                            <strong>Key:</strong> Expand right, contract left when constraint violated. Track window state with hashmap.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Binary Search -->
+                <div class="pattern-card" data-tags="array">
+                    <div class="pattern-header">
+                        <h3>Binary Search</h3>
+                        <span class="complexity">O(log n)</span>
+                    </div>
+                    <div class="pattern-body">
+                        <div class="pattern-section">
+                            <h4>When to Use</h4>
+                            <p>Sorted arrays, search space reduction, finding boundaries</p>
+                            <div class="use-cases">
+                                <span class="use-case-tag">Search in Rotated Array</span>
+                                <span class="use-case-tag">Find First/Last Position</span>
+                                <span class="use-case-tag">Search Insert Position</span>
+                                <span class="use-case-tag">Koko Eating Bananas</span>
+                            </div>
+                        </div>
+                        <div class="pattern-section">
+                            <h4>Template (Find Leftmost)</h4>
+                            <div class="quick-code">
+                                <pre><code class="language-python">def binary_search_left(arr, target):
+    left, right = 0, len(arr)
+    while left < right:
+        mid = (left + right) // 2
+        if arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid
+    return left  # First position >= target</code></pre>
+                            </div>
+                        </div>
+                        <div class="key-insight-inline">
+                            <strong>Key:</strong> Use <code>left < right</code> and <code>right = mid</code> for leftmost. Use <code>left = mid + 1</code> and <code>right = len(arr) - 1</code> for rightmost.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BFS -->
+                <div class="pattern-card" data-tags="tree graph">
+                    <div class="pattern-header">
+                        <h3>BFS (Breadth-First Search)</h3>
+                        <span class="complexity">O(V + E)</span>
+                    </div>
+                    <div class="pattern-body">
+                        <div class="pattern-section">
+                            <h4>When to Use</h4>
+                            <p>Shortest path (unweighted), level-order traversal, nearest neighbor</p>
+                            <div class="use-cases">
+                                <span class="use-case-tag">Level Order Traversal</span>
+                                <span class="use-case-tag">Word Ladder</span>
+                                <span class="use-case-tag">Rotting Oranges</span>
+                                <span class="use-case-tag">Shortest Path in Grid</span>
+                            </div>
+                        </div>
+                        <div class="pattern-section">
+                            <h4>Template</h4>
+                            <div class="quick-code">
+                                <pre><code class="language-python">from collections import deque
+
+def bfs(graph, start):
+    visited = {start}
+    queue = deque([start])
+
+    while queue:
+        node = queue.popleft()
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)</code></pre>
+                            </div>
+                        </div>
+                        <div class="key-insight-inline">
+                            <strong>Key:</strong> Use deque for O(1) popleft. Add to visited BEFORE adding to queue to avoid duplicates.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DFS -->
+                <div class="pattern-card" data-tags="tree graph">
+                    <div class="pattern-header">
+                        <h3>DFS (Depth-First Search)</h3>
+                        <span class="complexity">O(V + E)</span>
+                    </div>
+                    <div class="pattern-body">
+                        <div class="pattern-section">
+                            <h4>When to Use</h4>
+                            <p>Path finding, cycle detection, connected components, tree traversal</p>
+                            <div class="use-cases">
+                                <span class="use-case-tag">Number of Islands</span>
+                                <span class="use-case-tag">Path Sum</span>
+                                <span class="use-case-tag">Clone Graph</span>
+                                <span class="use-case-tag">Course Schedule</span>
+                            </div>
+                        </div>
+                        <div class="pattern-section">
+                            <h4>Template (Recursive)</h4>
+                            <div class="quick-code">
+                                <pre><code class="language-python">def dfs(graph, node, visited):
+    if node in visited:
+        return
+    visited.add(node)
+
+    for neighbor in graph[node]:
+        dfs(graph, neighbor, visited)</code></pre>
+                            </div>
+                        </div>
+                        <div class="key-insight-inline">
+                            <strong>Key:</strong> Recursive = implicit stack. For large inputs, use iterative with explicit stack to avoid stack overflow.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backtracking -->
+                <div class="pattern-card" data-tags="array string">
+                    <div class="pattern-header">
+                        <h3>Backtracking</h3>
+                        <span class="complexity">O(n! or 2^n)</span>
+                    </div>
+                    <div class="pattern-body">
+                        <div class="pattern-section">
+                            <h4>When to Use</h4>
+                            <p>Permutations, combinations, subsets, constraint satisfaction</p>
+                            <div class="use-cases">
+                                <span class="use-case-tag">Subsets</span>
+                                <span class="use-case-tag">Permutations</span>
+                                <span class="use-case-tag">Combination Sum</span>
+                                <span class="use-case-tag">N-Queens</span>
+                            </div>
+                        </div>
+                        <div class="pattern-section">
+                            <h4>Template</h4>
+                            <div class="quick-code">
+                                <pre><code class="language-python">def backtrack(path, choices):
+    if is_solution(path):
+        result.append(path[:])
+        return
+
+    for choice in choices:
+        if is_valid(choice):
+            path.append(choice)      # Make choice
+            backtrack(path, remaining_choices)
+            path.pop()               # Undo choice</code></pre>
+                            </div>
+                        </div>
+                        <div class="key-insight-inline">
+                            <strong>Key:</strong> Always undo your choice after recursing. Use <code>path[:]</code> to copy the path when saving.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Programming -->
+                <div class="pattern-card" data-tags="dp">
+                    <div class="pattern-header">
+                        <h3>Dynamic Programming</h3>
+                        <span class="complexity">O(n) to O(n²)</span>
+                    </div>
+                    <div class="pattern-body">
+                        <div class="pattern-section">
+                            <h4>When to Use</h4>
+                            <p>Optimization problems, counting problems, overlapping subproblems</p>
+                            <div class="use-cases">
+                                <span class="use-case-tag">Climbing Stairs</span>
+                                <span class="use-case-tag">Coin Change</span>
+                                <span class="use-case-tag">Longest Common Subsequence</span>
+                                <span class="use-case-tag">Edit Distance</span>
+                            </div>
+                        </div>
+                        <div class="pattern-section">
+                            <h4>Template (Bottom-Up)</h4>
+                            <div class="quick-code">
+                                <pre><code class="language-python">def dp_solution(n):
+    # 1. Define state: dp[i] = answer for subproblem i
+    dp = [0] * (n + 1)
+
+    # 2. Base cases
+    dp[0] = base_value
+
+    # 3. Fill table using recurrence
+    for i in range(1, n + 1):
+        dp[i] = recurrence(dp[i-1], ...)
+
+    return dp[n]</code></pre>
+                            </div>
+                        </div>
+                        <div class="key-insight-inline">
+                            <strong>Key:</strong> Define state clearly first. Identify base cases. Write recurrence relation. Consider space optimization.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topological Sort -->
+                <div class="pattern-card" data-tags="graph">
+                    <div class="pattern-header">
+                        <h3>Topological Sort</h3>
+                        <span class="complexity">O(V + E)</span>
+                    </div>
+                    <div class="pattern-body">
+                        <div class="pattern-section">
+                            <h4>When to Use</h4>
+                            <p>Dependency ordering, course scheduling, build systems, DAG problems</p>
+                            <div class="use-cases">
+                                <span class="use-case-tag">Course Schedule</span>
+                                <span class="use-case-tag">Alien Dictionary</span>
+                                <span class="use-case-tag">Task Scheduler</span>
+                            </div>
+                        </div>
+                        <div class="pattern-section">
+                            <h4>Template (Kahn's Algorithm)</h4>
+                            <div class="quick-code">
+                                <pre><code class="language-python">def topological_sort(n, edges):
+    in_degree = [0] * n
+    graph = defaultdict(list)
+
+    for u, v in edges:
+        graph[u].append(v)
+        in_degree[v] += 1
+
+    queue = deque([i for i in range(n) if in_degree[i] == 0])
+    result = []
+
+    while queue:
+        node = queue.popleft()
+        result.append(node)
+        for neighbor in graph[node]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    return result if len(result) == n else []  # Empty = cycle</code></pre>
+                            </div>
+                        </div>
+                        <div class="key-insight-inline">
+                            <strong>Key:</strong> If result length != n, there's a cycle. Start with nodes having in_degree 0.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Union Find -->
+                <div class="pattern-card" data-tags="graph">
+                    <div class="pattern-header">
+                        <h3>Union-Find (Disjoint Set)</h3>
+                        <span class="complexity">O(α(n)) ≈ O(1)</span>
+                    </div>
+                    <div class="pattern-body">
+                        <div class="pattern-section">
+                            <h4>When to Use</h4>
+                            <p>Connected components, cycle detection, dynamic connectivity</p>
+                            <div class="use-cases">
+                                <span class="use-case-tag">Number of Connected Components</span>
+                                <span class="use-case-tag">Redundant Connection</span>
+                                <span class="use-case-tag">Accounts Merge</span>
+                            </div>
+                        </div>
+                        <div class="pattern-section">
+                            <h4>Template</h4>
+                            <div class="quick-code">
+                                <pre><code class="language-python">class UnionFind:
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.rank = [0] * n
+
+    def find(self, x):
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])  # Path compression
+        return self.parent[x]
+
+    def union(self, x, y):
+        px, py = self.find(x), self.find(y)
+        if px == py:
+            return False
+        if self.rank[px] < self.rank[py]:
+            px, py = py, px
+        self.parent[py] = px
+        if self.rank[px] == self.rank[py]:
+            self.rank[px] += 1
+        return True</code></pre>
+                            </div>
+                        </div>
+                        <div class="key-insight-inline">
+                            <strong>Key:</strong> Path compression + union by rank = nearly O(1). Union returns False if already connected (cycle detection).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heap -->
+                <div class="pattern-card" data-tags="array">
+                    <div class="pattern-header">
+                        <h3>Heap / Priority Queue</h3>
+                        <span class="complexity">O(log n) per operation</span>
+                    </div>
+                    <div class="pattern-body">
+                        <div class="pattern-section">
+                            <h4>When to Use</h4>
+                            <p>Top K elements, merge K sorted lists, streaming median</p>
+                            <div class="use-cases">
+                                <span class="use-case-tag">Kth Largest Element</span>
+                                <span class="use-case-tag">Merge K Sorted Lists</span>
+                                <span class="use-case-tag">Find Median from Stream</span>
+                                <span class="use-case-tag">Meeting Rooms II</span>
+                            </div>
+                        </div>
+                        <div class="pattern-section">
+                            <h4>Template</h4>
+                            <div class="quick-code">
+                                <pre><code class="language-python">import heapq
+
+# Min heap (default in Python)
+heap = []
+heapq.heappush(heap, value)
+min_val = heapq.heappop(heap)
+
+# Max heap: negate values
+heapq.heappush(heap, -value)
+max_val = -heapq.heappop(heap)
+
+# Kth largest: maintain min heap of size k
+def kth_largest(nums, k):
+    heap = nums[:k]
+    heapq.heapify(heap)
+    for num in nums[k:]:
+        if num > heap[0]:
+            heapq.heapreplace(heap, num)
+    return heap[0]</code></pre>
+                            </div>
+                        </div>
+                        <div class="key-insight-inline">
+                            <strong>Key:</strong> Python heapq is min heap. For max heap, negate values. For Kth largest, use min heap of size K.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trie -->
+                <div class="pattern-card" data-tags="string tree">
+                    <div class="pattern-header">
+                        <h3>Trie (Prefix Tree)</h3>
+                        <span class="complexity">O(m) per operation</span>
+                    </div>
+                    <div class="pattern-body">
+                        <div class="pattern-section">
+                            <h4>When to Use</h4>
+                            <p>Prefix matching, autocomplete, word search, dictionary operations</p>
+                            <div class="use-cases">
+                                <span class="use-case-tag">Implement Trie</span>
+                                <span class="use-case-tag">Word Search II</span>
+                                <span class="use-case-tag">Design Search Autocomplete</span>
+                            </div>
+                        </div>
+                        <div class="pattern-section">
+                            <h4>Template</h4>
+                            <div class="quick-code">
+                                <pre><code class="language-python">class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+        node.is_end = True
+
+    def search(self, word):
+        node = self._find(word)
+        return node is not None and node.is_end
+
+    def starts_with(self, prefix):
+        return self._find(prefix) is not None
+
+    def _find(self, prefix):
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return None
+            node = node.children[char]
+        return node</code></pre>
+                            </div>
+                        </div>
+                        <div class="key-insight-inline">
+                            <strong>Key:</strong> m = word length. Space: O(ALPHABET_SIZE * m * n) where n = number of words.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complexity Comparison -->
+            <h2 class="mt-4">Complexity Quick Reference</h2>
+            <div class="card">
+                <table class="complexity-table">
+                    <thead>
+                        <tr>
+                            <th>Pattern</th>
+                            <th>Time</th>
+                            <th>Space</th>
+                            <th>Signal Keywords</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Two Pointers</td><td>O(n)</td><td>O(1)</td><td>sorted array, pairs, palindrome</td></tr>
+                        <tr><td>Sliding Window</td><td>O(n)</td><td>O(k)</td><td>subarray, substring, contiguous</td></tr>
+                        <tr><td>Binary Search</td><td>O(log n)</td><td>O(1)</td><td>sorted, search space, minimize maximum</td></tr>
+                        <tr><td>BFS</td><td>O(V+E)</td><td>O(V)</td><td>shortest path, level-order, nearest</td></tr>
+                        <tr><td>DFS</td><td>O(V+E)</td><td>O(V)</td><td>all paths, connected, cycle</td></tr>
+                        <tr><td>Backtracking</td><td>O(n!)</td><td>O(n)</td><td>permutations, combinations, generate all</td></tr>
+                        <tr><td>DP</td><td>O(n²)</td><td>O(n)</td><td>optimal, count ways, min/max</td></tr>
+                        <tr><td>Topological Sort</td><td>O(V+E)</td><td>O(V)</td><td>dependencies, ordering, prerequisites</td></tr>
+                        <tr><td>Union-Find</td><td>O(α(n))</td><td>O(n)</td><td>connected components, groups, merge</td></tr>
+                        <tr><td>Heap</td><td>O(n log k)</td><td>O(k)</td><td>top K, kth element, merge sorted</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex flex-between mt-4">
+                <a href="index.html" class="btn btn-secondary">&larr; Back to Course</a>
+                <a href="module-01.html" class="btn btn-primary">Start Learning &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('open');
+            });
+
+            sidebarOverlay.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('open');
+            });
+
+            // Pattern card toggle
+            document.querySelectorAll('.pattern-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    header.parentElement.classList.toggle('open');
+                });
+            });
+
+            // Filter tabs
+            const filterTabs = document.querySelectorAll('.filter-tab');
+            const patternCards = document.querySelectorAll('.pattern-card');
+
+            filterTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const filter = tab.dataset.filter;
+
+                    filterTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    patternCards.forEach(card => {
+                        if (filter === 'all' || card.dataset.tags.includes(filter)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // Search
+            const searchBox = document.getElementById('pattern-search');
+            searchBox.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+
+                patternCards.forEach(card => {
+                    const text = card.textContent.toLowerCase();
+                    if (text.includes(query)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Reset filter tabs
+                filterTabs.forEach(t => t.classList.remove('active'));
+                filterTabs[0].classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
