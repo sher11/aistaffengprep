@@ -26,11 +26,20 @@ This is an interactive GitHub Pages site for staff engineer interview preparatio
 ├── system-design/
 │   ├── index.html            # Course overview with left sidebar
 │   ├── module-01.html - module-12.html  # Core modules
-│   └── problems/             # Detailed problem breakdowns
-│       ├── url-shortener.html
-│       ├── news-feed.html
-│       ├── chat-system.html
-│       └── video-streaming.html
+│   ├── problems/             # Detailed problem breakdowns
+│   │   ├── url-shortener.html
+│   │   ├── news-feed.html
+│   │   ├── chat-system.html
+│   │   └── video-streaming.html
+│   └── papers/               # Seminal paper deep dives
+│       ├── gfs.html          # Google File System
+│       ├── bigtable.html     # Google BigTable
+│       ├── dynamo.html       # Amazon Dynamo
+│       ├── memcache.html     # Facebook Memcache
+│       ├── mapreduce.html    # Google MapReduce
+│       ├── kafka.html        # Apache Kafka
+│       ├── spanner.html      # Google Spanner
+│       └── flink.html        # Apache Flink (stream processing)
 ├── low-level-design/
 │   ├── index.html            # Course overview (12 modules + problems)
 │   ├── module-01.html        # Design Principles (SOLID, DRY, KISS)

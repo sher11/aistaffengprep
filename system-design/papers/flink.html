@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apache Flink Deep Dive - Staff Engineer Prep</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        /* Animated Header Styles */
+        .flink-hero {
+            background: linear-gradient(135deg, #e91e63 0%, #9c27b0 50%, #673ab7 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flink-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 30px,
+                    rgba(255,255,255,0.03) 30px,
+                    rgba(255,255,255,0.03) 31px
+                );
+            animation: wave 15s linear infinite;
+        }
+
+        @keyframes wave {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(31px) translateY(31px); }
+        }
+
+        .flink-hero h1 {
+            position: relative;
+            z-index: 1;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .flink-hero .subtitle {
+            position: relative;
+            z-index: 1;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        /* Stream Animation */
+        .stream-visual {
+            position: relative;
+            height: 80px;
+            margin-top: 1.5rem;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+        }
+
+        .event {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            position: absolute;
+            animation: stream-flow 4s linear infinite;
+        }
+
+        .event.e1 { background: #4caf50; left: -40px; animation-delay: 0s; }
+        .event.e2 { background: #2196f3; left: -40px; animation-delay: 0.8s; }
+        .event.e3 { background: #ff9800; left: -40px; animation-delay: 1.6s; }
+        .event.e4 { background: #e91e63; left: -40px; animation-delay: 2.4s; }
+        .event.e5 { background: #9c27b0; left: -40px; animation-delay: 3.2s; }
+
+        @keyframes stream-flow {
+            0% { left: -40px; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: calc(100% + 40px); opacity: 0; }
+        }
+
+        .watermark-line {
+            position: absolute;
+            left: 40%;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, transparent, #00bcd4, transparent);
+            animation: watermark-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes watermark-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; box-shadow: 0 0 10px #00bcd4; }
+        }
+
+        .watermark-label {
+            position: absolute;
+            left: calc(40% + 10px);
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7rem;
+            color: #00bcd4;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Window Visualization */
+        .window-demo {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            padding: 1rem;
+            background: var(--code-bg);
+            border-radius: 0.5rem;
+        }
+
+        .window-box {
+            min-width: 120px;
+            padding: 1rem;
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .window-box.active {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .window-box h5 {
+            color: white;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .window-events {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .mini-event {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+        }
+
+        /* State Management Visual */
+        .state-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .state-box {
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+        }
+
+        .state-box.keyed {
+            border-color: #4caf50;
+        }
+
+        .state-box.operator {
+            border-color: #2196f3;
+        }
+
+        .state-box h4 {
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Checkpoint Animation */
+        .checkpoint-visual {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--code-bg);
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+
+        .operator-node {
+            min-width: 80px;
+            height: 60px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+        }
+
+        .barrier {
+            width: 4px;
+            height: 80px;
+            background: linear-gradient(to bottom, #f44336, #ff9800, #f44336);
+            border-radius: 2px;
+            animation: barrier-move 3s ease-in-out infinite;
+        }
+
+        @keyframes barrier-move {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; box-shadow: 0 0 15px #ff9800; }
+        }
+
+        /* Comparison Grid */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .compare-card {
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            border: 2px solid var(--border-color);
+        }
+
+        .compare-card.flink {
+            border-color: #e91e63;
+            background: rgba(233, 30, 99, 0.05);
+        }
+
+        .compare-card.spark {
+            border-color: #ff9800;
+            background: rgba(255, 152, 0, 0.05);
+        }
+
+        .compare-card.kafka-streams {
+            border-color: #4caf50;
+            background: rgba(76, 175, 80, 0.05);
+        }
+
+        .compare-card h4 {
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .compare-card ul {
+            font-size: 0.9rem;
+            padding-left: 1.25rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 1.25rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+        }
+
+        .stat-box .number {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-box .label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        /* Interview Questions */
+        .interview-q {
+            background: var(--card-bg);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem 1.25rem;
+            margin: 0.75rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .interview-q strong {
+            color: var(--primary-color);
+        }
+
+        /* Key Takeaways */
+        .takeaway-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--success-bg);
+            border-radius: 0.5rem;
+            margin: 0.75rem 0;
+        }
+
+        .takeaway-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        /* Time semantics visual */
+        .time-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: var(--code-bg);
+            border-radius: 0.5rem;
+        }
+
+        .time-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .time-label {
+            min-width: 120px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .time-bar {
+            flex: 1;
+            height: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .time-marker {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #4caf50;
+        }
+
+        .time-marker.event-time { left: 30%; background: #4caf50; }
+        .time-marker.processing-time { left: 60%; background: #2196f3; }
+        .time-marker.ingestion-time { left: 45%; background: #ff9800; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">StaffEngPrep</a>
+            <ul class="nav-links">
+                <li><a href="../../coding-rounds/index.html">Coding</a></li>
+                <li><a href="../index.html" style="color: var(--primary-color);">System Design</a></li>
+                <li><a href="../../company-specific/index.html">Companies</a></li>
+                <li><a href="../../behavioral/index.html">Behavioral</a></li>
+                <li><a href="../../generative-ai/index.html">Gen AI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="layout-with-sidebar">
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Deep Dive Papers</div>
+                    <a href="flink.html" class="sidebar-link active">Apache Flink</a>
+                    <a href="kafka.html" class="sidebar-link">Apache Kafka</a>
+                    <a href="gfs.html" class="sidebar-link">Google File System</a>
+                    <a href="dynamo.html" class="sidebar-link">Amazon Dynamo</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Related Modules</div>
+                    <a href="../module-04.html" class="sidebar-link">Storage &amp; Data Processing</a>
+                    <a href="../module-05.html" class="sidebar-link">Seminal Papers</a>
+                    <a href="../module-03.html" class="sidebar-link">Distributed Systems</a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Back to Course</div>
+                    <a href="../index.html" class="sidebar-link">System Design Home</a>
+                </div>
+            </nav>
+        </aside>
+
+        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <!-- Animated Hero Header -->
+            <div class="flink-hero">
+                <h1>Apache Flink</h1>
+                <p class="subtitle">Unified Stream and Batch Processing with True Event-Time Semantics</p>
+
+                <div class="stream-visual">
+                    <div class="event e1">E1</div>
+                    <div class="event e2">E2</div>
+                    <div class="event e3">E3</div>
+                    <div class="event e4">E4</div>
+                    <div class="event e5">E5</div>
+                    <div class="watermark-line"></div>
+                    <span class="watermark-label">Watermark</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>What You'll Learn</h3>
+                <ul>
+                    <li>Why Flink pioneered true stream processing over micro-batching</li>
+                    <li>Event time vs processing time and why it matters</li>
+                    <li>Watermarks, windows, and handling late-arriving data</li>
+                    <li>Exactly-once semantics through distributed snapshots</li>
+                    <li>Stateful stream processing with managed state backends</li>
+                    <li>How Alibaba, Netflix, and Uber use Flink at massive scale</li>
+                </ul>
+            </div>
+
+            <!-- Problem Context -->
+            <h2 class="mt-4">1. The Problem: Beyond Batch Processing</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Why Stream Processing Needed a Revolution</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Before Flink, stream processing had fundamental limitations. Spark Streaming used <strong>micro-batching</strong> - collecting events into small batches and processing them. This had problems:</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph "Micro-Batch (Spark Streaming)"
+        E1[Events] --> B1[Batch 1<br/>t=0-1s]
+        E1 --> B2[Batch 2<br/>t=1-2s]
+        E1 --> B3[Batch 3<br/>t=2-3s]
+        B1 --> P1[Process]
+        B2 --> P2[Process]
+        B3 --> P3[Process]
+    end
+
+    subgraph "True Streaming (Flink)"
+        E2[Events] --> S1[Process<br/>Immediately]
+        S1 --> O1[Output]
+    end
+                        </div>
+                    </div>
+
+                    <p><strong>Problems with Micro-Batching:</strong></p>
+                    <ul>
+                        <li><strong>Latency floor:</strong> Minimum latency = batch interval (typically seconds)</li>
+                        <li><strong>Event time confusion:</strong> Batch boundaries based on processing time, not event time</li>
+                        <li><strong>State checkpointing:</strong> Complex coordination between batches</li>
+                        <li><strong>Late data handling:</strong> Events arriving after batch closes are problematic</li>
+                    </ul>
+
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="number">&lt;10ms</div>
+                            <div class="label">Flink Latency</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">1-5s</div>
+                            <div class="label">Micro-batch Latency</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">Millions/sec</div>
+                            <div class="label">Events per Node</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">Petabytes</div>
+                            <div class="label">State at Alibaba</div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Key Insight:</strong> Flink treats streams as the fundamental abstraction. Batch is just a bounded stream. This unification enables consistent semantics regardless of whether data is real-time or historical.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Time & Watermarks -->
+            <h2 class="mt-4">2. Event Time vs Processing Time</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>The Most Important Concept in Stream Processing</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Understanding time semantics is crucial for correct stream processing:</p>
+
+                    <div class="time-visual">
+                        <div class="time-row">
+                            <div class="time-label">Event Time</div>
+                            <div class="time-bar">
+                                <div class="time-marker event-time"></div>
+                            </div>
+                            <span style="color: #4caf50; font-size: 0.8rem;">When event occurred</span>
+                        </div>
+                        <div class="time-row">
+                            <div class="time-label">Ingestion Time</div>
+                            <div class="time-bar">
+                                <div class="time-marker ingestion-time"></div>
+                            </div>
+                            <span style="color: #ff9800; font-size: 0.8rem;">When event entered Flink</span>
+                        </div>
+                        <div class="time-row">
+                            <div class="time-label">Processing Time</div>
+                            <div class="time-bar">
+                                <div class="time-marker processing-time"></div>
+                            </div>
+                            <span style="color: #2196f3; font-size: 0.8rem;">When event is processed</span>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Why Event Time Matters</h4>
+                    <p>Consider a mobile app sending click events. Network delays, offline periods, and retries mean events arrive out of order:</p>
+
+                    <div class="code-block">
+                        <code>
+# Events arriving at processor (processing time order)
+10:00:05 - Click at 10:00:01 (4 sec delay)
+10:00:06 - Click at 10:00:04 (2 sec delay)
+10:00:07 - Click at 10:00:02 (5 sec delay - OUT OF ORDER!)
+10:00:08 - Click at 10:00:06 (2 sec delay)
+
+# If we count clicks per minute using processing time:
+# Wrong: All clicks counted in 10:00 minute
+
+# If we use event time:
+# Correct: Clicks attributed to their actual minute
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">Watermarks: Tracking Progress in Event Time</h4>
+                    <p>A <strong>watermark</strong> is a declaration that "no events with timestamp &lt; W will arrive anymore."</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant Source
+    participant Flink
+    participant Window
+
+    Source->>Flink: Event(t=10:01)
+    Source->>Flink: Event(t=10:03)
+    Source->>Flink: Watermark(t=10:02)
+    Note over Flink: "Events before 10:02<br/>are complete"
+    Flink->>Window: Close window [10:00-10:02)
+    Source->>Flink: Event(t=10:01) [LATE!]
+    Note over Flink: Late event handling
+                        </div>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Interview Question:</strong> "How would you handle late-arriving events in a streaming pipeline?"
+                        <p style="margin-top: 0.5rem;">Answer: Flink provides three strategies: (1) Drop late events, (2) Side-output late events for separate processing, (3) Allowed lateness - keep windows open longer and emit updates. The choice depends on accuracy vs latency requirements.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Windowing -->
+            <h2 class="mt-4">3. Windows: Grouping Unbounded Streams</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Tumbling, Sliding, Session, and Global Windows</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Windows divide infinite streams into finite chunks for aggregation:</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph Tumbling["Tumbling Window (5 min)"]
+        T1["[0-5)"] --> T2["[5-10)"] --> T3["[10-15)"]
+    end
+
+    subgraph Sliding["Sliding Window (10 min, slide 5 min)"]
+        S1["[0-10)"]
+        S2["[5-15)"]
+        S3["[10-20)"]
+    end
+
+    subgraph Session["Session Window (gap 5 min)"]
+        SE1["User active<br/>10:00-10:08"]
+        SE2["Gap"]
+        SE3["User active<br/>10:15-10:22"]
+    end
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Window Types Explained</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Window Type</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Use Case</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Tumbling</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Non-overlapping fixed intervals</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Hourly revenue totals</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Sliding</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Moving averages, trend detection</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">5-min avg over last hour</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Session</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">User activity periods</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Session duration analytics</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Global</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Custom triggering logic</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Count-based windows</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-block">
+                        <code>
+// Java: Windowed aggregation with event time
+DataStream&lt;Event&gt; events = ...;
+
+events
+    .keyBy(event -> event.getUserId())
+    .window(TumblingEventTimeWindows.of(Time.minutes(5)))
+    .allowedLateness(Time.minutes(1))
+    .sideOutputLateData(lateOutputTag)
+    .aggregate(new CountAggregator())
+    .print();
+
+// Python (PyFlink): Same concept
+events \
+    .key_by(lambda e: e.user_id) \
+    .window(TumblingEventTimeWindows.of(Time.minutes(5))) \
+    .reduce(lambda a, b: a + b)
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fault Tolerance -->
+            <h2 class="mt-4">4. Exactly-Once via Distributed Snapshots</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>The Chandy-Lamport Algorithm in Action</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Flink achieves exactly-once processing through <strong>asynchronous barrier snapshotting</strong>, based on the Chandy-Lamport distributed snapshot algorithm.</p>
+
+                    <h4>How Checkpointing Works</h4>
+                    <div class="checkpoint-visual">
+                        <div class="operator-node">Source</div>
+                        <div class="barrier"></div>
+                        <div class="operator-node">Map</div>
+                        <div class="barrier"></div>
+                        <div class="operator-node">Reduce</div>
+                        <div class="barrier"></div>
+                        <div class="operator-node">Sink</div>
+                    </div>
+                    <p class="text-muted" style="font-size: 0.85rem; margin-top: 0.5rem;">Checkpoint barriers flow through the pipeline, triggering state snapshots at each operator.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant JM as Job Manager
+    participant S as Source
+    participant O1 as Operator 1
+    participant O2 as Operator 2
+    participant Store as State Backend
+
+    JM->>S: Trigger checkpoint n
+    S->>S: Snapshot source offset
+    S->>O1: Barrier n
+    S->>Store: Save source state
+    O1->>O1: Snapshot state
+    O1->>O2: Barrier n
+    O1->>Store: Save O1 state
+    O2->>O2: Snapshot state
+    O2->>Store: Save O2 state
+    O2->>JM: Checkpoint n complete
+    Note over JM: Checkpoint n committed<br/>Can recover to this point
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Key Properties</h4>
+                    <ul>
+                        <li><strong>Asynchronous:</strong> Snapshots happen in the background, not blocking processing</li>
+                        <li><strong>Barrier alignment:</strong> Multi-input operators wait for barriers from all inputs</li>
+                        <li><strong>Incremental:</strong> RocksDB backend only saves changed state</li>
+                        <li><strong>Exactly-once:</strong> On recovery, replay from checkpoint with identical state</li>
+                    </ul>
+
+                    <div class="card mt-2" style="background: rgba(233, 30, 99, 0.1); border: 1px solid #e91e63;">
+                        <strong>Performance Impact:</strong> Checkpointing adds ~1-10% overhead. Tune checkpoint interval based on recovery time objectives. Typical: 1-5 minute intervals, with 10-30 second state sizes at scale.
+                    </div>
+                </div>
+            </div>
+
+            <!-- State Management -->
+            <h2 class="mt-4">5. Stateful Stream Processing</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Managed State: The Key to Scalable Streaming</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Flink manages state for you, handling distribution, fault tolerance, and rescaling automatically.</p>
+
+                    <div class="state-container">
+                        <div class="state-box keyed">
+                            <h4>&#128273; Keyed State</h4>
+                            <p>Partitioned by key, each key has isolated state.</p>
+                            <ul>
+                                <li><strong>ValueState:</strong> Single value per key</li>
+                                <li><strong>ListState:</strong> List of values per key</li>
+                                <li><strong>MapState:</strong> Key-value map per key</li>
+                                <li><strong>ReducingState:</strong> Aggregated value</li>
+                            </ul>
+                            <p class="text-muted" style="font-size: 0.85rem;">Use case: Per-user session data, per-device metrics</p>
+                        </div>
+                        <div class="state-box operator">
+                            <h4>&#9881; Operator State</h4>
+                            <p>Bound to operator instance, not partitioned.</p>
+                            <ul>
+                                <li><strong>ListState:</strong> Redistributed on rescale</li>
+                                <li><strong>UnionListState:</strong> Broadcast on rescale</li>
+                                <li><strong>BroadcastState:</strong> Same state on all parallels</li>
+                            </ul>
+                            <p class="text-muted" style="font-size: 0.85rem;">Use case: Kafka offsets, file positions, broadcast rules</p>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">State Backends</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Backend</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Storage</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>HashMapStateBackend</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">JVM Heap</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Small state (&lt; few GB), lowest latency</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>EmbeddedRocksDBStateBackend</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Local SSD + Heap cache</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Large state (TB+), incremental checkpoints</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="code-block">
+                        <code>
+// Java: Stateful processing with keyed state
+public class FraudDetector extends KeyedProcessFunction&lt;String, Transaction, Alert&gt; {
+    // Managed state - automatically checkpointed
+    private ValueState&lt;Double&gt; lastAmountState;
+    private ValueState&lt;Long&gt; lastTimestampState;
+
+    @Override
+    public void open(Configuration config) {
+        ValueStateDescriptor&lt;Double&gt; amountDesc =
+            new ValueStateDescriptor&lt;&gt;("lastAmount", Double.class);
+        lastAmountState = getRuntimeContext().getState(amountDesc);
+    }
+
+    @Override
+    public void processElement(Transaction tx, Context ctx, Collector&lt;Alert&gt; out) {
+        Double lastAmount = lastAmountState.value();
+
+        // Detect suspicious pattern: 10x increase in 1 minute
+        if (lastAmount != null && tx.amount > lastAmount * 10) {
+            out.collect(new Alert(tx.userId, "Suspicious spike"));
+        }
+
+        // Update state (automatically fault-tolerant)
+        lastAmountState.update(tx.amount);
+    }
+}
+                        </code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flink vs Others -->
+            <h2 class="mt-4">6. Flink vs Other Stream Processors</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>When to Choose Flink</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="comparison-grid">
+                        <div class="compare-card flink">
+                            <h4>Apache Flink</h4>
+                            <ul>
+                                <li>True event-time processing</li>
+                                <li>Sub-second latency</li>
+                                <li>Exactly-once with large state</li>
+                                <li>Unified batch + stream API</li>
+                                <li>Complex event processing</li>
+                            </ul>
+                            <p style="font-size: 0.85rem; margin-top: 0.75rem;"><strong>Best for:</strong> Low-latency analytics, fraud detection, real-time ML</p>
+                        </div>
+                        <div class="compare-card spark">
+                            <h4>Spark Streaming</h4>
+                            <ul>
+                                <li>Micro-batch architecture</li>
+                                <li>Higher latency (seconds)</li>
+                                <li>Mature ML ecosystem</li>
+                                <li>Better for batch-heavy workloads</li>
+                                <li>Simpler operations</li>
+                            </ul>
+                            <p style="font-size: 0.85rem; margin-top: 0.75rem;"><strong>Best for:</strong> ETL, batch analytics with some streaming</p>
+                        </div>
+                        <div class="compare-card kafka-streams">
+                            <h4>Kafka Streams</h4>
+                            <ul>
+                                <li>Library, not cluster</li>
+                                <li>Tight Kafka integration</li>
+                                <li>Simpler deployment</li>
+                                <li>Limited to Kafka sources</li>
+                                <li>No cluster management</li>
+                            </ul>
+                            <p style="font-size: 0.85rem; margin-top: 0.75rem;"><strong>Best for:</strong> Kafka-centric microservices</p>
+                        </div>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Interview Question:</strong> "When would you choose Flink over Spark Streaming?"
+                        <p style="margin-top: 0.5rem;">Answer: Choose Flink when you need: (1) True event-time processing with late data handling, (2) Sub-second latency requirements, (3) Large stateful computations (fraud detection, sessionization), (4) Complex event processing patterns. Choose Spark when batch processing is primary and streaming is secondary, or when you need tight integration with MLlib.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Production Patterns -->
+            <h2 class="mt-4">7. Production Patterns</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Real-World Flink Architectures</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <h4>Pattern 1: Real-Time Feature Engineering</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    K[Kafka<br/>User Events] --> F[Flink]
+    F --> |Aggregate| FS[Feature Store<br/>Redis]
+    F --> |Raw| DL[Data Lake<br/>S3]
+    FS --> ML[ML Model<br/>Serving]
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Pattern 2: Event-Driven Architecture</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph Sources
+        O[Orders]
+        I[Inventory]
+        P[Payments]
+    end
+
+    Sources --> K[Kafka]
+    K --> F[Flink CEP]
+    F --> |Alerts| A[Alert Service]
+    F --> |Enriched| DW[Data Warehouse]
+    F --> |Actions| K
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Production Code: Fraud Detection Pipeline</h4>
+                    <div class="code-block">
+                        <code>
+// Production Flink job with all best practices
+public class FraudDetectionJob {
+    public static void main(String[] args) throws Exception {
+        // 1. Configuration
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.enableCheckpointing(60000); // 1 minute
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+        env.setStateBackend(new EmbeddedRocksDBStateBackend());
+
+        // 2. Source with watermarks
+        KafkaSource&lt;Transaction&gt; source = KafkaSource.&lt;Transaction&gt;builder()
+            .setBootstrapServers("kafka:9092")
+            .setTopics("transactions")
+            .setStartingOffsets(OffsetsInitializer.committedOffsets())
+            .setDeserializer(new TransactionDeserializer())
+            .build();
+
+        DataStream&lt;Transaction&gt; transactions = env
+            .fromSource(source,
+                WatermarkStrategy.&lt;Transaction&gt;forBoundedOutOfOrderness(Duration.ofSeconds(5))
+                    .withTimestampAssigner((tx, ts) -> tx.getTimestamp()),
+                "Kafka Source");
+
+        // 3. Fraud detection with keyed state
+        DataStream&lt;Alert&gt; alerts = transactions
+            .keyBy(Transaction::getUserId)
+            .process(new FraudDetector())
+            .name("Fraud Detector");
+
+        // 4. Sinks
+        alerts.sinkTo(KafkaSink.&lt;Alert&gt;builder()
+            .setBootstrapServers("kafka:9092")
+            .setRecordSerializer(...)
+            .setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
+            .build());
+
+        env.execute("Fraud Detection");
+    }
+}
+                        </code>
+                    </div>
+
+                    <div class="takeaway-box">
+                        <span class="takeaway-icon">&#128161;</span>
+                        <div>
+                            <strong>Production Tips:</strong>
+                            <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                                <li>Always use event time for business logic correctness</li>
+                                <li>Set bounded out-of-orderness based on observed data delays</li>
+                                <li>Use RocksDB backend for state &gt; 1GB</li>
+                                <li>Enable incremental checkpoints for large state</li>
+                                <li>Monitor checkpoint duration and backpressure metrics</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interview Prep -->
+            <h2 class="mt-4">8. Interview Preparation</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Common Questions and Key Concepts</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <div class="interview-q">
+                        <strong>Q: Explain how Flink achieves exactly-once processing.</strong>
+                        <p>A: Flink uses asynchronous barrier snapshotting (Chandy-Lamport algorithm). Checkpoint barriers flow through the DAG, triggering consistent snapshots of operator state. On failure, Flink restores state from the last checkpoint and replays from source offsets, ensuring each record is processed exactly once.</p>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Q: What are watermarks and why are they needed?</strong>
+                        <p>A: Watermarks are timestamps that declare "no events earlier than this will arrive." They enable event-time windowing by signaling when windows can be closed. Without watermarks, we'd never know when to emit results from a window since streams are infinite and events arrive out of order.</p>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Q: How does Flink handle backpressure?</strong>
+                        <p>A: Flink uses credit-based flow control. Downstream operators grant "credits" to upstream operators. When a slow operator runs out of buffer space, it stops granting credits, naturally slowing the entire pipeline. This propagates backpressure to sources without losing data.</p>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Q: Design a real-time fraud detection system using Flink.</strong>
+                        <p>A: Key components: (1) Kafka source with transaction events, (2) Event-time watermarks based on transaction timestamp, (3) Keyed state per user/card storing recent transaction patterns, (4) ProcessFunction implementing fraud rules with timers for session expiry, (5) Side outputs for flagged transactions, (6) Exactly-once sink to alert service and audit log.</p>
+                    </div>
+
+                    <h4 class="mt-3">Key Numbers to Know</h4>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="number">1-5ms</div>
+                            <div class="label">Processing Latency</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">10M+</div>
+                            <div class="label">Events/sec/node</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">PB</div>
+                            <div class="label">State at Scale</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">1-5 min</div>
+                            <div class="label">Checkpoint Interval</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex flex-between mt-4">
+                <a href="../module-05.html" class="btn btn-secondary">&larr; Back to Papers</a>
+                <a href="kafka.html" class="btn btn-primary">Kafka Deep Dive &rarr;</a>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/app.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: { useMaxWidth: true }
+        });
+    </script>
+</body>
+</html>

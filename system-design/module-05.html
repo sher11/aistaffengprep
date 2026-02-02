@@ -110,6 +110,11 @@
             --paper-color-end: #db2777;
         }
 
+        .paper-card.flink {
+            --paper-color-start: #e91e63;
+            --paper-color-end: #9c27b0;
+        }
+
         .paper-header {
             display: flex;
             align-items: flex-start;
@@ -375,6 +380,7 @@
                     <a href="papers/dynamo.html" class="sidebar-link">Amazon Dynamo</a>
                     <a href="papers/memcache.html" class="sidebar-link">Facebook Memcache</a>
                     <a href="papers/mapreduce.html" class="sidebar-link">Google MapReduce</a>
+                    <a href="papers/flink.html" class="sidebar-link">Apache Flink</a>
                 </div>
 
                 <div class="sidebar-section">
@@ -631,6 +637,30 @@
                     </div>
                     <div class="paper-arrow">&#8594;</div>
                 </a>
+
+                <!-- Apache Flink -->
+                <a href="papers/flink.html" class="paper-card flink">
+                    <div class="paper-header">
+                        <div class="paper-icon">F</div>
+                        <div class="paper-meta">
+                            <div class="paper-company">TU Berlin / Data Artisans</div>
+                            <div class="paper-title">Apache Flink</div>
+                            <div class="paper-year">2015</div>
+                        </div>
+                    </div>
+                    <p class="paper-description">
+                        Unified batch and stream processing with true event-time semantics. Introduced watermarks for late data handling, exactly-once checkpointing, and managed stateful processing that redefined real-time analytics.
+                    </p>
+                    <div class="paper-influence">
+                        <div class="paper-influence-label">Systems Influenced</div>
+                        <div class="paper-influence-items">
+                            <span class="influence-tag">Kafka Streams</span>
+                            <span class="influence-tag">Beam</span>
+                            <span class="influence-tag">Spark Streaming</span>
+                        </div>
+                    </div>
+                    <div class="paper-arrow">&#8594;</div>
+                </a>
             </div>
 
             <!-- Paper Influence Map -->
@@ -657,24 +687,31 @@ flowchart TD
         MC["Memcache (2013)"]
     end
 
+    subgraph StreamProc ["Stream Processing"]
+        FL["Flink (2015)"]
+    end
+
     subgraph OpenSource ["Open Source Systems"]
         HDFS["Hadoop HDFS"]
         HB["HBase"]
         CASS["Cassandra"]
         CRDB["CockroachDB"]
         SPARK["Apache Spark"]
+        BEAM["Apache Beam"]
     end
 
     subgraph Cloud ["Cloud Services"]
         S3["AWS S3"]
         DDB["DynamoDB"]
         SPNR["Cloud Spanner"]
+        KIN["AWS Kinesis"]
     end
 
     GFS --> HDFS
     GFS --> S3
     MR --> HDFS
     MR --> SPARK
+    MR --> FL
     BT --> HB
     BT --> CASS
     DY --> CASS
@@ -682,6 +719,9 @@ flowchart TD
     SP --> CRDB
     SP --> SPNR
     KF --> SPARK
+    KF --> FL
+    FL --> BEAM
+    FL --> KIN
                 </div>
             </div>
 
