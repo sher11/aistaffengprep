@@ -835,8 +835,39 @@
 }
 
 .phase-modules {
-    padding: 1.5rem;
+    padding: 0 1.5rem;
     background: rgba(0, 0, 0, 0.02);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+}
+
+.roadmap-phase.open .phase-modules {
+    padding: 1.5rem;
+    max-height: 2000px;
+}
+
+.phase-header {
+    cursor: pointer;
+}
+
+.phase-toggle {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease;
+    color: var(--text-light);
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    margin-right: 1rem;
+}
+
+.roadmap-phase.open .phase-toggle {
+    transform: rotate(180deg);
+}
+
+.roadmap-phase:not(.open):hover {
+    transform: none;
 }
 
 .module-track {
