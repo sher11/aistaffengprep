@@ -303,6 +303,7 @@ body {
     padding: 1rem;
     overflow-x: auto;
     margin: 1rem 0;
+    max-width: 100%;
 }
 
 .code-block pre,
@@ -310,6 +311,7 @@ body {
     margin: 0;
     padding: 0;
     background: transparent;
+    overflow-x: auto;
 }
 
 .code-block code,
@@ -323,7 +325,53 @@ body {
     overflow-x: auto;
 }
 
+/* Global pre/code styles - ensure all code blocks are scrollable */
+pre {
+    background: var(--code-bg);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+pre code {
+    color: #e2e8f0;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    white-space: pre;
+    display: block;
+    background: transparent;
+}
+
+/* Inline code */
+:not(pre) > code {
+    background: rgba(30, 41, 59, 0.1);
+    color: var(--text-color);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.875em;
+}
+
 /* Prism.js overrides for consistent styling */
+pre[class*="language-"],
+code[class*="language-"] {
+    background: var(--code-bg);
+    text-shadow: none;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9rem;
+    overflow-x: auto;
+}
+
+pre[class*="language-"] {
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 0.5rem;
+    max-width: 100%;
+}
+
 .code-block pre[class*="language-"],
 .code-block code[class*="language-"] {
     background: transparent;
