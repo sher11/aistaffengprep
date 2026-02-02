@@ -302,8 +302,10 @@ body {
     border-radius: 0.5rem;
     padding: 1rem;
     overflow-x: auto;
+    overflow-y: hidden;
     margin: 1rem 0;
     max-width: 100%;
+    box-sizing: border-box;
 }
 
 .code-block pre,
@@ -316,13 +318,15 @@ body {
 
 .code-block code,
 .code-block pre code {
-    color: #e2e8f0;
+    color: #e2e8f0 !important;
+    background: transparent !important;
     font-family: 'Fira Code', 'Consolas', monospace;
     font-size: 0.9rem;
     line-height: 1.6;
     white-space: pre;
     display: block;
-    overflow-x: auto;
+    padding: 0 !important;
+    border-radius: 0 !important;
 }
 
 /* Global pre/code styles - ensure all code blocks are scrollable */
@@ -332,7 +336,9 @@ pre {
     padding: 1rem;
     margin: 1rem 0;
     overflow-x: auto;
+    overflow-y: hidden;
     max-width: 100%;
+    box-sizing: border-box;
 }
 
 pre code {
@@ -345,14 +351,27 @@ pre code {
     background: transparent;
 }
 
-/* Inline code */
-:not(pre) > code {
+/* Inline code - exclude code blocks */
+:not(pre):not(.code-block) > code {
     background: rgba(30, 41, 59, 0.1);
     color: var(--text-color);
     padding: 0.15rem 0.4rem;
     border-radius: 0.25rem;
     font-family: 'Fira Code', 'Consolas', monospace;
     font-size: 0.875em;
+}
+
+/* Ensure code blocks inside collapsibles don't overflow */
+.collapsible-content .code-block {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Constrain main content children */
+.main-content > *,
+.collapsible-content > * {
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Prism.js overrides for consistent styling */
