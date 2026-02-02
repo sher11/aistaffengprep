@@ -314,7 +314,7 @@ body {
     margin: 0;
     padding: 0;
     background: transparent;
-    overflow-x: auto;
+    overflow: visible;
 }
 
 .code-block code,
@@ -328,6 +328,7 @@ body {
     display: block;
     padding: 0 !important;
     border-radius: 0 !important;
+    overflow: visible;
 }
 
 /* Global pre/code styles - ensure all code blocks are scrollable */
