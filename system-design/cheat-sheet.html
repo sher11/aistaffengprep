@@ -270,6 +270,12 @@
                     <strong>Who feels pain:</strong> All users — redirects slow to 200ms+, DB gets hammered<br>
                     <strong>Mitigation:</strong> Cache-aside pattern with TTL; circuit breaker to DB; pre-warm cache from DB on recovery
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://github.com/donnemartin/system-design-primer#design-pastebin" target="_blank">System Design Primer: URL Shortener</a> — Classic reference with Base62, hashing tradeoffs</li>
+                    <li><a href="https://instagram-engineering.com/sharding-ids-at-instagram-1cf5a71e5a5c" target="_blank">Instagram Engineering: Sharding & IDs</a> — How Instagram generates unique IDs at scale</li>
+                </ul>
             </div>
 
             <!-- ==================== NEWS FEED ==================== -->
@@ -304,6 +310,12 @@
                     <strong>Who feels pain:</strong> System — queue backlog grows, feed freshness degrades for everyone<br>
                     <strong>Mitigation:</strong> Detect high-follower accounts; switch to pull model; rate limit fan-out workers
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://engineering.fb.com/2021/01/26/ml-applications/news-feed-ranking/" target="_blank">Meta Engineering: News Feed Ranking</a> — ML-powered ranking at 2B+ users scale</li>
+                    <li><a href="https://engineering.fb.com/2016/10/20/networking-traffic/client-side-ranking-to-more-efficiently-show-people-stories-in-feed/" target="_blank">Meta Engineering: Client-Side Ranking</a> — Hybrid ranking architecture</li>
+                </ul>
             </div>
 
             <!-- ==================== CHAT SYSTEM ==================== -->
@@ -338,6 +350,12 @@
                     <strong>Who feels pain:</strong> Users — messages appear undelivered, reconnection storm<br>
                     <strong>Mitigation:</strong> Sticky sessions with failover; exponential backoff on reconnect; message queue buffers during outage
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://www.erlang-solutions.com/blog/20-years-of-open-source-erlang-openerlang-interview-with-anton-lavrik-from-whatsapp/" target="_blank">Erlang Solutions: WhatsApp Interview</a> — Why Erlang powers 40B messages/day</li>
+                    <li><a href="https://discord.com/blog/how-discord-scaled-elixir-to-5-000-000-concurrent-users" target="_blank">Discord Engineering: Scaling Elixir</a> — 5M concurrent users, WebSocket architecture</li>
+                </ul>
             </div>
 
             <!-- ==================== VIDEO STREAMING ==================== -->
@@ -372,6 +390,12 @@
                     <strong>Who feels pain:</strong> Users globally — buffering, failed playback for cache-missed content<br>
                     <strong>Mitigation:</strong> Multi-region origin replication; extend CDN TTLs during incidents; serve stale content
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://netflixtechblog.com/behind-the-streams-live-at-netflix-part-1-d23f917c2f40" target="_blank">Netflix Tech Blog: Behind the Streams</a> — Live streaming architecture and transcoding</li>
+                    <li><a href="https://openconnect.netflix.com/en/" target="_blank">Netflix Open Connect</a> — How Netflix's CDN delivers 98% of traffic from edge</li>
+                </ul>
             </div>
 
             <!-- ==================== DISTRIBUTED CACHE ==================== -->
@@ -406,6 +430,12 @@
                     <strong>Who feels pain:</strong> All users accessing that key — timeouts, cascade to DB<br>
                     <strong>Mitigation:</strong> Key replication across shards; local caching; request coalescing for same key
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://engineering.fb.com/2013/06/25/core-infra/scaling-memcache-at-facebook/" target="_blank">Meta Engineering: Scaling Memcache</a> — Caching at Facebook's scale with consistency</li>
+                    <li><a href="https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/" target="_blank">Redis Official: Scaling Guide</a> — Consistent hashing, replication, cluster mode</li>
+                </ul>
             </div>
 
             <!-- ==================== RATE LIMITER ==================== -->
@@ -440,6 +470,12 @@
                     <strong>Who feels pain:</strong> Ops — either over-limit legit users (fail closed) or let attacks through (fail open)<br>
                     <strong>Mitigation:</strong> Local fallback with conservative limits; distributed rate limiting with sync intervals
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://blog.cloudflare.com/counting-things-a-lot-of-different-things/" target="_blank">Cloudflare: Rate Limiting at Scale</a> — Sliding window algorithm for millions of domains</li>
+                    <li><a href="https://stripe.com/blog/rate-limiters" target="_blank">Stripe Engineering: Rate Limiters</a> — Token bucket implementation for API protection</li>
+                </ul>
             </div>
 
             <!-- ==================== NOTIFICATION SYSTEM ==================== -->
@@ -474,6 +510,12 @@
                     <strong>Who feels pain:</strong> Users — delayed or missing notifications for time-sensitive events<br>
                     <strong>Mitigation:</strong> Exponential backoff; fallback to email/SMS; surface delivery failures in app
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://engineering.fb.com/2018/09/11/mobile/mobile-push-notifications/" target="_blank">Meta Engineering: Push Notifications</a> — Scaling push to billions of devices</li>
+                    <li><a href="https://firebase.google.com/docs/cloud-messaging/concept-options" target="_blank">Firebase Cloud Messaging Docs</a> — FCM architecture and delivery options</li>
+                </ul>
             </div>
 
             <!-- ==================== SEARCH AUTOCOMPLETE ==================== -->
@@ -508,6 +550,12 @@
                     <strong>Who feels pain:</strong> Users — slow suggestions during breaking news/viral moments<br>
                     <strong>Mitigation:</strong> Request coalescing; real-time trending detection; fallback to cached stale data
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://engineering.linkedin.com/search/did-you-mean-galene" target="_blank">LinkedIn Engineering: Search Suggestions</a> — Typeahead with Galene and trie structures</li>
+                    <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters.html" target="_blank">Elasticsearch: Completion Suggester</a> — Production-ready autocomplete implementation</li>
+                </ul>
             </div>
 
             <!-- ==================== WEB CRAWLER ==================== -->
@@ -542,6 +590,12 @@
                     <strong>Who feels pain:</strong> Crawler — wastes resources on one domain, starves others<br>
                     <strong>Mitigation:</strong> Max depth per domain; URL pattern detection; domain-level crawl budgets
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://blog.twitter.com/engineering/en_us/a/2011/spiderduck-twitters-real-time-url-fetcher" target="_blank">Twitter Engineering: SpiderDuck</a> — Real-time URL fetching with rate limiting per domain</li>
+                    <li><a href="https://research.google/pubs/web-search-for-a-planet-the-google-cluster-architecture/" target="_blank">Google Research: Web Search Architecture</a> — Crawling and indexing at Google scale</li>
+                </ul>
             </div>
 
             <!-- ==================== CLOUD STORAGE ==================== -->
@@ -576,6 +630,12 @@
                     <strong>Who feels pain:</strong> Users — uploads stuck, file tree inconsistent across devices<br>
                     <strong>Mitigation:</strong> Client-side journaling; idempotent uploads with block hashes; reconciliation on reconnect
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://dropbox.tech/infrastructure/magic-pocket-infrastructure" target="_blank">Dropbox Tech: Magic Pocket</a> — Exabyte-scale storage with block deduplication</li>
+                    <li><a href="https://dropbox.tech/infrastructure/rewriting-the-heart-of-our-sync-engine" target="_blank">Dropbox Tech: Sync Engine</a> — Delta sync and conflict resolution at scale</li>
+                </ul>
             </div>
 
             <!-- ==================== RIDE SHARING ==================== -->
@@ -610,6 +670,12 @@
                     <strong>Who feels pain:</strong> Riders — long match times, phantom drivers, ETA jumps<br>
                     <strong>Mitigation:</strong> Pre-position drivers for events; queue with ETA; degrade to larger radius search
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://www.uber.com/blog/h3/" target="_blank">Uber Engineering: H3 Geospatial Index</a> — Hexagonal hierarchical spatial index for matching</li>
+                    <li><a href="https://www.uber.com/blog/engineering-an-efficient-dispatch-system/" target="_blank">Uber Engineering: Dispatch System</a> — Real-time matching optimization (DISCO)</li>
+                </ul>
             </div>
 
             <!-- ==================== E-COMMERCE ==================== -->
@@ -644,6 +710,12 @@
                     <strong>Who feels pain:</strong> Users — cart shows item but checkout fails; overselling nightmare<br>
                     <strong>Mitigation:</strong> Queue-based checkout; inventory soft-reserve with TTL; honest stock counts
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://www.aboutamazon.com/news/aws/what-you-need-to-know-about-amazon-dynamodb" target="_blank">Amazon: DynamoDB Origin Story</a> — How Amazon built eventually consistent inventory at scale</li>
+                    <li><a href="https://shopify.engineering/how-shopify-manages-billions-of-dollars-in-flash-sales" target="_blank">Shopify Engineering: Flash Sales</a> — Inventory management during traffic spikes</li>
+                </ul>
             </div>
 
             <!-- ==================== PAYMENT SYSTEM ==================== -->
@@ -678,6 +750,12 @@
                     <strong>Who feels pain:</strong> Customer — charged twice; merchant — refund overhead, trust loss<br>
                     <strong>Mitigation:</strong> Idempotency keys mandatory; pending state with timeout; reconciliation jobs
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://stripe.com/blog/idempotency" target="_blank">Stripe Engineering: Idempotency</a> — Designing robust APIs for payment reliability</li>
+                    <li><a href="https://developer.squareup.com/blog/payments-integration-design-patterns" target="_blank">Square Developer: Payment Patterns</a> — Exactly-once semantics for transactions</li>
+                </ul>
             </div>
 
             <!-- ==================== MESSAGE QUEUE ==================== -->
@@ -712,6 +790,12 @@
                     <strong>Who feels pain:</strong> All consumers in group — processing halts during rebalance, duplicates<br>
                     <strong>Mitigation:</strong> Tune session timeout; static membership; isolate slow consumers to separate group
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying" target="_blank">LinkedIn Engineering: The Log</a> — Jay Kreps' seminal post on distributed logs and Kafka</li>
+                    <li><a href="https://engineering.linkedin.com/kafka/running-kafka-scale" target="_blank">LinkedIn Engineering: Kafka at Scale</a> — 800B messages/day, 1100+ brokers</li>
+                </ul>
             </div>
 
             <!-- ==================== SEARCH ENGINE ==================== -->
@@ -746,6 +830,12 @@
                     <strong>Who feels pain:</strong> Cluster — OOM on master nodes, cluster goes red<br>
                     <strong>Mitigation:</strong> Strict mappings; field limit settings; template governance
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://www.elastic.co/blog/found-elasticsearch-from-the-bottom-up" target="_blank">Elastic Blog: Elasticsearch Bottom Up</a> — Inverted index, Lucene segments, and scoring</li>
+                    <li><a href="https://blog.twitter.com/engineering/en_us/a/2014/building-a-complete-tweet-index" target="_blank">Twitter Engineering: Tweet Index</a> — Indexing billions of tweets with Lucene</li>
+                </ul>
             </div>
 
             <!-- ==================== AD CLICK AGGREGATOR ==================== -->
@@ -780,6 +870,12 @@
                     <strong>Who feels pain:</strong> Advertisers — dashboards show stale data, budget decisions delayed<br>
                     <strong>Mitigation:</strong> Auto-scaling consumers; sampling under load; SLA tiers for real-time vs batch
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://engineering.fb.com/2016/06/28/core-infra/data-infrastructure-at-facebook/" target="_blank">Meta Engineering: Data Infrastructure</a> — Petabyte-scale real-time analytics</li>
+                    <li><a href="https://www.uber.com/blog/pinot-real-time-analytics/" target="_blank">Uber Engineering: Apache Pinot</a> — Real-time OLAP for click aggregation</li>
+                </ul>
             </div>
 
             <!-- ==================== PROXIMITY SERVICE ==================== -->
@@ -814,6 +910,12 @@
                     <strong>Who feels pain:</strong> User — restaurant 100m away not shown because different geohash<br>
                     <strong>Mitigation:</strong> Query adjacent geohash cells; use overlapping grid; post-filter by actual distance
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://www.uber.com/blog/h3/" target="_blank">Uber Engineering: H3</a> — Hexagonal hierarchical spatial index (open source)</li>
+                    <li><a href="https://blog.yelp.com/2017/10/engineering-search-at-yelp/" target="_blank">Yelp Engineering: Search</a> — Geospatial search with Elasticsearch</li>
+                </ul>
             </div>
 
             <!-- ==================== COLLABORATIVE EDITING ==================== -->
@@ -848,6 +950,12 @@
                     <strong>Who feels pain:</strong> Users — lost work, document diverges between collaborators<br>
                     <strong>Mitigation:</strong> Client-side op queue with ACK; server replication; periodic snapshots
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/" target="_blank">Figma Engineering: Multiplayer</a> — CRDTs for real-time collaborative design</li>
+                    <li><a href="https://www.inkandswitch.com/local-first/" target="_blank">Ink & Switch: Local-First Software</a> — CRDTs vs OT deep dive with tradeoffs</li>
+                </ul>
             </div>
 
             <!-- ==================== STOCK EXCHANGE ==================== -->
@@ -882,6 +990,12 @@
                     <strong>Who feels pain:</strong> Traders — unfair fills, regulatory scrutiny, arbitrage losses<br>
                     <strong>Mitigation:</strong> Hot standby sequencer; sequence number validation; halt trading during recovery
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://www.lmax.com/exchange/technical-papers" target="_blank">LMAX Exchange: Technical Papers</a> — Disruptor pattern for 6M orders/sec</li>
+                    <li><a href="https://queue.acm.org/detail.cfm?id=2658164" target="_blank">ACM Queue: Trading System Design</a> — Latency engineering for financial systems</li>
+                </ul>
             </div>
 
             <!-- ==================== BOOKING SYSTEM ==================== -->
@@ -916,6 +1030,12 @@
                     <strong>Who feels pain:</strong> Guest — arrives to no room; hotel — angry customer, comped stay<br>
                     <strong>Mitigation:</strong> Serialized booking per room; inventory buffer; graceful overbooking policy
                 </div>
+
+                <h4>5) Best Reference</h4>
+                <ul>
+                    <li><a href="https://medium.com/airbnb-engineering/how-airbnb-avoids-double-payments-f93e3a83fe6e" target="_blank">Airbnb Engineering: Avoiding Double Payments</a> — Idempotency in booking transactions</li>
+                    <li><a href="https://blog.booking.com/architecture-systems-availability.html" target="_blank">Booking.com: Systems Availability</a> — High availability for reservation systems</li>
+                </ul>
             </div>
 
             <!-- Navigation -->
