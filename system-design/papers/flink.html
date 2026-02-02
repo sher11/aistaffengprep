@@ -504,8 +504,428 @@ flowchart TB
                 </div>
             </div>
 
+            <!-- Architecture Deep Dive -->
+            <h2 class="mt-4">2. Flink Architecture Deep Dive</h2>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Cluster Architecture: JobManager &amp; TaskManagers</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Flink runs as a distributed system with a <strong>master-worker architecture</strong>. Understanding this is critical for designing scalable streaming applications.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph Client["Client"]
+        C[Flink Client<br/>Submit Job]
+    end
+
+    subgraph Cluster["Flink Cluster"]
+        subgraph JM["JobManager (Master)"]
+            D[Dispatcher<br/>REST API]
+            RM[Resource Manager<br/>Slot Allocation]
+            JMaster[JobMaster<br/>Per-Job Coordination]
+        end
+
+        subgraph TM1["TaskManager 1"]
+            S1[Slot 1]
+            S2[Slot 2]
+            S3[Slot 3]
+        end
+
+        subgraph TM2["TaskManager 2"]
+            S4[Slot 1]
+            S5[Slot 2]
+            S6[Slot 3]
+        end
+
+        subgraph TM3["TaskManager 3"]
+            S7[Slot 1]
+            S8[Slot 2]
+            S9[Slot 3]
+        end
+    end
+
+    C -->|Submit JAR| D
+    D --> JMaster
+    JMaster -->|Request Slots| RM
+    RM -->|Allocate| TM1
+    RM -->|Allocate| TM2
+    RM -->|Allocate| TM3
+    JMaster -->|Deploy Tasks| S1
+    JMaster -->|Deploy Tasks| S4
+    JMaster -->|Deploy Tasks| S7
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Component Responsibilities</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+                        <thead>
+                            <tr style="background: var(--border-color);">
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Component</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Role</th>
+                                <th style="padding: 0.75rem; border: 1px solid var(--border-color);">Key Functions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Dispatcher</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Entry point</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">REST API, job submission, Web UI</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>ResourceManager</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Resource allocation</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Manages TaskManager slots, integrates with YARN/K8s/Mesos</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>JobMaster</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Job coordination</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Schedules tasks, manages checkpoints, handles failures</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>TaskManager</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Worker node</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Executes tasks, manages memory, network buffers</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);"><strong>Task Slot</strong></td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Resource unit</td>
+                                <td style="padding: 0.75rem; border: 1px solid var(--border-color);">Fixed slice of TaskManager resources (memory)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="card mt-2" style="background: rgba(233, 30, 99, 0.1); border: 1px solid #e91e63;">
+                        <strong>High Availability:</strong> In production, JobManager runs with a standby using ZooKeeper or Kubernetes for leader election. State is stored in a distributed file system (HDFS/S3) so any JobManager can recover a failed job.
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Dataflow Model: From Code to Execution</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Flink transforms your code through multiple stages before execution. Understanding this pipeline is essential for optimization.</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph User["User Code"]
+        API[DataStream API<br/>or Table API]
+    end
+
+    subgraph Logical["Logical Planning"]
+        SG[StreamGraph<br/>Logical operators]
+        JG[JobGraph<br/>Optimized, chained]
+    end
+
+    subgraph Physical["Physical Execution"]
+        EG[ExecutionGraph<br/>Parallelized tasks]
+        TASK[Running Tasks<br/>On TaskManagers]
+    end
+
+    API --> SG
+    SG -->|Optimize| JG
+    JG -->|Parallelize| EG
+    EG -->|Deploy| TASK
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Graph Transformation Stages</h4>
+
+                    <div class="code-block">
+                        <code>
+// User writes this code:
+DataStream&lt;Event&gt; events = env.addSource(kafkaSource);
+
+DataStream&lt;Result&gt; results = events
+    .filter(e -> e.isValid())           // Operator 1
+    .map(e -> enrichEvent(e))           // Operator 2
+    .keyBy(e -> e.getUserId())          // Partitioning
+    .window(TumblingEventTimeWindows.of(Time.minutes(5)))
+    .aggregate(new CountAggregator())   // Operator 3
+    .filter(r -> r.count > threshold);  // Operator 4
+
+results.addSink(kafkaSink);
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">1. StreamGraph (Logical Plan)</h4>
+                    <p>Direct representation of user code - each transformation becomes a node:</p>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    Source --> Filter1[Filter<br/>isValid]
+    Filter1 --> Map[Map<br/>enrich]
+    Map --> KeyBy[KeyBy<br/>userId]
+    KeyBy --> Window[Window<br/>5 min]
+    Window --> Agg[Aggregate<br/>count]
+    Agg --> Filter2[Filter<br/>threshold]
+    Filter2 --> Sink
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">2. JobGraph (Optimized Plan)</h4>
+                    <p>Flink <strong>chains operators</strong> that can run in the same thread to avoid serialization overhead:</p>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart LR
+    subgraph Chain1["Operator Chain 1"]
+        C1[Source → Filter → Map]
+    end
+
+    subgraph Chain2["Operator Chain 2"]
+        C2[Window → Aggregate → Filter → Sink]
+    end
+
+    Chain1 -->|Network Shuffle<br/>by userId| Chain2
+                        </div>
+                    </div>
+
+                    <div class="takeaway-box">
+                        <span class="takeaway-icon">&#128161;</span>
+                        <div>
+                            <strong>Operator Chaining:</strong> Consecutive operators without repartitioning are fused into a single task. This eliminates serialization/deserialization between operators and can improve throughput by 10x. Chaining is automatic but can be disabled with <code>.disableChaining()</code> for debugging.
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">3. ExecutionGraph (Physical Plan)</h4>
+                    <p>Each operator chain is parallelized according to its parallelism setting:</p>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph Source["Source Chain (parallelism=4)"]
+        S1[Task 1]
+        S2[Task 2]
+        S3[Task 3]
+        S4[Task 4]
+    end
+
+    subgraph Window["Window Chain (parallelism=4)"]
+        W1[Task 1<br/>Keys: A-G]
+        W2[Task 2<br/>Keys: H-N]
+        W3[Task 3<br/>Keys: O-T]
+        W4[Task 4<br/>Keys: U-Z]
+    end
+
+    S1 --> W1
+    S1 --> W2
+    S1 --> W3
+    S1 --> W4
+    S2 --> W1
+    S2 --> W2
+    S2 --> W3
+    S2 --> W4
+    S3 --> W1
+    S3 --> W2
+    S3 --> W3
+    S3 --> W4
+    S4 --> W1
+    S4 --> W2
+    S4 --> W3
+    S4 --> W4
+                        </div>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Interview Question:</strong> "How does Flink decide task parallelism?"
+                        <p style="margin-top: 0.5rem;">Answer: Each operator can have independent parallelism. Source parallelism often matches Kafka partitions. Downstream parallelism depends on expected data volume and available slots. KeyBy operations hash-partition data, ensuring all events for a key go to the same parallel instance. Total job parallelism ≤ total available slots.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Memory Management &amp; Network Stack</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Flink manages memory explicitly rather than relying on JVM garbage collection. This is critical for stable, predictable performance.</p>
+
+                    <h4>TaskManager Memory Layout</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph TM["TaskManager Total Memory"]
+        subgraph Flink["Flink Memory"]
+            subgraph Task["Task Memory"]
+                TH[Task Heap<br/>User objects]
+                TOH[Task Off-Heap<br/>Native memory]
+            end
+            subgraph Framework["Framework Memory"]
+                FH[Framework Heap]
+                FOH[Framework Off-Heap]
+            end
+            subgraph Managed["Managed Memory"]
+                SM[State Backends<br/>RocksDB]
+                BM[Batch Operators<br/>Sort, Hash]
+            end
+            NM[Network Memory<br/>Shuffle Buffers]
+        end
+        JVM[JVM Metaspace + Overhead]
+    end
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Memory Configuration</h4>
+                    <div class="code-block">
+                        <code>
+# TaskManager memory configuration (flink-conf.yaml)
+taskmanager.memory.process.size: 4096m    # Total container memory
+
+# Breakdown (automatically calculated or manual):
+taskmanager.memory.flink.size: 3584m      # Total Flink memory
+taskmanager.memory.task.heap.size: 1024m  # For user code objects
+taskmanager.memory.managed.size: 1536m    # For RocksDB state
+taskmanager.memory.network.min: 256m      # Network buffers
+taskmanager.memory.network.max: 512m      # Network buffers
+
+# Key insight: Managed memory is OFF-HEAP
+# RocksDB uses native memory, not JVM heap
+# This allows TB-scale state without GC pressure
+                        </code>
+                    </div>
+
+                    <h4 class="mt-3">Network Shuffle Architecture</h4>
+                    <p>Data exchange between tasks uses a credit-based flow control system:</p>
+
+                    <div class="diagram-container">
+                        <div class="mermaid">
+sequenceDiagram
+    participant UP as Upstream Task
+    participant NB as Network Buffer Pool
+    participant DOWN as Downstream Task
+
+    Note over DOWN: Has 4 credits available
+    DOWN->>UP: Grant 4 credits
+    UP->>NB: Request buffer
+    NB->>UP: Buffer allocated
+    UP->>UP: Serialize records to buffer
+    UP->>DOWN: Send buffer (use 1 credit)
+    Note over DOWN: 3 credits remaining
+    DOWN->>DOWN: Deserialize & process
+    DOWN->>UP: Return credit
+    Note over DOWN: 4 credits again
+                        </div>
+                    </div>
+
+                    <div class="card mt-2" style="background: var(--success-bg);">
+                        <strong>Backpressure Handling:</strong> When downstream is slow, it stops granting credits. Upstream buffers fill up. This naturally propagates backpressure to sources without data loss. Monitor backpressure via Flink Web UI's backpressure tab - high backpressure indicates a bottleneck.
+                    </div>
+
+                    <h4 class="mt-3">Key Memory Numbers</h4>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="number">32KB</div>
+                            <div class="label">Default Buffer Size</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">2-8</div>
+                            <div class="label">Buffers Per Channel</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">10%</div>
+                            <div class="label">Default Network Fraction</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="number">40%</div>
+                            <div class="label">Default Managed Fraction</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapsible open">
+                <div class="collapsible-header">
+                    <span>Task Slots &amp; Slot Sharing</span>
+                    <span class="collapsible-icon">&#9660;</span>
+                </div>
+                <div class="collapsible-content">
+                    <p>Task slots are Flink's unit of resource allocation. Understanding slot sharing is key to efficient cluster utilization.</p>
+
+                    <h4>Without Slot Sharing</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph TM1["TaskManager 1 (3 slots)"]
+        S1[Slot 1<br/>Source]
+        S2[Slot 2<br/>Source]
+        S3[Slot 3<br/>Source]
+    end
+
+    subgraph TM2["TaskManager 2 (3 slots)"]
+        S4[Slot 1<br/>Map]
+        S5[Slot 2<br/>Map]
+        S6[Slot 3<br/>Map]
+    end
+
+    subgraph TM3["TaskManager 3 (3 slots)"]
+        S7[Slot 1<br/>Sink]
+        S8[Slot 2<br/>Sink]
+        S9[Slot 3<br/>Sink]
+    end
+                        </div>
+                    </div>
+                    <p class="text-muted">Problem: 9 slots needed for parallelism=3, poor resource utilization</p>
+
+                    <h4 class="mt-3">With Slot Sharing (Default)</h4>
+                    <div class="diagram-container">
+                        <div class="mermaid">
+flowchart TB
+    subgraph TM1["TaskManager 1 (3 slots)"]
+                        S1["Slot 1<br/>Source → Map → Sink<br/>(Full Pipeline)"]
+        S2["Slot 2<br/>Source → Map → Sink<br/>(Full Pipeline)"]
+        S3["Slot 3<br/>Source → Map → Sink<br/>(Full Pipeline)"]
+    end
+                        </div>
+                    </div>
+                    <p class="text-muted">With slot sharing: Only 3 slots needed! Each slot runs a complete pipeline slice.</p>
+
+                    <div class="takeaway-box">
+                        <span class="takeaway-icon">&#128161;</span>
+                        <div>
+                            <strong>Slot Sharing Benefits:</strong>
+                            <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                                <li><strong>Better utilization:</strong> Heavy and light operators balance within a slot</li>
+                                <li><strong>Fewer slots needed:</strong> Total slots = max(operator parallelism)</li>
+                                <li><strong>Locality:</strong> Source and sink in same slot can share data without network</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-3">Slot Sharing Groups</h4>
+                    <div class="code-block">
+                        <code>
+// By default, all operators share slots
+// You can isolate resource-heavy operators:
+
+DataStream&lt;Event&gt; events = source
+    .map(e -> process(e))
+    .slotSharingGroup("default");  // Share with others
+
+DataStream&lt;Result&gt; heavy = events
+    .keyBy(...)
+    .process(new HeavyMLFunction())
+    .slotSharingGroup("ml-intensive");  // Isolate in dedicated slots
+
+// Now ML tasks won't compete with regular tasks for resources
+                        </code>
+                    </div>
+
+                    <div class="interview-q">
+                        <strong>Interview Question:</strong> "How would you size a Flink cluster?"
+                        <p style="margin-top: 0.5rem;">Answer: (1) Determine max parallelism needed based on input rate and processing capacity per task, (2) Total slots needed = max operator parallelism (with slot sharing), (3) TaskManagers = slots / slots_per_tm, (4) Size each TaskManager based on state size and memory needs. Example: 100K events/sec, each task handles 10K/sec → parallelism=10 → 10 slots minimum. Add headroom for failover (typically 10-20%).</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Event Time & Watermarks -->
-            <h2 class="mt-4">2. Event Time vs Processing Time</h2>
+            <h2 class="mt-4">3. Event Time vs Processing Time</h2>
 
             <div class="collapsible open">
                 <div class="collapsible-header">
@@ -586,7 +1006,7 @@ sequenceDiagram
             </div>
 
             <!-- Windowing -->
-            <h2 class="mt-4">3. Windows: Grouping Unbounded Streams</h2>
+            <h2 class="mt-4">4. Windows: Grouping Unbounded Streams</h2>
 
             <div class="collapsible open">
                 <div class="collapsible-header">
@@ -674,7 +1094,7 @@ events \
             </div>
 
             <!-- Fault Tolerance -->
-            <h2 class="mt-4">4. Exactly-Once via Distributed Snapshots</h2>
+            <h2 class="mt-4">5. Exactly-Once via Distributed Snapshots</h2>
 
             <div class="collapsible open">
                 <div class="collapsible-header">
@@ -734,7 +1154,7 @@ sequenceDiagram
             </div>
 
             <!-- State Management -->
-            <h2 class="mt-4">5. Stateful Stream Processing</h2>
+            <h2 class="mt-4">6. Stateful Stream Processing</h2>
 
             <div class="collapsible open">
                 <div class="collapsible-header">
@@ -825,7 +1245,7 @@ public class FraudDetector extends KeyedProcessFunction&lt;String, Transaction, 
             </div>
 
             <!-- Flink vs Others -->
-            <h2 class="mt-4">6. Flink vs Other Stream Processors</h2>
+            <h2 class="mt-4">7. Flink vs Other Stream Processors</h2>
 
             <div class="collapsible open">
                 <div class="collapsible-header">
@@ -877,7 +1297,7 @@ public class FraudDetector extends KeyedProcessFunction&lt;String, Transaction, 
             </div>
 
             <!-- Production Patterns -->
-            <h2 class="mt-4">7. Production Patterns</h2>
+            <h2 class="mt-4">8. Production Patterns</h2>
 
             <div class="collapsible open">
                 <div class="collapsible-header">
@@ -976,7 +1396,7 @@ public class FraudDetectionJob {
             </div>
 
             <!-- Interview Prep -->
-            <h2 class="mt-4">8. Interview Preparation</h2>
+            <h2 class="mt-4">9. Interview Preparation</h2>
 
             <div class="collapsible open">
                 <div class="collapsible-header">
