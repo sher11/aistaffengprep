@@ -109,6 +109,85 @@
             .main-content { margin: 0 !important; max-width: 100% !important; }
             .cheat-sheet-problem { break-inside: avoid; page-break-inside: avoid; }
         }
+        /* Two-column layout for problem cards */
+        .problem-layout {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+        }
+        .problem-content {
+            min-width: 0;
+        }
+        .practice-sidebar {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            height: fit-content;
+            position: sticky;
+            top: 1rem;
+        }
+        .practice-sidebar h4 {
+            margin: 0 0 0.75rem 0 !important;
+            font-size: 0.95rem !important;
+            color: var(--primary-color) !important;
+        }
+        .practice-sidebar h4::before {
+            content: "🎯 " !important;
+        }
+        .practice-section {
+            margin-bottom: 1rem;
+        }
+        .practice-section:last-child {
+            margin-bottom: 0;
+        }
+        .practice-section h5 {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0 0 0.5rem 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .practice-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .practice-link:hover {
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        .practice-link .difficulty {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        .practice-link .difficulty.easy { background: #2ecc71; color: white; }
+        .practice-link .difficulty.medium { background: #f39c12; color: white; }
+        .practice-link .difficulty.hard { background: #e74c3c; color: white; }
+        .practice-link .source {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+        @media (max-width: 900px) {
+            .problem-layout {
+                grid-template-columns: 1fr;
+            }
+            .practice-sidebar {
+                position: static;
+            }
+        }
     </style>
 </head>
 <body>
@@ -241,321 +320,529 @@
             <!-- ==================== URL SHORTENER ==================== -->
             <div class="cheat-sheet-problem" id="url-shortener">
                 <h3>URL Shortener (TinyURL/Bitly) <span class="difficulty-tag difficulty-easy">Easy</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Base62 encoding</strong> of auto-increment ID or random hash — simple, collision-free</li>
+                            <li><strong>MD5/SHA256 hash + truncation</strong> — collision risk requires DB check</li>
+                            <li><strong>Tradeoff:</strong> Sequential IDs are predictable but fast; random hashes hide info but need collision handling</li>
+                            <li><strong>Key insight:</strong> 7 chars of Base62 = 62^7 = 3.5 trillion URLs — more than enough</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Base62 encoding</strong> of auto-increment ID or random hash — simple, collision-free</li>
-                    <li><strong>MD5/SHA256 hash + truncation</strong> — collision risk requires DB check</li>
-                    <li><strong>Tradeoff:</strong> Sequential IDs are predictable but fast; random hashes hide info but need collision handling</li>
-                    <li><strong>Key insight:</strong> 7 chars of Base62 = 62^7 = 3.5 trillion URLs — more than enough</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 100:1 — heavily read-optimized</li>
+                            <li><strong>P50/P99 latency:</strong> Reads 5ms/50ms (cache hit), Writes 20ms/100ms</li>
+                            <li><strong>Optimization:</strong> Read path via cache; write path can be async</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 100:1 — heavily read-optimized</li>
-                    <li><strong>P50/P99 latency:</strong> Reads 5ms/50ms (cache hit), Writes 20ms/100ms</li>
-                    <li><strong>Optimization:</strong> Read path via cache; write path can be async</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Redis/Memcached:</strong> Hot URL cache — 90%+ hit rate for popular links</li>
+                            <li><strong>NoSQL (DynamoDB/Cassandra):</strong> URL mappings — high write throughput, key-value access pattern</li>
+                            <li><strong>Distributed ID Generator (Snowflake):</strong> Unique IDs without coordination overhead</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Redis/Memcached:</strong> Hot URL cache — 90%+ hit rate for popular links</li>
-                    <li><strong>NoSQL (DynamoDB/Cassandra):</strong> URL mappings — high write throughput, key-value access pattern</li>
-                    <li><strong>Distributed ID Generator (Snowflake):</strong> Unique IDs without coordination overhead</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Cache cluster fails during traffic spike<br>
+                            <strong>Who feels pain:</strong> All users — redirects slow to 200ms+, DB gets hammered<br>
+                            <strong>Mitigation:</strong> Cache-aside pattern with TTL; circuit breaker to DB; pre-warm cache from DB on recovery
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Cache cluster fails during traffic spike<br>
-                    <strong>Who feels pain:</strong> All users — redirects slow to 200ms+, DB gets hammered<br>
-                    <strong>Mitigation:</strong> Cache-aside pattern with TTL; circuit breaker to DB; pre-warm cache from DB on recovery
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://github.com/donnemartin/system-design-primer#design-pastebin" target="_blank">System Design Primer: URL Shortener</a> — Classic reference with Base62, hashing tradeoffs</li>
+                            <li><a href="https://instagram-engineering.com/sharding-ids-at-instagram-1cf5a71e5a5c" target="_blank">Instagram Engineering: Sharding & IDs</a> — How Instagram generates unique IDs at scale</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/encode-and-decode-tinyurl/" target="_blank" class="practice-link">
+                                <span>535. Encode/Decode TinyURL</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/design-hashmap/" target="_blank" class="practice-link">
+                                <span>706. Design HashMap</span>
+                                <span class="difficulty easy">Easy</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/donnemartin/system-design-primer/blob/master/solutions/object_oriented_design/url_shortener" target="_blank" class="practice-link">
+                                <span>URL Shortener OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://github.com/donnemartin/system-design-primer#design-pastebin" target="_blank">System Design Primer: URL Shortener</a> — Classic reference with Base62, hashing tradeoffs</li>
-                    <li><a href="https://instagram-engineering.com/sharding-ids-at-instagram-1cf5a71e5a5c" target="_blank">Instagram Engineering: Sharding & IDs</a> — How Instagram generates unique IDs at scale</li>
-                </ul>
             </div>
 
             <!-- ==================== NEWS FEED ==================== -->
             <div class="cheat-sheet-problem" id="news-feed">
                 <h3>News Feed / Timeline (Facebook/Twitter) <span class="difficulty-tag difficulty-medium">Medium</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Fan-out on write:</strong> Push posts to follower feeds at write time — fast reads, expensive writes</li>
+                            <li><strong>Fan-out on read:</strong> Pull from followees at read time — cheap writes, slow reads</li>
+                            <li><strong>Hybrid approach:</strong> Fan-out on write for normal users; fan-out on read for celebrities (>1M followers)</li>
+                            <li><strong>Ranking:</strong> ML model scores posts (engagement, recency, affinity) — adds 20-50ms latency</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Fan-out on write:</strong> Push posts to follower feeds at write time — fast reads, expensive writes</li>
-                    <li><strong>Fan-out on read:</strong> Pull from followees at read time — cheap writes, slow reads</li>
-                    <li><strong>Hybrid approach:</strong> Fan-out on write for normal users; fan-out on read for celebrities (>1M followers)</li>
-                    <li><strong>Ranking:</strong> ML model scores posts (engagement, recency, affinity) — adds 20-50ms latency</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 1000:1 — users scroll much more than post</li>
+                            <li><strong>P50/P99 latency:</strong> Feed fetch 100ms/500ms; Post creation 50ms/200ms (async fan-out)</li>
+                            <li><strong>Optimization:</strong> Pre-computed feeds in cache; ranking can be batched</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 1000:1 — users scroll much more than post</li>
-                    <li><strong>P50/P99 latency:</strong> Feed fetch 100ms/500ms; Post creation 50ms/200ms (async fan-out)</li>
-                    <li><strong>Optimization:</strong> Pre-computed feeds in cache; ranking can be batched</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Redis Sorted Sets:</strong> User timelines — O(1) prepend, O(log N) range queries by score</li>
+                            <li><strong>Graph DB / Social Graph Service:</strong> Follower relationships — who follows whom</li>
+                            <li><strong>Blob Storage + CDN:</strong> Media (images, videos) — posts reference media IDs</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Redis Sorted Sets:</strong> User timelines — O(1) prepend, O(log N) range queries by score</li>
-                    <li><strong>Graph DB / Social Graph Service:</strong> Follower relationships — who follows whom</li>
-                    <li><strong>Blob Storage + CDN:</strong> Media (images, videos) — posts reference media IDs</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Celebrity posts to 50M followers — write amplification explodes<br>
+                            <strong>Who feels pain:</strong> System — queue backlog grows, feed freshness degrades for everyone<br>
+                            <strong>Mitigation:</strong> Detect high-follower accounts; switch to pull model; rate limit fan-out workers
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Celebrity posts to 50M followers — write amplification explodes<br>
-                    <strong>Who feels pain:</strong> System — queue backlog grows, feed freshness degrades for everyone<br>
-                    <strong>Mitigation:</strong> Detect high-follower accounts; switch to pull model; rate limit fan-out workers
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://engineering.fb.com/2021/01/26/ml-applications/news-feed-ranking/" target="_blank">Meta Engineering: News Feed Ranking</a> — ML-powered ranking at 2B+ users scale</li>
+                            <li><a href="https://engineering.fb.com/2016/10/20/networking-traffic/client-side-ranking-to-more-efficiently-show-people-stories-in-feed/" target="_blank">Meta Engineering: Client-Side Ranking</a> — Hybrid ranking architecture</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-twitter/" target="_blank" class="practice-link">
+                                <span>355. Design Twitter</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/merge-k-sorted-lists/" target="_blank" class="practice-link">
+                                <span>23. Merge K Sorted Lists</span>
+                                <span class="difficulty hard">Hard</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/donnemartin/system-design-primer/blob/master/solutions/object_oriented_design/social_network" target="_blank" class="practice-link">
+                                <span>Social Network OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://engineering.fb.com/2021/01/26/ml-applications/news-feed-ranking/" target="_blank">Meta Engineering: News Feed Ranking</a> — ML-powered ranking at 2B+ users scale</li>
-                    <li><a href="https://engineering.fb.com/2016/10/20/networking-traffic/client-side-ranking-to-more-efficiently-show-people-stories-in-feed/" target="_blank">Meta Engineering: Client-Side Ranking</a> — Hybrid ranking architecture</li>
-                </ul>
             </div>
 
             <!-- ==================== CHAT SYSTEM ==================== -->
             <div class="cheat-sheet-problem" id="chat-system">
                 <h3>Chat System (WhatsApp/Messenger) <span class="difficulty-tag difficulty-medium">Medium</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>WebSocket connections:</strong> Persistent bi-directional — low latency, high server memory</li>
+                            <li><strong>Message ordering:</strong> Lamport timestamps or vector clocks — eventual consistency vs strict ordering</li>
+                            <li><strong>End-to-end encryption:</strong> Signal protocol — security vs features (search, server-side backup)</li>
+                            <li><strong>Group chat:</strong> Fan-out to members — complexity scales with group size</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>WebSocket connections:</strong> Persistent bi-directional — low latency, high server memory</li>
-                    <li><strong>Message ordering:</strong> Lamport timestamps or vector clocks — eventual consistency vs strict ordering</li>
-                    <li><strong>End-to-end encryption:</strong> Signal protocol — security vs features (search, server-side backup)</li>
-                    <li><strong>Group chat:</strong> Fan-out to members — complexity scales with group size</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 1:1 — balanced, real-time bidirectional</li>
+                            <li><strong>P50/P99 latency:</strong> Message delivery 50ms/200ms (same region); 150ms/500ms (cross-region)</li>
+                            <li><strong>Optimization:</strong> WebSocket keeps connection warm; messages queued for offline users</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 1:1 — balanced, real-time bidirectional</li>
-                    <li><strong>P50/P99 latency:</strong> Message delivery 50ms/200ms (same region); 150ms/500ms (cross-region)</li>
-                    <li><strong>Optimization:</strong> WebSocket keeps connection warm; messages queued for offline users</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Cassandra/ScyllaDB:</strong> Message history — time-series data, partition by (chat_id, time_bucket)</li>
+                            <li><strong>Redis:</strong> Online presence + connection mapping — which server holds user's WebSocket</li>
+                            <li><strong>Message Queue (Kafka):</strong> Async delivery to offline users — durability guarantee</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Cassandra/ScyllaDB:</strong> Message history — time-series data, partition by (chat_id, time_bucket)</li>
-                    <li><strong>Redis:</strong> Online presence + connection mapping — which server holds user's WebSocket</li>
-                    <li><strong>Message Queue (Kafka):</strong> Async delivery to offline users — durability guarantee</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Chat server crashes — 100K WebSocket connections drop<br>
+                            <strong>Who feels pain:</strong> Users — messages appear undelivered, reconnection storm<br>
+                            <strong>Mitigation:</strong> Sticky sessions with failover; exponential backoff on reconnect; message queue buffers during outage
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Chat server crashes — 100K WebSocket connections drop<br>
-                    <strong>Who feels pain:</strong> Users — messages appear undelivered, reconnection storm<br>
-                    <strong>Mitigation:</strong> Sticky sessions with failover; exponential backoff on reconnect; message queue buffers during outage
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://www.erlang-solutions.com/blog/20-years-of-open-source-erlang-openerlang-interview-with-anton-lavrik-from-whatsapp/" target="_blank">Erlang Solutions: WhatsApp Interview</a> — Why Erlang powers 40B messages/day</li>
+                            <li><a href="https://discord.com/blog/how-discord-scaled-elixir-to-5-000-000-concurrent-users" target="_blank">Discord Engineering: Scaling Elixir</a> — 5M concurrent users, WebSocket architecture</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-bounded-blocking-queue/" target="_blank" class="practice-link">
+                                <span>1188. Bounded Blocking Queue</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/time-based-key-value-store/" target="_blank" class="practice-link">
+                                <span>981. Time Based Key-Value</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/tssovi/grokking-the-object-oriented-design-interview/blob/master/object-oriented-design-case-studies/design-facebook-messenger.md" target="_blank" class="practice-link">
+                                <span>Messenger OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://www.erlang-solutions.com/blog/20-years-of-open-source-erlang-openerlang-interview-with-anton-lavrik-from-whatsapp/" target="_blank">Erlang Solutions: WhatsApp Interview</a> — Why Erlang powers 40B messages/day</li>
-                    <li><a href="https://discord.com/blog/how-discord-scaled-elixir-to-5-000-000-concurrent-users" target="_blank">Discord Engineering: Scaling Elixir</a> — 5M concurrent users, WebSocket architecture</li>
-                </ul>
             </div>
 
             <!-- ==================== VIDEO STREAMING ==================== -->
             <div class="cheat-sheet-problem" id="video-streaming">
                 <h3>Video Streaming (YouTube/Netflix) <span class="difficulty-tag difficulty-hard">Hard</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Adaptive Bitrate (HLS/DASH):</strong> Client switches quality based on bandwidth — smooth playback vs quality</li>
+                            <li><strong>Transcoding pipeline:</strong> Convert to multiple resolutions/codecs — CPU cost vs storage cost</li>
+                            <li><strong>CDN edge caching:</strong> Popular content at edge — latency vs cache cost vs origin load</li>
+                            <li><strong>Recommendation ML:</strong> Personalized content — engagement vs diversity vs filter bubbles</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Adaptive Bitrate (HLS/DASH):</strong> Client switches quality based on bandwidth — smooth playback vs quality</li>
-                    <li><strong>Transcoding pipeline:</strong> Convert to multiple resolutions/codecs — CPU cost vs storage cost</li>
-                    <li><strong>CDN edge caching:</strong> Popular content at edge — latency vs cache cost vs origin load</li>
-                    <li><strong>Recommendation ML:</strong> Personalized content — engagement vs diversity vs filter bubbles</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 10000:1 — video uploads rare, views constant</li>
+                            <li><strong>P50/P99 latency:</strong> Video start 500ms/2s; Chunk fetch 50ms/200ms from CDN</li>
+                            <li><strong>Optimization:</strong> Pre-buffer next chunks; CDN handles 95%+ of traffic</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 10000:1 — video uploads rare, views constant</li>
-                    <li><strong>P50/P99 latency:</strong> Video start 500ms/2s; Chunk fetch 50ms/200ms from CDN</li>
-                    <li><strong>Optimization:</strong> Pre-buffer next chunks; CDN handles 95%+ of traffic</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Object Storage (S3):</strong> Video files — petabytes of content, lifecycle policies for cold storage</li>
+                            <li><strong>CDN (CloudFront/Akamai):</strong> Edge delivery — reduce origin bandwidth by 95%</li>
+                            <li><strong>Metadata DB (MySQL + Redis):</strong> Video info, user data — relational for complex queries</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Object Storage (S3):</strong> Video files — petabytes of content, lifecycle policies for cold storage</li>
-                    <li><strong>CDN (CloudFront/Akamai):</strong> Edge delivery — reduce origin bandwidth by 95%</li>
-                    <li><strong>Metadata DB (MySQL + Redis):</strong> Video info, user data — relational for complex queries</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Origin storage region goes down — CDN cache expires<br>
+                            <strong>Who feels pain:</strong> Users globally — buffering, failed playback for cache-missed content<br>
+                            <strong>Mitigation:</strong> Multi-region origin replication; extend CDN TTLs during incidents; serve stale content
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Origin storage region goes down — CDN cache expires<br>
-                    <strong>Who feels pain:</strong> Users globally — buffering, failed playback for cache-missed content<br>
-                    <strong>Mitigation:</strong> Multi-region origin replication; extend CDN TTLs during incidents; serve stale content
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://netflixtechblog.com/behind-the-streams-live-at-netflix-part-1-d23f917c2f40" target="_blank">Netflix Tech Blog: Behind the Streams</a> — Live streaming architecture and transcoding</li>
+                            <li><a href="https://openconnect.netflix.com/en/" target="_blank">Netflix Open Connect</a> — How Netflix's CDN delivers 98% of traffic from edge</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-video-sharing-platform/" target="_blank" class="practice-link">
+                                <span>2254. Video Sharing Platform</span>
+                                <span class="difficulty hard">Hard</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/min-stack/" target="_blank" class="practice-link">
+                                <span>155. Min Stack</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/tssovi/grokking-the-object-oriented-design-interview/blob/master/object-oriented-design-case-studies/design-youtube.md" target="_blank" class="practice-link">
+                                <span>YouTube OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://netflixtechblog.com/behind-the-streams-live-at-netflix-part-1-d23f917c2f40" target="_blank">Netflix Tech Blog: Behind the Streams</a> — Live streaming architecture and transcoding</li>
-                    <li><a href="https://openconnect.netflix.com/en/" target="_blank">Netflix Open Connect</a> — How Netflix's CDN delivers 98% of traffic from edge</li>
-                </ul>
             </div>
 
             <!-- ==================== DISTRIBUTED CACHE ==================== -->
             <div class="cheat-sheet-problem" id="distributed-cache">
                 <h3>Distributed Cache (Redis/Memcached) <span class="difficulty-tag difficulty-medium">Medium</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Consistent hashing:</strong> Minimize rebalancing on node add/remove — complexity vs even distribution</li>
+                            <li><strong>LRU eviction:</strong> Remove least recently used — memory efficiency vs hit rate</li>
+                            <li><strong>Cache-aside vs write-through:</strong> Consistency vs latency vs complexity</li>
+                            <li><strong>Replication:</strong> Async replicas for reads — availability vs consistency</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Consistent hashing:</strong> Minimize rebalancing on node add/remove — complexity vs even distribution</li>
-                    <li><strong>LRU eviction:</strong> Remove least recently used — memory efficiency vs hit rate</li>
-                    <li><strong>Cache-aside vs write-through:</strong> Consistency vs latency vs complexity</li>
-                    <li><strong>Replication:</strong> Async replicas for reads — availability vs consistency</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 100:1 — caches are read-optimized by design</li>
+                            <li><strong>P50/P99 latency:</strong> Reads 0.5ms/2ms; Writes 1ms/5ms</li>
+                            <li><strong>Optimization:</strong> Local L1 cache → distributed L2 cache → database fallback</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 100:1 — caches are read-optimized by design</li>
-                    <li><strong>P50/P99 latency:</strong> Reads 0.5ms/2ms; Writes 1ms/5ms</li>
-                    <li><strong>Optimization:</strong> Local L1 cache → distributed L2 cache → database fallback</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Redis Cluster:</strong> Primary cache — hash slots for sharding, pub/sub for invalidation</li>
+                            <li><strong>Local in-process cache (Caffeine):</strong> Hot keys — avoid network round-trip</li>
+                            <li><strong>ZooKeeper/etcd:</strong> Cluster membership — track which nodes are alive</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Redis Cluster:</strong> Primary cache — hash slots for sharding, pub/sub for invalidation</li>
-                    <li><strong>Local in-process cache (Caffeine):</strong> Hot keys — avoid network round-trip</li>
-                    <li><strong>ZooKeeper/etcd:</strong> Cluster membership — track which nodes are alive</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Hot key (viral post) — single shard overwhelmed<br>
+                            <strong>Who feels pain:</strong> All users accessing that key — timeouts, cascade to DB<br>
+                            <strong>Mitigation:</strong> Key replication across shards; local caching; request coalescing for same key
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Hot key (viral post) — single shard overwhelmed<br>
-                    <strong>Who feels pain:</strong> All users accessing that key — timeouts, cascade to DB<br>
-                    <strong>Mitigation:</strong> Key replication across shards; local caching; request coalescing for same key
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://engineering.fb.com/2013/06/25/core-infra/scaling-memcache-at-facebook/" target="_blank">Meta Engineering: Scaling Memcache</a> — Caching at Facebook's scale with consistency</li>
+                            <li><a href="https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/" target="_blank">Redis Official: Scaling Guide</a> — Consistent hashing, replication, cluster mode</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/lru-cache/" target="_blank" class="practice-link">
+                                <span>146. LRU Cache</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/lfu-cache/" target="_blank" class="practice-link">
+                                <span>460. LFU Cache</span>
+                                <span class="difficulty hard">Hard</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://www.educative.io/courses/grokking-modern-system-design/design-distributed-cache" target="_blank" class="practice-link">
+                                <span>Distributed Cache OOD</span>
+                                <span class="source">Educative</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://engineering.fb.com/2013/06/25/core-infra/scaling-memcache-at-facebook/" target="_blank">Meta Engineering: Scaling Memcache</a> — Caching at Facebook's scale with consistency</li>
-                    <li><a href="https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/" target="_blank">Redis Official: Scaling Guide</a> — Consistent hashing, replication, cluster mode</li>
-                </ul>
             </div>
 
             <!-- ==================== RATE LIMITER ==================== -->
             <div class="cheat-sheet-problem" id="rate-limiter">
                 <h3>Rate Limiter <span class="difficulty-tag difficulty-easy">Easy</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Token bucket:</strong> Smooth rate + burst allowance — flexible but memory per user</li>
+                            <li><strong>Sliding window log:</strong> Exact counting — accurate but high memory</li>
+                            <li><strong>Sliding window counter:</strong> Weighted average of windows — memory-efficient approximation</li>
+                            <li><strong>Fixed window:</strong> Simple counters — edge case: 2x burst at window boundary</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Token bucket:</strong> Smooth rate + burst allowance — flexible but memory per user</li>
-                    <li><strong>Sliding window log:</strong> Exact counting — accurate but high memory</li>
-                    <li><strong>Sliding window counter:</strong> Weighted average of windows — memory-efficient approximation</li>
-                    <li><strong>Fixed window:</strong> Simple counters — edge case: 2x burst at window boundary</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> N/A — every request is both a read and increment</li>
+                            <li><strong>P50/P99 latency:</strong> 0.1ms/1ms — must be negligible overhead</li>
+                            <li><strong>Optimization:</strong> In-memory with async persistence; fail open vs fail closed tradeoff</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> N/A — every request is both a read and increment</li>
-                    <li><strong>P50/P99 latency:</strong> 0.1ms/1ms — must be negligible overhead</li>
-                    <li><strong>Optimization:</strong> In-memory with async persistence; fail open vs fail closed tradeoff</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Redis:</strong> Counters with TTL — <code>INCR</code> + <code>EXPIRE</code> atomic ops</li>
+                            <li><strong>Local memory:</strong> Per-instance rate limiting — no network latency</li>
+                            <li><strong>Config store (etcd):</strong> Rate limit rules — which endpoints, what limits</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Redis:</strong> Counters with TTL — <code>INCR</code> + <code>EXPIRE</code> atomic ops</li>
-                    <li><strong>Local memory:</strong> Per-instance rate limiting — no network latency</li>
-                    <li><strong>Config store (etcd):</strong> Rate limit rules — which endpoints, what limits</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Redis cluster fails — rate limiter loses state<br>
+                            <strong>Who feels pain:</strong> Ops — either over-limit legit users (fail closed) or let attacks through (fail open)<br>
+                            <strong>Mitigation:</strong> Local fallback with conservative limits; distributed rate limiting with sync intervals
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Redis cluster fails — rate limiter loses state<br>
-                    <strong>Who feels pain:</strong> Ops — either over-limit legit users (fail closed) or let attacks through (fail open)<br>
-                    <strong>Mitigation:</strong> Local fallback with conservative limits; distributed rate limiting with sync intervals
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://blog.cloudflare.com/counting-things-a-lot-of-different-things/" target="_blank">Cloudflare: Rate Limiting at Scale</a> — Sliding window algorithm for millions of domains</li>
+                            <li><a href="https://stripe.com/blog/rate-limiters" target="_blank">Stripe Engineering: Rate Limiters</a> — Token bucket implementation for API protection</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/logger-rate-limiter/" target="_blank" class="practice-link">
+                                <span>359. Logger Rate Limiter</span>
+                                <span class="difficulty easy">Easy</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/design-hit-counter/" target="_blank" class="practice-link">
+                                <span>362. Design Hit Counter</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/donnemartin/system-design-primer#rate-limiter" target="_blank" class="practice-link">
+                                <span>Rate Limiter OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://blog.cloudflare.com/counting-things-a-lot-of-different-things/" target="_blank">Cloudflare: Rate Limiting at Scale</a> — Sliding window algorithm for millions of domains</li>
-                    <li><a href="https://stripe.com/blog/rate-limiters" target="_blank">Stripe Engineering: Rate Limiters</a> — Token bucket implementation for API protection</li>
-                </ul>
             </div>
 
             <!-- ==================== NOTIFICATION SYSTEM ==================== -->
             <div class="cheat-sheet-problem" id="notification-system">
                 <h3>Notification System (Push/Email/SMS) <span class="difficulty-tag difficulty-medium">Medium</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Priority queues:</strong> Urgent vs batch notifications — latency vs throughput</li>
+                            <li><strong>Deduplication:</strong> Idempotency keys prevent double-sends — complexity vs user trust</li>
+                            <li><strong>Rate limiting per user:</strong> Prevent notification spam — engagement vs annoyance</li>
+                            <li><strong>Template rendering:</strong> Pre-compiled vs dynamic — flexibility vs performance</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Priority queues:</strong> Urgent vs batch notifications — latency vs throughput</li>
-                    <li><strong>Deduplication:</strong> Idempotency keys prevent double-sends — complexity vs user trust</li>
-                    <li><strong>Rate limiting per user:</strong> Prevent notification spam — engagement vs annoyance</li>
-                    <li><strong>Template rendering:</strong> Pre-compiled vs dynamic — flexibility vs performance</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> N/A — write-only from system perspective</li>
+                            <li><strong>P50/P99 latency:</strong> Push 100ms/500ms; Email/SMS 1s/10s (third-party dependent)</li>
+                            <li><strong>Optimization:</strong> Batch non-urgent; priority lane for transactional (2FA, receipts)</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> N/A — write-only from system perspective</li>
-                    <li><strong>P50/P99 latency:</strong> Push 100ms/500ms; Email/SMS 1s/10s (third-party dependent)</li>
-                    <li><strong>Optimization:</strong> Batch non-urgent; priority lane for transactional (2FA, receipts)</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Kafka:</strong> Event ingestion — handles burst of notification triggers</li>
+                            <li><strong>Redis:</strong> User preferences + device tokens — fast lookup per notification</li>
+                            <li><strong>PostgreSQL:</strong> Notification history + analytics — queryable delivery status</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Kafka:</strong> Event ingestion — handles burst of notification triggers</li>
-                    <li><strong>Redis:</strong> User preferences + device tokens — fast lookup per notification</li>
-                    <li><strong>PostgreSQL:</strong> Notification history + analytics — queryable delivery status</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> APNs/FCM rate limit hit — push notifications queue up<br>
+                            <strong>Who feels pain:</strong> Users — delayed or missing notifications for time-sensitive events<br>
+                            <strong>Mitigation:</strong> Exponential backoff; fallback to email/SMS; surface delivery failures in app
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> APNs/FCM rate limit hit — push notifications queue up<br>
-                    <strong>Who feels pain:</strong> Users — delayed or missing notifications for time-sensitive events<br>
-                    <strong>Mitigation:</strong> Exponential backoff; fallback to email/SMS; surface delivery failures in app
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://engineering.fb.com/2018/09/11/mobile/mobile-push-notifications/" target="_blank">Meta Engineering: Push Notifications</a> — Scaling push to billions of devices</li>
+                            <li><a href="https://firebase.google.com/docs/cloud-messaging/concept-options" target="_blank">Firebase Cloud Messaging Docs</a> — FCM architecture and delivery options</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-bounded-blocking-queue/" target="_blank" class="practice-link">
+                                <span>1188. Bounded Blocking Queue</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/task-scheduler/" target="_blank" class="practice-link">
+                                <span>621. Task Scheduler</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/ashishps1/awesome-low-level-design/blob/main/problems/notification-service.md" target="_blank" class="practice-link">
+                                <span>Notification Service OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://engineering.fb.com/2018/09/11/mobile/mobile-push-notifications/" target="_blank">Meta Engineering: Push Notifications</a> — Scaling push to billions of devices</li>
-                    <li><a href="https://firebase.google.com/docs/cloud-messaging/concept-options" target="_blank">Firebase Cloud Messaging Docs</a> — FCM architecture and delivery options</li>
-                </ul>
             </div>
 
             <!-- ==================== SEARCH AUTOCOMPLETE ==================== -->
             <div class="cheat-sheet-problem" id="search-autocomplete">
                 <h3>Search Autocomplete (Typeahead) <span class="difficulty-tag difficulty-medium">Medium</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Trie:</strong> Prefix tree for suggestions — fast lookup, high memory</li>
+                            <li><strong>Inverted index:</strong> Prefix → documents — good for phrase completion</li>
+                            <li><strong>Frequency-weighted ranking:</strong> Popular queries first — relevance vs recency vs personalization</li>
+                            <li><strong>Debouncing:</strong> Wait 100-200ms between keystrokes — reduce backend load vs perceived latency</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Trie:</strong> Prefix tree for suggestions — fast lookup, high memory</li>
-                    <li><strong>Inverted index:</strong> Prefix → documents — good for phrase completion</li>
-                    <li><strong>Frequency-weighted ranking:</strong> Popular queries first — relevance vs recency vs personalization</li>
-                    <li><strong>Debouncing:</strong> Wait 100-200ms between keystrokes — reduce backend load vs perceived latency</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 10000:1 — writes are aggregated search logs</li>
+                            <li><strong>P50/P99 latency:</strong> 10ms/50ms — must feel instant (under 100ms perceived)</li>
+                            <li><strong>Optimization:</strong> Edge cache popular prefixes; pre-compute top-K suggestions</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 10000:1 — writes are aggregated search logs</li>
-                    <li><strong>P50/P99 latency:</strong> 10ms/50ms — must feel instant (under 100ms perceived)</li>
-                    <li><strong>Optimization:</strong> Edge cache popular prefixes; pre-compute top-K suggestions</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Redis:</strong> Sorted sets for top suggestions per prefix — <code>ZRANGE</code> for top-K</li>
+                            <li><strong>Elasticsearch:</strong> Completion suggester — supports fuzzy matching, multi-field</li>
+                            <li><strong>Kafka + Flink:</strong> Aggregating search logs — build frequency counts offline</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Redis:</strong> Sorted sets for top suggestions per prefix — <code>ZRANGE</code> for top-K</li>
-                    <li><strong>Elasticsearch:</strong> Completion suggester — supports fuzzy matching, multi-field</li>
-                    <li><strong>Kafka + Flink:</strong> Aggregating search logs — build frequency counts offline</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Trending topic causes cache miss storm for new prefix<br>
+                            <strong>Who feels pain:</strong> Users — slow suggestions during breaking news/viral moments<br>
+                            <strong>Mitigation:</strong> Request coalescing; real-time trending detection; fallback to cached stale data
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Trending topic causes cache miss storm for new prefix<br>
-                    <strong>Who feels pain:</strong> Users — slow suggestions during breaking news/viral moments<br>
-                    <strong>Mitigation:</strong> Request coalescing; real-time trending detection; fallback to cached stale data
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://engineering.linkedin.com/search/did-you-mean-galene" target="_blank">LinkedIn Engineering: Search Suggestions</a> — Typeahead with Galene and trie structures</li>
+                            <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters.html" target="_blank">Elasticsearch: Completion Suggester</a> — Production-ready autocomplete implementation</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-search-autocomplete-system/" target="_blank" class="practice-link">
+                                <span>642. Autocomplete System</span>
+                                <span class="difficulty hard">Hard</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/implement-trie-prefix-tree/" target="_blank" class="practice-link">
+                                <span>208. Implement Trie</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/ashishps1/awesome-low-level-design/blob/main/problems/search-autocomplete.md" target="_blank" class="practice-link">
+                                <span>Autocomplete OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://engineering.linkedin.com/search/did-you-mean-galene" target="_blank">LinkedIn Engineering: Search Suggestions</a> — Typeahead with Galene and trie structures</li>
-                    <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters.html" target="_blank">Elasticsearch: Completion Suggester</a> — Production-ready autocomplete implementation</li>
-                </ul>
             </div>
 
             <!-- ==================== WEB CRAWLER ==================== -->
