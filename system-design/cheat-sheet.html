@@ -848,481 +848,793 @@
             <!-- ==================== WEB CRAWLER ==================== -->
             <div class="cheat-sheet-problem" id="web-crawler">
                 <h3>Web Crawler (Googlebot) <span class="difficulty-tag difficulty-hard">Hard</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>BFS vs DFS traversal:</strong> BFS for breadth coverage; DFS for depth — memory vs completeness</li>
+                            <li><strong>URL frontier prioritization:</strong> PageRank, freshness, domain importance — quality vs coverage</li>
+                            <li><strong>Politeness:</strong> Respect robots.txt, rate limit per domain — thoroughness vs being blocked</li>
+                            <li><strong>Deduplication:</strong> URL normalization + content fingerprinting — avoid redundant crawls</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>BFS vs DFS traversal:</strong> BFS for breadth coverage; DFS for depth — memory vs completeness</li>
-                    <li><strong>URL frontier prioritization:</strong> PageRank, freshness, domain importance — quality vs coverage</li>
-                    <li><strong>Politeness:</strong> Respect robots.txt, rate limit per domain — thoroughness vs being blocked</li>
-                    <li><strong>Deduplication:</strong> URL normalization + content fingerprinting — avoid redundant crawls</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 1:1 — fetch page (read) then store (write)</li>
+                            <li><strong>P50/P99 latency:</strong> Page fetch 200ms/2s (network bound); storage 10ms/100ms</li>
+                            <li><strong>Optimization:</strong> Async I/O; parallel fetches; DNS caching</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 1:1 — fetch page (read) then store (write)</li>
-                    <li><strong>P50/P99 latency:</strong> Page fetch 200ms/2s (network bound); storage 10ms/100ms</li>
-                    <li><strong>Optimization:</strong> Async I/O; parallel fetches; DNS caching</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Distributed Queue (Kafka):</strong> URL frontier — partitioned by domain for politeness</li>
+                            <li><strong>Bloom Filter:</strong> Seen URLs — memory-efficient deduplication (false positives OK)</li>
+                            <li><strong>Object Storage (S3):</strong> Raw HTML content — cheap, durable, append-only</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Distributed Queue (Kafka):</strong> URL frontier — partitioned by domain for politeness</li>
-                    <li><strong>Bloom Filter:</strong> Seen URLs — memory-efficient deduplication (false positives OK)</li>
-                    <li><strong>Object Storage (S3):</strong> Raw HTML content — cheap, durable, append-only</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Spider trap — infinite URL generation (calendars, session IDs)<br>
+                            <strong>Who feels pain:</strong> Crawler — wastes resources on one domain, starves others<br>
+                            <strong>Mitigation:</strong> Max depth per domain; URL pattern detection; domain-level crawl budgets
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Spider trap — infinite URL generation (calendars, session IDs)<br>
-                    <strong>Who feels pain:</strong> Crawler — wastes resources on one domain, starves others<br>
-                    <strong>Mitigation:</strong> Max depth per domain; URL pattern detection; domain-level crawl budgets
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://blog.twitter.com/engineering/en_us/a/2011/spiderduck-twitters-real-time-url-fetcher" target="_blank">Twitter Engineering: SpiderDuck</a> — Real-time URL fetching with rate limiting per domain</li>
+                            <li><a href="https://research.google/pubs/web-search-for-a-planet-the-google-cluster-architecture/" target="_blank">Google Research: Web Search Architecture</a> — Crawling and indexing at Google scale</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/web-crawler/" target="_blank" class="practice-link">
+                                <span>1236. Web Crawler</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/web-crawler-multithreaded/" target="_blank" class="practice-link">
+                                <span>1242. Web Crawler MT</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/donnemartin/system-design-primer#design-a-web-crawler" target="_blank" class="practice-link">
+                                <span>Web Crawler OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://blog.twitter.com/engineering/en_us/a/2011/spiderduck-twitters-real-time-url-fetcher" target="_blank">Twitter Engineering: SpiderDuck</a> — Real-time URL fetching with rate limiting per domain</li>
-                    <li><a href="https://research.google/pubs/web-search-for-a-planet-the-google-cluster-architecture/" target="_blank">Google Research: Web Search Architecture</a> — Crawling and indexing at Google scale</li>
-                </ul>
             </div>
 
             <!-- ==================== CLOUD STORAGE ==================== -->
             <div class="cheat-sheet-problem" id="cloud-storage">
                 <h3>Cloud Storage (Dropbox/Google Drive) <span class="difficulty-tag difficulty-hard">Hard</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Block-level deduplication:</strong> Store unique 4MB blocks — storage cost vs upload latency</li>
+                            <li><strong>Delta sync:</strong> rsync-style — bandwidth vs CPU for diff computation</li>
+                            <li><strong>Content-addressable storage:</strong> Hash as key — natural deduplication, immutable</li>
+                            <li><strong>Conflict resolution:</strong> Last-write-wins vs branching — simplicity vs data safety</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Block-level deduplication:</strong> Store unique 4MB blocks — storage cost vs upload latency</li>
-                    <li><strong>Delta sync:</strong> rsync-style — bandwidth vs CPU for diff computation</li>
-                    <li><strong>Content-addressable storage:</strong> Hash as key — natural deduplication, immutable</li>
-                    <li><strong>Conflict resolution:</strong> Last-write-wins vs branching — simplicity vs data safety</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 3:1 — more downloads/syncs than uploads</li>
+                            <li><strong>P50/P99 latency:</strong> Metadata ops 50ms/200ms; file transfer bandwidth-bound</li>
+                            <li><strong>Optimization:</strong> Local cache; sync queue for batch uploads; resume interrupted transfers</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 3:1 — more downloads/syncs than uploads</li>
-                    <li><strong>P50/P99 latency:</strong> Metadata ops 50ms/200ms; file transfer bandwidth-bound</li>
-                    <li><strong>Optimization:</strong> Local cache; sync queue for batch uploads; resume interrupted transfers</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Object Storage (S3):</strong> File blocks — 11 9's durability, cross-region replication</li>
+                            <li><strong>Metadata DB (MySQL/Spanner):</strong> File tree, permissions, versions — ACID for consistency</li>
+                            <li><strong>Notification Service:</strong> Real-time sync events — push changes to other devices</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Object Storage (S3):</strong> File blocks — 11 9's durability, cross-region replication</li>
-                    <li><strong>Metadata DB (MySQL/Spanner):</strong> File tree, permissions, versions — ACID for consistency</li>
-                    <li><strong>Notification Service:</strong> Real-time sync events — push changes to other devices</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Metadata DB leader failover during bulk upload<br>
+                            <strong>Who feels pain:</strong> Users — uploads stuck, file tree inconsistent across devices<br>
+                            <strong>Mitigation:</strong> Client-side journaling; idempotent uploads with block hashes; reconciliation on reconnect
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Metadata DB leader failover during bulk upload<br>
-                    <strong>Who feels pain:</strong> Users — uploads stuck, file tree inconsistent across devices<br>
-                    <strong>Mitigation:</strong> Client-side journaling; idempotent uploads with block hashes; reconciliation on reconnect
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://dropbox.tech/infrastructure/magic-pocket-infrastructure" target="_blank">Dropbox Tech: Magic Pocket</a> — Exabyte-scale storage with block deduplication</li>
+                            <li><a href="https://dropbox.tech/infrastructure/rewriting-the-heart-of-our-sync-engine" target="_blank">Dropbox Tech: Sync Engine</a> — Delta sync and conflict resolution at scale</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-file-system/" target="_blank" class="practice-link">
+                                <span>1166. Design File System</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/design-in-memory-file-system/" target="_blank" class="practice-link">
+                                <span>588. In-Memory File System</span>
+                                <span class="difficulty hard">Hard</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/tssovi/grokking-the-object-oriented-design-interview/blob/master/object-oriented-design-case-studies/design-google-drive.md" target="_blank" class="practice-link">
+                                <span>Google Drive OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://dropbox.tech/infrastructure/magic-pocket-infrastructure" target="_blank">Dropbox Tech: Magic Pocket</a> — Exabyte-scale storage with block deduplication</li>
-                    <li><a href="https://dropbox.tech/infrastructure/rewriting-the-heart-of-our-sync-engine" target="_blank">Dropbox Tech: Sync Engine</a> — Delta sync and conflict resolution at scale</li>
-                </ul>
             </div>
 
             <!-- ==================== RIDE SHARING ==================== -->
             <div class="cheat-sheet-problem" id="ride-sharing">
                 <h3>Ride Sharing (Uber/Lyft) <span class="difficulty-tag difficulty-hard">Hard</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Geospatial indexing:</strong> Quadtree/Geohash for nearby drivers — precision vs query speed</li>
+                            <li><strong>Dispatch optimization:</strong> Hungarian algorithm / ML matching — ETA accuracy vs fairness</li>
+                            <li><strong>Surge pricing:</strong> Dynamic pricing based on supply/demand — revenue vs user trust</li>
+                            <li><strong>ETA prediction:</strong> ML on historical + real-time traffic — accuracy vs computation cost</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Geospatial indexing:</strong> Quadtree/Geohash for nearby drivers — precision vs query speed</li>
-                    <li><strong>Dispatch optimization:</strong> Hungarian algorithm / ML matching — ETA accuracy vs fairness</li>
-                    <li><strong>Surge pricing:</strong> Dynamic pricing based on supply/demand — revenue vs user trust</li>
-                    <li><strong>ETA prediction:</strong> ML on historical + real-time traffic — accuracy vs computation cost</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 1:1 — constant location updates (writes) and nearby queries (reads)</li>
+                            <li><strong>P50/P99 latency:</strong> Match 500ms/2s; Location update 50ms/200ms</li>
+                            <li><strong>Optimization:</strong> Batch location updates; pre-compute nearby candidates; geofenced caching</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 1:1 — constant location updates (writes) and nearby queries (reads)</li>
-                    <li><strong>P50/P99 latency:</strong> Match 500ms/2s; Location update 50ms/200ms</li>
-                    <li><strong>Optimization:</strong> Batch location updates; pre-compute nearby candidates; geofenced caching</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Redis with geospatial:</strong> Real-time driver locations — <code>GEOADD</code>/<code>GEORADIUS</code></li>
+                            <li><strong>Kafka:</strong> Location event stream — replay for analytics, ML training</li>
+                            <li><strong>PostgreSQL + PostGIS:</strong> Trip history, user data — spatial queries for analytics</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Redis with geospatial:</strong> Real-time driver locations — <code>GEOADD</code>/<code>GEORADIUS</code></li>
-                    <li><strong>Kafka:</strong> Location event stream — replay for analytics, ML training</li>
-                    <li><strong>PostgreSQL + PostGIS:</strong> Trip history, user data — spatial queries for analytics</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Location service lag during concert end — 50K people request rides simultaneously<br>
+                            <strong>Who feels pain:</strong> Riders — long match times, phantom drivers, ETA jumps<br>
+                            <strong>Mitigation:</strong> Pre-position drivers for events; queue with ETA; degrade to larger radius search
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Location service lag during concert end — 50K people request rides simultaneously<br>
-                    <strong>Who feels pain:</strong> Riders — long match times, phantom drivers, ETA jumps<br>
-                    <strong>Mitigation:</strong> Pre-position drivers for events; queue with ETA; degrade to larger radius search
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://www.uber.com/blog/h3/" target="_blank">Uber Engineering: H3 Geospatial Index</a> — Hexagonal hierarchical spatial index for matching</li>
+                            <li><a href="https://www.uber.com/blog/engineering-an-efficient-dispatch-system/" target="_blank">Uber Engineering: Dispatch System</a> — Real-time matching optimization (DISCO)</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/k-closest-points-to-origin/" target="_blank" class="practice-link">
+                                <span>973. K Closest Points</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/design-tic-tac-toe/" target="_blank" class="practice-link">
+                                <span>348. Design Tic-Tac-Toe</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/tssovi/grokking-the-object-oriented-design-interview/blob/master/object-oriented-design-case-studies/design-uber.md" target="_blank" class="practice-link">
+                                <span>Uber OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://www.uber.com/blog/h3/" target="_blank">Uber Engineering: H3 Geospatial Index</a> — Hexagonal hierarchical spatial index for matching</li>
-                    <li><a href="https://www.uber.com/blog/engineering-an-efficient-dispatch-system/" target="_blank">Uber Engineering: Dispatch System</a> — Real-time matching optimization (DISCO)</li>
-                </ul>
             </div>
 
             <!-- ==================== E-COMMERCE ==================== -->
             <div class="cheat-sheet-problem" id="e-commerce">
                 <h3>E-Commerce Platform (Amazon) <span class="difficulty-tag difficulty-hard">Hard</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Inventory reservation:</strong> Optimistic locking vs distributed locks — throughput vs overselling</li>
+                            <li><strong>Search ranking:</strong> Relevance + conversion + ads — user experience vs revenue</li>
+                            <li><strong>Cart persistence:</strong> Merge anonymous + logged-in carts — UX vs complexity</li>
+                            <li><strong>Recommendation engine:</strong> Collaborative filtering + item-based — personalization vs cold start</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Inventory reservation:</strong> Optimistic locking vs distributed locks — throughput vs overselling</li>
-                    <li><strong>Search ranking:</strong> Relevance + conversion + ads — user experience vs revenue</li>
-                    <li><strong>Cart persistence:</strong> Merge anonymous + logged-in carts — UX vs complexity</li>
-                    <li><strong>Recommendation engine:</strong> Collaborative filtering + item-based — personalization vs cold start</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 100:1 — browsing dominates; purchases rare but critical</li>
+                            <li><strong>P50/P99 latency:</strong> Product page 100ms/500ms; Checkout 500ms/2s</li>
+                            <li><strong>Optimization:</strong> Aggressive caching for catalog; synchronous only for payment</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 100:1 — browsing dominates; purchases rare but critical</li>
-                    <li><strong>P50/P99 latency:</strong> Product page 100ms/500ms; Checkout 500ms/2s</li>
-                    <li><strong>Optimization:</strong> Aggressive caching for catalog; synchronous only for payment</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Elasticsearch:</strong> Product search + faceted navigation — full-text + aggregations</li>
+                            <li><strong>MySQL/Aurora:</strong> Orders, inventory, users — ACID for financial data</li>
+                            <li><strong>Redis:</strong> Sessions, cart, real-time inventory counts — sub-ms reads</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Elasticsearch:</strong> Product search + faceted navigation — full-text + aggregations</li>
-                    <li><strong>MySQL/Aurora:</strong> Orders, inventory, users — ACID for financial data</li>
-                    <li><strong>Redis:</strong> Sessions, cart, real-time inventory counts — sub-ms reads</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Flash sale — 100K users add same item simultaneously<br>
+                            <strong>Who feels pain:</strong> Users — cart shows item but checkout fails; overselling nightmare<br>
+                            <strong>Mitigation:</strong> Queue-based checkout; inventory soft-reserve with TTL; honest stock counts
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Flash sale — 100K users add same item simultaneously<br>
-                    <strong>Who feels pain:</strong> Users — cart shows item but checkout fails; overselling nightmare<br>
-                    <strong>Mitigation:</strong> Queue-based checkout; inventory soft-reserve with TTL; honest stock counts
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://www.aboutamazon.com/news/aws/what-you-need-to-know-about-amazon-dynamodb" target="_blank">Amazon: DynamoDB Origin Story</a> — How Amazon built eventually consistent inventory at scale</li>
+                            <li><a href="https://shopify.engineering/how-shopify-manages-billions-of-dollars-in-flash-sales" target="_blank">Shopify Engineering: Flash Sales</a> — Inventory management during traffic spikes</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-a-leaderboard/" target="_blank" class="practice-link">
+                                <span>1244. Design Leaderboard</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/top-k-frequent-elements/" target="_blank" class="practice-link">
+                                <span>347. Top K Frequent</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/tssovi/grokking-the-object-oriented-design-interview/blob/master/object-oriented-design-case-studies/design-amazon.md" target="_blank" class="practice-link">
+                                <span>Amazon OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://www.aboutamazon.com/news/aws/what-you-need-to-know-about-amazon-dynamodb" target="_blank">Amazon: DynamoDB Origin Story</a> — How Amazon built eventually consistent inventory at scale</li>
-                    <li><a href="https://shopify.engineering/how-shopify-manages-billions-of-dollars-in-flash-sales" target="_blank">Shopify Engineering: Flash Sales</a> — Inventory management during traffic spikes</li>
-                </ul>
             </div>
 
             <!-- ==================== PAYMENT SYSTEM ==================== -->
             <div class="cheat-sheet-problem" id="payment-system">
                 <h3>Payment System (Stripe/PayPal) <span class="difficulty-tag difficulty-hard">Hard</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Idempotency keys:</strong> Exactly-once payment processing — safety vs complexity</li>
+                            <li><strong>Two-phase commit:</strong> Distributed transaction — consistency vs availability</li>
+                            <li><strong>Saga pattern:</strong> Compensating transactions for rollback — eventual consistency vs complexity</li>
+                            <li><strong>Double-entry ledger:</strong> Every transaction has debit + credit — auditability vs performance</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Idempotency keys:</strong> Exactly-once payment processing — safety vs complexity</li>
-                    <li><strong>Two-phase commit:</strong> Distributed transaction — consistency vs availability</li>
-                    <li><strong>Saga pattern:</strong> Compensating transactions for rollback — eventual consistency vs complexity</li>
-                    <li><strong>Double-entry ledger:</strong> Every transaction has debit + credit — auditability vs performance</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 10:1 — balance checks, history vs actual payments</li>
+                            <li><strong>P50/P99 latency:</strong> Payment 300ms/1s; Balance query 20ms/100ms</li>
+                            <li><strong>Optimization:</strong> Synchronous for payment; async for notifications, reconciliation</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 10:1 — balance checks, history vs actual payments</li>
-                    <li><strong>P50/P99 latency:</strong> Payment 300ms/1s; Balance query 20ms/100ms</li>
-                    <li><strong>Optimization:</strong> Synchronous for payment; async for notifications, reconciliation</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>PostgreSQL:</strong> Ledger, accounts — serializable isolation, ACID guarantees</li>
+                            <li><strong>Redis:</strong> Idempotency keys with TTL — prevent duplicate charges</li>
+                            <li><strong>Kafka:</strong> Event sourcing — complete audit trail, replay capability</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>PostgreSQL:</strong> Ledger, accounts — serializable isolation, ACID guarantees</li>
-                    <li><strong>Redis:</strong> Idempotency keys with TTL — prevent duplicate charges</li>
-                    <li><strong>Kafka:</strong> Event sourcing — complete audit trail, replay capability</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Network partition during payment — client retries, potential double charge<br>
+                            <strong>Who feels pain:</strong> Customer — charged twice; merchant — refund overhead, trust loss<br>
+                            <strong>Mitigation:</strong> Idempotency keys mandatory; pending state with timeout; reconciliation jobs
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Network partition during payment — client retries, potential double charge<br>
-                    <strong>Who feels pain:</strong> Customer — charged twice; merchant — refund overhead, trust loss<br>
-                    <strong>Mitigation:</strong> Idempotency keys mandatory; pending state with timeout; reconciliation jobs
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://stripe.com/blog/idempotency" target="_blank">Stripe Engineering: Idempotency</a> — Designing robust APIs for payment reliability</li>
+                            <li><a href="https://developer.squareup.com/blog/payments-integration-design-patterns" target="_blank">Square Developer: Payment Patterns</a> — Exactly-once semantics for transactions</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-underground-system/" target="_blank" class="practice-link">
+                                <span>1396. Underground System</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/snapshot-array/" target="_blank" class="practice-link">
+                                <span>1146. Snapshot Array</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/ashishps1/awesome-low-level-design/blob/main/problems/payment-gateway.md" target="_blank" class="practice-link">
+                                <span>Payment Gateway OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://stripe.com/blog/idempotency" target="_blank">Stripe Engineering: Idempotency</a> — Designing robust APIs for payment reliability</li>
-                    <li><a href="https://developer.squareup.com/blog/payments-integration-design-patterns" target="_blank">Square Developer: Payment Patterns</a> — Exactly-once semantics for transactions</li>
-                </ul>
             </div>
 
             <!-- ==================== MESSAGE QUEUE ==================== -->
             <div class="cheat-sheet-problem" id="message-queue">
                 <h3>Distributed Message Queue (Kafka) <span class="difficulty-tag difficulty-hard">Hard</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Partitioning:</strong> Horizontal scaling — ordering only within partition</li>
+                            <li><strong>Replication:</strong> Leader + followers — durability vs write latency (acks=all)</li>
+                            <li><strong>Consumer groups:</strong> Parallel consumption — throughput vs ordering guarantees</li>
+                            <li><strong>Log compaction:</strong> Keep latest per key — storage vs full history</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Partitioning:</strong> Horizontal scaling — ordering only within partition</li>
-                    <li><strong>Replication:</strong> Leader + followers — durability vs write latency (acks=all)</li>
-                    <li><strong>Consumer groups:</strong> Parallel consumption — throughput vs ordering guarantees</li>
-                    <li><strong>Log compaction:</strong> Keep latest per key — storage vs full history</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> N:1 per message — one write, consumed by N consumer groups</li>
+                            <li><strong>P50/P99 latency:</strong> Produce 5ms/50ms (acks=1); Consume 1ms/10ms (sequential I/O)</li>
+                            <li><strong>Optimization:</strong> Batching; zero-copy; page cache for hot data</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> N:1 per message — one write, consumed by N consumer groups</li>
-                    <li><strong>P50/P99 latency:</strong> Produce 5ms/50ms (acks=1); Consume 1ms/10ms (sequential I/O)</li>
-                    <li><strong>Optimization:</strong> Batching; zero-copy; page cache for hot data</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Append-only log (disk):</strong> Messages — sequential writes, OS page cache</li>
+                            <li><strong>ZooKeeper/KRaft:</strong> Cluster metadata, leader election — consensus for coordination</li>
+                            <li><strong>Consumer offset storage:</strong> Kafka internal topic or external DB — exactly-once semantics</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Append-only log (disk):</strong> Messages — sequential writes, OS page cache</li>
-                    <li><strong>ZooKeeper/KRaft:</strong> Cluster metadata, leader election — consensus for coordination</li>
-                    <li><strong>Consumer offset storage:</strong> Kafka internal topic or external DB — exactly-once semantics</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Slow consumer — consumer group rebalances repeatedly<br>
+                            <strong>Who feels pain:</strong> All consumers in group — processing halts during rebalance, duplicates<br>
+                            <strong>Mitigation:</strong> Tune session timeout; static membership; isolate slow consumers to separate group
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Slow consumer — consumer group rebalances repeatedly<br>
-                    <strong>Who feels pain:</strong> All consumers in group — processing halts during rebalance, duplicates<br>
-                    <strong>Mitigation:</strong> Tune session timeout; static membership; isolate slow consumers to separate group
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying" target="_blank">LinkedIn Engineering: The Log</a> — Jay Kreps' seminal post on distributed logs and Kafka</li>
+                            <li><a href="https://engineering.linkedin.com/kafka/running-kafka-scale" target="_blank">LinkedIn Engineering: Kafka at Scale</a> — 800B messages/day, 1100+ brokers</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-bounded-blocking-queue/" target="_blank" class="practice-link">
+                                <span>1188. Bounded Blocking Queue</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/number-of-recent-calls/" target="_blank" class="practice-link">
+                                <span>933. Number of Recent Calls</span>
+                                <span class="difficulty easy">Easy</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/donnemartin/system-design-primer#design-a-message-queue" target="_blank" class="practice-link">
+                                <span>Message Queue OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying" target="_blank">LinkedIn Engineering: The Log</a> — Jay Kreps' seminal post on distributed logs and Kafka</li>
-                    <li><a href="https://engineering.linkedin.com/kafka/running-kafka-scale" target="_blank">LinkedIn Engineering: Kafka at Scale</a> — 800B messages/day, 1100+ brokers</li>
-                </ul>
             </div>
 
             <!-- ==================== SEARCH ENGINE ==================== -->
             <div class="cheat-sheet-problem" id="search-engine">
                 <h3>Search Engine (Elasticsearch/Google) <span class="difficulty-tag difficulty-hard">Hard</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Inverted index:</strong> Term → document IDs — fast lookup, expensive updates</li>
+                            <li><strong>TF-IDF / BM25:</strong> Relevance scoring — precision vs recall</li>
+                            <li><strong>Sharding:</strong> Horizontal scaling — query fan-out latency vs throughput</li>
+                            <li><strong>Near real-time:</strong> Refresh interval (1s default) — freshness vs indexing throughput</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Inverted index:</strong> Term → document IDs — fast lookup, expensive updates</li>
-                    <li><strong>TF-IDF / BM25:</strong> Relevance scoring — precision vs recall</li>
-                    <li><strong>Sharding:</strong> Horizontal scaling — query fan-out latency vs throughput</li>
-                    <li><strong>Near real-time:</strong> Refresh interval (1s default) — freshness vs indexing throughput</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 100:1 — search queries dominate indexing</li>
+                            <li><strong>P50/P99 latency:</strong> Search 20ms/200ms; Index 10ms/100ms (async)</li>
+                            <li><strong>Optimization:</strong> Query caching; filter caching; doc values for aggregations</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 100:1 — search queries dominate indexing</li>
-                    <li><strong>P50/P99 latency:</strong> Search 20ms/200ms; Index 10ms/100ms (async)</li>
-                    <li><strong>Optimization:</strong> Query caching; filter caching; doc values for aggregations</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Lucene segments:</strong> Immutable inverted index — merge in background</li>
+                            <li><strong>Translog:</strong> Write-ahead log — durability before segment flush</li>
+                            <li><strong>Cluster state:</strong> Metadata in memory — index mappings, shard allocation</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Lucene segments:</strong> Immutable inverted index — merge in background</li>
-                    <li><strong>Translog:</strong> Write-ahead log — durability before segment flush</li>
-                    <li><strong>Cluster state:</strong> Metadata in memory — index mappings, shard allocation</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Mapping explosion — too many fields, cluster state bloats<br>
+                            <strong>Who feels pain:</strong> Cluster — OOM on master nodes, cluster goes red<br>
+                            <strong>Mitigation:</strong> Strict mappings; field limit settings; template governance
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Mapping explosion — too many fields, cluster state bloats<br>
-                    <strong>Who feels pain:</strong> Cluster — OOM on master nodes, cluster goes red<br>
-                    <strong>Mitigation:</strong> Strict mappings; field limit settings; template governance
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://www.elastic.co/blog/found-elasticsearch-from-the-bottom-up" target="_blank">Elastic Blog: Elasticsearch Bottom Up</a> — Inverted index, Lucene segments, and scoring</li>
+                            <li><a href="https://blog.twitter.com/engineering/en_us/a/2014/building-a-complete-tweet-index" target="_blank">Twitter Engineering: Tweet Index</a> — Indexing billions of tweets with Lucene</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-add-and-search-words-data-structure/" target="_blank" class="practice-link">
+                                <span>211. Add/Search Words</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/word-search-ii/" target="_blank" class="practice-link">
+                                <span>212. Word Search II</span>
+                                <span class="difficulty hard">Hard</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/donnemartin/system-design-primer#design-the-twitter-search" target="_blank" class="practice-link">
+                                <span>Twitter Search OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://www.elastic.co/blog/found-elasticsearch-from-the-bottom-up" target="_blank">Elastic Blog: Elasticsearch Bottom Up</a> — Inverted index, Lucene segments, and scoring</li>
-                    <li><a href="https://blog.twitter.com/engineering/en_us/a/2014/building-a-complete-tweet-index" target="_blank">Twitter Engineering: Tweet Index</a> — Indexing billions of tweets with Lucene</li>
-                </ul>
             </div>
 
             <!-- ==================== AD CLICK AGGREGATOR ==================== -->
             <div class="cheat-sheet-problem" id="ad-click-aggregator">
                 <h3>Ad Click Aggregator (Google Ads) <span class="difficulty-tag difficulty-hard">Hard</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Stream processing:</strong> Real-time aggregation (Flink/Spark) — latency vs accuracy (late events)</li>
+                            <li><strong>Watermarks:</strong> Handle out-of-order events — completeness vs latency</li>
+                            <li><strong>HyperLogLog:</strong> Approximate unique counts — memory vs precision (2% error)</li>
+                            <li><strong>Lambda architecture:</strong> Real-time + batch — complexity vs accuracy reconciliation</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Stream processing:</strong> Real-time aggregation (Flink/Spark) — latency vs accuracy (late events)</li>
-                    <li><strong>Watermarks:</strong> Handle out-of-order events — completeness vs latency</li>
-                    <li><strong>HyperLogLog:</strong> Approximate unique counts — memory vs precision (2% error)</li>
-                    <li><strong>Lambda architecture:</strong> Real-time + batch — complexity vs accuracy reconciliation</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 1:1000 — massive click ingestion, periodic dashboard queries</li>
+                            <li><strong>P50/P99 latency:</strong> Ingestion 10ms/100ms; Aggregated view 1min/5min staleness</li>
+                            <li><strong>Optimization:</strong> Pre-aggregate by time window; materialize common dimensions</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 1:1000 — massive click ingestion, periodic dashboard queries</li>
-                    <li><strong>P50/P99 latency:</strong> Ingestion 10ms/100ms; Aggregated view 1min/5min staleness</li>
-                    <li><strong>Optimization:</strong> Pre-aggregate by time window; materialize common dimensions</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Kafka:</strong> Click event stream — partitioned by ad_id for ordering</li>
+                            <li><strong>ClickHouse/Druid:</strong> OLAP queries — columnar storage, fast aggregations</li>
+                            <li><strong>Redis:</strong> Real-time counters for fraud detection — sub-second updates</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Kafka:</strong> Click event stream — partitioned by ad_id for ordering</li>
-                    <li><strong>ClickHouse/Druid:</strong> OLAP queries — columnar storage, fast aggregations</li>
-                    <li><strong>Redis:</strong> Real-time counters for fraud detection — sub-second updates</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Kafka consumer lag during traffic spike — aggregations hours behind<br>
+                            <strong>Who feels pain:</strong> Advertisers — dashboards show stale data, budget decisions delayed<br>
+                            <strong>Mitigation:</strong> Auto-scaling consumers; sampling under load; SLA tiers for real-time vs batch
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Kafka consumer lag during traffic spike — aggregations hours behind<br>
-                    <strong>Who feels pain:</strong> Advertisers — dashboards show stale data, budget decisions delayed<br>
-                    <strong>Mitigation:</strong> Auto-scaling consumers; sampling under load; SLA tiers for real-time vs batch
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://engineering.fb.com/2016/06/28/core-infra/data-infrastructure-at-facebook/" target="_blank">Meta Engineering: Data Infrastructure</a> — Petabyte-scale real-time analytics</li>
+                            <li><a href="https://www.uber.com/blog/pinot-real-time-analytics/" target="_blank">Uber Engineering: Apache Pinot</a> — Real-time OLAP for click aggregation</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/find-median-from-data-stream/" target="_blank" class="practice-link">
+                                <span>295. Find Median Stream</span>
+                                <span class="difficulty hard">Hard</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/sliding-window-maximum/" target="_blank" class="practice-link">
+                                <span>239. Sliding Window Max</span>
+                                <span class="difficulty hard">Hard</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://www.educative.io/courses/grokking-modern-system-design/ad-click-event-aggregation" target="_blank" class="practice-link">
+                                <span>Click Aggregator OOD</span>
+                                <span class="source">Educative</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://engineering.fb.com/2016/06/28/core-infra/data-infrastructure-at-facebook/" target="_blank">Meta Engineering: Data Infrastructure</a> — Petabyte-scale real-time analytics</li>
-                    <li><a href="https://www.uber.com/blog/pinot-real-time-analytics/" target="_blank">Uber Engineering: Apache Pinot</a> — Real-time OLAP for click aggregation</li>
-                </ul>
             </div>
 
             <!-- ==================== PROXIMITY SERVICE ==================== -->
             <div class="cheat-sheet-problem" id="proximity-service">
                 <h3>Proximity Service (Yelp/Google Maps) <span class="difficulty-tag difficulty-medium">Medium</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Geohash:</strong> Encode lat/lng to string — prefix matching for nearby, boundary issues</li>
+                            <li><strong>Quadtree:</strong> Recursive spatial partitioning — dynamic density handling</li>
+                            <li><strong>R-tree:</strong> Bounding rectangles — good for range queries, complex updates</li>
+                            <li><strong>Haversine formula:</strong> Accurate distance — CPU cost vs flat-earth approximation</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Geohash:</strong> Encode lat/lng to string — prefix matching for nearby, boundary issues</li>
-                    <li><strong>Quadtree:</strong> Recursive spatial partitioning — dynamic density handling</li>
-                    <li><strong>R-tree:</strong> Bounding rectangles — good for range queries, complex updates</li>
-                    <li><strong>Haversine formula:</strong> Accurate distance — CPU cost vs flat-earth approximation</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 1000:1 — searches dominate; business updates rare</li>
+                            <li><strong>P50/P99 latency:</strong> Nearby search 50ms/200ms; Business update 100ms/500ms</li>
+                            <li><strong>Optimization:</strong> Cache popular areas; pre-compute for common radii (1km, 5km)</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 1000:1 — searches dominate; business updates rare</li>
-                    <li><strong>P50/P99 latency:</strong> Nearby search 50ms/200ms; Business update 100ms/500ms</li>
-                    <li><strong>Optimization:</strong> Cache popular areas; pre-compute for common radii (1km, 5km)</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Elasticsearch with geo_point:</strong> Full-text + spatial — "coffee near me"</li>
+                            <li><strong>Redis with geospatial:</strong> Real-time location queries — in-memory speed</li>
+                            <li><strong>PostgreSQL + PostGIS:</strong> Complex spatial queries — polygons, routes</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Elasticsearch with geo_point:</strong> Full-text + spatial — "coffee near me"</li>
-                    <li><strong>Redis with geospatial:</strong> Real-time location queries — in-memory speed</li>
-                    <li><strong>PostgreSQL + PostGIS:</strong> Complex spatial queries — polygons, routes</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Geohash boundary — user at edge misses nearby results<br>
+                            <strong>Who feels pain:</strong> User — restaurant 100m away not shown because different geohash<br>
+                            <strong>Mitigation:</strong> Query adjacent geohash cells; use overlapping grid; post-filter by actual distance
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Geohash boundary — user at edge misses nearby results<br>
-                    <strong>Who feels pain:</strong> User — restaurant 100m away not shown because different geohash<br>
-                    <strong>Mitigation:</strong> Query adjacent geohash cells; use overlapping grid; post-filter by actual distance
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://www.uber.com/blog/h3/" target="_blank">Uber Engineering: H3</a> — Hexagonal hierarchical spatial index (open source)</li>
+                            <li><a href="https://blog.yelp.com/2017/10/engineering-search-at-yelp/" target="_blank">Yelp Engineering: Search</a> — Geospatial search with Elasticsearch</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/k-closest-points-to-origin/" target="_blank" class="practice-link">
+                                <span>973. K Closest Points</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/design-hashset/" target="_blank" class="practice-link">
+                                <span>705. Design HashSet</span>
+                                <span class="difficulty easy">Easy</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/tssovi/grokking-the-object-oriented-design-interview/blob/master/object-oriented-design-case-studies/design-yelp.md" target="_blank" class="practice-link">
+                                <span>Yelp OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://www.uber.com/blog/h3/" target="_blank">Uber Engineering: H3</a> — Hexagonal hierarchical spatial index (open source)</li>
-                    <li><a href="https://blog.yelp.com/2017/10/engineering-search-at-yelp/" target="_blank">Yelp Engineering: Search</a> — Geospatial search with Elasticsearch</li>
-                </ul>
             </div>
 
             <!-- ==================== COLLABORATIVE EDITING ==================== -->
             <div class="cheat-sheet-problem" id="collaborative-editing">
                 <h3>Collaborative Editing (Google Docs) <span class="difficulty-tag difficulty-hard">Hard</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Operational Transformation (OT):</strong> Transform concurrent ops — proven but complex server</li>
+                            <li><strong>CRDT:</strong> Conflict-free merge — simpler, larger metadata overhead</li>
+                            <li><strong>Last-write-wins:</strong> Simple but loses data — not suitable for text</li>
+                            <li><strong>Cursor/selection sync:</strong> Presence awareness — bandwidth vs UX</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Operational Transformation (OT):</strong> Transform concurrent ops — proven but complex server</li>
-                    <li><strong>CRDT:</strong> Conflict-free merge — simpler, larger metadata overhead</li>
-                    <li><strong>Last-write-wins:</strong> Simple but loses data — not suitable for text</li>
-                    <li><strong>Cursor/selection sync:</strong> Presence awareness — bandwidth vs UX</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 1:10 per active session — keystrokes dominate</li>
+                            <li><strong>P50/P99 latency:</strong> Op broadcast 50ms/150ms; must feel synchronous</li>
+                            <li><strong>Optimization:</strong> Local-first with background sync; batch ops; operation log compaction</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 1:10 per active session — keystrokes dominate</li>
-                    <li><strong>P50/P99 latency:</strong> Op broadcast 50ms/150ms; must feel synchronous</li>
-                    <li><strong>Optimization:</strong> Local-first with background sync; batch ops; operation log compaction</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Document store (MongoDB/Firestore):</strong> Document snapshots — periodic persistence</li>
+                            <li><strong>Operation log (append-only):</strong> Edit history — replay for undo, versioning</li>
+                            <li><strong>WebSocket servers:</strong> Real-time broadcast — stateful, sticky sessions</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Document store (MongoDB/Firestore):</strong> Document snapshots — periodic persistence</li>
-                    <li><strong>Operation log (append-only):</strong> Edit history — replay for undo, versioning</li>
-                    <li><strong>WebSocket servers:</strong> Real-time broadcast — stateful, sticky sessions</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Server crash loses in-flight ops — user edits vanish<br>
+                            <strong>Who feels pain:</strong> Users — lost work, document diverges between collaborators<br>
+                            <strong>Mitigation:</strong> Client-side op queue with ACK; server replication; periodic snapshots
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Server crash loses in-flight ops — user edits vanish<br>
-                    <strong>Who feels pain:</strong> Users — lost work, document diverges between collaborators<br>
-                    <strong>Mitigation:</strong> Client-side op queue with ACK; server replication; periodic snapshots
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/" target="_blank">Figma Engineering: Multiplayer</a> — CRDTs for real-time collaborative design</li>
+                            <li><a href="https://www.inkandswitch.com/local-first/" target="_blank">Ink & Switch: Local-First Software</a> — CRDTs vs OT deep dive with tradeoffs</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-a-text-editor/" target="_blank" class="practice-link">
+                                <span>2296. Design Text Editor</span>
+                                <span class="difficulty hard">Hard</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/snapshot-array/" target="_blank" class="practice-link">
+                                <span>1146. Snapshot Array</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/ashishps1/awesome-low-level-design/blob/main/problems/text-editor.md" target="_blank" class="practice-link">
+                                <span>Text Editor OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/" target="_blank">Figma Engineering: Multiplayer</a> — CRDTs for real-time collaborative design</li>
-                    <li><a href="https://www.inkandswitch.com/local-first/" target="_blank">Ink & Switch: Local-First Software</a> — CRDTs vs OT deep dive with tradeoffs</li>
-                </ul>
             </div>
 
             <!-- ==================== STOCK EXCHANGE ==================== -->
             <div class="cheat-sheet-problem" id="stock-exchange">
                 <h3>Stock Exchange (NASDAQ) <span class="difficulty-tag difficulty-hard">Hard</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Order matching:</strong> Price-time priority FIFO — fairness vs throughput</li>
+                            <li><strong>Limit order book:</strong> Sorted bids/asks — O(log n) insert, O(1) match</li>
+                            <li><strong>Sequencer:</strong> Total ordering of events — single point of serialization</li>
+                            <li><strong>Market data fan-out:</strong> Multicast to subscribers — latency vs reliability</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Order matching:</strong> Price-time priority FIFO — fairness vs throughput</li>
-                    <li><strong>Limit order book:</strong> Sorted bids/asks — O(log n) insert, O(1) match</li>
-                    <li><strong>Sequencer:</strong> Total ordering of events — single point of serialization</li>
-                    <li><strong>Market data fan-out:</strong> Multicast to subscribers — latency vs reliability</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 100:1 — many quote queries per order</li>
+                            <li><strong>P50/P99 latency:</strong> Order processing 10μs/100μs; market data 1ms/10ms</li>
+                            <li><strong>Optimization:</strong> In-memory everything; kernel bypass (DPDK); co-location</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 100:1 — many quote queries per order</li>
-                    <li><strong>P50/P99 latency:</strong> Order processing 10μs/100μs; market data 1ms/10ms</li>
-                    <li><strong>Optimization:</strong> In-memory everything; kernel bypass (DPDK); co-location</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>In-memory order book:</strong> Red-black tree or skip list — microsecond operations</li>
+                            <li><strong>Sequenced journal:</strong> Append-only log — replay, audit, disaster recovery</li>
+                            <li><strong>Time-series DB:</strong> Trade history, OHLC candles — analytics, regulatory</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>In-memory order book:</strong> Red-black tree or skip list — microsecond operations</li>
-                    <li><strong>Sequenced journal:</strong> Append-only log — replay, audit, disaster recovery</li>
-                    <li><strong>Time-series DB:</strong> Trade history, OHLC candles — analytics, regulatory</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Sequencer failover — 500ms gap, orders processed out of sequence<br>
+                            <strong>Who feels pain:</strong> Traders — unfair fills, regulatory scrutiny, arbitrage losses<br>
+                            <strong>Mitigation:</strong> Hot standby sequencer; sequence number validation; halt trading during recovery
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Sequencer failover — 500ms gap, orders processed out of sequence<br>
-                    <strong>Who feels pain:</strong> Traders — unfair fills, regulatory scrutiny, arbitrage losses<br>
-                    <strong>Mitigation:</strong> Hot standby sequencer; sequence number validation; halt trading during recovery
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://www.lmax.com/exchange/technical-papers" target="_blank">LMAX Exchange: Technical Papers</a> — Disruptor pattern for 6M orders/sec</li>
+                            <li><a href="https://queue.acm.org/detail.cfm?id=2658164" target="_blank">ACM Queue: Trading System Design</a> — Latency engineering for financial systems</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/design-a-leaderboard/" target="_blank" class="practice-link">
+                                <span>1244. Design Leaderboard</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/stock-price-fluctuation/" target="_blank" class="practice-link">
+                                <span>2034. Stock Price Fluctuation</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/tssovi/grokking-the-object-oriented-design-interview/blob/master/object-oriented-design-case-studies/design-stock-brokerage.md" target="_blank" class="practice-link">
+                                <span>Stock Brokerage OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://www.lmax.com/exchange/technical-papers" target="_blank">LMAX Exchange: Technical Papers</a> — Disruptor pattern for 6M orders/sec</li>
-                    <li><a href="https://queue.acm.org/detail.cfm?id=2658164" target="_blank">ACM Queue: Trading System Design</a> — Latency engineering for financial systems</li>
-                </ul>
             </div>
 
             <!-- ==================== BOOKING SYSTEM ==================== -->
             <div class="cheat-sheet-problem" id="booking-system">
                 <h3>Hotel/Flight Booking (Booking.com/Expedia) <span class="difficulty-tag difficulty-medium">Medium</span></h3>
+                <div class="problem-layout">
+                    <div class="problem-content">
+                        <h4>1) Key Algorithms & Core Tradeoffs</h4>
+                        <ul>
+                            <li><strong>Inventory management:</strong> Optimistic vs pessimistic locking — throughput vs overbooking</li>
+                            <li><strong>Search ranking:</strong> Price, rating, commission — user value vs revenue</li>
+                            <li><strong>Price caching:</strong> Stale prices OK for search, fresh for booking — performance vs accuracy</li>
+                            <li><strong>Reservation hold:</strong> TTL-based soft lock — UX vs inventory blocking</li>
+                        </ul>
 
-                <h4>1) Key Algorithms & Core Tradeoffs</h4>
-                <ul>
-                    <li><strong>Inventory management:</strong> Optimistic vs pessimistic locking — throughput vs overbooking</li>
-                    <li><strong>Search ranking:</strong> Price, rating, commission — user value vs revenue</li>
-                    <li><strong>Price caching:</strong> Stale prices OK for search, fresh for booking — performance vs accuracy</li>
-                    <li><strong>Reservation hold:</strong> TTL-based soft lock — UX vs inventory blocking</li>
-                </ul>
+                        <h4>2) Read vs Write Pattern & Latency</h4>
+                        <ul>
+                            <li><strong>Read:Write ratio:</strong> 1000:1 — searches massively exceed bookings</li>
+                            <li><strong>P50/P99 latency:</strong> Search 200ms/1s; Booking 500ms/3s (payment involved)</li>
+                            <li><strong>Optimization:</strong> Cache search results aggressively; real-time only for final booking</li>
+                        </ul>
 
-                <h4>2) Read vs Write Pattern & Latency</h4>
-                <ul>
-                    <li><strong>Read:Write ratio:</strong> 1000:1 — searches massively exceed bookings</li>
-                    <li><strong>P50/P99 latency:</strong> Search 200ms/1s; Booking 500ms/3s (payment involved)</li>
-                    <li><strong>Optimization:</strong> Cache search results aggressively; real-time only for final booking</li>
-                </ul>
+                        <h4>3) Core Data Stores</h4>
+                        <ul>
+                            <li><strong>Elasticsearch:</strong> Property search — filters, geo, full-text</li>
+                            <li><strong>MySQL/PostgreSQL:</strong> Bookings, inventory — ACID for reservation</li>
+                            <li><strong>Redis:</strong> Availability cache, session — fast availability checks</li>
+                        </ul>
 
-                <h4>3) Core Data Stores</h4>
-                <ul>
-                    <li><strong>Elasticsearch:</strong> Property search — filters, geo, full-text</li>
-                    <li><strong>MySQL/PostgreSQL:</strong> Bookings, inventory — ACID for reservation</li>
-                    <li><strong>Redis:</strong> Availability cache, session — fast availability checks</li>
-                </ul>
+                        <h4>4) One Failure Story</h4>
+                        <div class="failure-story">
+                            <strong>What breaks:</strong> Flash sale on popular hotel — double booking same room<br>
+                            <strong>Who feels pain:</strong> Guest — arrives to no room; hotel — angry customer, comped stay<br>
+                            <strong>Mitigation:</strong> Serialized booking per room; inventory buffer; graceful overbooking policy
+                        </div>
 
-                <h4>4) One Failure Story</h4>
-                <div class="failure-story">
-                    <strong>What breaks:</strong> Flash sale on popular hotel — double booking same room<br>
-                    <strong>Who feels pain:</strong> Guest — arrives to no room; hotel — angry customer, comped stay<br>
-                    <strong>Mitigation:</strong> Serialized booking per room; inventory buffer; graceful overbooking policy
+                        <h4>5) Best Reference</h4>
+                        <ul>
+                            <li><a href="https://medium.com/airbnb-engineering/how-airbnb-avoids-double-payments-f93e3a83fe6e" target="_blank">Airbnb Engineering: Avoiding Double Payments</a> — Idempotency in booking transactions</li>
+                            <li><a href="https://blog.booking.com/architecture-systems-availability.html" target="_blank">Booking.com: Systems Availability</a> — High availability for reservation systems</li>
+                        </ul>
+                    </div>
+                    <div class="practice-sidebar">
+                        <h4>Practice Problems</h4>
+                        <div class="practice-section">
+                            <h5>Algorithm Practice</h5>
+                            <a href="https://leetcode.com/problems/my-calendar-i/" target="_blank" class="practice-link">
+                                <span>729. My Calendar I</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                            <a href="https://leetcode.com/problems/meeting-rooms-ii/" target="_blank" class="practice-link">
+                                <span>253. Meeting Rooms II</span>
+                                <span class="difficulty medium">Med</span>
+                                <span class="source">LC</span>
+                            </a>
+                        </div>
+                        <div class="practice-section">
+                            <h5>LLD / OOD Practice</h5>
+                            <a href="https://github.com/tssovi/grokking-the-object-oriented-design-interview/blob/master/object-oriented-design-case-studies/design-airbnb.md" target="_blank" class="practice-link">
+                                <span>Airbnb OOD</span>
+                                <span class="source">GitHub</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-
-                <h4>5) Best Reference</h4>
-                <ul>
-                    <li><a href="https://medium.com/airbnb-engineering/how-airbnb-avoids-double-payments-f93e3a83fe6e" target="_blank">Airbnb Engineering: Avoiding Double Payments</a> — Idempotency in booking transactions</li>
-                    <li><a href="https://blog.booking.com/architecture-systems-availability.html" target="_blank">Booking.com: Systems Availability</a> — High availability for reservation systems</li>
-                </ul>
             </div>
 
             <!-- Navigation -->
