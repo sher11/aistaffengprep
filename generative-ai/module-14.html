@@ -2191,41 +2191,323 @@ class ExtractedDocument:
 
 class DocumentExtractor:
     """
-    TODO: Implement a document extraction system that:
-    1. Classifies the document type
-    2. Extracts relevant fields
+    Multi-modal document extraction system that:
+    1. Classifies the document type (receipt, invoice, form)
+    2. Extracts relevant fields based on document type
     3. Validates the data (e.g., items sum to total)
-    4. Returns structured output
+    4. Returns structured output with confidence scores
     """
 
     def __init__(self):
         self.client = anthropic.Anthropic()
+        # Supported document types and their expected fields
+        self.doc_schemas = {
+            "receipt": ["vendor", "date", "items", "subtotal", "tax", "total"],
+            "invoice": ["vendor", "date", "invoice_number", "items", "subtotal", "tax", "total", "due_date"],
+            "form": ["form_type", "fields", "date"]
+        }
+
+    def _encode_image(self, image_path: str) -> tuple[str, str]:
+        """Encode image to base64 and detect media type."""
+        import mimetypes
+
+        # Detect media type from file extension
+        mime_type, _ = mimetypes.guess_type(image_path)
+        if mime_type is None:
+            # Default to JPEG if unknown
+            mime_type = "image/jpeg"
+
+        # Read and encode the image
+        with open(image_path, "rb") as f:
+            image_data = base64.standard_b64encode(f.read()).decode("utf-8")
+
+        return image_data, mime_type
 
     def extract(self, image_path: str) -> ExtractedDocument:
         """Extract structured data from a document image."""
-        # TODO: Implement
-        pass
+        # Step 1: Encode the image
+        image_data, media_type = self._encode_image(image_path)
 
-    def _classify_document(self, image_data: str) -> str:
-        """Determine what type of document this is."""
-        # TODO: Implement
-        pass
+        # Step 2: Classify the document type
+        doc_type = self._classify_document(image_data, media_type)
 
-    def _extract_fields(self, image_data: str, doc_type: str) -> dict:
-        """Extract fields based on document type."""
-        # TODO: Implement
-        pass
+        # Step 3: Extract fields based on document type
+        extracted_data = self._extract_fields(image_data, media_type, doc_type)
+
+        # Step 4: Validate the extracted data
+        is_valid, issues = self._validate(extracted_data)
+
+        # Adjust confidence based on validation results
+        confidence = extracted_data.get("confidence", 0.8)
+        if not is_valid:
+            # Reduce confidence for each validation issue
+            confidence = max(0.1, confidence - (0.1 * len(issues)))
+            print(f"Validation issues found: {issues}")
+
+        # Step 5: Parse line items
+        items = []
+        for item_data in extracted_data.get("items", []):
+            items.append(LineItem(
+                description=item_data.get("description", "Unknown item"),
+                quantity=item_data.get("quantity"),
+                unit_price=item_data.get("unit_price"),
+                total=item_data.get("total", 0.0)
+            ))
+
+        # Step 6: Return structured document
+        return ExtractedDocument(
+            document_type=doc_type,
+            vendor=extracted_data.get("vendor", "Unknown"),
+            date=extracted_data.get("date"),
+            items=items,
+            subtotal=extracted_data.get("subtotal"),
+            tax=extracted_data.get("tax"),
+            total=extracted_data.get("total", 0.0),
+            confidence=confidence
+        )
+
+    def _classify_document(self, image_data: str, media_type: str) -> str:
+        """Determine what type of document this is using vision AI."""
+        response = self.client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=100,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": media_type,
+                                "data": image_data,
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": """Classify this document into exactly ONE of these categories:
+- receipt (store receipts, restaurant bills, purchase confirmations)
+- invoice (business invoices, bills for services)
+- form (tax forms, application forms, official documents)
+
+Respond with ONLY the category name, nothing else."""
+                        }
+                    ],
+                }
+            ],
+        )
+
+        doc_type = response.content[0].text.strip().lower()
+
+        # Validate response is a known type
+        if doc_type not in self.doc_schemas:
+            doc_type = "receipt"  # Default fallback
+
+        return doc_type
+
+    def _extract_fields(self, image_data: str, media_type: str, doc_type: str) -> dict:
+        """Extract fields based on document type using structured prompting."""
+
+        # Build extraction prompt based on document type
+        if doc_type == "receipt":
+            extraction_prompt = """Extract the following information from this receipt image.
+Return a JSON object with these fields:
+{
+    "vendor": "store/restaurant name",
+    "date": "YYYY-MM-DD format if visible, null otherwise",
+    "items": [
+        {
+            "description": "item name",
+            "quantity": number or null,
+            "unit_price": number or null,
+            "total": number (line total)
+        }
+    ],
+    "subtotal": number or null,
+    "tax": number or null,
+    "total": number (final total),
+    "confidence": number between 0 and 1 indicating extraction confidence
+}
+
+Rules:
+- All monetary values should be numbers (e.g., 12.99 not "$12.99")
+- If a field is unclear or not visible, use null
+- For items, extract as many line items as clearly visible
+- Confidence should reflect how clearly the data was readable
+
+Return ONLY the JSON object, no additional text."""
+
+        elif doc_type == "invoice":
+            extraction_prompt = """Extract the following information from this invoice image.
+Return a JSON object with these fields:
+{
+    "vendor": "company/business name",
+    "date": "YYYY-MM-DD format (invoice date)",
+    "invoice_number": "invoice ID/number if visible",
+    "due_date": "YYYY-MM-DD format if visible, null otherwise",
+    "items": [
+        {
+            "description": "item/service description",
+            "quantity": number or null,
+            "unit_price": number or null,
+            "total": number (line total)
+        }
+    ],
+    "subtotal": number or null,
+    "tax": number or null,
+    "total": number (final total),
+    "confidence": number between 0 and 1 indicating extraction confidence
+}
+
+Rules:
+- All monetary values should be numbers
+- If a field is unclear or not visible, use null
+- Confidence should reflect how clearly the data was readable
+
+Return ONLY the JSON object, no additional text."""
+
+        else:  # form
+            extraction_prompt = """Extract the following information from this form/document image.
+Return a JSON object with these fields:
+{
+    "vendor": "organization/issuer name",
+    "form_type": "type of form (e.g., W-2, 1099, application)",
+    "date": "YYYY-MM-DD format if visible, null otherwise",
+    "items": [],
+    "subtotal": null,
+    "tax": null,
+    "total": 0,
+    "fields": {
+        "field_name": "field_value"
+    },
+    "confidence": number between 0 and 1 indicating extraction confidence
+}
+
+Extract key fields visible on the form into the "fields" object.
+Return ONLY the JSON object, no additional text."""
+
+        response = self.client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=2000,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": media_type,
+                                "data": image_data,
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": extraction_prompt
+                        }
+                    ],
+                }
+            ],
+        )
+
+        # Parse JSON response
+        response_text = response.content[0].text.strip()
+
+        # Handle potential markdown code blocks in response
+        if response_text.startswith("```"):
+            # Extract JSON from code block
+            lines = response_text.split("\n")
+            json_lines = []
+            in_json = False
+            for line in lines:
+                if line.startswith("```") and not in_json:
+                    in_json = True
+                    continue
+                elif line.startswith("```") and in_json:
+                    break
+                elif in_json:
+                    json_lines.append(line)
+            response_text = "\n".join(json_lines)
+
+        try:
+            return json.loads(response_text)
+        except json.JSONDecodeError:
+            # Return minimal valid structure on parse failure
+            return {
+                "vendor": "Parse Error",
+                "date": None,
+                "items": [],
+                "subtotal": None,
+                "tax": None,
+                "total": 0.0,
+                "confidence": 0.1
+            }
 
     def _validate(self, data: dict) -> tuple[bool, list[str]]:
         """
-        Validate extracted data.
-        Returns (is_valid, list of issues)
+        Validate extracted data for consistency.
+        Returns (is_valid, list of issues found)
         """
-        # TODO: Implement
-        # Check if items sum to subtotal
-        # Check if subtotal + tax = total
-        # Check date format
-        pass
+        issues = []
+
+        # Check 1: Items sum to subtotal (with tolerance for rounding)
+        if data.get("items") and data.get("subtotal") is not None:
+            items_sum = sum(item.get("total", 0) or 0 for item in data["items"])
+            subtotal = data["subtotal"]
+            if abs(items_sum - subtotal) > 0.02:  # Allow 2 cent tolerance
+                issues.append(
+                    f"Items sum ({items_sum:.2f}) doesn't match subtotal ({subtotal:.2f})"
+                )
+
+        # Check 2: Subtotal + tax = total (with tolerance)
+        if data.get("subtotal") is not None and data.get("total") is not None:
+            subtotal = data["subtotal"]
+            tax = data.get("tax") or 0
+            total = data["total"]
+            calculated_total = subtotal + tax
+            if abs(calculated_total - total) > 0.02:
+                issues.append(
+                    f"Subtotal ({subtotal:.2f}) + tax ({tax:.2f}) = {calculated_total:.2f} "
+                    f"doesn't match total ({total:.2f})"
+                )
+
+        # Check 3: Validate date format (YYYY-MM-DD)
+        import re
+        date = data.get("date")
+        if date is not None:
+            date_pattern = r"^\d{4}-\d{2}-\d{2}$"
+            if not re.match(date_pattern, str(date)):
+                issues.append(f"Date format invalid: {date} (expected YYYY-MM-DD)")
+            else:
+                # Validate date values are reasonable
+                try:
+                    year, month, day = map(int, date.split("-"))
+                    if not (1900 <= year <= 2100):
+                        issues.append(f"Year out of range: {year}")
+                    if not (1 <= month <= 12):
+                        issues.append(f"Month out of range: {month}")
+                    if not (1 <= day <= 31):
+                        issues.append(f"Day out of range: {day}")
+                except ValueError:
+                    issues.append(f"Could not parse date: {date}")
+
+        # Check 4: Total should be positive for receipts/invoices
+        total = data.get("total")
+        if total is not None and total < 0:
+            issues.append(f"Total is negative: {total}")
+
+        # Check 5: Confidence should be between 0 and 1
+        confidence = data.get("confidence")
+        if confidence is not None and not (0 <= confidence <= 1):
+            issues.append(f"Confidence out of range: {confidence}")
+
+        # Check 6: Vendor should not be empty
+        vendor = data.get("vendor")
+        if not vendor or vendor.strip() == "":
+            issues.append("Vendor name is empty")
+
+        is_valid = len(issues) == 0
+        return is_valid, issues
 
 # Test your implementation
 extractor = DocumentExtractor()

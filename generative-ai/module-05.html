@@ -2053,12 +2053,504 @@ n = int(0.9 * len(data))
 train_data = data[:n]
 val_data = data[n:]
 
-# TODO: Implement the rest!
-# 1. Create a get_batch function
-# 2. Use the GPT class from earlier
-# 3. Write the training loop
-# 4. Implement different generation strategies
-# 5. Generate samples and compare quality
+# =============================================================================
+# STEP 1: Create a get_batch function
+# =============================================================================
+# This function creates random mini-batches from our training/validation data.
+# Each batch contains 'batch_size' sequences, each of length 'block_size'.
+# For each input sequence x, we create a target sequence y that is x shifted
+# by one position (the next-token prediction objective).
+
+def get_batch(split):
+    """
+    Generate a small batch of data for training or validation.
+
+    Args:
+        split: 'train' or 'val' - which dataset to sample from
+
+    Returns:
+        x: Input sequences [batch_size, block_size]
+        y: Target sequences [batch_size, block_size] (x shifted right by 1)
+
+    Why random sampling?
+    - Ensures model sees diverse parts of the text
+    - Prevents memorizing the order of examples
+    - Each iteration sees a different batch
+    """
+    # Select the appropriate dataset
+    data = train_data if split == 'train' else val_data
+
+    # Generate random starting positions for each sequence in the batch
+    # We leave room for block_size tokens after the starting position
+    ix = torch.randint(len(data) - block_size, (batch_size,))
+
+    # Stack sequences into batches
+    # x[i] = data[ix[i] : ix[i] + block_size]
+    x = torch.stack([data[i:i+block_size] for i in ix])
+
+    # y is the same as x but shifted by 1 position
+    # This is the "next token" we want to predict
+    y = torch.stack([data[i+1:i+block_size+1] for i in ix])
+
+    # Move to GPU if available
+    x, y = x.to(device), y.to(device)
+    return x, y
+
+
+# =============================================================================
+# STEP 2: Define the GPT model classes
+# =============================================================================
+# We reuse the architecture from earlier in this module. The key components are:
+# - CausalSelfAttention: Masked attention to prevent looking at future tokens
+# - MLP: Feed-forward network with GELU activation
+# - Block: One transformer layer (attention + FFN with residuals)
+# - GPT: The full model with embeddings and multiple blocks
+
+class CausalSelfAttention(nn.Module):
+    """
+    Multi-head causal self-attention.
+
+    'Causal' means we mask future positions so token at position t
+    can only attend to positions 0, 1, ..., t (not t+1, t+2, ...).
+    This is essential for autoregressive generation.
+    """
+
+    def __init__(self, config):
+        super().__init__()
+        assert config.n_embd % config.n_head == 0
+
+        # Combined Q, K, V projection (more efficient than separate)
+        self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd, bias=config.bias)
+        # Output projection
+        self.c_proj = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
+
+        self.attn_dropout = nn.Dropout(config.dropout)
+        self.resid_dropout = nn.Dropout(config.dropout)
+
+        self.n_head = config.n_head
+        self.n_embd = config.n_embd
+        self.dropout = config.dropout
+
+        # Causal mask: lower triangular matrix
+        # Registered as buffer (saved with model but not a parameter)
+        self.register_buffer(
+            "mask",
+            torch.tril(torch.ones(config.block_size, config.block_size))
+                 .view(1, 1, config.block_size, config.block_size)
+        )
+
+    def forward(self, x):
+        B, T, C = x.size()  # Batch, Sequence length, Embedding dim
+
+        # Project to Q, K, V
+        qkv = self.c_attn(x)
+        q, k, v = qkv.split(self.n_embd, dim=2)
+
+        # Reshape for multi-head attention
+        # [B, T, C] -&gt; [B, n_head, T, head_dim]
+        head_dim = C // self.n_head
+        q = q.view(B, T, self.n_head, head_dim).transpose(1, 2)
+        k = k.view(B, T, self.n_head, head_dim).transpose(1, 2)
+        v = v.view(B, T, self.n_head, head_dim).transpose(1, 2)
+
+        # Scaled dot-product attention
+        # att[i,j] = how much position i attends to position j
+        att = (q @ k.transpose(-2, -1)) * (1.0 / (head_dim ** 0.5))
+
+        # Apply causal mask: set future positions to -inf
+        # After softmax, -inf becomes 0 (no attention to future)
+        att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float('-inf'))
+        att = F.softmax(att, dim=-1)
+        att = self.attn_dropout(att)
+
+        # Weighted sum of values
+        y = att @ v
+
+        # Reshape back: [B, n_head, T, head_dim] -&gt; [B, T, C]
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
+
+        # Output projection with residual dropout
+        y = self.resid_dropout(self.c_proj(y))
+        return y
+
+
+class MLP(nn.Module):
+    """
+    Feed-forward network (position-wise).
+
+    Architecture: Linear -&gt; GELU -&gt; Linear -&gt; Dropout
+    The hidden dimension is 4x the embedding dimension (standard choice).
+    """
+
+    def __init__(self, config):
+        super().__init__()
+        self.c_fc = nn.Linear(config.n_embd, 4 * config.n_embd, bias=config.bias)
+        self.gelu = nn.GELU()
+        self.c_proj = nn.Linear(4 * config.n_embd, config.n_embd, bias=config.bias)
+        self.dropout = nn.Dropout(config.dropout)
+
+    def forward(self, x):
+        x = self.c_fc(x)       # Expand to 4x
+        x = self.gelu(x)       # Non-linearity
+        x = self.c_proj(x)     # Project back
+        x = self.dropout(x)    # Regularization
+        return x
+
+
+class Block(nn.Module):
+    """
+    Transformer block with pre-LayerNorm (GPT-2 style).
+
+    Architecture:
+        x -&gt; LayerNorm -&gt; Attention -&gt; + (residual) -&gt; LayerNorm -&gt; MLP -&gt; + (residual)
+
+    Pre-LN (applying norm before attention/MLP) is more stable for training
+    than the original post-LN architecture from "Attention Is All You Need".
+    """
+
+    def __init__(self, config):
+        super().__init__()
+        self.ln_1 = nn.LayerNorm(config.n_embd)
+        self.attn = CausalSelfAttention(config)
+        self.ln_2 = nn.LayerNorm(config.n_embd)
+        self.mlp = MLP(config)
+
+    def forward(self, x):
+        # Residual connections allow gradients to flow directly
+        x = x + self.attn(self.ln_1(x))
+        x = x + self.mlp(self.ln_2(x))
+        return x
+
+
+class GPTConfig:
+    """Configuration dataclass for GPT model hyperparameters."""
+
+    def __init__(self, vocab_size, block_size, n_layer, n_head, n_embd, dropout, bias=True):
+        self.vocab_size = vocab_size
+        self.block_size = block_size
+        self.n_layer = n_layer
+        self.n_head = n_head
+        self.n_embd = n_embd
+        self.dropout = dropout
+        self.bias = bias
+
+
+class GPT(nn.Module):
+    """
+    The complete GPT model.
+
+    Components:
+    - Token embeddings: Convert token IDs to vectors
+    - Position embeddings: Add positional information
+    - Transformer blocks: Process the sequence
+    - LM head: Project back to vocabulary (with weight tying)
+    """
+
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+
+        self.transformer = nn.ModuleDict({
+            'wte': nn.Embedding(config.vocab_size, config.n_embd),  # Token embeddings
+            'wpe': nn.Embedding(config.block_size, config.n_embd), # Position embeddings
+            'drop': nn.Dropout(config.dropout),
+            'h': nn.ModuleList([Block(config) for _ in range(config.n_layer)]),
+            'ln_f': nn.LayerNorm(config.n_embd),  # Final layer norm
+        })
+
+        # Language model head
+        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+
+        # Weight tying: embedding and output projection share weights
+        # This reduces parameters and often improves performance
+        self.transformer.wte.weight = self.lm_head.weight
+
+        # Initialize weights
+        self.apply(self._init_weights)
+
+        # Report parameter count
+        n_params = sum(p.numel() for p in self.parameters())
+        print(f"GPT model initialized with {n_params/1e6:.2f}M parameters")
+
+    def _init_weights(self, module):
+        """Initialize weights with small random values."""
+        if isinstance(module, nn.Linear):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            if module.bias is not None:
+                torch.nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+
+    def forward(self, idx, targets=None):
+        """
+        Forward pass.
+
+        Args:
+            idx: Token indices [batch, seq_len]
+            targets: Target indices for loss (optional)
+
+        Returns:
+            logits: [batch, seq_len, vocab_size]
+            loss: Cross-entropy loss if targets provided
+        """
+        device = idx.device
+        B, T = idx.size()
+
+        # Create position indices [0, 1, 2, ..., T-1]
+        pos = torch.arange(0, T, dtype=torch.long, device=device)
+
+        # Token + position embeddings
+        tok_emb = self.transformer.wte(idx)   # [B, T, n_embd]
+        pos_emb = self.transformer.wpe(pos)   # [T, n_embd]
+        x = self.transformer.drop(tok_emb + pos_emb)
+
+        # Pass through transformer blocks
+        for block in self.transformer.h:
+            x = block(x)
+
+        # Final layer norm and project to vocabulary
+        x = self.transformer.ln_f(x)
+        logits = self.lm_head(x)
+
+        # Calculate loss if targets provided
+        loss = None
+        if targets is not None:
+            loss = F.cross_entropy(
+                logits.view(-1, logits.size(-1)),
+                targets.view(-1)
+            )
+
+        return logits, loss
+
+
+# =============================================================================
+# STEP 3: Training loop with loss estimation
+# =============================================================================
+
+@torch.no_grad()
+def estimate_loss():
+    """
+    Estimate loss on train and val sets.
+
+    We average over multiple batches for a more stable estimate.
+    The @torch.no_grad() decorator disables gradient computation
+    for efficiency (we're just evaluating, not training).
+    """
+    out = {}
+    model.eval()  # Set to evaluation mode (disables dropout)
+
+    for split in ['train', 'val']:
+        losses = torch.zeros(eval_iters)
+        for k in range(eval_iters):
+            X, Y = get_batch(split)
+            logits, loss = model(X, Y)
+            losses[k] = loss.item()
+        out[split] = losses.mean()
+
+    model.train()  # Set back to training mode
+    return out
+
+
+# Create model configuration
+config = GPTConfig(
+    vocab_size=vocab_size,
+    block_size=block_size,
+    n_layer=n_layer,
+    n_head=n_head,
+    n_embd=n_embd,
+    dropout=dropout,
+)
+
+# Initialize model
+model = GPT(config)
+model = model.to(device)
+
+# Create optimizer
+# AdamW is Adam with proper weight decay (decoupled from learning rate)
+optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+
+# Training loop
+print(f"Training on {device}...")
+for iter in range(max_iters):
+
+    # Periodically evaluate loss on train and val sets
+    if iter % eval_interval == 0 or iter == max_iters - 1:
+        losses = estimate_loss()
+        print(f"Step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+
+    # Get a batch of training data
+    xb, yb = get_batch('train')
+
+    # Forward pass: compute loss
+    logits, loss = model(xb, yb)
+
+    # Backward pass: compute gradients
+    optimizer.zero_grad(set_to_none=True)  # Clear previous gradients
+    loss.backward()                         # Compute new gradients
+
+    # Update weights
+    optimizer.step()
+
+print("Training complete!")
+
+
+# =============================================================================
+# STEP 4: Implement different generation strategies
+# =============================================================================
+
+@torch.no_grad()
+def generate_greedy(model, idx, max_new_tokens):
+    """
+    Greedy decoding: always pick the most likely next token.
+
+    Pros: Fast, deterministic
+    Cons: Often repetitive and boring
+    """
+    for _ in range(max_new_tokens):
+        # Crop context to block_size if needed
+        idx_cond = idx[:, -block_size:]
+
+        # Get predictions
+        logits, _ = model(idx_cond)
+
+        # Focus on last position (next token prediction)
+        logits = logits[:, -1, :]  # [B, vocab_size]
+
+        # Greedy: pick argmax
+        idx_next = torch.argmax(logits, dim=-1, keepdim=True)
+
+        # Append to sequence
+        idx = torch.cat((idx, idx_next), dim=1)
+
+    return idx
+
+
+@torch.no_grad()
+def generate_temperature(model, idx, max_new_tokens, temperature=1.0):
+    """
+    Temperature sampling: scale logits before softmax.
+
+    - temperature &lt; 1.0: sharper distribution (more confident)
+    - temperature = 1.0: original distribution
+    - temperature &gt; 1.0: flatter distribution (more random)
+    """
+    for _ in range(max_new_tokens):
+        idx_cond = idx[:, -block_size:]
+        logits, _ = model(idx_cond)
+        logits = logits[:, -1, :] / temperature  # Scale by temperature
+
+        # Convert to probabilities and sample
+        probs = F.softmax(logits, dim=-1)
+        idx_next = torch.multinomial(probs, num_samples=1)
+
+        idx = torch.cat((idx, idx_next), dim=1)
+
+    return idx
+
+
+@torch.no_grad()
+def generate_top_k(model, idx, max_new_tokens, top_k=40, temperature=1.0):
+    """
+    Top-k sampling: only sample from the top k most likely tokens.
+
+    This prevents sampling extremely unlikely tokens while
+    maintaining diversity among reasonable choices.
+    """
+    for _ in range(max_new_tokens):
+        idx_cond = idx[:, -block_size:]
+        logits, _ = model(idx_cond)
+        logits = logits[:, -1, :] / temperature
+
+        # Keep only top k tokens
+        v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
+        logits[logits &lt; v[:, [-1]]] = float('-inf')
+
+        probs = F.softmax(logits, dim=-1)
+        idx_next = torch.multinomial(probs, num_samples=1)
+
+        idx = torch.cat((idx, idx_next), dim=1)
+
+    return idx
+
+
+@torch.no_grad()
+def generate_top_p(model, idx, max_new_tokens, top_p=0.9, temperature=1.0):
+    """
+    Nucleus (top-p) sampling: sample from smallest set with cumulative prob &gt;= p.
+
+    This is adaptive - when model is confident, samples from fewer tokens;
+    when uncertain, samples from more tokens. Generally preferred over top-k.
+    """
+    for _ in range(max_new_tokens):
+        idx_cond = idx[:, -block_size:]
+        logits, _ = model(idx_cond)
+        logits = logits[:, -1, :] / temperature
+
+        # Sort and compute cumulative probabilities
+        sorted_logits, sorted_indices = torch.sort(logits, descending=True)
+        cumulative_probs = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
+
+        # Remove tokens with cumulative probability above the threshold
+        sorted_indices_to_remove = cumulative_probs &gt; top_p
+        # Keep at least one token
+        sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
+        sorted_indices_to_remove[..., 0] = 0
+
+        # Scatter back to original ordering
+        indices_to_remove = sorted_indices_to_remove.scatter(
+            1, sorted_indices, sorted_indices_to_remove
+        )
+        logits[indices_to_remove] = float('-inf')
+
+        probs = F.softmax(logits, dim=-1)
+        idx_next = torch.multinomial(probs, num_samples=1)
+
+        idx = torch.cat((idx, idx_next), dim=1)
+
+    return idx
+
+
+# =============================================================================
+# STEP 5: Generate samples and compare quality
+# =============================================================================
+
+# Start with a prompt
+context = torch.zeros((1, 1), dtype=torch.long, device=device)
+
+print("\n" + "="*60)
+print("GENERATION COMPARISON")
+print("="*60)
+
+print("\n--- Greedy Decoding ---")
+print("(Always picks most likely token - often repetitive)")
+greedy_output = generate_greedy(model, context, max_new_tokens=200)
+print(decode(greedy_output[0].tolist()))
+
+print("\n--- Temperature Sampling (T=0.8) ---")
+print("(Slightly sharpened distribution - balanced creativity)")
+temp_output = generate_temperature(model, context, max_new_tokens=200, temperature=0.8)
+print(decode(temp_output[0].tolist()))
+
+print("\n--- Top-k Sampling (k=40, T=0.8) ---")
+print("(Sample from top 40 tokens only)")
+topk_output = generate_top_k(model, context, max_new_tokens=200, top_k=40, temperature=0.8)
+print(decode(topk_output[0].tolist()))
+
+print("\n--- Nucleus Sampling (p=0.9, T=0.8) ---")
+print("(Adaptive - samples from dynamic token set)")
+topp_output = generate_top_p(model, context, max_new_tokens=200, top_p=0.9, temperature=0.8)
+print(decode(topp_output[0].tolist()))
+
+# Generate from a specific prompt
+print("\n" + "="*60)
+print("GENERATING FROM PROMPT: 'ROMEO:'")
+print("="*60)
+prompt = "ROMEO:"
+prompt_ids = torch.tensor([encode(prompt)], dtype=torch.long, device=device)
+
+print("\n--- Nucleus Sampling (p=0.9, T=0.8) ---")
+prompted_output = generate_top_p(model, prompt_ids, max_new_tokens=300, top_p=0.9, temperature=0.8)
+print(decode(prompted_output[0].tolist()))
 
 # Expected output after training:
 # """

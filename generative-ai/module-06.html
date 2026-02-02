@@ -1968,22 +1968,104 @@ def get_log_probs(model, input_ids, attention_mask):
 def dpo_loss(policy_model, ref_model, chosen_ids, chosen_mask,
              rejected_ids, rejected_mask, beta=0.1):
     """
-    Compute DPO loss.
+    Compute Direct Preference Optimization (DPO) loss.
 
-    TODO: Implement this function following the DPO paper.
+    DPO directly optimizes the policy to prefer chosen over rejected responses
+    without needing a separate reward model. The key insight is that the optimal
+    policy under RLHF can be expressed in closed form, allowing us to reparameterize
+    the reward function in terms of the policy itself.
+
+    The DPO loss is derived from:
+        r(x, y) = beta * log(pi(y|x) / pi_ref(y|x)) + beta * log Z(x)
+
+    This leads to the loss:
+        L_DPO = -E[log sigmoid(beta * (log_ratio_w - log_ratio_l))]
+
+    where:
+        - log_ratio_w = log pi(y_w|x) - log pi_ref(y_w|x)  # chosen (winner)
+        - log_ratio_l = log pi(y_l|x) - log pi_ref(y_l|x)  # rejected (loser)
 
     Args:
-        policy_model: Model being trained
-        ref_model: Frozen reference model
-        chosen_ids: Token IDs for preferred responses
-        rejected_ids: Token IDs for dispreferred responses
-        beta: Temperature parameter (default 0.1)
+        policy_model: Model being trained (pi_theta)
+        ref_model: Frozen reference model (pi_ref), typically the SFT model
+        chosen_ids: Token IDs for preferred responses (y_w)
+        chosen_mask: Attention mask for chosen responses
+        rejected_ids: Token IDs for dispreferred responses (y_l)
+        rejected_mask: Attention mask for rejected responses
+        beta: Temperature parameter controlling deviation from reference (default 0.1)
+               Higher beta = stronger KL constraint, more conservative updates
+               Lower beta = allows more deviation from reference model
 
     Returns:
-        loss: Scalar DPO loss
+        loss: Scalar DPO loss (to be minimized)
+        metrics: Dict with useful training metrics for logging
     """
-    # Your implementation here!
-    pass
+    # Step 1: Get log probabilities from the policy model (being trained)
+    # We need gradients here since we're training this model
+    policy_chosen_logps = get_log_probs_trainable(policy_model, chosen_ids, chosen_mask)
+    policy_rejected_logps = get_log_probs_trainable(policy_model, rejected_ids, rejected_mask)
+
+    # Step 2: Get log probabilities from the reference model (frozen)
+    # No gradients needed - this is our anchor point
+    with torch.no_grad():
+        ref_chosen_logps = get_log_probs(ref_model, chosen_ids, chosen_mask)
+        ref_rejected_logps = get_log_probs(ref_model, rejected_ids, rejected_mask)
+
+    # Step 3: Compute log ratios (how much policy differs from reference)
+    # Positive ratio means policy assigns higher probability than reference
+    chosen_log_ratios = policy_chosen_logps - ref_chosen_logps
+    rejected_log_ratios = policy_rejected_logps - ref_rejected_logps
+
+    # Step 4: Compute the DPO loss
+    # We want: chosen_log_ratio > rejected_log_ratio (prefer chosen)
+    # The sigmoid pushes this difference through a smooth threshold
+    logits = beta * (chosen_log_ratios - rejected_log_ratios)
+
+    # Binary cross-entropy loss: -log(sigmoid(x)) for positive class
+    # This encourages the model to increase the margin between chosen and rejected
+    loss = -F.logsigmoid(logits).mean()
+
+    # Step 5: Compute metrics for monitoring training health
+    with torch.no_grad():
+        # Accuracy: how often does the model prefer chosen over rejected?
+        accuracy = (logits > 0).float().mean()
+
+        # Reward margin: implicit reward difference (higher is better)
+        reward_margin = (chosen_log_ratios - rejected_log_ratios).mean()
+
+        # KL divergence from reference (regularization check)
+        chosen_kl = (policy_chosen_logps - ref_chosen_logps).mean()
+        rejected_kl = (policy_rejected_logps - ref_rejected_logps).mean()
+
+        metrics = {
+            "loss": loss.item(),
+            "accuracy": accuracy.item(),
+            "reward_margin": reward_margin.item(),
+            "chosen_kl": chosen_kl.item(),
+            "rejected_kl": rejected_kl.item(),
+            "chosen_logps": policy_chosen_logps.mean().item(),
+            "rejected_logps": policy_rejected_logps.mean().item(),
+        }
+
+    return loss, metrics
+
+
+def get_log_probs_trainable(model, input_ids, attention_mask):
+    """
+    Get per-token log probabilities WITH gradients for training.
+    Unlike get_log_probs(), this version allows backpropagation.
+    """
+    outputs = model(input_ids, attention_mask=attention_mask)
+    logits = outputs.logits[:, :-1, :]  # Exclude last position
+    labels = input_ids[:, 1:]  # Shift labels (predict next token)
+
+    log_probs = F.log_softmax(logits, dim=-1)
+    token_log_probs = torch.gather(log_probs, 2, labels.unsqueeze(-1)).squeeze(-1)
+
+    # Mask padding tokens
+    mask = attention_mask[:, 1:].float()
+    # Return mean log prob per sequence (normalized by length)
+    return (token_log_probs * mask).sum(-1) / mask.sum(-1)
 
 # Load models
 model_name = "gpt2"
@@ -1994,17 +2076,245 @@ ref_model.eval()  # Freeze reference model
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 tokenizer.pad_token = tokenizer.eos_token
 
-# Example preference data
+# Example preference data - in production, you'd have thousands of these
+# Each example has a prompt, a preferred (chosen) response, and a dispreferred (rejected) response
 preferences = [
     {
         "prompt": "Write a haiku about coding:",
         "chosen": "Lines of code flow free\nBugs arise then fade away\nPrograms come alive",
         "rejected": "code is good i like code very much",
     },
-    # Add more examples...
+    {
+        "prompt": "Explain recursion briefly:",
+        "chosen": "Recursion is when a function calls itself to solve smaller subproblems. It needs a base case to stop.",
+        "rejected": "its when things repeat over and over basically loops",
+    },
+    {
+        "prompt": "What is machine learning?",
+        "chosen": "Machine learning enables computers to learn patterns from data without being explicitly programmed, improving through experience.",
+        "rejected": "computers learning stuff from data i guess",
+    },
 ]
 
-# TODO: Implement training loop!</pre></code>
+
+# ============================================================================
+# DPO TRAINING LOOP
+# ============================================================================
+
+def prepare_dpo_batch(preferences, tokenizer, device):
+    """
+    Tokenize preference pairs for DPO training.
+
+    For each preference example, we create:
+    - chosen: prompt + preferred response
+    - rejected: prompt + dispreferred response
+
+    Both are tokenized and padded to the same length for batching.
+    """
+    chosen_texts = []
+    rejected_texts = []
+
+    for pref in preferences:
+        # Concatenate prompt with each response
+        chosen_texts.append(pref["prompt"] + " " + pref["chosen"])
+        rejected_texts.append(pref["prompt"] + " " + pref["rejected"])
+
+    # Tokenize with padding and truncation
+    chosen_encodings = tokenizer(
+        chosen_texts,
+        padding=True,
+        truncation=True,
+        max_length=512,
+        return_tensors="pt"
+    )
+
+    rejected_encodings = tokenizer(
+        rejected_texts,
+        padding=True,
+        truncation=True,
+        max_length=512,
+        return_tensors="pt"
+    )
+
+    return {
+        "chosen_ids": chosen_encodings["input_ids"].to(device),
+        "chosen_mask": chosen_encodings["attention_mask"].to(device),
+        "rejected_ids": rejected_encodings["input_ids"].to(device),
+        "rejected_mask": rejected_encodings["attention_mask"].to(device),
+    }
+
+
+def generate_sample(model, tokenizer, prompt, max_length=100):
+    """Generate a sample response from the model for evaluation."""
+    model.eval()
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_length=max_length,
+            num_return_sequences=1,
+            temperature=0.7,
+            do_sample=True,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+
+def train_dpo(
+    policy_model,
+    ref_model,
+    preferences,
+    tokenizer,
+    num_epochs=3,
+    learning_rate=1e-5,
+    beta=0.1,
+    device="cuda" if torch.cuda.is_available() else "cpu",
+):
+    """
+    Main DPO training loop.
+
+    This implements the complete training pipeline:
+    1. Prepare data batches
+    2. Forward pass through both policy and reference models
+    3. Compute DPO loss
+    4. Backpropagate and update policy model
+    5. Log metrics and generate samples for evaluation
+
+    Args:
+        policy_model: Model to train
+        ref_model: Frozen reference model (anchor for KL regularization)
+        preferences: List of preference dictionaries
+        tokenizer: Tokenizer for the models
+        num_epochs: Number of training epochs
+        learning_rate: Learning rate for AdamW optimizer
+        beta: DPO temperature (higher = more conservative)
+        device: Training device (cuda/cpu)
+    """
+    # Move models to device
+    policy_model = policy_model.to(device)
+    ref_model = ref_model.to(device)
+
+    # Freeze reference model - we never update it
+    for param in ref_model.parameters():
+        param.requires_grad = False
+
+    # Use AdamW optimizer with weight decay for regularization
+    optimizer = torch.optim.AdamW(
+        policy_model.parameters(),
+        lr=learning_rate,
+        weight_decay=0.01,
+    )
+
+    # Learning rate scheduler for stable training
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer,
+        T_max=num_epochs,
+        eta_min=learning_rate * 0.1,
+    )
+
+    # Prepare the batch (in production, you'd use a DataLoader)
+    batch = prepare_dpo_batch(preferences, tokenizer, device)
+
+    # Store metrics for plotting
+    all_metrics = []
+
+    # Sample prompt for generating comparisons before/after training
+    test_prompt = "Write a haiku about coding:"
+
+    print("=" * 60)
+    print("DPO TRAINING STARTED")
+    print("=" * 60)
+    print(f"Device: {device}")
+    print(f"Epochs: {num_epochs}")
+    print(f"Learning rate: {learning_rate}")
+    print(f"Beta (KL coefficient): {beta}")
+    print(f"Number of preference pairs: {len(preferences)}")
+    print("=" * 60)
+
+    # Generate sample BEFORE training
+    print("\n--- BEFORE TRAINING ---")
+    print(f"Prompt: {test_prompt}")
+    print(f"Response: {generate_sample(policy_model, tokenizer, test_prompt)}")
+
+    # Training loop
+    for epoch in range(num_epochs):
+        policy_model.train()
+
+        # Forward pass: compute DPO loss
+        loss, metrics = dpo_loss(
+            policy_model=policy_model,
+            ref_model=ref_model,
+            chosen_ids=batch["chosen_ids"],
+            chosen_mask=batch["chosen_mask"],
+            rejected_ids=batch["rejected_ids"],
+            rejected_mask=batch["rejected_mask"],
+            beta=beta,
+        )
+
+        # Backward pass
+        optimizer.zero_grad()
+        loss.backward()
+
+        # Gradient clipping for stability
+        torch.nn.utils.clip_grad_norm_(policy_model.parameters(), max_norm=1.0)
+
+        # Update weights
+        optimizer.step()
+        scheduler.step()
+
+        # Store metrics
+        metrics["epoch"] = epoch + 1
+        metrics["lr"] = scheduler.get_last_lr()[0]
+        all_metrics.append(metrics)
+
+        # Logging
+        print(f"\nEpoch {epoch + 1}/{num_epochs}")
+        print(f"  Loss: {metrics['loss']:.4f}")
+        print(f"  Accuracy: {metrics['accuracy']:.2%}")
+        print(f"  Reward Margin: {metrics['reward_margin']:.4f}")
+        print(f"  Chosen KL: {metrics['chosen_kl']:.4f}")
+        print(f"  Rejected KL: {metrics['rejected_kl']:.4f}")
+
+    # Generate sample AFTER training
+    print("\n--- AFTER TRAINING ---")
+    print(f"Prompt: {test_prompt}")
+    print(f"Response: {generate_sample(policy_model, tokenizer, test_prompt)}")
+
+    print("\n" + "=" * 60)
+    print("TRAINING COMPLETE")
+    print("=" * 60)
+
+    return policy_model, all_metrics
+
+
+# Run the training!
+if __name__ == "__main__":
+    trained_model, metrics = train_dpo(
+        policy_model=policy_model,
+        ref_model=ref_model,
+        preferences=preferences,
+        tokenizer=tokenizer,
+        num_epochs=10,
+        learning_rate=1e-5,
+        beta=0.1,
+    )
+
+    # Final evaluation: compare generations
+    print("\n" + "=" * 60)
+    print("FINAL EVALUATION")
+    print("=" * 60)
+
+    test_prompts = [
+        "Explain recursion briefly:",
+        "What is machine learning?",
+        "Write a short poem about AI:",
+    ]
+
+    for prompt in test_prompts:
+        print(f"\nPrompt: {prompt}")
+        print(f"Response: {generate_sample(trained_model, tokenizer, prompt)}")</pre></code>
                     </div>
 
                     <h5>Success Criteria:</h5>

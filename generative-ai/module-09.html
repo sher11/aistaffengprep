@@ -2323,7 +2323,67 @@ from dataclasses import dataclass
 import hashlib
 
 # TODO 1: Import or implement embedding model
+# Production-ready imports for RAG pipeline
+import re
+import ast
+import logging
+from pathlib import Path
+import numpy as np
+
+# Configure logging for production monitoring
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Option A: Use sentence-transformers (recommended for production)
 # from sentence_transformers import SentenceTransformer
+
+# Option B: Use OpenAI embeddings (higher quality, API cost)
+# import openai
+
+# Option C: Implement a simple embedding interface for flexibility
+class EmbeddingModel:
+    """
+    Abstract embedding model interface.
+
+    In production, replace with:
+    - sentence-transformers for local, fast embeddings
+    - OpenAI text-embedding-3-small for highest quality
+    - Cohere embed-v3 for multilingual support
+    """
+
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+        self.model_name = model_name
+        self._model = None  # Lazy loading
+
+    def _load_model(self):
+        """Lazy load the model to avoid startup overhead."""
+        if self._model is None:
+            try:
+                from sentence_transformers import SentenceTransformer
+                self._model = SentenceTransformer(self.model_name)
+                logger.info(f"Loaded embedding model: {self.model_name}")
+            except ImportError:
+                logger.warning("sentence-transformers not installed, using mock embeddings")
+                self._model = "mock"
+
+    def encode(self, texts: List[str]) -> np.ndarray:
+        """
+        Generate embeddings for a list of texts.
+
+        Args:
+            texts: List of strings to embed
+
+        Returns:
+            numpy array of shape (len(texts), embedding_dim)
+        """
+        self._load_model()
+
+        if self._model == "mock":
+            # Mock embeddings for testing (384-dim like MiniLM)
+            # In production, NEVER use random embeddings!
+            return np.random.randn(len(texts), 384).astype(np.float32)
+
+        return self._model.encode(texts, convert_to_numpy=True)
 
 @dataclass
 class Document:
@@ -2356,7 +2416,7 @@ class SecureRAGPipeline:
     # ========================================
     # TODO 2: Implement document loading
     # ========================================
-    def load_python_files(self, directory: str) -> int:
+    def load_python_files(self, directory: str) -&gt; int:
         """
         Load Python files from directory with AST parsing.
 
@@ -2367,30 +2427,184 @@ class SecureRAGPipeline:
 
         Returns: Number of documents loaded
         """
-        # YOUR CODE HERE
-        pass
+        dir_path = Path(directory)
+        if not dir_path.exists():
+            logger.error(f"Directory not found: {directory}")
+            return 0
+
+        loaded_count = 0
+
+        for py_file in dir_path.rglob("*.py"):
+            try:
+                source_code = py_file.read_text(encoding="utf-8")
+                tree = ast.parse(source_code)
+
+                # Extract module-level docstring
+                module_doc = ast.get_docstring(tree)
+                if module_doc:
+                    doc = Document(
+                        content=f"Module: {py_file.name}\n\n{module_doc}",
+                        metadata={
+                            "type": "module",
+                            "file": str(py_file),
+                            "line_start": 1
+                        },
+                        source=str(py_file),
+                        doc_id=hashlib.md5(f"{py_file}:module".encode()).hexdigest()
+                    )
+                    self.documents.append(doc)
+                    loaded_count += 1
+
+                # Walk AST to extract functions and classes
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.FunctionDef):
+                        # Extract function with its docstring and signature
+                        func_doc = ast.get_docstring(node) or "No docstring"
+                        # Get function signature from source
+                        func_source = ast.get_source_segment(source_code, node)
+                        # Limit to first 50 lines to avoid huge chunks
+                        func_lines = func_source.split("\n")[:50] if func_source else []
+                        func_content = "\n".join(func_lines)
+
+                        doc = Document(
+                            content=f"Function: {node.name}\n\nDocstring: {func_doc}\n\nCode:\n{func_content}",
+                            metadata={
+                                "type": "function",
+                                "name": node.name,
+                                "file": str(py_file),
+                                "line_start": node.lineno,
+                                "args": [arg.arg for arg in node.args.args]
+                            },
+                            source=str(py_file),
+                            doc_id=hashlib.md5(f"{py_file}:{node.name}:{node.lineno}".encode()).hexdigest()
+                        )
+                        self.documents.append(doc)
+                        loaded_count += 1
+
+                    elif isinstance(node, ast.ClassDef):
+                        # Extract class with docstring and method list
+                        class_doc = ast.get_docstring(node) or "No docstring"
+                        methods = [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
+
+                        doc = Document(
+                            content=f"Class: {node.name}\n\nDocstring: {class_doc}\n\nMethods: {', '.join(methods)}",
+                            metadata={
+                                "type": "class",
+                                "name": node.name,
+                                "file": str(py_file),
+                                "line_start": node.lineno,
+                                "methods": methods
+                            },
+                            source=str(py_file),
+                            doc_id=hashlib.md5(f"{py_file}:{node.name}:class".encode()).hexdigest()
+                        )
+                        self.documents.append(doc)
+                        loaded_count += 1
+
+            except SyntaxError as e:
+                logger.warning(f"Syntax error in {py_file}: {e}")
+            except Exception as e:
+                logger.error(f"Error processing {py_file}: {e}")
+
+        # Generate embeddings for all loaded documents
+        if self.documents and self.embedding_model:
+            texts = [doc.content for doc in self.documents]
+            self.embeddings = self.embedding_model.encode(texts)
+            logger.info(f"Generated embeddings for {len(texts)} documents")
+
+        return loaded_count
 
     # ========================================
     # TODO 3: Implement input validation
     # ========================================
-    def validate_query(self, query: str) -> tuple[bool, str, List[str]]:
+    def validate_query(self, query: str) -&gt; tuple[bool, str, List[str]]:
         """
         Validate user query for safety.
 
         Returns:
             (is_safe, sanitized_query, warnings)
+
+        Security considerations:
+        - Prompt injection: Attackers try to override system instructions
+        - PII leakage: Users may accidentally include sensitive data
+        - Resource exhaustion: Very long queries can be costly
         """
-        # YOUR CODE HERE
-        # Check for:
-        # - Prompt injection patterns
-        # - PII that should be redacted
-        # - Maximum length
-        pass
+        warnings = []
+        sanitized = query.strip()
+
+        # Check 1: Maximum length (prevent resource exhaustion)
+        MAX_QUERY_LENGTH = 1000
+        if len(sanitized) &gt; MAX_QUERY_LENGTH:
+            sanitized = sanitized[:MAX_QUERY_LENGTH]
+            warnings.append(f"Query truncated to {MAX_QUERY_LENGTH} characters")
+
+        # Check 2: Empty query
+        if not sanitized:
+            return (False, "", ["Empty query provided"])
+
+        # Check 3: Prompt injection detection
+        # These patterns indicate attempts to manipulate the LLM
+        INJECTION_PATTERNS = [
+            r"ignore\s+(all\s+)?(previous|above|prior)\s+(instructions?|prompts?)",
+            r"disregard\s+(all\s+)?(previous|above|prior)",
+            r"forget\s+(everything|all|your)\s+(instructions?|rules?|guidelines?)",
+            r"you\s+are\s+now\s+(a|an|in)",  # Role-playing attacks
+            r"pretend\s+(you\s+are|to\s+be)",
+            r"act\s+as\s+(if|a|an)",
+            r"system\s*:\s*",  # Fake system messages
+            r"\[system\]",
+            r"&lt;system&gt;",  # HTML-escaped version for display
+            r"reveal\s+(your|the)\s+(instructions?|prompt|system)",
+            r"show\s+(me\s+)?(your|the)\s+(instructions?|prompt)",
+            r"what\s+(are|is)\s+your\s+(instructions?|system\s+prompt)",
+            r"output\s+(your|the)\s+(instructions?|prompt)",
+            r"```\s*(system|assistant)",  # Code block injection
+        ]
+
+        query_lower = sanitized.lower()
+        for pattern in INJECTION_PATTERNS:
+            if re.search(pattern, query_lower):
+                logger.warning(f"Potential prompt injection detected: {pattern}")
+                return (False, "", [f"Query blocked: potential prompt injection detected"])
+
+        # Check 4: PII detection and redaction
+        PII_PATTERNS = {
+            # Email addresses
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b": "[EMAIL_REDACTED]",
+            # Phone numbers (various formats)
+            r"\b\d{3}[-.]?\d{3}[-.]?\d{4}\b": "[PHONE_REDACTED]",
+            # SSN
+            r"\b\d{3}-\d{2}-\d{4}\b": "[SSN_REDACTED]",
+            # Credit card numbers (basic pattern)
+            r"\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b": "[CC_REDACTED]",
+            # API keys (common patterns)
+            r"\b(sk|pk|api)[-_][a-zA-Z0-9]{20,}\b": "[API_KEY_REDACTED]",
+        }
+
+        pii_found = False
+        for pattern, replacement in PII_PATTERNS.items():
+            if re.search(pattern, sanitized, re.IGNORECASE):
+                sanitized = re.sub(pattern, replacement, sanitized, flags=re.IGNORECASE)
+                pii_found = True
+
+        if pii_found:
+            warnings.append("PII detected and redacted from query")
+            logger.info("PII redacted from user query")
+
+        # Check 5: Suspicious character sequences
+        # Null bytes, unicode exploits, etc.
+        SUSPICIOUS_CHARS = ["\x00", "\u200b", "\u200c", "\u200d", "\ufeff"]
+        for char in SUSPICIOUS_CHARS:
+            if char in sanitized:
+                sanitized = sanitized.replace(char, "")
+                warnings.append("Suspicious characters removed from query")
+
+        return (True, sanitized, warnings)
 
     # ========================================
     # TODO 4: Implement query expansion
     # ========================================
-    def expand_query(self, query: str) -> List[str]:
+    def expand_query(self, query: str) -&gt; List[str]:
         """
         Generate multiple search queries from the original.
 
@@ -2400,28 +2614,218 @@ class SecureRAGPipeline:
         - Step-back prompting
 
         Returns: List of expanded queries
+
+        Why query expansion matters:
+        - Users may use different terminology than the documents
+        - Single queries may miss relevant context
+        - Multi-query retrieval improves recall by 15-30%
         """
-        # YOUR CODE HERE
-        pass
+        expanded = [query]  # Always include original
+
+        # Technique 1: Keyword extraction and synonym expansion
+        # Common programming synonyms
+        SYNONYMS = {
+            "function": ["method", "def", "procedure", "routine"],
+            "class": ["object", "type", "struct"],
+            "error": ["exception", "bug", "issue", "problem"],
+            "create": ["make", "initialize", "instantiate", "construct"],
+            "delete": ["remove", "destroy", "drop"],
+            "get": ["fetch", "retrieve", "obtain", "read"],
+            "set": ["update", "modify", "change", "write"],
+            "list": ["array", "collection", "sequence"],
+            "dict": ["dictionary", "map", "hash", "object"],
+            "async": ["asynchronous", "await", "concurrent"],
+            "auth": ["authentication", "authorize", "login"],
+            "config": ["configuration", "settings", "options"],
+        }
+
+        query_lower = query.lower()
+        for term, synonyms in SYNONYMS.items():
+            if term in query_lower:
+                # Add one query with each synonym
+                for syn in synonyms[:2]:  # Limit to avoid explosion
+                    expanded.append(query_lower.replace(term, syn))
+
+        # Technique 2: Question reformulation
+        # Convert statements to questions and vice versa
+        if query.startswith(("how", "what", "why", "when", "where")):
+            # It's a question - create a statement version
+            # "How do I use X?" -> "using X" or "X usage"
+            words = query.lower().split()
+            if len(words) &gt; 3:
+                # Extract key terms, skip question words
+                key_terms = [w for w in words if w not in
+                            {"how", "do", "i", "what", "is", "the", "a", "an", "to", "?"}]
+                if key_terms:
+                    expanded.append(" ".join(key_terms))
+        else:
+            # It's a statement - create question versions
+            expanded.append(f"How to {query.lower()}?")
+            expanded.append(f"What is {query.lower()}?")
+
+        # Technique 3: Step-back prompting
+        # Generate a more abstract/general query
+        # This helps retrieve foundational context
+        STEP_BACK_PREFIXES = [
+            "overview of",
+            "introduction to",
+            "basics of",
+        ]
+
+        # Extract likely topic (last noun phrase or key term)
+        words = query.split()
+        if len(words) &gt;= 2:
+            # Simple heuristic: use last 2-3 meaningful words
+            key_phrase = " ".join(words[-3:]).strip("?.,!")
+            expanded.append(f"{STEP_BACK_PREFIXES[0]} {key_phrase}")
+
+        # Technique 4: If using LLM, generate expansions dynamically
+        # This produces highest quality but adds latency
+        if self.llm:
+            try:
+                expansion_prompt = f"""Generate 2 alternative search queries for: "{query}"
+                Rules:
+                - Use different words but same meaning
+                - One should be more specific, one more general
+                - Return only the queries, one per line"""
+
+                # Uncomment when LLM is available:
+                # llm_expansions = self.llm.generate(expansion_prompt)
+                # expanded.extend(llm_expansions.strip().split("\n"))
+            except Exception as e:
+                logger.warning(f"LLM expansion failed: {e}")
+
+        # Deduplicate while preserving order
+        seen = set()
+        unique_expanded = []
+        for q in expanded:
+            q_normalized = q.lower().strip()
+            if q_normalized not in seen and q_normalized:
+                seen.add(q_normalized)
+                unique_expanded.append(q)
+
+        logger.debug(f"Expanded '{query}' into {len(unique_expanded)} queries")
+        return unique_expanded[:5]  # Limit to prevent too many retrievals
 
     # ========================================
     # TODO 5: Implement retrieval with scoring
     # ========================================
-    def retrieve(self, query: str, k: int = 5) -> List[tuple[Document, float]]:
+    def retrieve(self, query: str, k: int = 5) -&gt; List[tuple[Document, float]]:
         """
         Retrieve relevant documents with similarity scores.
 
         Returns: List of (document, similarity_score) tuples
+
+        Retrieval strategy:
+        - Use cosine similarity for semantic matching
+        - Apply minimum threshold to filter noise
+        - Optionally combine with BM25 for hybrid search
         """
-        # YOUR CODE HERE
-        pass
+        if not self.documents:
+            logger.warning("No documents loaded for retrieval")
+            return []
+
+        if not self.embedding_model:
+            logger.error("No embedding model configured")
+            return []
+
+        # Generate query embedding
+        query_embedding = self.embedding_model.encode([query])[0]
+
+        # Calculate cosine similarity with all documents
+        # Cosine similarity = dot(a, b) / (norm(a) * norm(b))
+        def cosine_similarity(a: np.ndarray, b: np.ndarray) -&gt; float:
+            dot_product = np.dot(a, b)
+            norm_a = np.linalg.norm(a)
+            norm_b = np.linalg.norm(b)
+            if norm_a == 0 or norm_b == 0:
+                return 0.0
+            return float(dot_product / (norm_a * norm_b))
+
+        # Score all documents
+        scored_docs = []
+        for i, doc in enumerate(self.documents):
+            if i &lt; len(self.embeddings):
+                score = cosine_similarity(query_embedding, self.embeddings[i])
+
+                # Only include if above threshold
+                if score &gt;= self.similarity_threshold:
+                    scored_docs.append((doc, score))
+
+        # Sort by score descending
+        scored_docs.sort(key=lambda x: x[1], reverse=True)
+
+        # Log retrieval stats for monitoring
+        if scored_docs:
+            logger.info(f"Retrieved {len(scored_docs)} docs, top score: {scored_docs[0][1]:.3f}")
+        else:
+            logger.warning(f"No documents above threshold {self.similarity_threshold}")
+
+        # Return top k results
+        return scored_docs[:k]
+
+    def hybrid_retrieve(self, query: str, k: int = 5, alpha: float = 0.5) -&gt; List[tuple[Document, float]]:
+        """
+        Hybrid retrieval combining semantic and keyword search.
+
+        Args:
+            query: Search query
+            k: Number of results to return
+            alpha: Weight for semantic search (1-alpha for BM25)
+
+        Returns: List of (document, combined_score) tuples
+
+        Why hybrid search?
+        - Semantic search captures meaning but may miss exact matches
+        - BM25 excels at exact keyword matching
+        - Combining both improves retrieval by 10-20% in benchmarks
+        """
+        # Get semantic search results
+        semantic_results = self.retrieve(query, k=k*2)
+        semantic_scores = {doc.doc_id: score for doc, score in semantic_results}
+
+        # Simple BM25-like keyword scoring
+        # In production, use rank_bm25 library for proper BM25
+        query_terms = set(query.lower().split())
+
+        bm25_scores = {}
+        for doc in self.documents:
+            doc_terms = set(doc.content.lower().split())
+            # Simple term frequency scoring
+            matches = len(query_terms &amp; doc_terms)
+            # Normalize by document length (IDF-like)
+            score = matches / (1 + np.log(1 + len(doc_terms)))
+            bm25_scores[doc.doc_id] = score
+
+        # Normalize BM25 scores to [0, 1]
+        max_bm25 = max(bm25_scores.values()) if bm25_scores else 1
+        if max_bm25 &gt; 0:
+            bm25_scores = {k: v/max_bm25 for k, v in bm25_scores.items()}
+
+        # Combine scores
+        combined_scores = {}
+        all_doc_ids = set(semantic_scores.keys()) | set(bm25_scores.keys())
+
+        for doc_id in all_doc_ids:
+            sem_score = semantic_scores.get(doc_id, 0)
+            bm25_score = bm25_scores.get(doc_id, 0)
+            combined_scores[doc_id] = alpha * sem_score + (1 - alpha) * bm25_score
+
+        # Get documents and sort by combined score
+        doc_map = {doc.doc_id: doc for doc in self.documents}
+        results = [(doc_map[doc_id], score)
+                   for doc_id, score in combined_scores.items()
+                   if doc_id in doc_map and score &gt; 0]
+
+        results.sort(key=lambda x: x[1], reverse=True)
+        return results[:k]
 
     # ========================================
     # TODO 6: Implement grounded generation
     # ========================================
     def generate_with_citations(self,
                                  query: str,
-                                 documents: List[tuple[Document, float]]) -> RAGResponse:
+                                 documents: List[tuple[Document, float]]) -&gt; RAGResponse:
         """
         Generate response with citation tracking.
 
@@ -2432,9 +2836,181 @@ class SecureRAGPipeline:
         - Add citations to response
 
         Returns: RAGResponse with answer, sources, and confidence
+
+        Grounding is critical for:
+        - Reducing hallucinations
+        - Providing verifiable answers
+        - Building user trust
         """
-        # YOUR CODE HERE
-        pass
+        warnings = []
+
+        # Handle case with no relevant documents
+        if not documents:
+            return RAGResponse(
+                answer="I couldn't find relevant information to answer your question. "
+                       "Please try rephrasing or ask about a different topic.",
+                sources=[],
+                confidence=0.0,
+                warnings=["No relevant documents found"]
+            )
+
+        # Build context from retrieved documents with source markers
+        context_parts = []
+        source_map = {}  # Map source markers to document info
+
+        for i, (doc, score) in enumerate(documents):
+            source_marker = f"[Source {i+1}]"
+            source_map[source_marker] = {
+                "file": doc.source,
+                "type": doc.metadata.get("type", "unknown"),
+                "name": doc.metadata.get("name", ""),
+                "score": score
+            }
+
+            # Truncate long documents to stay within context limits
+            content = doc.content[:2000] if len(doc.content) &gt; 2000 else doc.content
+            context_parts.append(f"{source_marker}\n{content}")
+
+        context = "\n\n---\n\n".join(context_parts)
+
+        # Create grounded generation prompt
+        # This prompt structure encourages the LLM to cite sources
+        system_prompt = """You are a helpful code documentation assistant.
+
+CRITICAL RULES:
+1. ONLY use information from the provided sources
+2. Cite sources using [Source N] format when making claims
+3. If information isn't in the sources, say "I don't have information about that"
+4. Never make up code or functionality not shown in sources
+5. Be concise but thorough"""
+
+        user_prompt = f"""Based on the following documentation sources, answer the question.
+
+SOURCES:
+{context}
+
+QUESTION: {query}
+
+Provide a clear answer with citations to the relevant sources."""
+
+        # Generate response
+        if self.llm:
+            try:
+                # Call LLM with the grounded prompt
+                response_text = self.llm.generate(
+                    system=system_prompt,
+                    user=user_prompt,
+                    max_tokens=1000,
+                    temperature=0.3  # Lower temperature for factual responses
+                )
+            except Exception as e:
+                logger.error(f"LLM generation failed: {e}")
+                return RAGResponse(
+                    answer="An error occurred while generating the response.",
+                    sources=[],
+                    confidence=0.0,
+                    warnings=[f"Generation error: {str(e)}"]
+                )
+        else:
+            # Fallback: return context summary without LLM
+            response_text = self._generate_fallback_response(query, documents)
+            warnings.append("No LLM configured - returning document summary")
+
+        # Extract citations from response
+        cited_sources = []
+        citation_pattern = r'\[Source (\d+)\]'
+        cited_numbers = set(re.findall(citation_pattern, response_text))
+
+        for num in cited_numbers:
+            marker = f"[Source {num}]"
+            if marker in source_map:
+                source_info = source_map[marker]
+                cited_sources.append(
+                    f"{source_info['file']} ({source_info['type']}: {source_info['name']})"
+                )
+
+        # Calculate confidence based on:
+        # 1. Average retrieval score of cited sources
+        # 2. Number of citations vs claims made
+        # 3. Whether the response acknowledges uncertainty
+        avg_score = np.mean([doc[1] for doc in documents]) if documents else 0
+        citation_coverage = len(cited_sources) / max(len(documents), 1)
+        uncertainty_phrases = ["i don't have", "not in the sources", "unclear", "may be"]
+        has_uncertainty = any(phrase in response_text.lower() for phrase in uncertainty_phrases)
+
+        confidence = avg_score * 0.5 + citation_coverage * 0.3
+        if has_uncertainty:
+            confidence *= 0.8  # Reduce confidence when model expresses uncertainty
+        confidence = min(max(confidence, 0.0), 1.0)  # Clamp to [0, 1]
+
+        # Verify grounding: check if response makes claims not in sources
+        grounding_warnings = self._verify_grounding(response_text, documents)
+        warnings.extend(grounding_warnings)
+
+        return RAGResponse(
+            answer=response_text,
+            sources=cited_sources,
+            confidence=round(confidence, 2),
+            warnings=warnings
+        )
+
+    def _generate_fallback_response(self, query: str, documents: List[tuple[Document, float]]) -&gt; str:
+        """Generate a simple response without LLM by summarizing relevant documents."""
+        if not documents:
+            return "No relevant information found."
+
+        response_parts = [f"Based on the documentation, here's what I found about '{query}':\n"]
+
+        for i, (doc, score) in enumerate(documents[:3]):
+            doc_type = doc.metadata.get("type", "document")
+            doc_name = doc.metadata.get("name", "")
+
+            # Extract first few sentences as summary
+            content_preview = doc.content[:500].split("\n")[0]
+
+            response_parts.append(
+                f"\n[Source {i+1}] From {doc_type} '{doc_name}' "
+                f"(relevance: {score:.0%}):\n{content_preview}"
+            )
+
+        return "\n".join(response_parts)
+
+    def _verify_grounding(self, response: str, documents: List[tuple[Document, float]]) -&gt; List[str]:
+        """
+        Verify that response claims are grounded in source documents.
+
+        This is a simplified check. Production systems should use:
+        - NLI models (Natural Language Inference)
+        - Factual consistency checkers
+        - Claim extraction + verification pipelines
+        """
+        warnings = []
+
+        # Combine all source content for checking
+        source_content = " ".join(doc.content.lower() for doc, _ in documents)
+
+        # Extract potential claims (sentences with specific patterns)
+        # This is a simplified heuristic
+        claim_patterns = [
+            r"(?:the|this)\s+\w+\s+(?:is|are|has|have|can|will)\s+",
+            r"(?:you|we)\s+(?:can|should|must|need to)\s+",
+            r"\d+\s+\w+",  # Numbers in claims
+        ]
+
+        response_lower = response.lower()
+        for pattern in claim_patterns:
+            matches = re.findall(pattern, response_lower)
+            for match in matches:
+                # Check if key terms from the claim appear in sources
+                key_terms = [w for w in match.split() if len(w) &gt; 3]
+                terms_found = sum(1 for term in key_terms if term in source_content)
+
+                if key_terms and terms_found / len(key_terms) &lt; 0.5:
+                    # Less than half of key terms found in sources
+                    warnings.append(f"Potential ungrounded claim detected")
+                    break
+
+        return warnings[:3]  # Limit warnings
 
     def query(self, user_query: str) -> RAGResponse:
         """Main entry point for RAG queries."""

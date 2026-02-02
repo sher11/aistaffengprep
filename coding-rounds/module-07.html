@@ -1126,6 +1126,18 @@ class ExternalSorter:
                     let classes = 'array-cell';
                     let bgColor = 'var(--border-color)';
 
+                    // Order of priority for colors (last match wins for visibility)
+                    // Base colors for merge/heap phases
+                    if (highlights.dividing && highlights.dividing.includes(i)) {
+                        bgColor = '#9b59b6'; // Purple for division phase in merge sort
+                    }
+                    if (highlights.merging && highlights.merging.includes(i)) {
+                        bgColor = '#3498db'; // Blue for merge phase
+                    }
+                    if (highlights.heapifying && highlights.heapifying.includes(i)) {
+                        bgColor = '#9b59b6'; // Purple for heapify phase
+                    }
+                    // Standard highlighting
                     if (highlights.comparing && highlights.comparing.includes(i)) {
                         bgColor = 'var(--warning-color)';
                     }
@@ -1209,6 +1221,171 @@ class ExternalSorter:
                 steps.push({ array: [...a], sorted: Array.from({ length: a.length }, (_, i) => i), done: true });
             }
 
+            function generateMergeSortSteps() {
+                steps = [];
+                let a = [...arr];
+                const n = a.length;
+
+                // Helper to record a step showing which indices are being worked on
+                function recordStep(array, options = {}) {
+                    steps.push({
+                        array: [...array],
+                        comparing: options.comparing || [],
+                        swapping: options.swapping || [],
+                        sorted: options.sorted || [],
+                        dividing: options.dividing || [],
+                        merging: options.merging || []
+                    });
+                }
+
+                // Merge two sorted subarrays: a[left..mid] and a[mid+1..right]
+                function merge(left, mid, right) {
+                    // Create temp arrays
+                    const leftArr = a.slice(left, mid + 1);
+                    const rightArr = a.slice(mid + 1, right + 1);
+
+                    let i = 0, j = 0, k = left;
+
+                    // Show the ranges being merged
+                    const mergeRange = [];
+                    for (let idx = left; idx <= right; idx++) mergeRange.push(idx);
+                    recordStep(a, { merging: mergeRange });
+
+                    // Merge the temp arrays back
+                    while (i < leftArr.length && j < rightArr.length) {
+                        // Show comparison between elements from left and right subarrays
+                        recordStep(a, { comparing: [left + i, mid + 1 + j], merging: mergeRange });
+
+                        if (leftArr[i] <= rightArr[j]) {
+                            a[k] = leftArr[i];
+                            i++;
+                        } else {
+                            a[k] = rightArr[j];
+                            j++;
+                        }
+                        recordStep(a, { swapping: [k], merging: mergeRange, swapped: true });
+                        k++;
+                    }
+
+                    // Copy remaining elements from left array
+                    while (i < leftArr.length) {
+                        a[k] = leftArr[i];
+                        recordStep(a, { swapping: [k], merging: mergeRange, swapped: true });
+                        i++;
+                        k++;
+                    }
+
+                    // Copy remaining elements from right array
+                    while (j < rightArr.length) {
+                        a[k] = rightArr[j];
+                        recordStep(a, { swapping: [k], merging: mergeRange, swapped: true });
+                        j++;
+                        k++;
+                    }
+                }
+
+                function mergeSort(left, right) {
+                    if (left < right) {
+                        const mid = Math.floor((left + right) / 2);
+
+                        // Show division phase - highlight the range being divided
+                        const divideRange = [];
+                        for (let idx = left; idx <= right; idx++) divideRange.push(idx);
+                        recordStep(a, { dividing: divideRange });
+
+                        // Recursively sort first and second halves
+                        mergeSort(left, mid);
+                        mergeSort(mid + 1, right);
+
+                        // Merge the sorted halves
+                        merge(left, mid, right);
+                    }
+                }
+
+                mergeSort(0, n - 1);
+                steps.push({ array: [...a], sorted: Array.from({ length: n }, (_, i) => i), done: true });
+            }
+
+            function generateHeapSortSteps() {
+                steps = [];
+                let a = [...arr];
+                const n = a.length;
+                const sorted = [];
+
+                // Helper to record a step
+                function recordStep(array, options = {}) {
+                    steps.push({
+                        array: [...array],
+                        comparing: options.comparing || [],
+                        swapping: options.swapping || [],
+                        sorted: options.sorted ? [...options.sorted] : [...sorted],
+                        heapifying: options.heapifying || [],
+                        swapped: options.swapped || false
+                    });
+                }
+
+                // Heapify a subtree rooted at index i
+                // heapSize is the size of the heap
+                function heapify(heapSize, i) {
+                    let largest = i;
+                    const left = 2 * i + 1;
+                    const right = 2 * i + 2;
+
+                    // Show the node being heapified with its children
+                    const heapifyIndices = [i];
+                    if (left < heapSize) heapifyIndices.push(left);
+                    if (right < heapSize) heapifyIndices.push(right);
+                    recordStep(a, { heapifying: heapifyIndices });
+
+                    // Compare with left child
+                    if (left < heapSize) {
+                        recordStep(a, { comparing: [largest, left], heapifying: heapifyIndices });
+                        if (a[left] > a[largest]) {
+                            largest = left;
+                        }
+                    }
+
+                    // Compare with right child
+                    if (right < heapSize) {
+                        recordStep(a, { comparing: [largest, right], heapifying: heapifyIndices });
+                        if (a[right] > a[largest]) {
+                            largest = right;
+                        }
+                    }
+
+                    // If largest is not root, swap and continue heapifying
+                    if (largest !== i) {
+                        [a[i], a[largest]] = [a[largest], a[i]];
+                        recordStep(a, { swapping: [i, largest], heapifying: heapifyIndices, swapped: true });
+                        heapify(heapSize, largest);
+                    }
+                }
+
+                // Build max heap (heapify phase)
+                // Start from last non-leaf node and heapify all nodes
+                for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+                    heapify(n, i);
+                }
+
+                // Show the built heap
+                recordStep(a, { heapifying: Array.from({ length: n }, (_, i) => i) });
+
+                // Extract elements from heap one by one
+                for (let i = n - 1; i > 0; i--) {
+                    // Move current root (max) to end
+                    recordStep(a, { comparing: [0, i] });
+                    [a[0], a[i]] = [a[i], a[0]];
+                    sorted.unshift(i);
+                    recordStep(a, { swapping: [0, i], swapped: true });
+
+                    // Heapify the reduced heap
+                    heapify(i, 0);
+                }
+
+                sorted.unshift(0);
+                steps.push({ array: [...a], sorted: Array.from({ length: n }, (_, i) => i), done: true });
+            }
+
             function setAlgorithm(algo) {
                 algorithm = algo;
                 document.querySelectorAll('[id^="sort-"]').forEach(btn => {
@@ -1242,9 +1419,10 @@ class ExternalSorter:
                     generateBubbleSortSteps();
                 } else if (algorithm === 'quick') {
                     generateQuickSortSteps();
-                } else {
-                    // For merge and heap, use bubble as placeholder
-                    generateBubbleSortSteps();
+                } else if (algorithm === 'merge') {
+                    generateMergeSortSteps();
+                } else if (algorithm === 'heap') {
+                    generateHeapSortSteps();
                 }
 
                 render();
@@ -1259,14 +1437,17 @@ class ExternalSorter:
                 const s = steps[currentStep];
                 arr = s.array;
 
-                if (s.comparing) comparisons++;
+                if (s.comparing && s.comparing.length > 0) comparisons++;
                 if (s.swapped) swaps++;
 
                 render({
                     comparing: s.comparing,
                     swapping: s.swapping,
                     sorted: s.sorted,
-                    pivot: s.pivot
+                    pivot: s.pivot,
+                    dividing: s.dividing,
+                    merging: s.merging,
+                    heapifying: s.heapifying
                 });
 
                 currentStep++;

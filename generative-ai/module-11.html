@@ -2365,34 +2365,238 @@ result = crew.kickoff()</code>
 
                 <div class="code-block">
 <code># Starter code structure
+import json
+import os
+from pathlib import Path
+from typing import Dict, List, Optional
+from datetime import datetime
+import chromadb
+
 class PersonalAssistant:
-    def __init__(self, user_id: str):
+    """
+    A personal assistant with persistent memory across sessions.
+
+    Context Engineering Principle: "Memory Hierarchy"
+    ------------------------------------------------
+    Effective AI assistants need three tiers of memory:
+    1. Working Memory (buffer) - Recent conversation turns
+    2. Compressed Memory (summary) - Distilled history of past interactions
+    3. Long-term Memory (vector store) - Searchable facts, preferences, entities
+
+    This mirrors human memory: short-term, episodic, and semantic memory.
+    """
+
+    def __init__(self, user_id: str, storage_dir: str = "./user_memories"):
         self.user_id = user_id
+        self.storage_dir = Path(storage_dir)
         self.context_manager = ContextWindowManager(max_tokens=8192)
         self.memory = ConversationMemory(buffer_size=10)
-        # TODO: Load existing memories for this user
+
+        # Context Engineering Principle: "Persistent Context"
+        # ---------------------------------------------------
+        # Unlike stateless API calls, a good personal assistant must
+        # maintain context across sessions. This requires:
+        # 1. Serializing memory state to persistent storage
+        # 2. Restoring state when user returns
+        # 3. Merging new information with existing memories
+
+        self._load_user_memories()
+
+    def _get_user_storage_path(self) -> Path:
+        """Get the storage path for this user's memories."""
+        return self.storage_dir / f"{self.user_id}_memories.json"
+
+    def _get_chroma_path(self) -> Path:
+        """Get the ChromaDB path for this user's vector store."""
+        return self.storage_dir / f"{self.user_id}_vectordb"
+
+    def _load_user_memories(self):
+        """
+        Load existing memories for this user from persistent storage.
+
+        Context Engineering Principle: "Memory Restoration"
+        ---------------------------------------------------
+        When a user returns, we must restore their context to create
+        continuity. This includes:
+
+        1. Recent buffer messages - For immediate conversation context
+        2. Running summary - Compressed history of all past interactions
+        3. Long-term memories - Facts, preferences, and entities in vector DB
+
+        The goal is to make the AI "remember" the user as if no time passed.
+        """
+        storage_path = self._get_user_storage_path()
+        chroma_path = self._get_chroma_path()
+
+        # Ensure storage directory exists
+        self.storage_dir.mkdir(parents=True, exist_ok=True)
+
+        if not storage_path.exists():
+            # First-time user - no memories to load
+            # Context Engineering Note: New users start with empty context,
+            # but the system should still work gracefully
+            print(f"New user session: {self.user_id}")
+            return
+
+        try:
+            with open(storage_path, 'r') as f:
+                saved_state = json.load(f)
+
+            # Restore conversation buffer (recent messages)
+            # Context Engineering Principle: "Working Memory Window"
+            # Keep only the most recent messages to stay within token limits
+            # while maintaining immediate conversational context
+            if 'buffer' in saved_state:
+                self.memory.buffer = saved_state['buffer'][-self.memory.buffer_size:]
+                print(f"Restored {len(self.memory.buffer)} recent messages")
+
+            # Restore running summary (compressed history)
+            # Context Engineering Principle: "Lossy Compression"
+            # We can't keep all messages, so we compress them into summaries.
+            # This trades detail for breadth - we remember WHAT happened,
+            # even if we lose some nuance about HOW it happened.
+            if 'running_summary' in saved_state:
+                self.memory.running_summary = saved_state['running_summary']
+                print(f"Restored conversation summary ({len(self.memory.running_summary)} chars)")
+
+            # Restore structured memories list
+            if 'memories' in saved_state:
+                for mem_dict in saved_state['memories']:
+                    memory = Memory(
+                        content=mem_dict['content'],
+                        memory_type=mem_dict['memory_type'],
+                        importance=mem_dict.get('importance', 0.5),
+                        timestamp=datetime.fromisoformat(mem_dict['timestamp'])
+                            if 'timestamp' in mem_dict else datetime.now(),
+                        metadata=mem_dict.get('metadata', {})
+                    )
+                    self.memory.memories.append(memory)
+                print(f"Restored {len(self.memory.memories)} long-term memories")
+
+            # Restore or reconnect to persistent vector store
+            # Context Engineering Principle: "Semantic Retrieval"
+            # Vector stores enable retrieval by MEANING, not just keywords.
+            # This is crucial for context engineering - we can find relevant
+            # memories even when the user phrases things differently.
+            if chroma_path.exists():
+                self.memory.chroma_client = chromadb.PersistentClient(
+                    path=str(chroma_path)
+                )
+                self.memory.memory_collection = self.memory.chroma_client.get_or_create_collection(
+                    name=f"memories_{self.user_id}",
+                    metadata={"hnsw:space": "cosine"}
+                )
+                print(f"Connected to persistent vector store")
+
+            print(f"Successfully loaded memories for user: {self.user_id}")
+
+        except json.JSONDecodeError as e:
+            print(f"Warning: Could not parse memory file: {e}")
+            # Start fresh if file is corrupted
+        except Exception as e:
+            print(f"Warning: Could not load memories: {e}")
+            # Gracefully degrade - assistant still works, just without history
+
+    def save_user_memories(self):
+        """
+        Persist current memory state for future sessions.
+
+        Context Engineering Principle: "Memory Durability"
+        --------------------------------------------------
+        Call this periodically and on session end to ensure
+        user memories survive across conversations and restarts.
+        """
+        storage_path = self._get_user_storage_path()
+        self.storage_dir.mkdir(parents=True, exist_ok=True)
+
+        state = {
+            'user_id': self.user_id,
+            'last_updated': datetime.now().isoformat(),
+            'buffer': self.memory.buffer,
+            'running_summary': self.memory.running_summary,
+            'memories': [m.to_dict() for m in self.memory.memories]
+        }
+
+        with open(storage_path, 'w') as f:
+            json.dump(state, f, indent=2)
+
+        print(f"Saved memories for user: {self.user_id}")
 
     async def chat(self, user_message: str) -> str:
-        # 1. Add user message to memory
+        """
+        Process a user message with full memory integration.
+
+        Context Engineering Principle: "Context Assembly Pipeline"
+        ----------------------------------------------------------
+        Each message requires careful assembly of context from multiple sources.
+        The order and priority of context blocks determines what the model
+        "pays attention to" and how it responds.
+        """
+        # 1. Add user message to working memory
+        # This ensures the current turn is captured before we process it
         self.memory.add_message("user", user_message)
 
         # 2. Retrieve relevant long-term memories
+        # Context Engineering Principle: "Selective Recall"
+        # We don't dump ALL memories - we retrieve only what's relevant
+        # to the current query. This keeps context focused and efficient.
         relevant = self.memory.retrieve_relevant_memories(user_message)
 
-        # 3. Build context with memory
+        # 3. Build unified context from all memory tiers
+        # This combines: summary + relevant memories + recent buffer
         context = self.memory.get_context(user_message)
 
         # 4. Add to context manager with priorities
+        # Context Engineering Principle: "Priority-Based Allocation"
+        # Not all context is equal. System prompt is CRITICAL (never dropped),
+        # while memories are HIGH (dropped only if absolutely necessary)
         self.context_manager.add_block(SYSTEM_PROMPT, ContextPriority.CRITICAL)
         self.context_manager.add_block(context, ContextPriority.HIGH)
 
-        # 5. Call LLM
+        # 5. Call LLM with assembled context
         response = await self._call_llm(self.context_manager.build_context())
 
-        # 6. Add response to memory
+        # 6. Add response to memory for continuity
         self.memory.add_message("assistant", response)
 
-        return response</code>
+        # 7. Persist memories periodically for durability
+        # Context Engineering Best Practice: Save after meaningful interactions
+        # to prevent memory loss if the session ends unexpectedly
+        self.save_user_memories()
+
+        return response
+
+
+# Example usage showing the full memory lifecycle
+async def demo_personal_assistant():
+    """
+    Demonstrates how memory persists across sessions.
+
+    Context Engineering in Action:
+    - Session 1: User introduces themselves, preferences are learned
+    - Session 2: Assistant recalls user's name and preferences
+    """
+    # Session 1: New user
+    assistant = PersonalAssistant(user_id="user_12345")
+
+    response1 = await assistant.chat("Hi, I'm Sarah. I work at Google as a senior engineer.")
+    print(f"Assistant: {response1}")
+
+    response2 = await assistant.chat("I prefer detailed technical explanations with code examples.")
+    print(f"Assistant: {response2}")
+
+    # Session ends - memories are persisted
+
+    # Session 2: User returns (simulated by creating new instance)
+    assistant2 = PersonalAssistant(user_id="user_12345")
+    # Memories are automatically loaded from storage
+
+    # The assistant now knows:
+    # - User's name is Sarah
+    # - User works at Google as a senior engineer
+    # - User prefers detailed technical explanations with code examples
+    response3 = await assistant2.chat("Can you help me with a coding problem?")
+    print(f"Assistant: {response3}")  # Will reference Sarah's preferences</code>
                 </div>
             </div>
 

@@ -1773,89 +1773,323 @@ class ToolRegistry:
             return f"Error executing {name}: {str(e)}"
 
 # ============== IMPLEMENT YOUR TOOLS ==============
+# Tools are the "hands" of an agent - they allow the LLM to interact with
+# the outside world. Each tool should have a clear, single purpose and
+# return helpful error messages when things go wrong.
+
+# In-memory storage for notes (in production, use a database)
+notes_storage: Dict[str, str] = {}
 
 def search_web(query: str) -> str:
-    """Simulate web search. In production, use a real search API."""
-    # TODO: Implement search functionality
-    # For now, return simulated results
+    """
+    Simulate web search. In production, use a real search API like:
+    - SerpAPI (Google results)
+    - Brave Search API
+    - Bing Search API
+    - Tavily (designed for AI agents)
+
+    The key insight for ReAct: Return concise, factual information that
+    the agent can reason about. Avoid returning too much text.
+    """
+    # Simulated knowledge base - in production, this would call an API
     results = {
-        "population paris": "Paris has a population of approximately 2.1 million in the city proper.",
-        "python creator": "Python was created by Guido van Rossum and first released in 1991.",
-        "largest planet": "Jupiter is the largest planet in our solar system.",
+        "population paris": "Paris has a population of approximately 2.1 million in the city proper, and 12.5 million in the metropolitan area.",
+        "python creator": "Python was created by Guido van Rossum and first released in 1991. He worked at Google and Dropbox.",
+        "largest planet": "Jupiter is the largest planet in our solar system, with a mass of 1.898 x 10^27 kg.",
+        "eiffel tower height": "The Eiffel Tower is 330 meters (1,083 feet) tall including antennas.",
+        "speed of light": "The speed of light in a vacuum is approximately 299,792,458 meters per second.",
     }
 
+    query_lower = query.lower()
     for key, value in results.items():
-        if key in query.lower():
+        if key in query_lower:
             return value
 
-    return f"Search results for '{query}': [No specific results found. Try rephrasing.]"
+    # Return a helpful message when no results found
+    return f"Search results for '{query}': No specific results found. Try using different keywords."
 
 def calculate(expression: str) -> str:
-    """Evaluate a mathematical expression."""
-    # TODO: Implement safe calculation
-    pass
+    """
+    Safely evaluate a mathematical expression.
+
+    Security considerations for production:
+    - Never use eval() with untrusted input in production
+    - Use a proper math parser like 'numexpr' or 'asteval'
+    - Implement a whitelist of allowed operations
+    - Set computation timeouts to prevent DoS
+
+    For this educational example, we use a restricted character set.
+    """
+    # Define allowed characters for safety
+    # This prevents code injection by only allowing math-related characters
+    allowed_chars = set("0123456789+-*/.() ")
+
+    # Validate expression contains only safe characters
+    if not all(char in allowed_chars for char in expression):
+        return "Error: Expression contains invalid characters. Only numbers and +-*/.() are allowed."
+
+    # Additional safety: prevent empty expressions or only spaces
+    if not expression.strip():
+        return "Error: Empty expression provided."
+
+    try:
+        # eval() is used here for simplicity - in production, use a safer alternative
+        # like ast.literal_eval() for simple expressions or a math parsing library
+        result = eval(expression)
+
+        # Format the result nicely
+        if isinstance(result, float):
+            # Round to avoid floating point weirdness like 0.1 + 0.2 = 0.30000000000000004
+            if result == int(result):
+                return f"Result: {int(result)}"
+            return f"Result: {round(result, 10)}"
+        return f"Result: {result}"
+    except ZeroDivisionError:
+        return "Error: Division by zero is not allowed."
+    except SyntaxError:
+        return "Error: Invalid mathematical expression syntax."
+    except Exception as e:
+        return f"Error calculating expression: {str(e)}"
 
 def save_note(title: str, content: str) -> str:
-    """Save a note for later reference."""
-    # TODO: Implement note storage
-    pass
+    """
+    Save a note for later reference.
+
+    Notes are useful for agents to:
+    - Store intermediate results for multi-step reasoning
+    - Remember important facts discovered during research
+    - Build up a knowledge base during a session
+
+    In production, consider:
+    - Persisting to a database or file system
+    - Adding timestamps and metadata
+    - Implementing note search/retrieval by content
+    """
+    if not title or not title.strip():
+        return "Error: Note title cannot be empty."
+    if not content or not content.strip():
+        return "Error: Note content cannot be empty."
+
+    # Store the note (overwrites if title exists)
+    title = title.strip()
+    notes_storage[title] = content.strip()
+
+    return f"Note '{title}' saved successfully. You now have {len(notes_storage)} note(s) stored."
 
 def get_notes() -> str:
-    """Retrieve all saved notes."""
-    # TODO: Implement note retrieval
-    pass
+    """
+    Retrieve all saved notes.
+
+    This allows the agent to recall information it stored earlier,
+    enabling multi-step reasoning and research workflows.
+    """
+    if not notes_storage:
+        return "No notes saved yet. Use save_note to store information."
+
+    # Format notes for easy reading by the agent
+    formatted_notes = []
+    for title, content in notes_storage.items():
+        formatted_notes.append(f"## {title}\n{content}")
+
+    return f"Saved Notes ({len(notes_storage)} total):\n\n" + "\n\n".join(formatted_notes)
 
 # ============== REACT AGENT ==============
+# ReAct (Reasoning + Acting) is a paradigm where the agent alternates between:
+# 1. THOUGHT: Reasoning about what to do next
+# 2. ACTION: Calling a tool to get information or perform an action
+# 3. OBSERVATION: Processing the result of the action
+#
+# This loop continues until the agent has enough information to provide
+# a final answer. The key insight is that explicit reasoning traces help
+# the model make better decisions about which tools to use and how.
 
 class ReActAgent:
+    """
+    A ReAct-style agent that can reason and use tools to answer questions.
+
+    The ReAct pattern (from Yao et al., 2022) combines reasoning and acting:
+    - Reasoning traces help the model track progress and make decisions
+    - Actions allow the model to gather information from external tools
+    - The interleaved approach produces more interpretable and reliable results
+    """
+
     def __init__(self, llm_func: Callable, tools: ToolRegistry):
         """
         Initialize the ReAct agent.
 
         Args:
-            llm_func: Function that takes a prompt and returns LLM response
-            tools: Registry of available tools
+            llm_func: Function that takes a prompt and returns LLM response.
+                      Should have signature: (prompt: str) -> str
+            tools: Registry of available tools the agent can use
         """
         self.llm = llm_func
         self.tools = tools
-        self.max_iterations = 10
-        self.action_history: List[str] = []
+        self.max_iterations = 10  # Prevent infinite loops
+        self.action_history: List[str] = []  # Track actions to detect loops
 
     def _build_prompt(self, question: str, history: List[str]) -> str:
-        """Build the ReAct prompt with tool descriptions and history."""
-        # TODO: Implement prompt building
-        pass
+        """
+        Build the ReAct prompt with tool descriptions and conversation history.
+
+        The prompt structure is critical for ReAct to work well:
+        1. Clear instructions on the Thought/Action/Observation format
+        2. List of available tools with their parameters
+        3. The question to answer
+        4. Any previous reasoning steps (for multi-turn)
+
+        Args:
+            question: The user's question to answer
+            history: List of previous Thought/Action/Observation steps
+
+        Returns:
+            Complete prompt string ready for the LLM
+        """
+        # Get formatted tool descriptions
+        tool_descriptions = self.tools.get_tool_descriptions()
+
+        # Build the system prompt that teaches the ReAct format
+        system_prompt = f"""You are a helpful research assistant that can use tools to answer questions.
+
+Available tools:
+{tool_descriptions}
+
+To use a tool, respond with this exact format:
+Thought: [Your reasoning about what to do next]
+Action: [tool_name]
+Action Input: {{"param1": "value1", "param2": "value2"}}
+
+When you have enough information to answer, respond with:
+Thought: [Your final reasoning]
+Final Answer: [Your complete answer to the question]
+
+Important guidelines:
+- Always start with a Thought explaining your reasoning
+- Use tools to gather information rather than making assumptions
+- If a tool returns an error, try a different approach
+- Be concise but thorough in your final answer
+"""
+
+        # Build the conversation with history
+        conversation = f"Question: {question}\n\n"
+
+        if history:
+            conversation += "Previous steps:\n"
+            conversation += "\n".join(history)
+            conversation += "\n\nContinue from here:\n"
+
+        return system_prompt + "\n" + conversation
 
     def _parse_response(self, response: str) -> tuple[str, Optional[str], Optional[Dict]]:
         """
         Parse the LLM response to extract thought, action, and action input.
 
+        The response should follow one of two formats:
+        1. Tool use: Thought: ... / Action: ... / Action Input: {...}
+        2. Final answer: Thought: ... / Final Answer: ...
+
+        Args:
+            response: Raw LLM response string
+
         Returns:
-            (thought, action_name, action_args) or (thought, None, None) if final answer
+            Tuple of (thought, action_name, action_args)
+            - If final answer: (thought, None, None) and thought contains the answer
+            - If tool use: (thought, action_name, action_args_dict)
         """
-        # TODO: Implement response parsing
-        pass
+        # Extract the thought (everything after "Thought:" until next section)
+        thought_match = re.search(r"Thought:\s*(.+?)(?=\n(?:Action:|Final Answer:)|$)", response, re.DOTALL)
+        thought = thought_match.group(1).strip() if thought_match else ""
+
+        # Check for final answer first
+        final_match = re.search(r"Final Answer:\s*(.+?)$", response, re.DOTALL)
+        if final_match:
+            # Return the final answer as the "thought" since we're done
+            return final_match.group(1).strip(), None, None
+
+        # Extract action name
+        action_match = re.search(r"Action:\s*(\w+)", response)
+        if not action_match:
+            # No action found - treat as incomplete response
+            return thought or response, None, None
+
+        action_name = action_match.group(1).strip()
+
+        # Extract action input (JSON format)
+        input_match = re.search(r"Action Input:\s*(\{.+?\})", response, re.DOTALL)
+        if input_match:
+            try:
+                action_args = json.loads(input_match.group(1))
+            except json.JSONDecodeError:
+                # If JSON parsing fails, try to extract as simple string
+                action_args = {"query": input_match.group(1)}
+        else:
+            # No input provided - use empty dict
+            action_args = {}
+
+        return thought, action_name, action_args
 
     def run(self, question: str) -> str:
         """
         Run the ReAct loop to answer a question.
 
+        The ReAct loop:
+        1. Build prompt with question and any previous history
+        2. Call LLM to get next thought/action
+        3. If final answer, return it
+        4. If action, execute the tool and record observation
+        5. Add the step to history and repeat
+        6. If max iterations reached, return best attempt
+
         Args:
-            question: The user's question
+            question: The user's question to answer
 
         Returns:
-            The final answer
+            The final answer string
         """
-        # TODO: Implement the ReAct loop
-        # 1. Build initial prompt with question
-        # 2. Loop:
-        #    a. Call LLM
-        #    b. Parse response for thought/action
-        #    c. If final answer, return it
-        #    d. If action, execute tool and add observation
-        #    e. Check for loops
-        # 3. If max iterations reached, return best attempt
-        pass
+        history: List[str] = []
+        self.action_history = []  # Reset for new question
+
+        print(f"\n{'='*60}")
+        print(f"Starting ReAct loop for: {question}")
+        print(f"{'='*60}\n")
+
+        for iteration in range(self.max_iterations):
+            print(f"--- Iteration {iteration + 1} ---")
+
+            # Step 1: Build prompt with current history
+            prompt = self._build_prompt(question, history)
+
+            # Step 2: Call LLM
+            response = self.llm(prompt)
+            print(f"LLM Response:\n{response}\n")
+
+            # Step 3: Parse the response
+            thought, action_name, action_args = self._parse_response(response)
+
+            # Step 4: Check if we have a final answer
+            if action_name is None:
+                print(f"Final Answer reached: {thought}")
+                return thought
+
+            # Step 5: Check for action loops (same action repeated)
+            action_signature = f"{action_name}:{json.dumps(action_args, sort_keys=True)}"
+            if action_signature in self.action_history:
+                print(f"Warning: Detected repeated action, breaking loop")
+                return f"I encountered a loop while researching. Based on what I found: {thought}"
+
+            self.action_history.append(action_signature)
+
+            # Step 6: Execute the tool
+            print(f"Executing: {action_name}({action_args})")
+            observation = self.tools.execute(action_name, action_args)
+            print(f"Observation: {observation}\n")
+
+            # Step 7: Add this step to history
+            step = f"Thought: {thought}\nAction: {action_name}\nAction Input: {json.dumps(action_args)}\nObservation: {observation}"
+            history.append(step)
+
+        # Max iterations reached
+        print("Max iterations reached")
+        return f"I researched this extensively but couldn't reach a definitive answer. Here's what I found: {thought}"
 
 # ============== TEST YOUR IMPLEMENTATION ==============
 
@@ -1884,19 +2118,56 @@ Final Answer: Paris has a population of approximately 2.1 million people.
 Final Answer: I couldn't find enough information to answer this question."""
 
 def main():
-    # Setup tools
+    """
+    Main function demonstrating the ReAct agent in action.
+
+    This sets up:
+    1. Tool registry with all available tools
+    2. The ReAct agent with a mock LLM
+    3. Test questions to demonstrate multi-step reasoning
+    """
+    # Setup tools - each tool extends the agent's capabilities
     registry = ToolRegistry()
 
+    # Tool 1: Web Search - for gathering external information
     registry.register(Tool(
         name="search_web",
-        description="Search the web for information",
+        description="Search the web for factual information. Use for questions about facts, statistics, people, places, etc.",
         func=search_web,
-        parameters={"query": "string"}
+        parameters={"query": "The search query string"}
     ))
 
-    # TODO: Register calculate and note tools
+    # Tool 2: Calculator - for mathematical computations
+    # This is essential for agents that need to do math on retrieved data
+    registry.register(Tool(
+        name="calculate",
+        description="Evaluate a mathematical expression. Supports +, -, *, /, and parentheses. Example: '(10 + 5) * 2'",
+        func=calculate,
+        parameters={"expression": "Mathematical expression to evaluate"}
+    ))
 
-    # Create agent
+    # Tool 3: Save Note - for storing intermediate results
+    # Useful in complex research tasks where the agent needs to remember things
+    registry.register(Tool(
+        name="save_note",
+        description="Save a note for later reference. Use to store important information discovered during research.",
+        func=save_note,
+        parameters={
+            "title": "Short title for the note",
+            "content": "The content to save"
+        }
+    ))
+
+    # Tool 4: Get Notes - for retrieving stored information
+    registry.register(Tool(
+        name="get_notes",
+        description="Retrieve all previously saved notes. Use to recall information stored earlier.",
+        func=get_notes,
+        parameters={}  # No parameters needed
+    ))
+
+    # Create the ReAct agent with our mock LLM
+    # In production, replace mock_llm with a real LLM call (OpenAI, Anthropic, etc.)
     agent = ReActAgent(mock_llm, registry)
 
     # Test questions

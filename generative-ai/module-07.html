@@ -2351,25 +2351,234 @@ print(f"Sparsity: {zero_params / total_params:.2%}")</code>
 <code>import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import time
+from typing import List, Optional
 
 class OptimizedInferenceServer:
-    def __init__(self, model_name="meta-llama/Llama-2-7b-hf"):
-        # TODO: Load model with 4-bit quantization
-        # TODO: Enable Flash Attention
-        pass
+    """
+    Production-ready LLM inference server with multiple optimization techniques:
+    1. 4-bit Quantization (NF4) - Reduces memory by 4x with minimal quality loss
+    2. Flash Attention 2 - O(N) memory instead of O(N^2), 2-4x faster
+    3. KV Caching - Avoids recomputing attention for previous tokens
+    """
 
-    def generate(self, prompt, max_tokens=100):
-        # TODO: Implement generation with KV caching
-        pass
+    def __init__(self, model_name: str = "meta-llama/Llama-2-7b-hf"):
+        self.model_name = model_name
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    def benchmark(self, prompts, num_tokens=100):
-        # TODO: Measure tokens/second
-        pass
+        # =====================================================
+        # OPTIMIZATION 1: 4-bit Quantization with BitsAndBytes
+        # =====================================================
+        # NF4 (NormalFloat4) is optimized for normally-distributed weights
+        # double_quant: quantize the quantization constants too (saves ~0.4 bits/param)
+        # compute_dtype: use bfloat16 for matrix multiplications (better numerical stability)
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,                    # Enable 4-bit quantization
+            bnb_4bit_quant_type="nf4",           # NormalFloat4 - optimal for neural network weights
+            bnb_4bit_compute_dtype=torch.bfloat16,  # Compute in bfloat16 for speed + stability
+            bnb_4bit_use_double_quant=True,      # Nested quantization saves additional memory
+        )
 
-# Your implementation here
-server = OptimizedInferenceServer()
-result = server.generate("Explain quantum computing in simple terms:")
-print(result)</code>
+        # =====================================================
+        # OPTIMIZATION 2: Flash Attention 2
+        # =====================================================
+        # Flash Attention tiles the attention computation to fit in GPU SRAM
+        # Benefits:
+        # - Memory: O(N) instead of O(N^2) - enables much longer sequences
+        # - Speed: 2-4x faster by avoiding HBM memory bandwidth bottleneck
+        # - Exact: No approximation, mathematically identical to standard attention
+        #
+        # attn_implementation="flash_attention_2" requires:
+        # - CUDA GPU with compute capability >= 8.0 (Ampere or newer)
+        # - pip install flash-attn --no-build-isolation
+
+        print(f"Loading {model_name} with 4-bit quantization and Flash Attention 2...")
+
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        # Set pad token to eos token if not defined (common for decoder-only models)
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            quantization_config=quantization_config,  # 4-bit quantization
+            attn_implementation="flash_attention_2",  # Flash Attention 2
+            device_map="auto",                        # Automatically distribute across GPUs
+            torch_dtype=torch.bfloat16,              # Use bfloat16 for non-quantized layers
+        )
+
+        # Enable inference mode optimizations
+        self.model.eval()
+
+        # Pre-compute memory savings
+        # Full precision: 7B params * 4 bytes = 28GB
+        # 4-bit quantized: 7B params * 0.5 bytes = 3.5GB (plus overhead ~4.5GB total)
+        print(f"Model loaded. Estimated VRAM: ~4.5GB (vs ~28GB full precision)")
+
+    def generate(
+        self,
+        prompt: str,
+        max_tokens: int = 100,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+    ) -> str:
+        """
+        Generate text with KV caching enabled (automatic in HuggingFace).
+
+        KV Caching Explanation:
+        - In autoregressive generation, each new token attends to ALL previous tokens
+        - Without caching: For token N, we recompute K,V for tokens 1..N-1 = O(N^2) total
+        - With caching: Store K,V for previous tokens, only compute for new token = O(N) total
+        - HuggingFace enables this by default via `use_cache=True` in generation config
+        """
+        # =====================================================
+        # OPTIMIZATION 3: KV Caching (enabled by default)
+        # =====================================================
+        # The `past_key_values` are automatically managed by the generate() method
+        # Each layer stores (key_states, value_states) tensors
+        # Shape: [batch, num_heads, seq_len, head_dim]
+
+        # Tokenize input
+        inputs = self.tokenizer(
+            prompt,
+            return_tensors="pt",
+            padding=True,
+        ).to(self.device)
+
+        # Generate with optimizations
+        with torch.inference_mode():  # Faster than torch.no_grad() for inference
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=max_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                do_sample=True,
+                use_cache=True,           # Enable KV caching (default=True, explicit for clarity)
+                pad_token_id=self.tokenizer.pad_token_id,
+            )
+
+        # Decode and return only the generated part
+        generated_text = self.tokenizer.decode(
+            outputs[0][inputs['input_ids'].shape[1]:],  # Skip the prompt tokens
+            skip_special_tokens=True
+        )
+
+        return generated_text
+
+    def benchmark(
+        self,
+        prompts: List[str],
+        num_tokens: int = 100
+    ) -> dict:
+        """
+        Benchmark inference performance.
+
+        Key metrics for LLM inference:
+        - Tokens/second: Raw throughput
+        - Time to First Token (TTFT): Latency for initial response
+        - Inter-Token Latency (ITL): Time between subsequent tokens
+        """
+        # =====================================================
+        # BENCHMARKING: Measure tokens/second accurately
+        # =====================================================
+
+        results = {
+            "total_tokens": 0,
+            "total_time": 0,
+            "tokens_per_second": 0,
+            "per_prompt_stats": [],
+        }
+
+        # Warm-up run (first run is slower due to CUDA kernel compilation)
+        print("Warming up...")
+        _ = self.generate("Hello", max_tokens=10)
+
+        # Synchronize GPU before timing (ensures all operations complete)
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+
+        print(f"Benchmarking {len(prompts)} prompts with {num_tokens} tokens each...")
+
+        for i, prompt in enumerate(prompts):
+            # Synchronize before timing
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+
+            start_time = time.perf_counter()  # High-resolution timer
+
+            output = self.generate(prompt, max_tokens=num_tokens, temperature=0.7)
+
+            # Synchronize after generation to ensure completion
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+
+            end_time = time.perf_counter()
+
+            # Count actual generated tokens (may be less than max_tokens if EOS reached)
+            generated_tokens = len(self.tokenizer.encode(output))
+            elapsed = end_time - start_time
+
+            prompt_stats = {
+                "prompt_index": i,
+                "generated_tokens": generated_tokens,
+                "time_seconds": elapsed,
+                "tokens_per_second": generated_tokens / elapsed if elapsed > 0 else 0,
+            }
+
+            results["per_prompt_stats"].append(prompt_stats)
+            results["total_tokens"] += generated_tokens
+            results["total_time"] += elapsed
+
+            print(f"  Prompt {i+1}: {generated_tokens} tokens in {elapsed:.2f}s "
+                  f"({prompt_stats['tokens_per_second']:.1f} tok/s)")
+
+        # Calculate aggregate metrics
+        results["tokens_per_second"] = (
+            results["total_tokens"] / results["total_time"]
+            if results["total_time"] > 0 else 0
+        )
+
+        print(f"\n=== Benchmark Results ===")
+        print(f"Total tokens: {results['total_tokens']}")
+        print(f"Total time: {results['total_time']:.2f}s")
+        print(f"Average throughput: {results['tokens_per_second']:.1f} tokens/second")
+
+        # Memory usage report
+        if torch.cuda.is_available():
+            memory_allocated = torch.cuda.memory_allocated() / 1024**3  # GB
+            memory_reserved = torch.cuda.memory_reserved() / 1024**3   # GB
+            print(f"GPU Memory: {memory_allocated:.2f}GB allocated, {memory_reserved:.2f}GB reserved")
+
+        return results
+
+
+# =====================================================
+# Example Usage
+# =====================================================
+if __name__ == "__main__":
+    # Initialize server with all optimizations
+    server = OptimizedInferenceServer(model_name="meta-llama/Llama-2-7b-hf")
+
+    # Single generation
+    result = server.generate(
+        "Explain quantum computing in simple terms:",
+        max_tokens=150,
+        temperature=0.7
+    )
+    print(f"\n=== Generated Text ===\n{result}")
+
+    # Benchmark with multiple prompts
+    test_prompts = [
+        "Write a Python function to find the nth Fibonacci number:",
+        "Explain the difference between TCP and UDP:",
+        "What are the key principles of microservice architecture?",
+    ]
+
+    benchmark_results = server.benchmark(test_prompts, num_tokens=100)
+
+    # Expected results on modern GPU (RTX 3090/4090):
+    # - 4-bit Llama-2-7B: 40-80 tokens/second
+    # - Baseline FP16: 15-25 tokens/second
+    # - Speedup: ~2-3x from quantization + Flash Attention</code>
                 </div>
             </div>
 

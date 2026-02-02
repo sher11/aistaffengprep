@@ -1936,40 +1936,489 @@ for r in results:
                     <li>Compare different chunk sizes and overlap values</li>
                 </ul>
 
-                <h5>Starter Code:</h5>
+                <h5>Complete Implementation:</h5>
                 <div class="code-block">
-<code>from langchain.text_splitter import RecursiveCharacterTextSplitter
+<code>"""
+Complete RAG Pipeline for Documentation Q&amp;A
+============================================
+This implementation demonstrates a production-ready RAG system with:
+- Recursive document chunking with metadata
+- Hybrid search (dense embeddings + BM25 sparse retrieval)
+- Cross-encoder reranking for improved relevance
+- LLM-based answer generation with citations
+"""
+
+import os
+import glob
+from typing import List, Dict, Tuple
+from dataclasses import dataclass
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer, CrossEncoder
 import chromadb
+from rank_bm25 import BM25Okapi
+import openai
+import numpy as np
+
+@dataclass
+class Chunk:
+    """Represents a document chunk with metadata for traceability."""
+    text: str
+    source: str      # Original file path
+    chunk_id: int    # Position in document
+    metadata: Dict   # Additional metadata (title, section, etc.)
 
 class DocQASystem:
-    def __init__(self):
+    """
+    A complete RAG system for documentation Q&amp;A.
+
+    Architecture Overview:
+    1. INGESTION: Load docs -&gt; Chunk -&gt; Embed -&gt; Store
+    2. RETRIEVAL: Query -&gt; Hybrid Search -&gt; Rerank -&gt; Top-K
+    3. GENERATION: Context + Query -&gt; LLM -&gt; Answer with Citations
+    """
+
+    def __init__(self, collection_name: str = "docs"):
+        # ===========================================
+        # MODEL SELECTION RATIONALE
+        # ===========================================
+        # Embedder: MiniLM is fast (80ms/query) with good quality
+        # For production, consider: 'BAAI/bge-large-en-v1.5' (better quality)
+        # Or OpenAI 'text-embedding-3-small' (best quality, API cost)
         self.embedder = SentenceTransformer('all-MiniLM-L6-v2')
+
+        # Reranker: Cross-encoders are ~10x slower but much more accurate
+        # They see query AND document together, enabling deeper matching
         self.reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
-        self.client = chromadb.Client()
-        self.collection = None
 
-    def load_documents(self, docs_path):
-        # TODO: Load and chunk documents
-        pass
+        # Vector DB: ChromaDB for local dev (in-memory or persistent)
+        # For production: Pinecone (managed), Qdrant (self-hosted), or Weaviate
+        self.client = chromadb.Client()  # Use PersistentClient() for disk storage
+        self.collection = self.client.get_or_create_collection(
+            name=collection_name,
+            metadata={"hnsw:space": "cosine"}  # HNSW index with cosine similarity
+        )
 
-    def index(self, chunks):
-        # TODO: Embed and store chunks
-        pass
+        # BM25 index for sparse retrieval (keyword matching)
+        self.bm25_index = None
+        self.chunks: List[Chunk] = []
 
-    def retrieve(self, query, k=5):
-        # TODO: Hybrid search + reranking
-        pass
+        # Text splitter configuration
+        # ===========================================
+        # CHUNKING STRATEGY EXPLAINED
+        # ===========================================
+        # chunk_size=512: Balanced for semantic coherence and retrieval precision
+        #   - Too small (&lt;256): Loses context, fragments ideas
+        #   - Too large (&gt;1024): Dilutes relevance, wastes context window
+        # chunk_overlap=50: Preserves continuity across chunk boundaries
+        #   - Prevents cutting sentences mid-thought
+        #   - ~10% overlap is a good default
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=512,
+            chunk_overlap=50,
+            length_function=len,
+            # Separators ordered by priority: prefer semantic boundaries
+            separators=[
+                "\n\n",     # Paragraphs (strongest boundary)
+                "\n",       # Lines
+                ". ",       # Sentences
+                ", ",       # Clauses
+                " ",        # Words (last resort)
+                ""          # Characters (emergency)
+            ]
+        )
 
-    def answer(self, query):
-        # TODO: Retrieve context and generate answer with LLM
-        pass
+    def load_documents(self, docs_path: str) -&gt; List[Chunk]:
+        """
+        Load and chunk documents from a directory.
 
-# Your implementation here
-qa = DocQASystem()
-qa.load_documents("./docs/")
-answer = qa.answer("How do I install the library?")
-print(answer)</code>
+        CHUNKING BEST PRACTICES:
+        1. Preserve document structure (headers, sections)
+        2. Include metadata for filtering and citations
+        3. Handle multiple file formats (md, txt, html, pdf)
+        4. Clean text before chunking (remove artifacts)
+
+        Args:
+            docs_path: Directory containing documentation files
+
+        Returns:
+            List of Chunk objects with text and metadata
+        """
+        chunks = []
+
+        # Support multiple documentation formats
+        supported_formats = ['*.md', '*.txt', '*.rst', '*.html']
+
+        for pattern in supported_formats:
+            for filepath in glob.glob(os.path.join(docs_path, '**', pattern), recursive=True):
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                # ===========================================
+                # PREPROCESSING: Clean text before chunking
+                # ===========================================
+                # Remove excessive whitespace
+                content = ' '.join(content.split())
+
+                # Extract document title from first heading or filename
+                title = os.path.basename(filepath).replace('.md', '').replace('_', ' ')
+
+                # Split into chunks using recursive strategy
+                text_chunks = self.text_splitter.split_text(content)
+
+                # Create Chunk objects with rich metadata
+                for i, text in enumerate(text_chunks):
+                    chunk = Chunk(
+                        text=text,
+                        source=filepath,
+                        chunk_id=i,
+                        metadata={
+                            "title": title,
+                            "total_chunks": len(text_chunks),
+                            "char_count": len(text),
+                            "position": "start" if i == 0 else ("end" if i == len(text_chunks)-1 else "middle")
+                        }
+                    )
+                    chunks.append(chunk)
+
+        self.chunks = chunks
+        print(f"Loaded {len(chunks)} chunks from {docs_path}")
+
+        # Build BM25 index for sparse retrieval
+        self._build_bm25_index()
+
+        return chunks
+
+    def _build_bm25_index(self):
+        """
+        Build BM25 index for keyword-based sparse retrieval.
+
+        WHY BM25?
+        - Excels at exact keyword matching (API names, error codes)
+        - Complements dense retrieval which finds semantic similarity
+        - Fast and doesn't require GPU
+        - Industry-standard TF-IDF variant with saturation
+        """
+        # Tokenize chunks for BM25
+        tokenized_chunks = [chunk.text.lower().split() for chunk in self.chunks]
+        self.bm25_index = BM25Okapi(tokenized_chunks)
+
+    def index(self, chunks: List[Chunk] = None):
+        """
+        Embed chunks and store in vector database.
+
+        EMBEDDING PIPELINE:
+        1. Batch chunks for efficient GPU utilization
+        2. Normalize embeddings for cosine similarity
+        3. Store with metadata for filtering
+
+        Args:
+            chunks: List of Chunk objects (uses self.chunks if None)
+        """
+        chunks = chunks or self.chunks
+        if not chunks:
+            raise ValueError("No chunks to index. Call load_documents first.")
+
+        # ===========================================
+        # BATCH EMBEDDING FOR EFFICIENCY
+        # ===========================================
+        # Process in batches to manage memory and show progress
+        batch_size = 32  # Tune based on GPU memory
+
+        all_embeddings = []
+        all_ids = []
+        all_documents = []
+        all_metadatas = []
+
+        for i in range(0, len(chunks), batch_size):
+            batch = chunks[i:i + batch_size]
+            texts = [chunk.text for chunk in batch]
+
+            # Generate embeddings (normalized by default in SentenceTransformers)
+            embeddings = self.embedder.encode(
+                texts,
+                convert_to_numpy=True,
+                normalize_embeddings=True,  # Important for cosine similarity
+                show_progress_bar=False
+            )
+
+            for j, chunk in enumerate(batch):
+                chunk_id = f"chunk_{i + j}"
+                all_ids.append(chunk_id)
+                all_documents.append(chunk.text)
+                all_embeddings.append(embeddings[j].tolist())
+                all_metadatas.append({
+                    "source": chunk.source,
+                    "chunk_id": chunk.chunk_id,
+                    **chunk.metadata
+                })
+
+        # ===========================================
+        # UPSERT TO VECTOR DATABASE
+        # ===========================================
+        # ChromaDB handles deduplication via IDs
+        self.collection.upsert(
+            ids=all_ids,
+            embeddings=all_embeddings,
+            documents=all_documents,
+            metadatas=all_metadatas
+        )
+
+        print(f"Indexed {len(chunks)} chunks in vector database")
+
+    def retrieve(self, query: str, k: int = 5,
+                 dense_weight: float = 0.7,
+                 use_reranking: bool = True) -&gt; List[Tuple[Chunk, float]]:
+        """
+        Hybrid search with dense + sparse retrieval and reranking.
+
+        HYBRID SEARCH STRATEGY:
+        1. Dense retrieval: Semantic similarity via embeddings
+        2. Sparse retrieval: Keyword matching via BM25
+        3. Score fusion: Reciprocal Rank Fusion (RRF)
+        4. Reranking: Cross-encoder for final ordering
+
+        Args:
+            query: User's question
+            k: Number of results to return
+            dense_weight: Weight for dense vs sparse (0-1)
+            use_reranking: Whether to apply cross-encoder reranking
+
+        Returns:
+            List of (Chunk, score) tuples, sorted by relevance
+        """
+        # ===========================================
+        # STEP 1: DENSE RETRIEVAL (Semantic)
+        # ===========================================
+        query_embedding = self.embedder.encode(
+            query,
+            normalize_embeddings=True
+        ).tolist()
+
+        # Retrieve more candidates for reranking (3x final k)
+        n_candidates = k * 3 if use_reranking else k
+
+        dense_results = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=min(n_candidates, len(self.chunks)),
+            include=["documents", "metadatas", "distances"]
+        )
+
+        # Convert distances to scores (ChromaDB returns L2 or cosine distance)
+        dense_scores = {}
+        for i, doc_id in enumerate(dense_results['ids'][0]):
+            # Convert cosine distance to similarity score
+            distance = dense_results['distances'][0][i]
+            score = 1 - distance  # Cosine distance to similarity
+            dense_scores[doc_id] = score
+
+        # ===========================================
+        # STEP 2: SPARSE RETRIEVAL (Keyword/BM25)
+        # ===========================================
+        tokenized_query = query.lower().split()
+        bm25_scores_raw = self.bm25_index.get_scores(tokenized_query)
+
+        # Normalize BM25 scores to [0, 1]
+        max_bm25 = max(bm25_scores_raw) if max(bm25_scores_raw) &gt; 0 else 1
+        sparse_scores = {}
+        for i, score in enumerate(bm25_scores_raw):
+            chunk_id = f"chunk_{i}"
+            sparse_scores[chunk_id] = score / max_bm25
+
+        # ===========================================
+        # STEP 3: SCORE FUSION (Reciprocal Rank Fusion)
+        # ===========================================
+        # RRF is robust to different score distributions
+        # Formula: RRF(d) = sum(1 / (k + rank(d))) across all rankings
+
+        all_chunk_ids = set(dense_scores.keys()) | set(sparse_scores.keys())
+        fused_scores = {}
+
+        rrf_k = 60  # Standard RRF constant
+
+        # Sort by scores to get ranks
+        dense_ranked = sorted(dense_scores.items(), key=lambda x: -x[1])
+        sparse_ranked = sorted(sparse_scores.items(), key=lambda x: -x[1])
+
+        dense_rank = {cid: rank for rank, (cid, _) in enumerate(dense_ranked)}
+        sparse_rank = {cid: rank for rank, (cid, _) in enumerate(sparse_ranked)}
+
+        for chunk_id in all_chunk_ids:
+            rrf_dense = 1 / (rrf_k + dense_rank.get(chunk_id, len(dense_scores)))
+            rrf_sparse = 1 / (rrf_k + sparse_rank.get(chunk_id, len(sparse_scores)))
+
+            # Weighted combination
+            fused_scores[chunk_id] = dense_weight * rrf_dense + (1 - dense_weight) * rrf_sparse
+
+        # Get top candidates
+        top_candidates = sorted(fused_scores.items(), key=lambda x: -x[1])[:n_candidates]
+
+        # ===========================================
+        # STEP 4: RERANKING WITH CROSS-ENCODER
+        # ===========================================
+        if use_reranking and len(top_candidates) &gt; 0:
+            # Prepare query-document pairs for cross-encoder
+            chunk_idx_map = {f"chunk_{i}": i for i in range(len(self.chunks))}
+
+            pairs = []
+            valid_candidates = []
+            for chunk_id, _ in top_candidates:
+                if chunk_id in chunk_idx_map:
+                    chunk = self.chunks[chunk_idx_map[chunk_id]]
+                    pairs.append([query, chunk.text])
+                    valid_candidates.append((chunk_id, chunk))
+
+            # Cross-encoder scores (higher = more relevant)
+            # This is the "slow but accurate" step
+            rerank_scores = self.reranker.predict(pairs)
+
+            # Combine with (chunk, score) and sort
+            results = []
+            for i, (chunk_id, chunk) in enumerate(valid_candidates):
+                results.append((chunk, float(rerank_scores[i])))
+
+            results.sort(key=lambda x: -x[1])
+            return results[:k]
+
+        else:
+            # Return without reranking
+            chunk_idx_map = {f"chunk_{i}": i for i in range(len(self.chunks))}
+            results = []
+            for chunk_id, score in top_candidates[:k]:
+                if chunk_id in chunk_idx_map:
+                    results.append((self.chunks[chunk_idx_map[chunk_id]], score))
+            return results
+
+    def answer(self, query: str, k: int = 5) -&gt; Dict:
+        """
+        Generate an answer using retrieved context.
+
+        GENERATION STRATEGY:
+        1. Retrieve relevant chunks
+        2. Format context with source citations
+        3. Construct prompt with instructions
+        4. Generate response with LLM
+        5. Return answer with sources
+
+        Args:
+            query: User's question
+            k: Number of chunks to use as context
+
+        Returns:
+            Dict with 'answer', 'sources', and 'context_used'
+        """
+        # ===========================================
+        # STEP 1: RETRIEVE RELEVANT CONTEXT
+        # ===========================================
+        retrieved = self.retrieve(query, k=k)
+
+        if not retrieved:
+            return {
+                "answer": "I couldn't find relevant information to answer your question.",
+                "sources": [],
+                "context_used": ""
+            }
+
+        # ===========================================
+        # STEP 2: FORMAT CONTEXT WITH CITATIONS
+        # ===========================================
+        context_parts = []
+        sources = []
+
+        for i, (chunk, score) in enumerate(retrieved):
+            # Add citation marker for traceability
+            citation = f"[{i+1}]"
+            context_parts.append(f"{citation} {chunk.text}")
+            sources.append({
+                "citation": citation,
+                "source": chunk.source,
+                "relevance_score": round(score, 3),
+                "preview": chunk.text[:100] + "..."
+            })
+
+        context = "\n\n".join(context_parts)
+
+        # ===========================================
+        # STEP 3: CONSTRUCT RAG PROMPT
+        # ===========================================
+        # System prompt establishes behavior
+        system_prompt = """You are a helpful documentation assistant.
+Answer questions based ONLY on the provided context.
+If the context doesn't contain enough information, say so.
+Always cite your sources using the citation markers [1], [2], etc."""
+
+        # User prompt with context and question
+        user_prompt = f"""Context from documentation:
+{context}
+
+---
+
+Question: {query}
+
+Instructions:
+1. Answer based ONLY on the context above
+2. Cite sources using [1], [2], etc.
+3. If unsure, acknowledge limitations
+4. Be concise but complete"""
+
+        # ===========================================
+        # STEP 4: GENERATE WITH LLM
+        # ===========================================
+        # Using OpenAI API (swap for local LLM if needed)
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",  # Cost-effective for RAG
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.1,  # Low temperature for factual responses
+            max_tokens=500
+        )
+
+        answer = response.choices[0].message.content
+
+        return {
+            "answer": answer,
+            "sources": sources,
+            "context_used": context,
+            "chunks_retrieved": len(retrieved)
+        }
+
+
+# ===========================================
+# USAGE EXAMPLE
+# ===========================================
+if __name__ == "__main__":
+    # Initialize the RAG system
+    qa = DocQASystem(collection_name="my_docs")
+
+    # Step 1: Load and chunk documents
+    chunks = qa.load_documents("./docs/")
+
+    # Step 2: Index chunks (embed and store)
+    qa.index(chunks)
+
+    # Step 3: Query the system
+    result = qa.answer("How do I install the library?")
+
+    # Display results
+    print("=" * 50)
+    print("ANSWER:")
+    print(result["answer"])
+    print("\nSOURCES:")
+    for src in result["sources"]:
+        print(f"  {src['citation']} {src['source']} (score: {src['relevance_score']})")
+</code>
+                </div>
+
+                <div class="card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); margin-top: 1rem;">
+                    <h5>Key Implementation Details</h5>
+                    <ul>
+                        <li><strong>Chunking:</strong> RecursiveCharacterTextSplitter respects semantic boundaries (paragraphs &gt; sentences &gt; words)</li>
+                        <li><strong>Hybrid Search:</strong> Dense retrieval (semantic) + BM25 (keyword) combined via Reciprocal Rank Fusion</li>
+                        <li><strong>Reranking:</strong> Cross-encoder sees query and document together for deeper relevance scoring</li>
+                        <li><strong>Citations:</strong> Each chunk is tagged with source file for traceability</li>
+                        <li><strong>Batching:</strong> Embeddings are processed in batches for GPU efficiency</li>
+                    </ul>
                 </div>
             </div>
 

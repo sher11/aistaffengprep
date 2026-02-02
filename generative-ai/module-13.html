@@ -1997,13 +1997,135 @@ class AdaptiveMathSolver:
 
     def classify_difficulty(self, problem: str) -> Difficulty:
         """
-        TODO: Implement difficulty classification
-        Hints:
-        - Count operations needed
-        - Check for word problem complexity
-        - Look for multi-step indicators
+        Classify problem difficulty to route to appropriate reasoning strategy.
+
+        This is a heuristic-based classifier that analyzes the problem text
+        to determine complexity. In production, you might use an LLM for
+        classification, but heuristics are faster and more cost-effective
+        for initial routing.
+
+        Difficulty Levels:
+        - EASY: Simple arithmetic, single operation (e.g., "What is 7 + 5?")
+        - MEDIUM: Multi-step problems, word problems with 2-3 operations
+        - HARD: Complex reasoning, multiple variables, rates, optimization
+
+        Args:
+            problem: The math problem text to classify
+
+        Returns:
+            Difficulty enum indicating problem complexity
         """
-        pass
+        # Normalize the problem text for analysis
+        problem_lower = problem.lower()
+
+        # ============================================================
+        # HARD INDICATORS: Complex reasoning required
+        # These patterns suggest problems needing self-consistency
+        # or extended thinking due to multiple variables/constraints
+        # ============================================================
+        hard_indicators = [
+            # Rate problems (distance/time, work/time, fill/drain)
+            r'\b(rate|speed|velocity|per\s+(hour|minute|second|day))\b',
+            r'\b(liters?|gallons?)\s*(per|\/)\s*(min|hour|second)\b',
+
+            # Optimization and comparison problems
+            r'\b(maximize|minimize|optimal|best|least|most)\b',
+            r'\b(compare|ratio|proportion)\b',
+
+            # Multi-entity problems (pipes, workers, machines)
+            r'\b(pipe\s*[a-z]|worker\s*[a-z]|machine\s*[a-z])\b',
+            r'\b(both|together|combined|simultaneously)\b.*\b(and)\b',
+
+            # Conditional/constraint problems
+            r'\b(if|when|while|until|given that)\b.*\b(then|how)\b',
+            r'\b(leak|loss|drain|decrease)\b',
+
+            # Probability and statistics
+            r'\b(probability|chance|odds|expected|average)\b',
+
+            # Algebraic complexity markers
+            r'\b(equation|variable|solve\s+for|unknown)\b',
+        ]
+
+        # Check for hard indicators
+        hard_score = 0
+        for pattern in hard_indicators:
+            if re.search(pattern, problem_lower):
+                hard_score += 1
+
+        # Multiple hard indicators strongly suggest HARD difficulty
+        if hard_score >= 2:
+            return Difficulty.HARD
+
+        # ============================================================
+        # EASY INDICATORS: Simple, direct computation
+        # Single operation problems that don't need chain-of-thought
+        # ============================================================
+        easy_patterns = [
+            # Direct arithmetic expressions
+            r'^what\s+is\s+\d+\s*[\+\-\*\/]\s*\d+\s*\??$',
+            r'^\d+\s*[\+\-\*\/]\s*\d+\s*=\s*\??$',
+
+            # Simple single-operation questions
+            r'^(calculate|compute|find|what\s+is)\s+\d+\s*[\+\-\*\/]\s*\d+',
+        ]
+
+        for pattern in easy_patterns:
+            if re.search(pattern, problem_lower):
+                return Difficulty.EASY
+
+        # Count mathematical operations in the problem
+        # More operations suggest higher complexity
+        operations = re.findall(r'[\+\-\*\/]|\b(plus|minus|times|divided|multiply|add|subtract)\b', problem_lower)
+
+        # Count numbers mentioned (more numbers often = more steps)
+        numbers = re.findall(r'\b\d+\.?\d*\b', problem)
+
+        # ============================================================
+        # MEDIUM INDICATORS: Multi-step word problems
+        # These need Chain-of-Thought but not self-consistency
+        # ============================================================
+        medium_indicators = [
+            # Word problem structure
+            r'\b(store|shop|buy|sell|cost|price|pay|change)\b',
+            r'\b(total|sum|altogether|remaining|left)\b',
+            r'\b(first|then|after|next|finally)\b',
+
+            # Percentage and fraction problems
+            r'\b(percent|%|fraction|half|quarter|third)\b',
+
+            # Basic geometry
+            r'\b(area|perimeter|length|width|height)\b',
+
+            # Sequential operations
+            r'\b(and\s+then|after\s+that)\b',
+        ]
+
+        medium_score = 0
+        for pattern in medium_indicators:
+            if re.search(pattern, problem_lower):
+                medium_score += 1
+
+        # ============================================================
+        # CLASSIFICATION DECISION LOGIC
+        # Combine signals to make final determination
+        # ============================================================
+
+        # If we have a hard indicator, lean toward HARD
+        if hard_score >= 1 and (len(numbers) > 4 or medium_score >= 2):
+            return Difficulty.HARD
+
+        # Word problems with multiple steps -> MEDIUM
+        if medium_score >= 1 or len(numbers) >= 3 or len(operations) >= 2:
+            return Difficulty.MEDIUM
+
+        # Very short problems with few numbers -> EASY
+        if len(problem.split()) < 10 and len(numbers) <= 2:
+            return Difficulty.EASY
+
+        # Default to MEDIUM for uncertain cases
+        # It's better to over-prepare (CoT) than under-prepare (direct)
+        return Difficulty.MEDIUM
 
     def solve_easy(self, problem: str) -> MathSolution:
         """Direct answer for easy problems."""
