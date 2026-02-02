@@ -429,7 +429,8 @@ pre[class*="language-"] {
 
 .collapsible.open .collapsible-content {
     padding: 1rem;
-    max-height: 2000px;
+    max-height: none;
+    overflow: visible;
 }
 
 .collapsible-icon {
