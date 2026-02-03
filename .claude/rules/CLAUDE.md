@@ -39,7 +39,8 @@ This is an interactive GitHub Pages site for staff engineer interview preparatio
 │       ├── mapreduce.html    # Google MapReduce
 │       ├── kafka.html        # Apache Kafka
 │       ├── spanner.html      # Google Spanner
-│       └── flink.html        # Apache Flink (stream processing)
+│       ├── flink.html        # Apache Flink (stream processing)
+│       └── flashblade.html   # Pure Storage FlashBlade
 ├── low-level-design/
 │   ├── index.html            # Course overview (12 modules + problems)
 │   ├── module-01.html        # Design Principles (SOLID, DRY, KISS)
